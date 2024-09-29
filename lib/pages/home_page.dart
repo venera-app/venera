@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
@@ -21,19 +22,47 @@ class HomePage extends StatelessWidget {
       slivers: [
         _History(),
         _Local(),
+        _ComicSourceWidget(),
+        _AccountsWidget(),
       ],
     );
   }
 }
 
-class _History extends StatelessWidget {
+class _History extends StatefulWidget {
   const _History();
 
   @override
-  Widget build(BuildContext context) {
-    final history = HistoryManager().getRecent();
-    final count = HistoryManager().count();
+  State<_History> createState() => _HistoryState();
+}
 
+class _HistoryState extends State<_History> {
+  late List<History> history;
+  late int count;
+
+  void onHistoryChange() {
+    setState(() {
+      history = HistoryManager().getRecent();
+      count = HistoryManager().count();
+    });
+  }
+
+  @override
+  void initState() {
+    history = HistoryManager().getRecent();
+    count = HistoryManager().count();
+    HistoryManager().addListener(onHistoryChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    HistoryManager().removeListener(onHistoryChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: InkWell(
         onTap: () {},
@@ -117,14 +146,40 @@ class _History extends StatelessWidget {
   }
 }
 
-class _Local extends StatelessWidget {
+class _Local extends StatefulWidget {
   const _Local();
 
   @override
-  Widget build(BuildContext context) {
-    final local = LocalManager().getRecent();
-    final count = LocalManager().count;
+  State<_Local> createState() => _LocalState();
+}
 
+class _LocalState extends State<_Local> {
+  late List<LocalComic> local;
+  late int count;
+
+  void onLocalComicsChange() {
+    setState(() {
+      local = LocalManager().getRecent();
+      count = LocalManager().count;
+    });
+  }
+
+  @override
+  void initState() {
+    local = LocalManager().getRecent();
+    count = LocalManager().count;
+    LocalManager().addListener(onLocalComicsChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    LocalManager().removeListener(onLocalComicsChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: InkWell(
         onTap: () {},
@@ -492,6 +547,201 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       cover: coverPath,
       comicType: ComicType.local,
       createdAt: DateTime.now(),
+    );
+  }
+}
+
+class _ComicSourceWidget extends StatefulWidget {
+  const _ComicSourceWidget();
+
+  @override
+  State<_ComicSourceWidget> createState() => _ComicSourceWidgetState();
+}
+
+class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
+  late List<String> comicSources;
+
+  void onComicSourceChange() {
+    setState(() {
+      comicSources = ComicSource.all().map((e) => e.name).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    comicSources = ComicSource.all().map((e) => e.name).toList();
+    ComicSource.addListener(onComicSourceChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ComicSource.removeListener(onComicSourceChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: InkWell(
+        onTap: () {},
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 0.6,
+              ),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    Center(
+                      child: Text('Comic Source'.tl, style: ts.s18),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(comicSources.length.toString(), style: ts.s12),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_right),
+                  ],
+                ),
+              ).paddingHorizontal(16),
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  children: comicSources.map((e) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(e),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountsWidget extends StatefulWidget {
+  const _AccountsWidget();
+
+  @override
+  State<_AccountsWidget> createState() => _AccountsWidgetState();
+}
+
+class _AccountsWidgetState extends State<_AccountsWidget> {
+  late List<String> accounts;
+
+  void onComicSourceChange() {
+    setState(() {
+      for(var c in ComicSource.all()) {
+        if(c.isLogged) {
+          accounts.add(c.name);
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    accounts = [];
+    for(var c in ComicSource.all()) {
+      if(c.isLogged) {
+        accounts.add(c.name);
+      }
+    }
+    ComicSource.addListener(onComicSourceChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ComicSource.removeListener(onComicSourceChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: InkWell(
+        onTap: () {},
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 0.6,
+              ),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    Center(
+                      child: Text('Accounts'.tl, style: ts.s18),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(accounts.length.toString(), style: ts.s12),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_right),
+                  ],
+                ),
+              ).paddingHorizontal(16),
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  children: accounts.map((e) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(e),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

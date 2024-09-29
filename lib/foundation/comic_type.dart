@@ -15,7 +15,7 @@ class ComicType {
     if(this == local) {
       return null;
     } else {
-      return ComicSource.sources.firstWhere((element) => element.intKey == value);
+      return ComicSource.fromIntKey(value);
     }
   }
 

@@ -105,7 +105,7 @@ class ComicSourceParser {
         throw ComicSourceParseException("minAppVersion $minAppVersion is required");
       }
     }
-    for(var source in ComicSource.sources){
+    for(var source in ComicSource.all()){
       if(source.key == key){
         throw ComicSourceParseException("key($key) already exists");
       }
@@ -188,8 +188,7 @@ class ComicSourceParser {
           ComicSource.sources.$_key.account.login(${jsonEncode(account)}, 
           ${jsonEncode(pwd)})
         """);
-        var source = ComicSource.sources
-            .firstWhere((element) => element.key == _key);
+        var source = ComicSource.find(_key!)!;
         source.data["account"] = <String>[account, pwd];
         source.saveData();
         return const Res(true);
@@ -461,7 +460,7 @@ class ComicSourceParser {
     final bool multiFolder = _getValue("favorites.multiFolder");
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async{
-      if(!ComicSource.find(_key!)!.isLogin){
+      if(!ComicSource.find(_key!)!.isLogged){
         return const Res.error("Not login");
       }
       var res = await func();

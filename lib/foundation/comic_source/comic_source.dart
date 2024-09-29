@@ -43,13 +43,31 @@ typedef GetThumbnailLoadingConfigFunc = Map<String, dynamic> Function(
     String imageKey)?;
 
 class ComicSource {
-  static List<ComicSource> sources = [];
+  static final List<ComicSource> _sources = [];
+
+  static final List<Function> _listeners = [];
+
+  static void addListener(Function listener) {
+    _listeners.add(listener);
+  }
+
+  static void removeListener(Function listener) {
+    _listeners.remove(listener);
+  }
+
+  static void notifyListeners() {
+    for (var listener in _listeners) {
+      listener();
+    }
+  }
+
+  static List<ComicSource> all() => List.from(_sources);
 
   static ComicSource? find(String key) =>
-      sources.firstWhereOrNull((element) => element.key == key);
+      _sources.firstWhereOrNull((element) => element.key == key);
 
   static ComicSource? fromIntKey(int key) =>
-      sources.firstWhereOrNull((element) => element.key.hashCode == key);
+      _sources.firstWhereOrNull((element) => element.key.hashCode == key);
 
   static Future<void> init() async {
     final path = "${App.dataPath}/comic_source";
@@ -62,7 +80,7 @@ class ComicSource {
         try {
           var source = await ComicSourceParser()
               .parse(await entity.readAsString(), entity.absolute.path);
-          sources.add(source);
+          _sources.add(source);
         } catch (e, s) {
           Log.error("ComicSource", "$e\n$s");
         }
@@ -71,9 +89,20 @@ class ComicSource {
   }
 
   static Future reload() async {
-    sources.clear();
+    _sources.clear();
     JsEngine().runCode("ComicSource.sources = {};");
     await init();
+    notifyListeners();
+  }
+
+  static void add(ComicSource source) {
+    _sources.add(source);
+    notifyListeners();
+  }
+
+  static void remove(String key) {
+    _sources.removeWhere((element) => element.key == key);
+    notifyListeners();
   }
 
   /// Name of this source.
@@ -123,7 +152,7 @@ class ComicSource {
 
   var data = <String, dynamic>{};
 
-  bool get isLogin => data["account"] != null;
+  bool get isLogged => data["account"] != null;
 
   final String filePath;
 

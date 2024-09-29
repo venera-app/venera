@@ -22,7 +22,6 @@ import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
-import 'package:venera/utils/ext.dart';
 
 import 'comic_source/comic_source.dart';
 import 'consts.dart';
@@ -107,8 +106,7 @@ class JsEngine with _JSEngineApi{
             {
               String key = message["key"];
               String dataKey = message["data_key"];
-              return ComicSource.sources
-                  .firstWhereOrNull((element) => element.key == key)
+              return ComicSource.find(key)
                   ?.data[dataKey];
             }
           case 'save_data':
@@ -116,8 +114,7 @@ class JsEngine with _JSEngineApi{
               String key = message["key"];
               String dataKey = message["data_key"];
               var data = message["data"];
-              var source = ComicSource.sources
-                  .firstWhere((element) => element.key == key);
+              var source = ComicSource.find(key)!;
               source.data[dataKey] = data;
               source.saveData();
             }
@@ -125,8 +122,7 @@ class JsEngine with _JSEngineApi{
             {
               String key = message["key"];
               String dataKey = message["data_key"];
-              var source = ComicSource.sources
-                  .firstWhereOrNull((element) => element.key == key);
+              var source = ComicSource.find(key);
               source?.data.remove(dataKey);
               source?.saveData();
             }
