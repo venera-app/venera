@@ -1,0 +1,41 @@
+name: venera
+description: "A comic app."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.4 <4.0.0'
+  flutter: 3.22.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_provider: any
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  window_manager: ^0.4.2
+  sqlite3: any
+  sqlite3_flutter_libs: any
+  flutter_qjs:
+    git:
+      url: https://github.com/wgh136/flutter_qjs
+      ref: ade0b9d
+  crypto: any
+  dio: any
+  html: any
+  pointycastle: any
+  file_picker: ^8.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/translation.json
+    - assets/init.js
+
