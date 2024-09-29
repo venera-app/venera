@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
@@ -228,7 +227,7 @@ class _Local extends StatelessWidget {
 }
 
 class _ImportComicsWidget extends StatefulWidget {
-  const _ImportComicsWidget({super.key});
+  const _ImportComicsWidget();
 
   @override
   State<_ImportComicsWidget> createState() => _ImportComicsWidgetState();
