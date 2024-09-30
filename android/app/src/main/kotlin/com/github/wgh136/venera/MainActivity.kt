@@ -4,8 +4,8 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
-import android.os.Environment
 import android.view.KeyEvent
+import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -13,8 +13,6 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 import java.lang.Exception
 
 class MainActivity : FlutterActivity() {
@@ -27,15 +25,19 @@ class MainActivity : FlutterActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == pickDirectoryCode && resultCode == Activity.RESULT_OK) {
-            val pickedDirectoryUri = data?.getStringExtra("directoryUri")
+        if (requestCode == pickDirectoryCode) {
+            if(resultCode != Activity.RESULT_OK) {
+                result.success(null)
+                return
+            }
+            val pickedDirectoryUri = data?.data
             if (pickedDirectoryUri == null) {
                 result.success(null)
+                return
             }
-            val uri = Uri.parse(pickedDirectoryUri)
             Thread {
                 try {
-                    result.success(onPickedDirectory(uri))
+                    result.success(onPickedDirectory(pickedDirectoryUri))
                 }
                 catch (e: Exception) {
                     result.error("Failed to Copy Files", e.toString(), null)
@@ -63,7 +65,8 @@ class MainActivity : FlutterActivity() {
                 }
                 "getDirectoryPath" -> {
                     this.result = res
-                    val intent = Intent(this, DirectoryPickerActivity::class.java)
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                     startActivityForResult(intent, pickDirectoryCode)
                 }
                 else -> res.notImplemented()
@@ -116,33 +119,31 @@ class MainActivity : FlutterActivity() {
 
     /// copy the directory to tmp directory, return copied directory
     private fun onPickedDirectory(uri: Uri): String {
-        val tempDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "tempDir")
-        if (!tempDir.exists()) {
-            tempDir.mkdirs()
-        }
+        val contentResolver = context.contentResolver
+        var tmp = context.cacheDir
+        tmp = File(tmp, "getDirectoryPathTemp")
+        tmp.mkdir()
+        copyDirectory(contentResolver, uri, tmp)
 
-        val contentResolver: ContentResolver = context.contentResolver
+        return tmp.absolutePath
+    }
 
-        val childrenUri = Uri.withAppendedPath(uri, "children")
-
-        contentResolver.query(childrenUri, null, null, null, null)?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val documentId = cursor.getString(cursor.getColumnIndexOrThrow("_id"))
-                val fileUri = Uri.withAppendedPath(uri, documentId)
-
-                // 复制文件
-                val inputStream: InputStream? = contentResolver.openInputStream(fileUri)
-                val outputStream: OutputStream = FileOutputStream(File(tempDir, documentId))
-
-                inputStream?.use { input ->
-                    outputStream.use { output ->
-                        input.copyTo(output)
-                    }
-                }
+    private fun copyDirectory(resolver: ContentResolver, srcUri: Uri, destDir: File) {
+        val src = DocumentFile.fromTreeUri(context, srcUri) ?: return
+        for (file in src.listFiles()) {
+            if(file.isDirectory) {
+                val newDir = File(destDir, file.name!!)
+                newDir.mkdir()
+                copyDirectory(resolver, file.uri, newDir)
+            } else {
+                val newFile = File(destDir, file.name!!)
+                val inputStream = resolver.openInputStream(file.uri) ?: return
+                val outputStream = FileOutputStream(newFile)
+                inputStream.copyTo(outputStream)
+                inputStream.close()
+                outputStream.close()
             }
         }
-
-        return tempDir.absolutePath
     }
 }
 
