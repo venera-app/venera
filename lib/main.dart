@@ -54,6 +54,21 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   @override
+  void initState() {
+    App.registerForceRebuild(forceRebuild);
+    super.initState();
+  }
+
+  void forceRebuild() {
+    void rebuild(Element el) {
+      el.markNeedsBuild();
+      el.visitChildren(rebuild);
+    }
+    (context as Element).visitChildren(rebuild);
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: const MainPage(),

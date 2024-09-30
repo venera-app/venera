@@ -10,6 +10,8 @@ import 'package:venera/utils/ext.dart';
 
 import '../foundation/app.dart';
 
+export 'package:dio/dio.dart';
+
 class MyLogInterceptor implements Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
@@ -101,8 +103,8 @@ class MyLogInterceptor implements Interceptor {
 class AppDio with DioMixin {
   String? _proxy = proxy;
 
-  AppDio(BaseOptions options) {
-    this.options = options;
+  AppDio([BaseOptions? options]) {
+    this.options = options ?? BaseOptions();
     interceptors.add(MyLogInterceptor());
     httpClientAdapter = IOHttpClientAdapter(createHttpClient: createHttpClient);
   }
@@ -127,7 +129,7 @@ class AppDio with DioMixin {
   static String? proxy;
 
   static Future<String?> getProxy() async {
-    if (appdata.settings['proxy'].removeAllBlank == "direct") return null;
+    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct") return null;
     if (appdata.settings['proxy'] != "system") return appdata.settings['proxy'];
 
     String res;

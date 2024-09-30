@@ -1,5 +1,67 @@
 part of "components.dart";
 
+void showToast({required String message, required BuildContext context, Widget? icon, Widget? trailing,}) {
+  var newEntry = OverlayEntry(
+      builder: (context) => _ToastOverlay(
+        message: message,
+        icon: icon,
+        trailing: trailing,
+      ));
+
+  var state = context.findAncestorStateOfType<OverlayWidgetState>();
+
+  state?.addOverlay(newEntry);
+
+  Timer(const Duration(seconds: 2), () => state?.remove(newEntry));
+}
+
+class _ToastOverlay extends StatelessWidget {
+  const _ToastOverlay({required this.message, this.icon, this.trailing});
+
+  final String message;
+
+  final Widget? icon;
+
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+      left: 0,
+      right: 0,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Material(
+          color: Theme.of(context).colorScheme.inverseSurface,
+          borderRadius: BorderRadius.circular(8),
+          elevation: 2,
+          textStyle: ts.withColor(Theme.of(context).colorScheme.onInverseSurface),
+          child: IconTheme(
+            data: IconThemeData(color: Theme.of(context).colorScheme.onInverseSurface),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) icon!.paddingRight(8),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
+                    maxLines: 3,
+                  ),
+                  if (trailing != null) trailing!.paddingLeft(8)
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class OverlayWidget extends StatefulWidget {
   const OverlayWidget(this.child, {super.key});
 
@@ -67,8 +129,7 @@ void showConfirmDialog(BuildContext context, String title, String content,
             title: Text(title),
             content: Text(content),
             actions: [
-              TextButton(
-                  onPressed: context.pop, child: Text("Cancel".tl)),
+              TextButton(onPressed: context.pop, child: Text("Cancel".tl)),
               TextButton(
                   onPressed: () {
                     context.pop();
@@ -194,6 +255,9 @@ class ContentDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
+        side: context.brightness == Brightness.dark
+            ? BorderSide(color: context.colorScheme.outlineVariant)
+            : BorderSide.none,
       ),
       insetPadding: context.width < 400
           ? const EdgeInsets.symmetric(horizontal: 4)

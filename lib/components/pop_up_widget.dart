@@ -129,7 +129,7 @@ class _PopUpWidgetScaffoldState extends State<PopUpWidgetScaffold> {
                     icon: const Icon(Icons.arrow_back_sharp),
                     onPressed: () => context.canPop()
                         ? context.pop()
-                        : App.rootNavigatorKey.currentContext?.pop(),
+                        : App.pop(),
                   ),
                 ),
                 const SizedBox(

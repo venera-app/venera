@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:venera/components/components.dart';
 
 import 'app_page_route.dart';
 
@@ -31,6 +32,6 @@ extension Navigation on BuildContext {
   Brightness get brightness => Theme.of(this).brightness;
 
   void showMessage({required String message}) {
-    // TODO: show message
+    showToast(message: message, context: this);
   }
 }

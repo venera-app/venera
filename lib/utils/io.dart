@@ -5,6 +5,18 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:path/path.dart' as p;
+
+export 'dart:io';
+
+
+class FilePath {
+  const FilePath._();
+
+  static String join(String path1, String path2, [String? path3, String? path4, String? path5]) {
+    return p.join(path1, path2, path3, path4, path5);
+  }
+}
 
 extension FileSystemEntityExt on FileSystemEntity {
   String get name {

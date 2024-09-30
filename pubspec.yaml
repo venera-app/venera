@@ -27,6 +27,8 @@ dependencies:
   html: any
   pointycastle: any
   file_picker: ^8.1.2
+  url_launcher: ^6.3.0
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

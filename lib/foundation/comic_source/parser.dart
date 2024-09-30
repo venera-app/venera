@@ -59,11 +59,11 @@ class ComicSourceParser {
     if(!fileName.endsWith("js")){
       fileName = "$fileName.js";
     }
-    var file = File("${App.dataPath}/comic_source/$fileName");
+    var file = File(FilePath.join(App.dataPath, "comic_source", fileName));
     if(file.existsSync()){
       int i = 0;
       while(file.existsSync()){
-        file = File("${App.dataPath}/comic_source/$fileName($i).js");
+        file = File(FilePath.join(App.dataPath, "comic_source", "${fileName.split('.').first}($i).js"));
         i++;
       }
     }

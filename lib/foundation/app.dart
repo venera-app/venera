@@ -67,6 +67,16 @@ class _App {
       _ => Colors.blue,
     };
   }
+
+  Function? _forceRebuildHandler;
+
+  void registerForceRebuild(Function handler) {
+    _forceRebuildHandler = handler;
+  }
+
+  void forceRebuild() {
+    _forceRebuildHandler?.call();
+  }
 }
 
 // ignore: non_constant_identifier_names

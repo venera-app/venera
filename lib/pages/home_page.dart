@@ -10,6 +10,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -584,7 +585,9 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          context.to(() => const ComicSourcePage());
+        },
         child: Container(
           decoration: BoxDecoration(
             border: Border(
@@ -619,23 +622,25 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                   ],
                 ),
               ).paddingHorizontal(16),
-              SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  children: comicSources.map((e) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(e),
-                    );
-                  }).toList(),
+              if(comicSources.isNotEmpty)
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    runSpacing: 8,
+                    spacing: 8,
+                    children: comicSources.map((e) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(e),
+                      );
+                    }).toList(),
+                  ).paddingHorizontal(16).paddingBottom(16),
                 ),
-              ),
             ],
           ),
         ),
