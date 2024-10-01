@@ -206,14 +206,6 @@ class _NaviPaneState extends State<NaviPane>
         padding: const EdgeInsets.only(left: 16, right: 16),
         height: _kTopBarHeight,
         width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 1,
-            ),
-          ),
-        ),
         child: Row(
           children: [
             Text(

@@ -11,6 +11,13 @@ class _Appdata {
     var file = File(FilePath.join(App.dataPath, 'settings.json'));
     await file.writeAsString(data);
   }
+
+  Future<void> init() async {
+    var json = jsonDecode(await File(FilePath.join(App.dataPath, 'settings.json')).readAsString()) as Map<String, dynamic>;
+    for(var key in json.keys) {
+      settings[key] = json[key];
+    }
+  }
 }
 
 final appdata = _Appdata();
@@ -29,6 +36,9 @@ class _Settings {
     'explore_pages': [],
     'categories': [],
     'favorites': [],
+    'showFavoriteStatusOnTile': true,
+    'showHistoryStatusOnTile': false,
+    'blockedWords': [],
   };
 
   operator[](String key) {

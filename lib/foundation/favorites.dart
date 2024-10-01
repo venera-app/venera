@@ -455,11 +455,11 @@ class LocalFavoritesManager {
 
   final _cachedFavoritedIds = <String, bool>{};
 
-  bool isExist(String id) {
+  bool isExist(String id, ComicType type) {
     if (_modifiedAfterLastCache) {
       _cacheFavoritedIds();
     }
-    return _cachedFavoritedIds.containsKey(id);
+    return _cachedFavoritedIds.containsKey("$id@${type.value}");
   }
 
   bool _modifiedAfterLastCache = true;
@@ -468,11 +468,11 @@ class LocalFavoritesManager {
     _modifiedAfterLastCache = false;
     _cachedFavoritedIds.clear();
     for (var folder in folderNames) {
-      var res = _db.select("""
-        select id from "$folder";
+      var rows = _db.select("""
+        select id, type from "$folder";
       """);
-      for (var row in res) {
-        _cachedFavoritedIds[row["id"]] = true;
+      for (var row in rows) {
+        _cachedFavoritedIds["${row["id"]}@${row["type"]}"] = true;
       }
     }
   }

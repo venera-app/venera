@@ -64,6 +64,10 @@ extension WidgetExtension on Widget{
   Widget fixHeight(double height){
     return SizedBox(height: height, child: this);
   }
+
+  Widget toSliver(){
+    return SliverToBoxAdapter(child: this);
+  }
 }
 
 /// create default text style

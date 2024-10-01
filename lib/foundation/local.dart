@@ -4,17 +4,22 @@ import 'dart:io';
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 
 import 'app.dart';
 
-class LocalComic {
-  final int id;
+class LocalComic implements Comic{
+  @override
+  final String id;
 
+  @override
   final String title;
 
+  @override
   final String subtitle;
 
+  @override
   final List<String> tags;
 
   /// name of the directory, which is in `LocalManager.path`
@@ -26,6 +31,7 @@ class LocalComic {
   final Map<String, String>? chapters;
 
   /// relative path to the cover image
+  @override
   final String cover;
 
   final ComicType comicType;
@@ -45,7 +51,7 @@ class LocalComic {
   });
 
   LocalComic.fromRow(Row row)
-      : id = row[0] as int,
+      : id = row[0] as String,
         title = row[1] as String,
         subtitle = row[2] as String,
         tags = List.from(jsonDecode(row[3] as String)),
@@ -56,6 +62,28 @@ class LocalComic {
         createdAt = DateTime.fromMillisecondsSinceEpoch(row[8] as int);
 
   File get coverFile => File('${LocalManager().path}/$directory/$cover');
+
+  @override
+  String get description => "";
+
+  @override
+  String get sourceKey => comicType.comicSource?.key ?? '_local_';
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      "title": title,
+      "cover": cover,
+      "id": id,
+      "subTitle": subtitle,
+      "tags": tags,
+      "description": description,
+      "sourceKey": sourceKey,
+    };
+  }
+
+  @override
+  int? get maxPage => null;
 }
 
 class LocalManager with ChangeNotifier {
@@ -77,7 +105,7 @@ class LocalManager with ChangeNotifier {
     );
     _db.execute('''
       CREATE TABLE IF NOT EXISTS comics (
-        id INTEGER,
+        id TEXT NOT NULL,
         title TEXT NOT NULL,
         subtitle TEXT NOT NULL,
         tags TEXT NOT NULL,
@@ -108,18 +136,21 @@ class LocalManager with ChangeNotifier {
     }
   }
 
-  int findValidId(ComicType type) {
-    final res = _db.select(
-      'SELECT id FROM comics WHERE comic_type = ? ORDER BY id DESC LIMIT 1;',
+  String findValidId(ComicType type) {
+    final res = _db.select('''
+      SELECT id FROM comics WHERE comic_type = ? 
+      ORDER BY CAST(id AS INTEGER) DESC
+      LIMIT 1;
+      '''
       [type.value],
     );
     if (res.isEmpty) {
-      return 1;
+      return '1';
     }
-    return (res.first[0] as int) + 1;
+    return ((res.first[0] as int) + 1).toString();
   }
 
-  Future<void> add(LocalComic comic, [int? id]) async {
+  Future<void> add(LocalComic comic, [String? id]) async {
     _db.execute(
       'INSERT INTO comics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
@@ -137,7 +168,7 @@ class LocalManager with ChangeNotifier {
     notifyListeners();
   }
 
-  void remove(int id, ComicType comicType) async {
+  void remove(String id, ComicType comicType) async {
     _db.execute(
       'DELETE FROM comics WHERE id = ? AND comic_type = ?;',
       [id, comicType.value],
@@ -155,7 +186,7 @@ class LocalManager with ChangeNotifier {
     return res.map((row) => LocalComic.fromRow(row)).toList();
   }
 
-  LocalComic? find(int id, ComicType comicType) {
+  LocalComic? find(String id, ComicType comicType) {
     final res = _db.select(
       'SELECT * FROM comics WHERE id = ? AND comic_type = ?;',
       [id, comicType.value],

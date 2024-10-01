@@ -539,7 +539,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       return null;
     }
     return LocalComic(
-      id: 0,
+      id: '0',
       title: name,
       subtitle: '',
       tags: [],

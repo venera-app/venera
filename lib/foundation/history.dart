@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_type.dart';
 
 import 'app.dart';
-import 'log.dart';
 
 typedef HistoryType = ComicType;
 
@@ -113,7 +111,7 @@ class History {
     int ep = 0,
     int page = 0,
   }) async {
-    var history = await HistoryManager().find(model.id);
+    var history = await HistoryManager().find(model.id, model.historyType);
     if (history != null) {
       return history;
     }
@@ -147,36 +145,6 @@ class HistoryManager with ChangeNotifier {
 
   Map<String, bool>? _cachedHistory;
 
-  Future<void> tryUpdateDb() async {
-    var file = File("${App.dataPath}/history_temp.db");
-    if (!file.existsSync()) {
-      Log.info("HistoryManager.tryUpdateDb", "db file not exist");
-      return;
-    }
-    var db = sqlite3.open(file.path);
-    var newHistory0 = db.select("""
-      select * from history
-      order by time DESC;
-    """);
-    var newHistory =
-        newHistory0.map((element) => History.fromRow(element)).toList();
-    if (file.existsSync()) {
-      var skips = 0;
-      for (var history in newHistory) {
-        if (findSync(history.id) == null) {
-          addHistory(history);
-          Log.info("HistoryManager", "merge history ${history.id}");
-        } else {
-          skips++;
-        }
-      }
-      Log.info("HistoryManager",
-          "merge history, skipped $skips, added ${newHistory.length - skips}");
-    }
-    db.dispose();
-    file.deleteSync();
-  }
-
   Future<void> init() async {
     _db = sqlite3.open("${App.dataPath}/history.db");
 
@@ -202,8 +170,8 @@ class HistoryManager with ChangeNotifier {
   Future<void> addHistory(History newItem) async {
     var res = _db.select("""
       select * from history
-      where id == ?;
-    """, [newItem.id]);
+      where id == ? and type == ?;
+    """, [newItem.id, newItem.type.value]);
     if (res.isEmpty) {
       _db.execute("""
         insert into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
@@ -224,8 +192,8 @@ class HistoryManager with ChangeNotifier {
       _db.execute("""
         update history
         set time = ${DateTime.now().millisecondsSinceEpoch}
-        where id == ?;
-      """, [newItem.id]);
+        where id == ? and type == ?;
+      """, [newItem.id, newItem.type.value]);
     }
     updateCache();
     notifyListeners();
@@ -235,13 +203,14 @@ class HistoryManager with ChangeNotifier {
     _db.execute("""
         update history
         set time = ${DateTime.now().millisecondsSinceEpoch}, ep = ?, page = ?, readEpisode = ?, max_page = ?
-        where id == ?;
+        where id == ? and type == ?;
     """, [
       history.ep,
       history.page,
       history.readEpisode.join(','),
       history.maxPage,
-      history.id
+      history.id,
+      history.type.value
     ]);
     notifyListeners();
   }
@@ -251,16 +220,16 @@ class HistoryManager with ChangeNotifier {
     updateCache();
   }
 
-  void remove(String id) async {
+  void remove(String id, ComicType type) async {
     _db.execute("""
       delete from history
-      where id == '$id';
-    """);
+      where id == ? and type == ?;
+    """, [id, type.value]);
     updateCache();
   }
 
-  Future<History?> find(String id) async {
-    return findSync(id);
+  Future<History?> find(String id, ComicType type) async {
+    return findSync(id, type);
   }
 
   void updateCache() {
@@ -273,7 +242,7 @@ class HistoryManager with ChangeNotifier {
     }
   }
 
-  History? findSync(String id) {
+  History? findSync(String id, ComicType type) {
     if(_cachedHistory == null) {
       updateCache();
     }
@@ -283,8 +252,8 @@ class HistoryManager with ChangeNotifier {
 
     var res = _db.select("""
       select * from history
-      where id == ?;
-    """, [id]);
+      where id == ? and type == ?;
+    """, [id, type.value]);
     if (res.isEmpty) {
       return null;
     }

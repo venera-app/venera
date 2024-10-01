@@ -389,35 +389,39 @@ class Comic {
   
   final String id;
   
-  final String? subTitle;
+  final String? subtitle;
   
   final List<String>? tags;
   
   final String description;
   
   final String sourceKey;
+
+  final int? maxPage;
   
-  const Comic(this.title, this.cover, this.id, this.subTitle, this.tags, this.description, this.sourceKey);
+  const Comic(this.title, this.cover, this.id, this.subtitle, this.tags, this.description, this.sourceKey, this.maxPage);
 
   Map<String, dynamic> toJson() {
     return {
       "title": title,
       "cover": cover,
       "id": id,
-      "subTitle": subTitle,
+      "subTitle": subtitle,
       "tags": tags,
       "description": description,
       "sourceKey": sourceKey,
+      "maxPage": maxPage,
     };
   }
 
   Comic.fromJson(Map<String, dynamic> json, this.sourceKey)
       : title = json["title"],
-        subTitle = json["subTitle"] ?? "",
+        subtitle = json["subTitle"] ?? "",
         cover = json["cover"],
         id = json["id"],
         tags = List<String>.from(json["tags"] ?? []),
-        description = json["description"] ?? "";
+        description = json["description"] ?? "",
+        maxPage = json["maxPage"];
 }
 
 class ComicDetails with HistoryMixin {

@@ -20,12 +20,25 @@ class NetworkError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 60,
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 28,
+                  color: context.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Error".tl,
+                  style: ts.withColor(context.colorScheme.error).s16,
+                ),
+              ],
+            ),
           ),
           const SizedBox(
-            height: 4,
+            height: 8,
           ),
           Text(
             message,
@@ -34,7 +47,7 @@ class NetworkError extends StatelessWidget {
           ),
           if (retry != null)
             const SizedBox(
-              height: 4,
+              height: 12,
             ),
           if (retry != null)
             FilledButton(onPressed: retry, child: Text('重试'.tl))

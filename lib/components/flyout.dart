@@ -15,18 +15,19 @@ class FlyoutController {
 }
 
 class Flyout extends StatefulWidget {
-  const Flyout(
-      {super.key,
-      required this.flyoutBuilder,
-      required this.child,
-      this.enableTap = false,
-      this.enableDoubleTap = false,
-      this.enableLongPress = false,
-      this.enableSecondaryTap = false,
-      this.withInkWell = false,
-      this.borderRadius = 0,
-      this.controller,
-      this.navigator});
+  const Flyout({
+    super.key,
+    required this.flyoutBuilder,
+    required this.child,
+    this.enableTap = false,
+    this.enableDoubleTap = false,
+    this.enableLongPress = false,
+    this.enableSecondaryTap = false,
+    this.withInkWell = false,
+    this.borderRadius = 0,
+    this.controller,
+    this.navigator,
+  });
 
   final WidgetBuilder flyoutBuilder;
 
@@ -164,7 +165,7 @@ class FlyoutContent extends StatelessWidget {
 
   final String title;
 
-  final String? content;
+  final Widget? content;
 
   final List<Widget> actions;
 
@@ -191,7 +192,7 @@ class FlyoutContent extends StatelessWidget {
               if (content != null)
                 Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Text(content!, style: const TextStyle(fontSize: 12)),
+                  child: content!,
                 ),
               const SizedBox(
                 height: 12,

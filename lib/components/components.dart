@@ -2,6 +2,7 @@ library components;
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -13,9 +14,17 @@ import 'package:flutter/services.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/app_page_route.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/foundation/favorites.dart';
+import 'package:venera/foundation/history.dart';
+import 'package:venera/foundation/image_provider/cached_image.dart';
+import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
 part 'image.dart';
@@ -32,3 +41,4 @@ part 'pop_up_widget.dart';
 part 'scroll.dart';
 part 'select.dart';
 part 'side_bar.dart';
+part 'comic.dart';

@@ -8,9 +8,12 @@ import 'package:venera/foundation/local.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/utils/translations.dart';
 
+import 'foundation/appdata.dart';
+
 Future<void> init() async {
   await AppTranslation.init();
   await App.init();
+  await appdata.init();
   await HistoryManager().init();
   await LocalManager().init();
   await LocalFavoritesManager().init();

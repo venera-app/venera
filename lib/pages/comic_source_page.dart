@@ -155,7 +155,7 @@ class _BodyState extends State<_Body> {
       () {
         var file = File(source.filePath);
         file.delete();
-        ComicSource.all().remove(source);
+        ComicSource.remove(source.key);
         _validatePages();
         App.forceRebuild();
       },
