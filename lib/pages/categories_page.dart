@@ -4,6 +4,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/ranking_page.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'category_comics_page.dart';
@@ -132,11 +133,7 @@ class _CategoryPage extends StatelessWidget {
           children: [
             if (data.enableRankingPage)
               buildTag("Ranking".tl, (p0, p1) {
-                // TODO: Implement ranking
-                /*
                 context.to(() => RankingPage(sourceKey: findComicSourceKey()));
-
-                 */
               }),
             for (var buttonData in data.buttons)
               buildTag(buttonData.label.tl, (p0, p1) => buttonData.onTap())
