@@ -634,8 +634,8 @@ class _ComicListState extends State<ComicList> {
           } else {
             setState(() {
               data[page] = res.data;
-              if (res.subData?['maxPage'] != null) {
-                maxPage = res.subData['maxPage'];
+              if (res.subData != null && res.subData is int) {
+                maxPage = res.subData;
               }
             });
           }

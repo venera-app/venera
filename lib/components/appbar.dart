@@ -335,7 +335,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
 
   static const tabPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 6);
 
-  static const tabRadius = 12.0;
+  static const tabRadius = 8.0;
 
   _IndicatorPainter? painter;
 
