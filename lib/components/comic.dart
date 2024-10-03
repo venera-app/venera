@@ -499,11 +499,21 @@ String? isBlocked(Comic item) {
 }
 
 class ComicList extends StatefulWidget {
-  const ComicList({super.key, this.loadPage, this.loadNext});
+  const ComicList({
+    super.key,
+    this.loadPage,
+    this.loadNext,
+    this.leadingSliver,
+    this.trailingSliver,
+  });
 
   final Future<Res<List<Comic>>> Function(int page)? loadPage;
 
   final Future<Res<List<Comic>>> Function(String? next)? loadNext;
+
+  final Widget? leadingSliver;
+
+  final Widget? trailingSliver;
 
   @override
   State<ComicList> createState() => _ComicListState();
@@ -567,16 +577,18 @@ class _ComicListState extends State<ComicList> {
                             onPressed: () {
                               Navigator.of(context).pop();
                               var page = int.tryParse(value);
-                              if(page == null) {
+                              if (page == null) {
                                 context.showMessage(message: "Invalid page".tl);
                               } else {
-                                if(page > 0 && (maxPage == null || page <= maxPage!)) {
+                                if (page > 0 &&
+                                    (maxPage == null || page <= maxPage!)) {
                                   setState(() {
                                     error = null;
                                     this.page = page;
                                   });
                                 } else {
-                                  context.showMessage(message: "Invalid page".tl);
+                                  context.showMessage(
+                                      message: "Invalid page".tl);
                                 }
                               }
                             },
@@ -702,9 +714,11 @@ class _ComicListState extends State<ComicList> {
     }
     return SmoothCustomScrollView(
       slivers: [
+        if (widget.leadingSliver != null) widget.leadingSliver!,
         buildSliverPageSelector(),
         SliverGridComics(comics: data[page] ?? const []),
         buildSliverPageSelector(),
+        if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );
   }

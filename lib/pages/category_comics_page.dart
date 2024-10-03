@@ -58,19 +58,15 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
       appBar: Appbar(
         title: Text(widget.category),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ComicList(
-              loadPage: (i) => data.load(
-                widget.category,
-                widget.param,
-                optionsValue,
-                i,
-              ),
-            ),
-          ),
-        ],
+      body: ComicList(
+        key: Key(widget.category + optionsValue.toString()),
+        leadingSliver: buildOptions(),
+        loadPage: (i) => data.load(
+          widget.category,
+          widget.param,
+          optionsValue,
+          i,
+        ),
       ),
     );
   }
