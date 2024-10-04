@@ -14,7 +14,10 @@ class ComicTile extends StatelessWidget {
 
   final String? badge;
 
-  void onTap() {}
+  void onTap() {
+    App.mainNavigatorKey?.currentContext
+        ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+  }
 
   void onLongPress() {}
 
@@ -721,8 +724,7 @@ class _ComicListState extends State<ComicList> {
         if (widget.leadingSliver != null) widget.leadingSliver!,
         buildSliverPageSelector(),
         SliverGridComics(comics: data[page] ?? const []),
-        if(data[page]!.length > 6)
-          buildSliverPageSelector(),
+        if (data[page]!.length > 6) buildSliverPageSelector(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );

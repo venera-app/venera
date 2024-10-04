@@ -2,7 +2,6 @@ library components;
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -23,8 +22,8 @@ import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/comic_page.dart';
 import 'package:venera/utils/ext.dart';
-import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
 part 'image.dart';

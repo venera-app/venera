@@ -34,4 +34,12 @@ extension Navigation on BuildContext {
   void showMessage({required String message}) {
     showToast(message: message, context: this);
   }
+
+  Color useBackgroundColor(MaterialColor color) {
+    return color[brightness == Brightness.light ? 100 : 800]!;
+  }
+
+  Color useTextColor(MaterialColor color) {
+    return color[brightness == Brightness.light ? 800 : 100]!;
+  }
 }

@@ -43,6 +43,8 @@ typedef GetImageLoadingConfigFunc = Map<String, dynamic> Function(
 typedef GetThumbnailLoadingConfigFunc = Map<String, dynamic> Function(
     String imageKey)?;
 
+typedef ComicThumbnailLoader = Future<Res<List<String>>> Function(String comicId, String? next);
+
 class ComicSource {
   static final List<ComicSource> _sources = [];
 
@@ -140,6 +142,8 @@ class ComicSource {
   /// Load comic info.
   final LoadComicFunc? loadComicInfo;
 
+  final ComicThumbnailLoader? loadComicThumbnail;
+
   /// Load comic pages.
   final LoadComicPagesFunc? loadComicPages;
 
@@ -216,6 +220,7 @@ class ComicSource {
       this.searchPageData,
       this.settings,
       this.loadComicInfo,
+      this.loadComicThumbnail,
       this.loadComicPages,
       this.getImageLoadingConfig,
       this.getThumbnailLoadingConfig,
@@ -237,6 +242,7 @@ class ComicSource {
         searchPageData = null,
         settings = [],
         loadComicInfo = null,
+        loadComicThumbnail = null,
         loadComicPages = null,
         getImageLoadingConfig = null,
         getThumbnailLoadingConfig = null,
@@ -338,8 +344,8 @@ class SearchPageData {
   /// If this is not null, the default value of search options will be first element.
   final List<SearchOptions>? searchOptions;
 
-  final Widget Function(BuildContext, List<String> initialValues, void Function(List<String>))?
-      customOptionsBuilder;
+  final Widget Function(BuildContext, List<String> initialValues,
+      void Function(List<String>))? customOptionsBuilder;
 
   final Widget Function(String keyword, List<String> options)?
       overrideSearchResultBuilder;
@@ -384,22 +390,23 @@ enum SettingType {
 
 class Comic {
   final String title;
-  
+
   final String cover;
-  
+
   final String id;
-  
+
   final String? subtitle;
-  
+
   final List<String>? tags;
-  
+
   final String description;
-  
+
   final String sourceKey;
 
   final int? maxPage;
-  
-  const Comic(this.title, this.cover, this.id, this.subtitle, this.tags, this.description, this.sourceKey, this.maxPage);
+
+  const Comic(this.title, this.cover, this.id, this.subtitle, this.tags,
+      this.description, this.sourceKey, this.maxPage);
 
   Map<String, dynamic> toJson() {
     return {
@@ -443,12 +450,7 @@ class ComicDetails with HistoryMixin {
 
   final List<String>? thumbnails;
 
-  final Future<Res<List<String>>> Function(String id, int page)?
-      thumbnailLoader;
-
-  final int thumbnailMaxPage;
-
-  final List<Comic>? suggestions;
+  final List<Comic>? recommend;
 
   final String sourceKey;
 
@@ -458,36 +460,17 @@ class ComicDetails with HistoryMixin {
 
   final String? subId;
 
-  const ComicDetails(
-      this.title,
-      this.subTitle,
-      this.cover,
-      this.description,
-      this.tags,
-      this.chapters,
-      this.thumbnails,
-      this.thumbnailLoader,
-      this.thumbnailMaxPage,
-      this.suggestions,
-      this.sourceKey,
-      this.comicId,
-      {this.isFavorite,
-      this.subId});
+  final bool? isLiked;
 
-  Map<String, dynamic> toJson() {
-    return {
-      "title": title,
-      "subTitle": subTitle,
-      "cover": cover,
-      "description": description,
-      "tags": tags,
-      "chapters": chapters,
-      "sourceKey": sourceKey,
-      "comicId": comicId,
-      "isFavorite": isFavorite,
-      "subId": subId,
-    };
-  }
+  final int? likesCount;
+
+  final int? commentsCount;
+
+  final String? uploader;
+
+  final String? uploadTime;
+
+  final String? updateTime;
 
   static Map<String, List<String>> _generateMap(Map<String, dynamic> map) {
     var res = <String, List<String>>{};
@@ -503,15 +486,23 @@ class ComicDetails with HistoryMixin {
         cover = json["cover"],
         description = json["description"],
         tags = _generateMap(json["tags"]),
-        chapters = Map<String, String>.from(json["chapters"]),
+        chapters = json["chapters"] == null
+            ? null
+            : Map<String, String>.from(json["chapters"]),
         sourceKey = json["sourceKey"],
         comicId = json["comicId"],
-        thumbnails = null,
-        thumbnailLoader = null,
-        thumbnailMaxPage = 0,
-        suggestions = null,
+        thumbnails = ListOrNull.from(json["thumbnails"]),
+        recommend = (json["recommend"] as List?)
+            ?.map((e) => Comic.fromJson(e, json["sourceKey"]))
+            .toList(),
         isFavorite = json["isFavorite"],
-        subId = json["subId"];
+        subId = json["subId"],
+        likesCount = json["likesCount"],
+        isLiked = json["isLiked"],
+        commentsCount = json["commentsCount"],
+        uploader = json["uploader"],
+        uploadTime = json["uploadTime"],
+        updateTime = json["updateTime"];
 
   @override
   HistoryType get historyType => HistoryType(sourceKey.hashCode);

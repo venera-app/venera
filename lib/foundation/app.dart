@@ -64,6 +64,8 @@ class _App {
       'green' => Colors.green,
       'orange' => Colors.orange,
       'blue' => Colors.blue,
+      'yellow' => Colors.yellow,
+      'cyan' => Colors.cyan,
       _ => Colors.blue,
     };
   }
