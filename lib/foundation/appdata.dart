@@ -5,18 +5,53 @@ import 'package:venera/utils/io.dart';
 
 class _Appdata {
   final _Settings settings = _Settings();
+
+  var searchHistory = <String>[];
   
-  void saveSettings() async {
-    var data = jsonEncode(settings._data);
-    var file = File(FilePath.join(App.dataPath, 'settings.json'));
+  void saveData() async {
+    var data = jsonEncode(toJson());
+    var file = File(FilePath.join(App.dataPath, 'appdata.json'));
     await file.writeAsString(data);
   }
 
+  void addSearchHistory(String keyword) {
+    if(searchHistory.contains(keyword)) {
+      searchHistory.remove(keyword);
+    }
+    searchHistory.insert(0, keyword);
+    if(searchHistory.length > 50) {
+      searchHistory.removeLast();
+    }
+    saveData();
+  }
+
+  void removeSearchHistory(String keyword) {
+    searchHistory.remove(keyword);
+    saveData();
+  }
+
+  void clearSearchHistory() {
+    searchHistory.clear();
+    saveData();
+  }
+
   Future<void> init() async {
-    var json = jsonDecode(await File(FilePath.join(App.dataPath, 'settings.json')).readAsString()) as Map<String, dynamic>;
-    for(var key in json.keys) {
+    var file = File(FilePath.join(App.dataPath, 'appdata.json'));
+    if(!await file.exists()) {
+      return;
+    }
+    var json = jsonDecode(await file.readAsString());
+    for(var key in json['settings'].keys) {
       settings[key] = json[key];
     }
+    searchHistory = List.from(json['searchHistory']);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'settings': settings._data,
+      'searchHistory': searchHistory,
+    };
   }
 }
 
@@ -39,6 +74,7 @@ class _Settings {
     'showFavoriteStatusOnTile': true,
     'showHistoryStatusOnTile': false,
     'blockedWords': [],
+    'defaultSearchTarget': null,
   };
 
   operator[](String key) {

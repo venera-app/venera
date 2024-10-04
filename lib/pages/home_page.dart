@@ -6,11 +6,13 @@ import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/comic_source_page.dart';
+import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -19,13 +21,49 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SmoothCustomScrollView(
+    var widget = const SmoothCustomScrollView(
       slivers: [
+        _SearchBar(),
         _History(),
         _Local(),
         _ComicSourceWidget(),
         _AccountsWidget(),
       ],
+    );
+    return context.width > changePoint ? widget.paddingHorizontal(8) : widget;
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 52,
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Material(
+          color: context.colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(32),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(32),
+            onTap: () {
+              context.to(() => const SearchPage());
+            },
+            child: Row(
+              children: [
+                const SizedBox(width: 16),
+                const Icon(Icons.search),
+                const SizedBox(width: 8),
+                Text('Search'.tl, style: ts.s16),
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -65,17 +103,18 @@ class _HistoryState extends State<_History> {
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: InkWell(
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6,
-              ),
-            ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
           ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {},
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -182,17 +221,18 @@ class _LocalState extends State<_Local> {
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: InkWell(
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6,
-              ),
-            ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
           ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {},
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -320,7 +360,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
-          )
+            )
           : Column(
               key: key,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,20 +451,20 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     });
     final picker = DirectoryPicker();
     final path = await picker.pickDirectory();
-    if(!loading) {
+    if (!loading) {
       picker.dispose();
       return;
     }
-    if(path == null) {
+    if (path == null) {
       setState(() {
         loading = false;
       });
       return;
     }
     Map<Directory, LocalComic> comics = {};
-    if(type == 0) {
+    if (type == 0) {
       var result = await checkSingleComic(path);
-      if(result != null) {
+      if (result != null) {
         comics[path] = result;
       } else {
         context.showMessage(message: "Invalid Comic".tl);
@@ -434,31 +474,30 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
         return;
       }
     } else {
-      await for(var entry in path.list()) {
-        if(entry is Directory) {
+      await for (var entry in path.list()) {
+        if (entry is Directory) {
           var result = await checkSingleComic(entry);
-          if(result != null) {
+          if (result != null) {
             comics[entry] = result;
           }
         }
       }
     }
     bool shouldCopy = true;
-    for(var comic in comics.keys) {
-      if(comic.parent.path == LocalManager().path) {
+    for (var comic in comics.keys) {
+      if (comic.parent.path == LocalManager().path) {
         shouldCopy = false;
         break;
       }
     }
-    if(shouldCopy && comics.isNotEmpty) {
+    if (shouldCopy && comics.isNotEmpty) {
       try {
         // copy the comics to the local directory
         await compute<Map<String, dynamic>, void>(_copyDirectories, {
           'toBeCopied': comics.keys.map((e) => e.path).toList(),
           'destination': LocalManager().path,
         });
-      }
-      catch(e) {
+      } catch (e) {
         context.showMessage(message: "Failed to import comics".tl);
         Log.error("Import Comic", e.toString());
         setState(() {
@@ -467,11 +506,12 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
         return;
       }
     }
-    for(var comic in comics.values) {
+    for (var comic in comics.values) {
       LocalManager().add(comic, LocalManager().findValidId(ComicType.local));
     }
     context.pop();
-    context.showMessage(message: "Imported @a comics".tlParams({
+    context.showMessage(
+        message: "Imported @a comics".tlParams({
       'a': comics.length,
     }));
   }
@@ -479,14 +519,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
   static _copyDirectories(Map<String, dynamic> data) {
     var toBeCopied = data['toBeCopied'] as List<String>;
     var destination = data['destination'] as String;
-    for(var dir in toBeCopied) {
+    for (var dir in toBeCopied) {
       var source = Directory(dir);
       var dest = Directory("$destination/${source.name}");
-      if(dest.existsSync()) {
+      if (dest.existsSync()) {
         // The destination directory already exists, and it is not managed by the app.
         // Rename the old directory to avoid conflicts.
-        Log.info("Import Comic", "Directory already exists: ${source.name}\nRenaming the old directory.");
-        dest.rename(findValidDirectoryName(dest.parent.path, "${dest.path}_old"));
+        Log.info("Import Comic",
+            "Directory already exists: ${source.name}\nRenaming the old directory.");
+        dest.rename(
+            findValidDirectoryName(dest.parent.path, "${dest.path}_old"));
       }
       dest.createSync();
       copyDirectory(source, dest);
@@ -494,47 +536,49 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
   }
 
   Future<LocalComic?> checkSingleComic(Directory directory) async {
-    if(!(await directory.exists())) return null;
+    if (!(await directory.exists())) return null;
     var name = directory.name;
     bool hasChapters = false;
     var chapters = <String>[];
     var coverPath = ''; // relative path to the cover image
-    await for(var entry in directory.list()) {
-      if(entry is Directory) {
+    await for (var entry in directory.list()) {
+      if (entry is Directory) {
         hasChapters = true;
-        if(LocalManager().findByName(entry.name) != null) {
+        if (LocalManager().findByName(entry.name) != null) {
           Log.info("Import Comic", "Comic already exists: $name");
           return null;
         }
         chapters.add(entry.name);
-        await for(var file in entry.list()) {
-          if(file is Directory) {
-            Log.info("Import Comic", "Invalid Chapter: ${entry.name}\nA directory is found in the chapter directory.");
+        await for (var file in entry.list()) {
+          if (file is Directory) {
+            Log.info("Import Comic",
+                "Invalid Chapter: ${entry.name}\nA directory is found in the chapter directory.");
             return null;
           }
         }
-      } else if(entry is File){
-        if(entry.name.startsWith('cover')) {
+      } else if (entry is File) {
+        if (entry.name.startsWith('cover')) {
           coverPath = entry.name;
         }
         const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'];
-        if(!coverPath.startsWith('cover') && imageExtensions.contains(entry.extension)) {
+        if (!coverPath.startsWith('cover') &&
+            imageExtensions.contains(entry.extension)) {
           coverPath = entry.name;
         }
       }
     }
     chapters.sort();
-    if(hasChapters && coverPath == '') {
+    if (hasChapters && coverPath == '') {
       // use the first image in the first chapter as the cover
       var firstChapter = Directory('${directory.path}/${chapters.first}');
-      await for(var entry in firstChapter.list()) {
-        if(entry is File) {
+      await for (var entry in firstChapter.list()) {
+        if (entry is File) {
           coverPath = entry.name;
           break;
         }
       }
     }
-    if(coverPath == '') {
+    if (coverPath == '') {
       Log.info("Import Comic", "Invalid Comic: $name\nNo cover image found.");
       return null;
     }
@@ -584,19 +628,20 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: InkWell(
-        onTap: () {
-          context.to(() => const ComicSourcePage());
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6,
-              ),
-            ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
           ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            context.to(() => const ComicSourcePage());
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -615,14 +660,15 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                         color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(comicSources.length.toString(), style: ts.s12),
+                      child:
+                          Text(comicSources.length.toString(), style: ts.s12),
                     ),
                     const Spacer(),
                     const Icon(Icons.arrow_right),
                   ],
                 ),
               ).paddingHorizontal(16),
-              if(comicSources.isNotEmpty)
+              if (comicSources.isNotEmpty)
                 SizedBox(
                   width: double.infinity,
                   child: Wrap(
@@ -633,7 +679,8 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(e),
@@ -661,8 +708,8 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
 
   void onComicSourceChange() {
     setState(() {
-      for(var c in ComicSource.all()) {
-        if(c.isLogged) {
+      for (var c in ComicSource.all()) {
+        if (c.isLogged) {
           accounts.add(c.name);
         }
       }
@@ -672,8 +719,8 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
   @override
   void initState() {
     accounts = [];
-    for(var c in ComicSource.all()) {
-      if(c.isLogged) {
+    for (var c in ComicSource.all()) {
+      if (c.isLogged) {
         accounts.add(c.name);
       }
     }
@@ -690,17 +737,18 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: InkWell(
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6,
-              ),
-            ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
           ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {},
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

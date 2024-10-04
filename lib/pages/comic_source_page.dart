@@ -314,7 +314,7 @@ class _BodyState extends State<_Body> {
     var comicSource = await ComicSourceParser().createAndParse(js, fileName);
     ComicSource.add(comicSource);
     _addAllPagesWithComicSource(comicSource);
-    appdata.saveSettings();
+    appdata.saveData();
     App.forceRebuild();
   }
 }
@@ -429,7 +429,7 @@ void _validatePages() {
   appdata.settings['categories'] = categoryPages.toSet().toList();
   appdata.settings['favorites'] = networkFavorites.toSet().toList();
 
-  appdata.saveSettings();
+  appdata.saveData();
 }
 
 void _addAllPagesWithComicSource(ComicSource source) {
@@ -457,5 +457,5 @@ void _addAllPagesWithComicSource(ComicSource source) {
   appdata.settings['categories'] = categoryPages.toSet().toList();
   appdata.settings['favorites'] = networkFavorites.toSet().toList();
 
-  appdata.saveSettings();
+  appdata.saveData();
 }

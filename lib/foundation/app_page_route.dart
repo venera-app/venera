@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:venera/components/components.dart';
 
 const double _kBackGestureWidth = 20.0;
 const int _kMaxDroppedSwipePageForwardAnimationTime = 800;
@@ -35,7 +36,11 @@ class AppPageRoute<T> extends PageRoute<T> with _AppRouteTransitionMixin{
   @override
   Widget buildContent(BuildContext context) {
     var widget = builder(context);
-    label = widget.runtimeType.toString();
+    if(widget is NaviPaddingWidget) {
+      label = widget.child.runtimeType.toString();
+    } else {
+      label = widget.runtimeType.toString();
+    }
     return widget;
   }
 

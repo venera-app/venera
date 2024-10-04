@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:venera/pages/categories_page.dart';
+import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/translations.dart';
 
 import '../components/components.dart';
@@ -48,6 +49,8 @@ class _MainPageState extends State<MainPage> {
     const CategoriesPage(),
   ];
 
+  var index = 0;
+
   @override
   Widget build(BuildContext context) {
     return NaviPane(
@@ -75,11 +78,14 @@ class _MainPageState extends State<MainPage> {
         ),
       ],
       paneActions: [
-        PaneActionEntry(
-          icon: Icons.search,
-          label: "Search".tl,
-          onTap: () {},
-        ),
+        if(index != 0)
+          PaneActionEntry(
+            icon: Icons.search,
+            label: "Search".tl,
+            onTap: () {
+              to(() => const SearchPage());
+            },
+          ),
         PaneActionEntry(
           icon: Icons.settings,
           label: "Settings".tl,
@@ -100,6 +106,9 @@ class _MainPageState extends State<MainPage> {
         );
       },
       onPageChange: (index) {
+        setState(() {
+          this.index = index;
+        });
         _navigatorKey!.currentState?.pushAndRemoveUntil(
           AppPageRoute(
             preventRebuild: false,

@@ -233,88 +233,6 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class FloatingSearchBar extends StatefulWidget {
-  const FloatingSearchBar({
-    super.key,
-    this.height = 56,
-    this.trailing,
-    required this.onSearch,
-    required this.controller,
-    this.onChanged,
-  });
-
-  /// height of search bar
-  final double height;
-
-  /// end of search bar
-  final Widget? trailing;
-
-  /// callback when user do search
-  final void Function(String) onSearch;
-
-  /// controller of [TextField]
-  final TextEditingController controller;
-
-  final void Function(String)? onChanged;
-
-  @override
-  State<FloatingSearchBar> createState() => _FloatingSearchBarState();
-}
-
-class _FloatingSearchBarState extends State<FloatingSearchBar> {
-  double get effectiveHeight {
-    return math.max(widget.height, 53);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    var text = widget.controller.text;
-    if (text.isEmpty) {
-      text = "Search";
-    }
-    var padding = 12.0;
-    return Container(
-      padding: EdgeInsets.fromLTRB(padding, 9, padding, 0),
-      width: double.infinity,
-      height: effectiveHeight,
-      child: Material(
-        elevation: 0,
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(effectiveHeight / 2),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(children: [
-            Tooltip(
-              message: "返回".tl,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: TextField(
-                  controller: widget.controller,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
-                  onSubmitted: (s) {
-                    widget.onSearch(s);
-                  },
-                  onChanged: widget.onChanged,
-                ),
-              ),
-            ),
-            if (widget.trailing != null) widget.trailing!
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
 class FilledTabBar extends StatefulWidget {
   const FilledTabBar({super.key, this.controller, required this.tabs});
 
@@ -420,21 +338,18 @@ class _FilledTabBarState extends State<FilledTabBar> {
       },
     );
     return Container(
-      key: tabBarKey,
-      height: _kTabHeight,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: context.colorScheme.outlineVariant,
-            width: 0.6,
+        key: tabBarKey,
+        height: _kTabHeight,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: context.colorScheme.outlineVariant,
+              width: 0.6,
+            ),
           ),
         ),
-      ),
-      child: widget.tabs.isEmpty
-          ? const SizedBox()
-          : child
-    );
+        child: widget.tabs.isEmpty ? const SizedBox() : child);
   }
 
   int? previousIndex;
@@ -482,11 +397,11 @@ class _FilledTabBarState extends State<FilledTabBar> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: DefaultTextStyle(
             style: DefaultTextStyle.of(context).style.copyWith(
-              color: i == _controller.index
-                  ? context.colorScheme.primary
-                  : context.colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: i == _controller.index
+                      ? context.colorScheme.primary
+                      : context.colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
             child: widget.tabs[i],
           ),
         ),
@@ -611,13 +526,249 @@ class _IndicatorPainter extends CustomPainter {
     final Rect toRect = indicatorRect(size, to);
     _currentRect = Rect.lerp(fromRect, toRect, (value - from).abs());
     final Paint paint = Paint()..color = color;
-    final RRect rrect =
-        RRect.fromRectAndCorners(_currentRect!, topLeft: Radius.circular(radius), topRight: Radius.circular(radius));
+    final RRect rrect = RRect.fromRectAndCorners(_currentRect!,
+        topLeft: Radius.circular(radius), topRight: Radius.circular(radius));
     canvas.drawRRect(rrect, paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
+  }
+}
+
+class SearchBarController {
+  _SearchBarMixin? _state;
+
+  final void Function(String text)? onSearch;
+
+  final String initialText;
+
+  void setText(String text) {
+    _state?.setText(text);
+  }
+
+  String get text => _state?.getText() ?? '';
+
+  SearchBarController({this.onSearch, this.initialText = ''});
+}
+
+abstract mixin class _SearchBarMixin {
+  void setText(String text);
+
+  String getText();
+}
+
+class SliverSearchBar extends StatefulWidget {
+  const SliverSearchBar({super.key, required this.controller});
+
+  final SearchBarController controller;
+
+  @override
+  State<SliverSearchBar> createState() => _SliverSearchBarState();
+}
+
+class _SliverSearchBarState extends State<SliverSearchBar>
+    with _SearchBarMixin {
+  late TextEditingController _editingController;
+
+  late SearchBarController _controller;
+
+  @override
+  void initState() {
+    _controller = widget.controller;
+    _controller._state = this;
+    _editingController = TextEditingController(text: _controller.initialText);
+    super.initState();
+  }
+
+  @override
+  void setText(String text) {
+    _editingController.text = text;
+  }
+
+  @override
+  String getText() {
+    return _editingController.text;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPersistentHeader(
+      delegate: _SliverSearchBarDelegate(
+        editingController: _editingController,
+        controller: _controller,
+        topPadding: MediaQuery.of(context).padding.top,
+      ),
+    );
+  }
+}
+
+class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController editingController;
+
+  final SearchBarController controller;
+
+  final double topPadding;
+
+  const _SliverSearchBarDelegate({
+    required this.editingController,
+    required this.controller,
+    required this.topPadding,
+  });
+
+  static const _kAppBarHeight = 52.0;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      height: _kAppBarHeight + topPadding,
+      width: double.infinity,
+      padding: EdgeInsets.only(top: topPadding),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          const BackButton(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: TextField(
+                controller: editingController,
+                decoration: InputDecoration(
+                  hintText: "Search".tl,
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (text) {
+                  controller.onSearch?.call(text);
+                },
+              ),
+            ),
+          ),
+          ListenableBuilder(
+            listenable: editingController,
+            builder: (context, child) {
+              return editingController.text.isEmpty
+                  ? const SizedBox()
+                  : IconButton(
+                      iconSize: 20,
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        editingController.clear();
+                      },
+                    );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => _kAppBarHeight + topPadding;
+
+  @override
+  double get minExtent => _kAppBarHeight + topPadding;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return oldDelegate is! _SliverSearchBarDelegate ||
+        editingController != oldDelegate.editingController ||
+        controller != oldDelegate.controller ||
+        topPadding != oldDelegate.topPadding;
+  }
+}
+
+class AppSearchBar extends StatefulWidget {
+  const AppSearchBar({super.key, required this.controller});
+
+  final SearchBarController controller;
+
+  @override
+  State<AppSearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<AppSearchBar> with _SearchBarMixin {
+  late TextEditingController _editingController;
+
+  late SearchBarController _controller;
+
+  @override
+  void setText(String text) {
+    _editingController.text = text;
+  }
+
+  @override
+  String getText() {
+    return _editingController.text;
+  }
+
+  @override
+  void initState() {
+    _controller = widget.controller;
+    _controller._state = this;
+    _editingController = TextEditingController(text: _controller.initialText);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Container(
+      height: _kAppBarHeight + topPadding,
+      width: double.infinity,
+      padding: EdgeInsets.only(top: topPadding),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          const BackButton(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: TextField(
+                controller: _editingController,
+                decoration: InputDecoration(
+                  hintText: "Search".tl,
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (text) {
+                  _controller.onSearch?.call(text);
+                },
+              ),
+            ),
+          ),
+          ListenableBuilder(
+            listenable: _editingController,
+            builder: (context, child) {
+              return _editingController.text.isEmpty
+                  ? const SizedBox()
+                  : IconButton(
+                      iconSize: 20,
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _editingController.clear();
+                      },
+                    );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
   }
 }

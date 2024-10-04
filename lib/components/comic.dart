@@ -505,6 +505,7 @@ class ComicList extends StatefulWidget {
     this.loadNext,
     this.leadingSliver,
     this.trailingSliver,
+    this.errorLeading,
   });
 
   final Future<Res<List<Comic>>> Function(int page)? loadPage;
@@ -514,6 +515,8 @@ class ComicList extends StatefulWidget {
   final Widget? leadingSliver;
 
   final Widget? trailingSliver;
+
+  final Widget? errorLeading;
 
   @override
   State<ComicList> createState() => _ComicListState();
@@ -691,6 +694,7 @@ class _ComicListState extends State<ComicList> {
     if (error != null) {
       return Column(
         children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
           buildPageSelector(),
           Expanded(
             child: NetworkError(
@@ -717,7 +721,8 @@ class _ComicListState extends State<ComicList> {
         if (widget.leadingSliver != null) widget.leadingSliver!,
         buildSliverPageSelector(),
         SliverGridComics(comics: data[page] ?? const []),
-        buildSliverPageSelector(),
+        if(data[page]!.length > 6)
+          buildSliverPageSelector(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );
