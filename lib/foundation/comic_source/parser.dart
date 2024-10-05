@@ -136,6 +136,7 @@ class ComicSourceParser {
     final favoriteData = _loadFavoriteData();
     final commentsLoader = _parseCommentsLoader();
     final sendCommentFunc = _parseSendCommentFunc();
+    final likeFunc = _parseLikeFunc();
 
     var source = ComicSource(
       _name!,
@@ -158,6 +159,7 @@ class ComicSourceParser {
       version ?? "1.0.0",
       commentsLoader,
       sendCommentFunc,
+      likeFunc,
     );
 
     await source.loadData();
@@ -648,6 +650,23 @@ class ComicSourceParser {
           ComicSource.sources.$_key.comic.loadThumbnail(${jsonEncode(id)}, ${jsonEncode(next)})
         """);
         return Res(List<String>.from(res['thumbnails']), subData: res['next']);
+      } catch (e, s) {
+        Log.error("Network", "$e\n$s");
+        return Res.error(e.toString());
+      }
+    };
+  }
+
+  LikeOrUnlikeComicFunc? _parseLikeFunc() {
+    if (!_checkExists("comic.likeOrUnlikeComic")) {
+      return null;
+    }
+    return (id, isLiking) async {
+      try {
+        await JsEngine().runCode("""
+          ComicSource.sources.$_key.comic.likeOrUnlikeComic(${jsonEncode(id)}, ${jsonEncode(isLiking)})
+        """);
+        return const Res(true);
       } catch (e, s) {
         Log.error("Network", "$e\n$s");
         return Res.error(e.toString());

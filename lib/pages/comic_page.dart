@@ -86,6 +86,12 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     return comicSource!.loadComicInfo!(widget.id);
   }
 
+  @override
+  onDataLoaded() {
+    isLiked = comic.isLiked ?? false;
+    isFavorite = comic.isFavorite ?? false;
+  }
+
   Iterable<Widget> buildTitle() sync* {
     yield SliverAppbar(
       title: AnimatedOpacity(
@@ -171,9 +177,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 _ActionButton(
                   icon: const Icon(Icons.favorite_border),
                   activeIcon: const Icon(Icons.favorite),
-                  isActive: data!.isLiked,
+                  isActive: isLiked,
                   text: (data!.likesCount ??
-                          (comic.isLiked! ? 'Liked'.tl : 'Like'.tl))
+                          (isLiked ? 'Liked'.tl : 'Like'.tl))
                       .toString(),
                   isLoading: isLiking,
                   onPressed: likeOrUnlike,
@@ -182,18 +188,16 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               _ActionButton(
                 icon: const Icon(Icons.bookmark_border),
                 activeIcon: const Icon(Icons.bookmark),
-                isActive: (data!.isFavorite ?? false) || isAddToLocalFav,
+                isActive: isFavorite || isAddToLocalFav,
                 text: 'Favorite'.tl,
-                isLoading: isFavoriting,
-                onPressed: favoriteOrUnfavorite,
+                onPressed: openFavPanel,
                 iconColor: context.useTextColor(Colors.purple),
               ),
               if (comicSource.commentsLoader != null)
                 _ActionButton(
                   icon: const Icon(Icons.comment),
                   text: (comic.commentsCount ?? 'Comments'.tl).toString(),
-                  isLoading: isFavoriting,
-                  onPressed: favoriteOrUnfavorite,
+                  onPressed: showComments,
                   iconColor: context.useTextColor(Colors.green),
                 ),
               _ActionButton(
@@ -397,13 +401,27 @@ abstract mixin class _ComicPageActions {
 
   bool isLiking = false;
 
-  void likeOrUnlike() {}
+  bool isLiked = false;
+
+  void likeOrUnlike() async {
+    if(isLiking)  return;
+    isLiking = true;
+    update();
+    var res = await comicSource.likeOrUnlikeComic!(comic.id, isLiked ?? false);
+    if(res.error) {
+      App.rootContext.showMessage(message: res.errorMessage!);
+    } else {
+      isLiked = !isLiked;
+    }
+    isLiking = false;
+    update();
+  }
 
   bool isAddToLocalFav = false;
 
-  bool isFavoriting = false;
+  bool isFavorite = false;
 
-  void favoriteOrUnfavorite() {}
+  void openFavPanel() {}
 
   void share() {}
 
@@ -421,6 +439,8 @@ abstract mixin class _ComicPageActions {
   void onTagTap(String tag, String namespace) {}
 
   void showMoreActions() {}
+
+  void showComments() {}
 }
 
 class _ActionButton extends StatelessWidget {
@@ -460,7 +480,11 @@ class _ActionButton extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: onPressed,
+        onTap: () {
+          if(!(isLoading ?? false)) {
+            onPressed();
+          }
+        },
         borderRadius: BorderRadius.circular(18),
         child: IconTheme.merge(
           data: IconThemeData(size: 20, color: iconColor),

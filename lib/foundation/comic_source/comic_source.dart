@@ -3,7 +3,6 @@ library comic_source;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
@@ -44,6 +43,8 @@ typedef GetThumbnailLoadingConfigFunc = Map<String, dynamic> Function(
     String imageKey)?;
 
 typedef ComicThumbnailLoader = Future<Res<List<String>>> Function(String comicId, String? next);
+
+typedef LikeOrUnlikeComicFunc = Future<Res<bool>> Function(String comicId, bool isLiking);
 
 class ComicSource {
   static final List<ComicSource> _sources = [];
@@ -171,6 +172,8 @@ class ComicSource {
 
   final RegExp? idMatcher;
 
+  final LikeOrUnlikeComicFunc? likeOrUnlikeComic;
+
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
     if (await file.exists()) {
@@ -229,7 +232,8 @@ class ComicSource {
       this.url,
       this.version,
       this.commentsLoader,
-      this.sendCommentFunc)
+      this.sendCommentFunc,
+      this.likeOrUnlikeComic)
       : idMatcher = null;
 
   ComicSource.unknown(this.key)
@@ -252,7 +256,8 @@ class ComicSource {
         version = "",
         commentsLoader = null,
         sendCommentFunc = null,
-        idMatcher = null;
+        idMatcher = null,
+        likeOrUnlikeComic = null;
 }
 
 class AccountConfig {
