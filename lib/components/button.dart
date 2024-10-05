@@ -195,6 +195,9 @@ class _ButtonState extends State<Button> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: padding,
+          constraints: const BoxConstraints(
+            minWidth: 76,
+          ),
           decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.circular(16),
@@ -220,7 +223,10 @@ class _ButtonState extends State<Button> {
             child: SizedBox(
               width: width,
               height: height,
-              child: child,
+              child: Center(
+                widthFactor: 1,
+                child: child,
+              ),
             ),
           ),
         ),

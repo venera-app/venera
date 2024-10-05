@@ -8,6 +8,7 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/res.dart';
+import 'package:venera/pages/favorites/favorite_actions.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
 
@@ -152,7 +153,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
-              if(history != null && (history!.ep > 1 || history!.page > 1))
+              if (history != null && (history!.ep > 1 || history!.page > 1))
                 _ActionButton(
                   icon: const Icon(Icons.menu_book),
                   text: 'Continue'.tl,
@@ -178,8 +179,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   icon: const Icon(Icons.favorite_border),
                   activeIcon: const Icon(Icons.favorite),
                   isActive: isLiked,
-                  text: (data!.likesCount ??
-                          (isLiked ? 'Liked'.tl : 'Like'.tl))
+                  text: (data!.likesCount ?? (isLiked ? 'Liked'.tl : 'Like'.tl))
                       .toString(),
                   isLoading: isLiking,
                   onPressed: likeOrUnlike,
@@ -404,11 +404,11 @@ abstract mixin class _ComicPageActions {
   bool isLiked = false;
 
   void likeOrUnlike() async {
-    if(isLiking)  return;
+    if (isLiking) return;
     isLiking = true;
     update();
-    var res = await comicSource.likeOrUnlikeComic!(comic.id, isLiked ?? false);
-    if(res.error) {
+    var res = await comicSource.likeOrUnlikeComic!(comic.id, isLiked);
+    if (res.error) {
       App.rootContext.showMessage(message: res.errorMessage!);
     } else {
       isLiked = !isLiked;
@@ -421,7 +421,33 @@ abstract mixin class _ComicPageActions {
 
   bool isFavorite = false;
 
-  void openFavPanel() {}
+  void openFavPanel() {
+    var tags = <String>[];
+    for (var e in comic.tags.entries) {
+      tags.addAll(e.value.map((tag) => '${e.key}:$tag'));
+    }
+
+    showSideBar(
+      App.rootContext,
+      _FavoritePanel(
+        cid: comic.id,
+        type: comic.comicType,
+        isFavorite: isFavorite,
+        onFavorite: (b) {
+          isFavorite = b;
+          update();
+        },
+        favoriteItem: FavoriteItem(
+          id: comic.id,
+          name: comic.title,
+          coverPath: comic.cover,
+          author: comic.subTitle ?? comic.uploader ?? '',
+          type: comic.comicType,
+          tags: tags,
+        ),
+      ),
+    );
+  }
 
   void share() {}
 
@@ -481,7 +507,7 @@ class _ActionButton extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          if(!(isLoading ?? false)) {
+          if (!(isLoading ?? false)) {
             onPressed();
           }
         },
@@ -654,15 +680,15 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
   bool isLoading = false;
 
   void loadNext() async {
-    if(state.comicSource.loadComicThumbnail == null || isLoading)  return;
-    if(!isInitialLoading && next == null) {
+    if (state.comicSource.loadComicThumbnail == null || isLoading) return;
+    if (!isInitialLoading && next == null) {
       return;
     }
     setState(() {
       isLoading = true;
     });
     var res = await state.comicSource.loadComicThumbnail!(state.comic.id, next);
-    if(res.success) {
+    if (res.success) {
       thumbnails.addAll(res.data);
       next = res.subData;
       isInitialLoading = false;
@@ -674,7 +700,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
 
   @override
   Widget build(BuildContext context) {
-    if(thumbnails.isEmpty) {
+    if (thumbnails.isEmpty) {
       Future.microtask(loadNext);
     }
     return SliverMainAxisGroup(
@@ -740,7 +766,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
             childAspectRatio: 0.65,
           ),
         ),
-        if(isLoading)
+        if (isLoading)
           const SliverToBoxAdapter(
             child: ListLoadingIndicator(),
           ),
@@ -749,5 +775,335 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
         ),
       ],
     );
+  }
+}
+
+class _FavoritePanel extends StatefulWidget {
+  const _FavoritePanel({
+    required this.cid,
+    required this.type,
+    required this.isFavorite,
+    required this.onFavorite,
+    required this.favoriteItem,
+  });
+
+  final String cid;
+
+  final ComicType type;
+
+  /// whether the comic is in the network favorite list
+  ///
+  /// if null, the comic source does not support favorite or support multiple favorite lists
+  final bool? isFavorite;
+
+  final void Function(bool) onFavorite;
+
+  final FavoriteItem favoriteItem;
+
+  @override
+  State<_FavoritePanel> createState() => _FavoritePanelState();
+}
+
+class _FavoritePanelState extends State<_FavoritePanel> {
+  late ComicSource comicSource;
+
+  @override
+  void initState() {
+    comicSource = widget.type.comicSource!;
+    localFolders = LocalFavoritesManager().folderNames;
+    added = LocalFavoritesManager().find(widget.cid, widget.type);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var hasNetwork = comicSource.favoriteData != null && comicSource.isLogged;
+    return Scaffold(
+      appBar: Appbar(
+        title: Text("Favorite".tl),
+      ),
+      body: DefaultTabController(
+        length: comicSource.favoriteData == null ? 1 : 2,
+        child: Column(
+          children: [
+            TabBar(tabs: [
+              Tab(text: "Local".tl),
+              if (hasNetwork) Tab(text: "Network".tl),
+            ]),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  buildLocal(),
+                  if (hasNetwork) buildNetwork(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  late List<String> localFolders;
+
+  late List<String> added;
+
+  var selectedLocalFolders = <String>{};
+
+  Widget buildLocal() {
+    var isRemove = selectedLocalFolders.isNotEmpty &&
+        added.contains(selectedLocalFolders.first);
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: localFolders.length + 1,
+            itemBuilder: (context, index) {
+              if (index == localFolders.length) {
+                return SizedBox(
+                  height: 36,
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () {
+                        newFolder().then((v) {
+                          setState(() {
+                            localFolders = LocalFavoritesManager().folderNames;
+                          });
+                        });
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add, size: 20),
+                          const SizedBox(width: 4),
+                          Text("New Folder".tl)
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+              var folder = localFolders[index];
+              var disabled = false;
+              if (selectedLocalFolders.isNotEmpty) {
+                if (added.contains(folder) &&
+                    !added.contains(selectedLocalFolders.first)) {
+                  disabled = true;
+                } else if (!added.contains(folder) &&
+                    added.contains(selectedLocalFolders.first)) {
+                  disabled = true;
+                }
+              }
+              return CheckboxListTile(
+                title: Row(
+                  children: [
+                    Text(folder),
+                    const SizedBox(width: 8),
+                    if (added.contains(folder))
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text("Added".tl, style: ts.s12),
+                      ),
+                  ],
+                ),
+                value: selectedLocalFolders.contains(folder),
+                onChanged: disabled
+                    ? null
+                    : (v) {
+                        setState(() {
+                          if (v!) {
+                            selectedLocalFolders.add(folder);
+                          } else {
+                            selectedLocalFolders.remove(folder);
+                          }
+                        });
+                      },
+              );
+            },
+          ),
+        ),
+        Center(
+          child: FilledButton(
+            onPressed: () {
+              if (selectedLocalFolders.isEmpty) {
+                return;
+              }
+              if (isRemove) {
+                for (var folder in selectedLocalFolders) {
+                  LocalFavoritesManager()
+                      .deleteComicWithId(folder, widget.cid, widget.type);
+                }
+              } else {
+                for (var folder in selectedLocalFolders) {
+                  LocalFavoritesManager().addComic(folder, widget.favoriteItem);
+                }
+              }
+              context.pop();
+            },
+            child: isRemove ? Text("Remove".tl) : Text("Add".tl),
+          ).paddingVertical(8),
+        ),
+      ],
+    );
+  }
+
+  Widget buildNetwork() {
+    return _NetworkFavorites(
+      cid: widget.cid,
+      comicSource: comicSource,
+      isFavorite: widget.isFavorite,
+    );
+  }
+}
+
+class _NetworkFavorites extends StatefulWidget {
+  const _NetworkFavorites(
+      {required this.cid, required this.comicSource, required this.isFavorite});
+
+  final String cid;
+
+  final ComicSource comicSource;
+
+  final bool? isFavorite;
+
+  @override
+  State<_NetworkFavorites> createState() => _NetworkFavoritesState();
+}
+
+class _NetworkFavoritesState extends State<_NetworkFavorites> {
+  @override
+  Widget build(BuildContext context) {
+    bool isMultiFolder = widget.comicSource.favoriteData!.loadFolders != null;
+
+    return isMultiFolder ? buildMultiFolder() : buildSingleFolder();
+  }
+
+  bool isLoading = false;
+
+  Widget buildSingleFolder() {
+    var isFavorite = widget.isFavorite ?? false;
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Text(isFavorite ? "Added to favorites".tl : "Not added".tl),
+          ),
+        ),
+        Center(
+          child: Button.filled(
+            isLoading: isLoading,
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+              var res = await widget.comicSource.favoriteData!
+                  .addOrDelFavorite!(widget.cid, '', !isFavorite);
+              if (res.success) {
+                context.pop();
+              } else {
+                setState(() {
+                  isLoading = false;
+                });
+                context.showMessage(message: res.errorMessage!);
+              }
+            },
+            child: isFavorite ? Text("Remove".tl) : Text("Add".tl),
+          ).paddingVertical(8),
+        ),
+      ],
+    );
+  }
+
+  Map<String, String>? folders;
+
+  var addedFolders = <String>{};
+
+  var isLoadingFolders = true;
+
+  // for network favorites, only one selection is allowed
+  String? selected;
+
+  void loadFolders() async {
+    var res = await widget.comicSource.favoriteData!.loadFolders!(widget.cid);
+    if (res.error) {
+      context.showMessage(message: res.errorMessage!);
+    } else {
+      folders = res.data;
+      if (res.subData is List) {
+        addedFolders = List<String>.from(res.subData).toSet();
+      }
+      setState(() {
+        isLoadingFolders = false;
+      });
+    }
+  }
+
+  Widget buildMultiFolder() {
+    if (isLoadingFolders) {
+      loadFolders();
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: folders!.length,
+              itemBuilder: (context, index) {
+                var name = folders!.values.elementAt(index);
+                var id = folders!.keys.elementAt(index);
+                return CheckboxListTile(
+                  title: Row(
+                    children: [
+                      Text(name),
+                      const SizedBox(width: 8),
+                      if (addedFolders.contains(id))
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text("Added".tl, style: ts.s12),
+                        ),
+                    ],
+                  ),
+                  value: selected == id,
+                  onChanged: (v) {
+                    setState(() {
+                      selected = id;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+          Center(
+            child: FilledButton(
+              onPressed: () {
+                if (selected == null) {
+                  return;
+                }
+                widget.comicSource.favoriteData!.addOrDelFavorite!(
+                    widget.cid, selected!, !addedFolders.contains(selected!));
+                context.pop();
+              },
+              child: addedFolders.contains(selected!)
+                  ? Text("Remove".tl)
+                  : Text("Add".tl),
+            ).paddingVertical(8),
+          ),
+        ],
+      );
+    }
   }
 }

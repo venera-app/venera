@@ -96,7 +96,7 @@ class LocalFavoritesManager {
     """);
   }
 
-  Future<List<String>> find(String id, ComicType type) async {
+  List<String> find(String id, ComicType type) {
     var res = <String>[];
     for (var folder in folderNames) {
       var rows = _db.select("""

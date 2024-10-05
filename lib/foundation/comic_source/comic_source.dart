@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/utils/ext.dart';
@@ -514,6 +515,8 @@ class ComicDetails with HistoryMixin {
 
   @override
   String get id => comicId;
+
+  ComicType get comicType => ComicType(sourceKey.hashCode);
 }
 
 typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(
