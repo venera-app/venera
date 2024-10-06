@@ -99,11 +99,13 @@ class Button extends StatefulWidget {
 
   static Widget icon(
       {Key? key,
-      required Widget icon,
-      required VoidCallback onPressed,
-      double? size,
-      Color? color,
-      String? tooltip}) {
+        required Widget icon,
+        required VoidCallback onPressed,
+        double? size,
+        Color? color,
+        String? tooltip,
+        bool isLoading = false,
+        HitTestBehavior behavior = HitTestBehavior.deferToChild}) {
     return _IconButton(
       key: key,
       icon: icon,
@@ -111,6 +113,8 @@ class Button extends StatefulWidget {
       size: size,
       color: color,
       tooltip: tooltip,
+      behavior: behavior,
+      isLoading: isLoading,
     );
   }
 
@@ -262,13 +266,16 @@ class _ButtonState extends State<Button> {
 }
 
 class _IconButton extends StatefulWidget {
-  const _IconButton(
-      {super.key,
-      required this.icon,
-      required this.onPressed,
-      this.size,
-      this.color,
-      this.tooltip});
+  const _IconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.size,
+    this.color,
+    this.tooltip,
+    this.isLoading = false,
+    this.behavior = HitTestBehavior.deferToChild,
+  });
 
   final Widget icon;
 
@@ -280,6 +287,10 @@ class _IconButton extends StatefulWidget {
 
   final Color? color;
 
+  final HitTestBehavior behavior;
+
+  final bool isLoading;
+
   @override
   State<_IconButton> createState() => _IconButtonState();
 }
@@ -289,24 +300,43 @@ class _IconButtonState extends State<_IconButton> {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: widget.onPressed,
-      mouseCursor: SystemMouseCursors.click,
-      customBorder: const CircleBorder(),
-      child: Tooltip(
-        message: widget.tooltip ?? "",
-        child: Container(
-          decoration: BoxDecoration(
-            color:
-                isHover ? Theme.of(context).colorScheme.surfaceContainer : null,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.all(6),
-          child: IconTheme(
-            data: IconThemeData(
-                size: widget.size ?? 24,
-                color: widget.color ?? context.colorScheme.primary),
-            child: widget.icon,
+    var iconSize = widget.size ?? 24;
+    Widget icon = IconTheme(
+      data: IconThemeData(
+        size: iconSize,
+        color: widget.color ?? context.colorScheme.primary,
+      ),
+      child: widget.icon,
+    );
+    if (widget.isLoading) {
+      icon = const CircularProgressIndicator(
+        strokeWidth: 1.5,
+      ).paddingAll(2).fixWidth(iconSize).fixHeight(iconSize);
+    }
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHover = true),
+      onExit: (_) => setState(() => isHover = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: widget.behavior,
+        onTap: () {
+          if (widget.isLoading) return;
+          widget.onPressed();
+        },
+        child: Tooltip(
+          message: widget.tooltip ?? "",
+          child: Container(
+            decoration: BoxDecoration(
+              color: isHover
+                  ? Theme.of(context)
+                  .colorScheme
+                  .outlineVariant
+                  .withOpacity(0.4)
+                  : null,
+              borderRadius: BorderRadius.circular((iconSize + 12) / 2),
+            ),
+            padding: const EdgeInsets.all(6),
+            child: icon,
           ),
         ),
       ),

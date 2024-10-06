@@ -103,8 +103,6 @@ class ComicSourceParser {
         (throw ComicSourceParseException('version is required'));
     var minAppVersion = JsEngine().runCode("this['temp'].minAppVersion");
     var url = JsEngine().runCode("this['temp'].url");
-    var matchBriefIdRegex =
-        JsEngine().runCode("this['temp'].comic.matchBriefIdRegex");
     if (minAppVersion != null) {
       if (compareSemVer(minAppVersion, App.version.split('-').first)) {
         throw ComicSourceParseException(
@@ -123,43 +121,29 @@ class ComicSourceParser {
       ComicSource.sources.$_key = this['temp'];
     """);
 
-    final account = _loadAccountConfig();
-    final explorePageData = _loadExploreData();
-    final categoryPageData = _loadCategoryData();
-    final categoryComicsData = _loadCategoryComicsData();
-    final searchData = _loadSearchData();
-    final loadComicFunc = _parseLoadComicFunc();
-    final loadComicThumbnailFunc = _parseThumbnailLoader();
-    final loadComicPagesFunc = _parseLoadComicPagesFunc();
-    final getImageLoadingConfigFunc = _parseImageLoadingConfigFunc();
-    final getThumbnailLoadingConfigFunc = _parseThumbnailLoadingConfigFunc();
-    final favoriteData = _loadFavoriteData();
-    final commentsLoader = _parseCommentsLoader();
-    final sendCommentFunc = _parseSendCommentFunc();
-    final likeFunc = _parseLikeFunc();
-
     var source = ComicSource(
       _name!,
       key,
-      account,
-      categoryPageData,
-      categoryComicsData,
-      favoriteData,
-      explorePageData,
-      searchData,
+      _loadAccountConfig(),
+      _loadCategoryData(),
+      _loadCategoryComicsData(),
+      _loadFavoriteData(),
+      _loadExploreData(),
+      _loadSearchData(),
       [],
-      loadComicFunc,
-      loadComicThumbnailFunc,
-      loadComicPagesFunc,
-      getImageLoadingConfigFunc,
-      getThumbnailLoadingConfigFunc,
-      matchBriefIdRegex,
+      _parseLoadComicFunc(),
+      _parseThumbnailLoader(),
+      _parseLoadComicPagesFunc(),
+      _parseImageLoadingConfigFunc(),
+      _parseThumbnailLoadingConfigFunc(),
       filePath,
       url ?? "",
       version ?? "1.0.0",
-      commentsLoader,
-      sendCommentFunc,
-      likeFunc,
+      _parseCommentsLoader(),
+      _parseSendCommentFunc(),
+      _parseLikeFunc(),
+      _parseVoteCommentFunc(),
+      _parseLikeCommentFunc(),
     );
 
     await source.loadData();
@@ -571,10 +555,7 @@ class ComicSourceParser {
             ${jsonEncode(id)}, ${jsonEncode(subId)}, ${jsonEncode(page)}, ${jsonEncode(replyTo)})
         """);
         return Res(
-            (res["comments"] as List)
-                .map((e) => Comment(e["userName"], e["avatar"], e["content"],
-                    e["time"], e["replyCount"], e["id"].toString()))
-                .toList(),
+            (res["comments"] as List).map((e) => Comment.fromJson(e)).toList(),
             subData: res["maxPage"]);
       } catch (e, s) {
         Log.error("Network", "$e\n$s");
@@ -667,6 +648,40 @@ class ComicSourceParser {
           ComicSource.sources.$_key.comic.likeOrUnlikeComic(${jsonEncode(id)}, ${jsonEncode(isLiking)})
         """);
         return const Res(true);
+      } catch (e, s) {
+        Log.error("Network", "$e\n$s");
+        return Res.error(e.toString());
+      }
+    };
+  }
+
+  VoteCommentFunc? _parseVoteCommentFunc() {
+    if (!_checkExists("comic.voteComment")) {
+      return null;
+    }
+    return (id, subId, commentId, isUp, isCancel) async {
+      try {
+        var res = await JsEngine().runCode("""
+          ComicSource.sources.$_key.comic.voteComment(${jsonEncode(id)}, ${jsonEncode(subId)}, ${jsonEncode(commentId)}, ${jsonEncode(isUp)}, ${jsonEncode(isCancel)})
+        """);
+        return Res(res is num ? res.toInt() : 0);
+      } catch (e, s) {
+        Log.error("Network", "$e\n$s");
+        return Res.error(e.toString());
+      }
+    };
+  }
+
+  LikeCommentFunc? _parseLikeCommentFunc() {
+    if (!_checkExists("comic.likeComment")) {
+      return null;
+    }
+    return (id, subId, commentId, isLiking) async {
+      try {
+        var res = await JsEngine().runCode("""
+          ComicSource.sources.$_key.comic.likeComment(${jsonEncode(id)}, ${jsonEncode(subId)}, ${jsonEncode(commentId)}, ${jsonEncode(isLiking)})
+        """);
+        return Res(res is num ? res.toInt() : 0);
       } catch (e, s) {
         Log.error("Network", "$e\n$s");
         return Res.error(e.toString());

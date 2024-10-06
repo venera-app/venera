@@ -12,6 +12,8 @@ import 'package:venera/pages/favorites/favorite_actions.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
 
+import 'comments_page.dart';
+
 class ComicPage extends StatefulWidget {
   const ComicPage({super.key, required this.id, required this.sourceKey});
 
@@ -466,7 +468,15 @@ abstract mixin class _ComicPageActions {
 
   void showMoreActions() {}
 
-  void showComments() {}
+  void showComments() {
+    showSideBar(
+      App.rootContext,
+      CommentsPage(
+        data: comic,
+        source: comicSource,
+      ),
+    );
+  }
 }
 
 class _ActionButton extends StatelessWidget {
@@ -1107,3 +1117,4 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
     }
   }
 }
+
