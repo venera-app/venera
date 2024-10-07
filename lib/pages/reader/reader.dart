@@ -1,0 +1,275 @@
+library venera_reader;
+
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
+import 'package:venera/components/components.dart';
+import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/history.dart';
+import 'package:venera/foundation/image_provider/reader_image.dart';
+import 'package:venera/utils/translations.dart';
+import 'package:window_manager/window_manager.dart';
+
+part 'scaffold.dart';
+
+part 'images.dart';
+
+part 'gesture.dart';
+
+extension _ReaderContext on BuildContext {
+  _ReaderState get reader => findAncestorStateOfType<_ReaderState>()!;
+
+  _ReaderScaffoldState get readerScaffold =>
+      findAncestorStateOfType<_ReaderScaffoldState>()!;
+}
+
+class Reader extends StatefulWidget {
+  const Reader({
+    super.key,
+    required this.source,
+    required this.cid,
+    required this.name,
+    required this.chapters,
+    required this.history,
+    this.initialPage,
+    this.initialChapter,
+  });
+
+  final ComicSource source;
+
+  final String cid;
+
+  final String name;
+
+  /// Map<Chapter ID, Chapter Name>.
+  /// null if the comic is a gallery
+  final Map<String, String>? chapters;
+
+  /// Starts from 1, invalid values equal to 1
+  final int? initialPage;
+
+  /// Starts from 1, invalid values equal to 1
+  final int? initialChapter;
+
+  final History history;
+
+  @override
+  State<Reader> createState() => _ReaderState();
+}
+
+class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
+  @override
+  void update() {
+    setState(() {});
+  }
+
+  @override
+  int get maxPage => images?.length ?? 1;
+
+  String get cid => widget.cid;
+
+  String get eid => widget.chapters?.keys.elementAt(chapter - 1) ?? '0';
+
+  List<String>? images;
+
+  late ReaderMode mode;
+
+  History? history;
+
+  @override
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    page = widget.initialPage ?? 1;
+    chapter = widget.initialChapter ?? 1;
+    mode = ReaderMode.fromKey(appdata.settings['readerMode']);
+    history = widget.history;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _ReaderScaffold(
+      child: _ReaderGestureDetector(
+        child: _ReaderImages(key: Key(chapter.toString())),
+      ),
+    );
+  }
+
+  @override
+  int get maxChapter => widget.chapters?.length ?? 1;
+
+  @override
+  void onPageChanged() {
+    updateHistory();
+  }
+
+  void updateHistory() {
+    if(history != null) {
+      history!.page = page;
+      history!.ep = chapter;
+      history!.readEpisode.add(chapter);
+      HistoryManager().addHistory(history!);
+    }
+  }
+}
+
+abstract mixin class _ReaderLocation {
+  int _page = 1;
+
+  int get page => _page;
+
+  set page(int value) {
+    _page = value;
+    onPageChanged();
+  }
+
+  int chapter = 1;
+
+  int get maxPage;
+
+  int get maxChapter;
+
+  bool get isLoading;
+
+  void update();
+
+  bool get enablePageAnimation => appdata.settings['enablePageAnimation'];
+
+  _ImageViewController? _imageViewController;
+
+  void onPageChanged();
+
+  void setPage(int page) {
+    // Prevent page change during animation
+    if (_animationCount > 0) {
+      return;
+    }
+    this.page = page;
+  }
+
+  bool _validatePage(int page) {
+    return page >= 1 && page <= maxPage;
+  }
+
+  /// Returns true if the page is changed
+  bool toNextPage() {
+    return toPage(page + 1);
+  }
+
+  /// Returns true if the page is changed
+  bool toPrevPage() {
+    return toPage(page - 1);
+  }
+
+  int _animationCount = 0;
+
+  bool toPage(int page) {
+    if (_validatePage(page)) {
+      if (page == this.page) {
+        return false;
+      }
+      this.page = page;
+      update();
+      if (enablePageAnimation) {
+        _animationCount++;
+        _imageViewController!.animateToPage(page).then((_) {
+          _animationCount--;
+        });
+      } else {
+        _imageViewController!.toPage(page);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool _validateChapter(int chapter) {
+    return chapter >= 1 && chapter <= maxChapter;
+  }
+
+  /// Returns true if the chapter is changed
+  bool toNextChapter() {
+    return toChapter(chapter + 1);
+  }
+
+  /// Returns true if the chapter is changed
+  bool toPrevChapter() {
+    return toChapter(chapter - 1);
+  }
+
+  bool toChapter(int c) {
+    if (_validateChapter(c) && !isLoading) {
+      chapter = c;
+      page = 1;
+      update();
+      return true;
+    }
+    return false;
+  }
+
+  Timer? autoPageTurningTimer;
+
+  void autoPageTurning() {
+    if (autoPageTurningTimer != null) {
+      autoPageTurningTimer!.cancel();
+      autoPageTurningTimer = null;
+    } else {
+      int interval = appdata.settings['autoPageTurningInterval'];
+      autoPageTurningTimer = Timer.periodic(Duration(seconds: interval), (_) {
+        if (page == maxPage) {
+          autoPageTurningTimer!.cancel();
+        }
+        toNextPage();
+      });
+    }
+  }
+}
+
+mixin class _ReaderWindow {
+  bool isFullscreen = false;
+
+  void fullscreen() {
+    windowManager.setFullScreen(!isFullscreen);
+    isFullscreen = !isFullscreen;
+  }
+}
+
+enum ReaderMode {
+  galleryLeftToRight('galleryLeftToRight'),
+  galleryRightToLeft('galleryRightToLeft'),
+  galleryTopToBottom('galleryTopToBottom'),
+  continuousTopToBottom('continuousTopToBottom'),
+  continuousLeftToRight('continuousLeftToRight'),
+  continuousRightToLeft('continuousRightToLeft');
+
+  final String key;
+
+  bool get isGallery => key.startsWith('gallery');
+
+  const ReaderMode(this.key);
+
+  static ReaderMode fromKey(String key) {
+    for (var mode in values) {
+      if (mode.key == key) {
+        return mode;
+      }
+    }
+    return galleryLeftToRight;
+  }
+}
+
+abstract interface class _ImageViewController {
+  void toPage(int page);
+
+  Future<void> animateToPage(int page);
+
+  void handleDoubleTap(Offset location);
+}

@@ -47,7 +47,7 @@ class _App {
   void pop() {
     if(rootNavigatorKey.currentState?.canPop() ?? false) {
       rootNavigatorKey.currentState?.pop();
-    } else {
+    } else if (mainNavigatorKey?.currentState?.canPop() ?? false) {
       mainNavigatorKey?.currentState?.pop();
     }
   }

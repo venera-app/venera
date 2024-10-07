@@ -29,6 +29,10 @@ dependencies:
   file_picker: ^8.1.2
   url_launcher: ^6.3.0
   path: ^1.9.0
+  photo_view:
+    git:
+      url: https://github.com/wgh136/photo_view
+      ref: 94724a0b
 
 dev_dependencies:
   flutter_test:

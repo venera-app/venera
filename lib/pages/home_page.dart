@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
@@ -11,6 +9,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/io.dart';
@@ -149,7 +148,12 @@ class _HistoryState extends State<_History> {
                     itemBuilder: (context, index) {
                       return InkWell(
                         onTap: () {
-                          // TODO: toComicPageWithHistory(context, history[index]);
+                          context.to(
+                            () => ComicPage(
+                              id: history[index].id,
+                              sourceKey: history[index].type.comicSource!.key,
+                            ),
+                          );
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
@@ -177,7 +181,7 @@ class _HistoryState extends State<_History> {
                       );
                     },
                   ),
-                ).paddingHorizontal(8),
+                ).paddingHorizontal(8).paddingBottom(16),
             ],
           ),
         ),

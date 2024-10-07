@@ -9,6 +9,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/favorites/favorite_actions.dart';
+import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
 
@@ -458,9 +459,25 @@ abstract mixin class _ComicPageActions {
   /// [ep] the episode number, start from 1
   ///
   /// [page] the page number, start from 1
-  void read([int? ep, int? page]) {}
+  void read([int? ep, int? page]) {
+    App.rootContext.to(
+      () => Reader(
+        source: comicSource,
+        cid: comic.id,
+        name: comic.title,
+        chapters: comic.chapters,
+        initialChapter: ep,
+        initialPage: page,
+        history: History.fromModel(model: comic, ep: 0, page: 0),
+      ),
+    );
+  }
 
-  void continueRead() {}
+  void continueRead() {
+    var ep = history?.ep ?? 1;
+    var page = history?.page ?? 1;
+    read(ep, page);
+  }
 
   void download() {}
 
@@ -1117,4 +1134,3 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
     }
   }
 }
-

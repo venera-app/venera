@@ -39,25 +39,25 @@ class History {
 
   String id;
 
+  /// readEpisode is a set of episode numbers that have been read.
+  ///
+  /// The number of episodes is 1-based.
   Set<int> readEpisode;
 
   int? maxPage;
-
-  History(this.type, this.time, this.title, this.subtitle, this.cover, this.ep,
-      this.page, this.id,
-      [this.readEpisode = const <int>{}, this.maxPage]);
 
   History.fromModel(
       {required HistoryMixin model,
       required this.ep,
       required this.page,
-      this.readEpisode = const <int>{},
+      Set<int>? readChapters,
       DateTime? time})
       : type = model.historyType,
         title = model.title,
         subtitle = model.subTitle ?? '',
         cover = model.cover,
         id = model.id,
+        readEpisode = readChapters ?? <int>{},
         time = time ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
@@ -168,50 +168,22 @@ class HistoryManager with ChangeNotifier {
   ///
   /// This function would be called when user start reading.
   Future<void> addHistory(History newItem) async {
-    var res = _db.select("""
-      select * from history
-      where id == ? and type == ?;
-    """, [newItem.id, newItem.type.value]);
-    if (res.isEmpty) {
-      _db.execute("""
-        insert into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
+    _db.execute("""
+        insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       """, [
-        newItem.id,
-        newItem.title,
-        newItem.subtitle,
-        newItem.cover,
-        newItem.time.millisecondsSinceEpoch,
-        newItem.type.value,
-        newItem.ep,
-        newItem.page,
-        newItem.readEpisode.join(','),
-        newItem.maxPage
-      ]);
-    } else {
-      _db.execute("""
-        update history
-        set time = ${DateTime.now().millisecondsSinceEpoch}
-        where id == ? and type == ?;
-      """, [newItem.id, newItem.type.value]);
-    }
-    updateCache();
-    notifyListeners();
-  }
-
-  Future<void> saveReadHistory(History history) async {
-    _db.execute("""
-        update history
-        set time = ${DateTime.now().millisecondsSinceEpoch}, ep = ?, page = ?, readEpisode = ?, max_page = ?
-        where id == ? and type == ?;
-    """, [
-      history.ep,
-      history.page,
-      history.readEpisode.join(','),
-      history.maxPage,
-      history.id,
-      history.type.value
+      newItem.id,
+      newItem.title,
+      newItem.subtitle,
+      newItem.cover,
+      newItem.time.millisecondsSinceEpoch,
+      newItem.type.value,
+      newItem.ep,
+      newItem.page,
+      newItem.readEpisode.join(','),
+      newItem.maxPage
     ]);
+    updateCache();
     notifyListeners();
   }
 

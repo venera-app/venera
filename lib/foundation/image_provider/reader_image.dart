@@ -6,22 +6,24 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/network/app_dio.dart';
 import 'base_image_provider.dart';
-import 'cached_image.dart' as image_provider;
+import 'reader_image.dart' as image_provider;
 
-class CachedImageProvider
-    extends BaseImageProvider<image_provider.CachedImageProvider> {
+class ReaderImageProvider
+    extends BaseImageProvider<image_provider.ReaderImageProvider> {
   /// Image provider for normal image.
-  const CachedImageProvider(this.url, {this.headers, this.sourceKey});
+  const ReaderImageProvider(this.imageKey, this.sourceKey, this.cid, this.eid);
 
-  final String url;
-
-  final Map<String, String>? headers;
+  final String imageKey;
 
   final String? sourceKey;
 
+  final String cid;
+
+  final String eid;
+
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
-    final cacheKey = "$url@$sourceKey";
+    final cacheKey = "$imageKey@$sourceKey@$cid@$eid";
     final cache = await CacheManager().findCache(cacheKey);
 
     if (cache != null) {
@@ -31,7 +33,7 @@ class CachedImageProvider
     var configs = <String, dynamic>{};
     if (sourceKey != null) {
       var comicSource = ComicSource.find(sourceKey!);
-      configs = comicSource!.getThumbnailLoadingConfig?.call(url) ?? {};
+      configs = comicSource!.getImageLoadingConfig?.call(imageKey, cid, eid) ?? {};
     }
     configs['headers'] ??= {
       'user-agent': webUA,
@@ -43,7 +45,7 @@ class CachedImageProvider
       responseType: ResponseType.stream,
     ));
 
-    var req = await dio.request<ResponseBody>(configs['url'] ?? url,
+    var req = await dio.request<ResponseBody>(configs['url'] ?? imageKey,
         data: configs['data']);
     var stream = req.data?.stream ?? (throw "Error: Empty response body.");
     int? expectedBytes = req.data!.contentLength;
@@ -70,10 +72,10 @@ class CachedImageProvider
   }
 
   @override
-  Future<CachedImageProvider> obtainKey(ImageConfiguration configuration) {
+  Future<ReaderImageProvider> obtainKey(ImageConfiguration configuration) {
     return SynchronousFuture(this);
   }
 
   @override
-  String get key => url;
+  String get key => "$imageKey@$sourceKey@$cid@$eid";
 }
