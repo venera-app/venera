@@ -7,11 +7,21 @@ class _Appdata {
   final _Settings settings = _Settings();
 
   var searchHistory = <String>[];
+
+  bool _isSavingData = false;
   
-  void saveData() async {
+  Future<void> saveData() async {
+    if(_isSavingData) {
+      await Future.doWhile(() async {
+        await Future.delayed(const Duration(milliseconds: 20));
+        return _isSavingData;
+      });
+    }
+    _isSavingData = true;
     var data = jsonEncode(toJson());
     var file = File(FilePath.join(App.dataPath, 'appdata.json'));
     await file.writeAsString(data);
+    _isSavingData = false;
   }
 
   void addSearchHistory(String keyword) {
@@ -42,7 +52,9 @@ class _Appdata {
     }
     var json = jsonDecode(await file.readAsString());
     for(var key in json['settings'].keys) {
-      settings[key] = json[key];
+      if(json[key] != null) {
+        settings[key] = json[key];
+      }
     }
     searchHistory = List.from(json['searchHistory']);
   }
@@ -87,5 +99,10 @@ class _Settings {
 
   operator[]=(String key, dynamic value) {
     _data[key] = value;
+  }
+
+  @override
+  String toString() {
+    return _data.toString();
   }
 }

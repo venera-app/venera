@@ -127,13 +127,15 @@ class _NaviPaneState extends State<NaviPane>
       }
       if (target == 1) {
         StateController.find<NaviPaddingWidgetController>()
-            .setWithPadding(true);
+            .setWithPadding(true, true);
         controller.value = target;
       } else if (controller.value == 1 && target == 0) {
         StateController.findOrNull<NaviPaddingWidgetController>()
-            ?.setWithPadding(false);
+            ?.setWithPadding(false, false);
         controller.value = target;
       } else {
+        StateController.findOrNull<NaviPaddingWidgetController>()
+            ?.setWithPadding(true, false);
         controller.animateTo(target);
       }
       animationTarget = target;
@@ -181,14 +183,14 @@ class _NaviPaneState extends State<NaviPane>
               ),
               Positioned(
                 top: _kTopBarHeight * ((1 - value).clamp(0, 1)) +
-                    MediaQuery.of(context).padding.top * (value == 1 ? 0 : 1),
+                    MediaQuery.of(context).padding.top * (value == 0 ? 1 : 0),
                 left: _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
                     (_kSideBarWidth - _kFoldedSideBarWidth) *
                         ((value - 2).clamp(0, 1)),
                 right: 0,
                 bottom: bottomBarHeight * ((1 - value).clamp(0, 1)),
                 child: MediaQuery.removePadding(
-                  removeTop: value >= 2 || value == 0,
+                  removeTop: value == 0,
                   context: context,
                   child: Material(child: widget.pageBuilder(currentPage)),
                 ),
@@ -656,8 +658,11 @@ class NaviPaddingWidgetController extends StateController {
 
   bool _withPadding = false;
 
-  void setWithPadding(bool value) {
-    _withPadding = value;
+  bool _withTopBarPadding = false;
+
+  void setWithPadding(bool withPadding, bool withAppbarPadding) {
+    _withPadding = withPadding;
+    _withTopBarPadding = withAppbarPadding;
     update();
   }
 }
@@ -674,7 +679,10 @@ class NaviPaddingWidget extends StatelessWidget {
         return Padding(
           padding: controller._withPadding
               ? EdgeInsets.only(
-                  top: _NaviPaneState._kTopBarHeight + context.padding.top,
+                  top: context.padding.top +
+                      (controller._withTopBarPadding
+                          ? _NaviPaneState._kTopBarHeight
+                          : 0),
                   bottom:
                       _NaviPaneState._kBottomBarHeight + context.padding.bottom,
                 )

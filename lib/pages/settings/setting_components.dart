@@ -3,14 +3,11 @@ part of 'settings_page.dart';
 class _SwitchSetting extends StatefulWidget {
   const _SwitchSetting({
     required this.title,
-    this.subtitle,
     required this.settingKey,
     this.onChanged,
   });
 
   final String title;
-
-  final String? subtitle;
 
   final String settingKey;
 
@@ -27,7 +24,6 @@ class _SwitchSettingState extends State<_SwitchSetting> {
 
     return ListTile(
       title: Text(widget.title),
-      subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
       trailing: Switch(
         value: appdata.settings[widget.settingKey],
         onChanged: (value) {
