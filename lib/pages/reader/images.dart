@@ -12,49 +12,51 @@ class _ReaderImagesState extends State<_ReaderImages> {
 
   bool inProgress = false;
 
+  late _ReaderState reader;
+
   @override
   void initState() {
-    context.reader.isLoading = true;
+    reader = context.reader;
+    reader.isLoading = true;
     super.initState();
   }
 
   void load() async {
     if (inProgress) return;
     inProgress = true;
-    if (context.reader.type == ComicType.local ||
-        (await LocalManager().isDownloaded(
-            context.reader.cid, context.reader.type, context.reader.chapter))) {
+    if (reader.type == ComicType.local ||
+        (await LocalManager()
+            .isDownloaded(reader.cid, reader.type, reader.chapter))) {
       try {
-        var images = await LocalManager().getImages(
-            context.reader.cid, context.reader.type, context.reader.chapter);
+        var images = await LocalManager()
+            .getImages(reader.cid, reader.type, reader.chapter);
         setState(() {
-          context.reader.images = images;
-          context.reader.isLoading = false;
+          reader.images = images;
+          reader.isLoading = false;
           inProgress = false;
         });
       } catch (e) {
         setState(() {
           error = e.toString();
-          context.reader.isLoading = false;
+          reader.isLoading = false;
           inProgress = false;
         });
       }
     } else {
-      var res = await context.reader.type.comicSource!.loadComicPages!(
-        context.reader.widget.cid,
-        context.reader.widget.chapters?.keys
-            .elementAt(context.reader.chapter - 1),
+      var res = await reader.type.comicSource!.loadComicPages!(
+        reader.widget.cid,
+        reader.widget.chapters?.keys.elementAt(reader.chapter - 1),
       );
       if (res.error) {
         setState(() {
           error = res.errorMessage;
-          context.reader.isLoading = false;
+          reader.isLoading = false;
           inProgress = false;
         });
       } else {
         setState(() {
-          context.reader.images = res.data;
-          context.reader.isLoading = false;
+          reader.images = res.data;
+          reader.isLoading = false;
           inProgress = false;
         });
       }
@@ -64,7 +66,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
 
   @override
   Widget build(BuildContext context) {
-    if (context.reader.isLoading) {
+    if (reader.isLoading) {
       load();
       return const Center(
         child: CircularProgressIndicator(),
@@ -74,14 +76,14 @@ class _ReaderImagesState extends State<_ReaderImages> {
         message: error!,
         retry: () {
           setState(() {
-            context.reader.isLoading = true;
+            reader.isLoading = true;
             error = null;
           });
         },
       );
     } else {
-      if (context.reader.mode.isGallery) {
-        return _GalleryMode(key: Key(context.reader.mode.key));
+      if (reader.mode.isGallery) {
+        return _GalleryMode(key: Key(reader.mode.key));
       } else {
         // TODO: Implement other modes
         throw UnimplementedError();
@@ -107,17 +109,20 @@ class _GalleryModeState extends State<_GalleryMode>
 
   var photoViewControllers = <int, PhotoViewController>{};
 
+  late _ReaderState reader;
+
   @override
   void initState() {
-    controller = PageController(initialPage: context.reader.page);
-    context.reader._imageViewController = this;
-    cached = List.filled(context.reader.maxPage + 2, false);
+    reader = context.reader;
+    controller = PageController(initialPage: reader.page);
+    reader._imageViewController = this;
+    cached = List.filled(reader.maxPage + 2, false);
     super.initState();
   }
 
   void cache(int current) {
     for (int i = current + 1; i <= current + preCacheCount; i++) {
-      if (i <= context.reader.maxPage && !cached[i]) {
+      if (i <= reader.maxPage && !cached[i]) {
         _precacheImage(i, context);
         cached[i] = true;
       }
@@ -130,14 +135,14 @@ class _GalleryModeState extends State<_GalleryMode>
       backgroundDecoration: BoxDecoration(
         color: context.colorScheme.surface,
       ),
-      reverse: context.reader.mode == ReaderMode.galleryRightToLeft,
-      scrollDirection: context.reader.mode == ReaderMode.galleryTopToBottom
+      reverse: reader.mode == ReaderMode.galleryRightToLeft,
+      scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
           ? Axis.vertical
           : Axis.horizontal,
-      itemCount: context.reader.images!.length + 2,
+      itemCount: reader.images!.length + 2,
       builder: (BuildContext context, int index) {
         ImageProvider? imageProvider;
-        if (index != 0 && index != context.reader.images!.length + 1) {
+        if (index != 0 && index != reader.images!.length + 1) {
           imageProvider = _createImageProvider(index, context);
         } else {
           return PhotoViewGalleryPageOptions.customChild(
@@ -176,15 +181,15 @@ class _GalleryModeState extends State<_GalleryMode>
       ),
       onPageChanged: (i) {
         if (i == 0) {
-          if (!context.reader.toNextChapter()) {
-            context.reader.toPage(1);
+          if (!reader.toNextChapter()) {
+            reader.toPage(1);
           }
-        } else if (i == context.reader.maxPage + 1) {
-          if (!context.reader.toPrevChapter()) {
-            context.reader.toPage(context.reader.maxPage);
+        } else if (i == reader.maxPage + 1) {
+          if (!reader.toPrevChapter()) {
+            reader.toPage(reader.maxPage);
           }
         } else {
-          context.reader.setPage(i);
+          reader.setPage(i);
           context.readerScaffold.update();
         }
       },
@@ -210,21 +215,22 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleDoubleTap(Offset location) {
-    var controller = photoViewControllers[context.reader.page]!;
+    var controller = photoViewControllers[reader.page]!;
     controller.onDoubleClick?.call();
   }
 }
 
 ImageProvider _createImageProvider(int page, BuildContext context) {
-  var imageKey = context.reader.images![page-1];
-  if(imageKey.startsWith('file://')) {
+  var reader = context.reader;
+  var imageKey = reader.images![page - 1];
+  if (imageKey.startsWith('file://')) {
     return FileImage(File(imageKey.replaceFirst("file://", '')));
   } else {
     return ReaderImageProvider(
       imageKey,
-      context.reader.type.comicSource!.key,
-      context.reader.cid,
-      context.reader.eid,
+      reader.type.comicSource!.key,
+      reader.cid,
+      reader.eid,
     );
   }
 }

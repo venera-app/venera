@@ -122,7 +122,6 @@ class SliverAppbar extends StatelessWidget {
     required this.title,
     this.leading,
     this.actions,
-    this.color,
     this.radius = 0,
   });
 
@@ -131,8 +130,6 @@ class SliverAppbar extends StatelessWidget {
   final Widget title;
 
   final List<Widget>? actions;
-
-  final Color? color;
 
   final double radius;
 
@@ -145,14 +142,13 @@ class SliverAppbar extends StatelessWidget {
         title: title,
         actions: actions,
         topPadding: MediaQuery.of(context).padding.top,
-        color: color,
         radius: radius,
       ),
     );
   }
 }
 
-const _kAppBarHeight = 58.0;
+const _kAppBarHeight = 52.0;
 
 class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget? leading;
@@ -163,15 +159,12 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   final double topPadding;
 
-  final Color? color;
-
   final double radius;
 
   _MySliverAppBarDelegate(
       {this.leading,
       required this.title,
       this.actions,
-      this.color,
       required this.topPadding,
       this.radius = 0});
 
@@ -179,41 +172,44 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox.expand(
-      child: Material(
-        color: color,
-        elevation: 0,
-        borderRadius: BorderRadius.circular(radius),
-        child: Row(
-          children: [
-            const SizedBox(width: 8),
-            leading ??
-                (Navigator.of(context).canPop()
-                    ? Tooltip(
-                        message: "返回".tl,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      )
-                    : const SizedBox()),
-            const SizedBox(
-              width: 24,
-            ),
-            Expanded(
-              child: DefaultTextStyle(
-                style:
-                    DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                child: title,
+      child: BlurEffect(
+        blur: 15,
+        child: Material(
+          color: context.colorScheme.surface.withOpacity(0.72),
+          elevation: 0,
+          borderRadius: BorderRadius.circular(radius),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              leading ??
+                  (Navigator.of(context).canPop()
+                      ? Tooltip(
+                    message: "Back".tl,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  )
+                      : const SizedBox()),
+              const SizedBox(
+                width: 24,
               ),
-            ),
-            ...?actions,
-            const SizedBox(
-              width: 8,
-            )
-          ],
-        ).paddingTop(topPadding),
+              Expanded(
+                child: DefaultTextStyle(
+                  style:
+                  DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  child: title,
+                ),
+              ),
+              ...?actions,
+              const SizedBox(
+                width: 8,
+              )
+            ],
+          ).paddingTop(topPadding),
+        ),
       ),
     );
   }

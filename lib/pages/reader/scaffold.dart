@@ -63,6 +63,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       child: Container(
         padding: EdgeInsets.only(top: context.padding.top),
         decoration: BoxDecoration(
+          color: context.colorScheme.surface.withOpacity(0.82),
           border: Border(
             bottom: BorderSide(
               color: Colors.grey.withOpacity(0.5),
@@ -73,16 +74,20 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         child: Row(
           children: [
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+            const BackButton(),
             const SizedBox(width: 8),
             Expanded(
               child: Text(context.reader.widget.name, style: ts.s18),
             ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: "Settings".tl,
+              child: IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: openSetting,
+              ),
+            ),
+            const SizedBox(width: 8),
           ],
         ),
       ),
@@ -191,7 +196,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                   icon: context.reader.autoPageTurningTimer != null
                       ? const Icon(Icons.timer)
                       : const Icon(Icons.timer_sharp),
-                  onPressed: context.reader.autoPageTurning,
+                  onPressed: () {
+                    context.reader.autoPageTurning();
+                    update();
+                  },
                 ),
               ),
               if (context.reader.widget.chapters != null)
@@ -226,6 +234,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     return BlurEffect(
       child: Container(
         decoration: BoxDecoration(
+          color: context.colorScheme.surface.withOpacity(0.82),
           border: Border(
             top: BorderSide(
               color: Colors.grey.withOpacity(0.5),
@@ -243,7 +252,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     return Slider(
       value: context.reader.page.toDouble(),
       min: 1,
-      max: context.reader.maxPage.clamp(context.reader.page, 1 << 16).toDouble(),
+      max:
+          context.reader.maxPage.clamp(context.reader.page, 1 << 16).toDouble(),
       divisions: (context.reader.maxPage - 1).clamp(2, 1 << 16),
       onChanged: (i) {
         context.reader.toPage(i.toInt());
@@ -285,18 +295,131 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void openChapterDrawer() {
-    // TODO
+    showSideBar(
+      context,
+      _ChaptersView(context.reader),
+      width: 400,
+    );
   }
 
-  void saveCurrentImage() {
-    // TODO
+  Future<Uint8List> _getCurrentImageData() async {
+    var imageKey = context.reader.images![context.reader.page - 1];
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager()
+              .findCache("$imageKey@${context.reader.type.comicSource!.key}"))!
+          .readAsBytes();
+    }
   }
 
-  void share() {
-    // TODO
+  void saveCurrentImage() async {
+    var data = await _getCurrentImageData();
+    var fileType = detectFileType(data);
+    var filename = "${context.reader.page}${fileType.ext}";
+    saveFile(data: data, filename: filename);
+  }
+
+  void share() async {
+    var data = await _getCurrentImageData();
+    var fileType = detectFileType(data);
+    var filename = "${context.reader.page}${fileType.ext}";
+    Share.shareFile(
+      data: data,
+      filename: filename,
+      mime: fileType.mime,
+    );
   }
 
   void openSetting() {
-    // TODO
+    showSideBar(
+      context,
+      ReaderSettings(
+        onChanged: (key) {
+          if(key == "readerMode") {
+            context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
+            App.rootContext.pop();
+          }
+          context.reader.update();
+        },
+      ),
+      width: 400,
+    );
+  }
+}
+
+class _ChaptersView extends StatefulWidget {
+  const _ChaptersView(this.reader);
+
+  final _ReaderState reader;
+
+  @override
+  State<_ChaptersView> createState() => _ChaptersViewState();
+}
+
+class _ChaptersViewState extends State<_ChaptersView> {
+  bool desc = false;
+
+  @override
+  Widget build(BuildContext context) {
+    var chapters = widget.reader.widget.chapters!;
+    var current = widget.reader.chapter - 1;
+    return Scaffold(
+      body: SmoothCustomScrollView(
+        slivers: [
+          SliverAppbar(
+            title: Text("Chapters".tl),
+            actions: [
+              Tooltip(
+                message: "Click to change the order".tl,
+                child: TextButton.icon(
+                  icon: Icon(
+                    !desc ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 18,
+                  ),
+                  label: Text(!desc ? "Ascending".tl : "Descending".tl),
+                  onPressed: () {
+                    setState(() {
+                      desc = !desc;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (desc) {
+                  index = chapters.length - 1 - index;
+                }
+                var chapter = chapters.values.elementAt(index);
+                return ListTile(
+                  shape: Border(
+                    left: BorderSide(
+                      color: current == index
+                          ? context.colorScheme.primary
+                          : Colors.transparent,
+                      width: 4,
+                    ),
+                  ),
+                  title: Text(
+                    chapter,
+                    style: current == index
+                        ? ts.withColor(context.colorScheme.primary).bold
+                        : null,
+                  ),
+                  onTap: () {
+                    widget.reader.toChapter(index + 1);
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+              childCount: chapters.length,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

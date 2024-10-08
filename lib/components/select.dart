@@ -1,132 +1,70 @@
 part of 'components.dart';
 
-class Select extends StatefulWidget {
+class Select extends StatelessWidget {
   const Select({
-    required this.initialValue,
-    this.width = 120,
-    required this.onChange,
     super.key,
+    required this.current,
     required this.values,
-    this.disabledValues = const [],
-    this.outline = false,
+    this.onTap,
   });
 
-  ///初始值, 提供values的下标
-  final int? initialValue;
+  final String current;
 
-  ///可供选取的值
   final List<String> values;
 
-  ///宽度
-  final double width;
-
-  ///发生改变时的回调
-  final void Function(int) onChange;
-
-  /// 禁用的值
-  final List<int> disabledValues;
-
-  /// 是否为边框模式
-  final bool outline;
-
-  @override
-  State<Select> createState() => _SelectState();
-}
-
-class _SelectState extends State<Select> {
-  late int? value = widget.initialValue;
-  bool isHover = false;
+  final void Function(int index)? onTap;
 
   @override
   Widget build(BuildContext context) {
-    if (value != null && value! < 0) value = null;
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHover = true),
-      onExit: (_) => setState(() => isHover = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: context.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: InkWell(
         onTap: () {
-          if (widget.values.isEmpty) {
-            return;
-          }
-          final renderBox = context.findRenderObject() as RenderBox;
+          var renderBox = context.findRenderObject() as RenderBox;
           var offset = renderBox.localToGlobal(Offset.zero);
-          var size = MediaQuery.of(context).size;
-          showMenu<int>(
-              context: App.rootNavigatorKey.currentContext!,
-              initialValue: value,
-              position: RelativeRect.fromLTRB(offset.dx, offset.dy,
-                  offset.dx + widget.width, size.height - offset.dy),
-              constraints: BoxConstraints(
-                maxWidth: widget.width,
-                minWidth: widget.width,
-              ),
-              color: context.colorScheme.surfaceContainerLowest,
-              items: [
-                for (int i = 0; i < widget.values.length; i++)
-                  if (!widget.disabledValues.contains(i))
-                    PopupMenuItem(
-                      value: i,
-                      height: App.isDesktop ? 38 : 42,
-                      onTap: () {
-                        setState(() {
-                          value = i;
-                          widget.onChange(i);
-                        });
-                      },
-                      child: Text(widget.values[i]),
-                    )
-              ]);
+          var size = renderBox.size;
+          showMenu(
+            elevation: 3,
+            color: context.colorScheme.surface,
+            surfaceTintColor: Colors.transparent,
+            context: context,
+            useRootNavigator: true,
+            constraints: BoxConstraints(
+              minWidth: size.width,
+              maxWidth: size.width,
+            ),
+            position: RelativeRect.fromLTRB(
+              offset.dx,
+              offset.dy + size.height,
+              offset.dx + size.height,
+              offset.dy,
+            ),
+            items: values
+                .map((e) => PopupMenuItem(
+                      height: App.isMobile ? 46 : 40,
+                      value: e,
+                      child: Text(e),
+                    ))
+                .toList(),
+          ).then((value) {
+            if (value != null) {
+              onTap?.call(values.indexOf(value));
+            }
+          });
         },
-        child: AnimatedContainer(
-          duration: _fastAnimationDuration,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(widget.outline ? 4 : 8),
-            border: widget.outline
-                ? Border.all(
-                    color: context.colorScheme.outline,
-                    width: 1,
-                  )
-                : null,
-          ),
-          width: widget.width,
-          height: 38,
-          child: Row(
-            children: [
-              const SizedBox(
-                width: 12,
-              ),
-              Expanded(
-                child: Text(
-                  value == null ? "" : widget.values[value!],
-                  overflow: TextOverflow.fade,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-              const Icon(Icons.arrow_drop_down_sharp),
-              const SizedBox(
-                width: 4,
-              ),
-            ],
-          ),
-        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(current, style: ts.s14),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_drop_down),
+          ],
+        ).padding(const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
       ),
     );
-  }
-
-  Color get color {
-    if (widget.outline) {
-      return isHover
-          ? context.colorScheme.outline.withOpacity(0.1)
-          : Colors.transparent;
-    } else {
-      var color = context.colorScheme.surfaceContainerHigh;
-      if (isHover) {
-        color = color.withOpacity(0.8);
-      }
-      return color;
-    }
   }
 }
 
