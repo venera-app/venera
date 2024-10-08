@@ -6,10 +6,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/utils/io.dart';
 
 import 'app.dart';
 
-class LocalComic implements Comic{
+class LocalComic implements Comic {
   @override
   final String id;
 
@@ -117,12 +118,12 @@ class LocalManager with ChangeNotifier {
         PRIMARY KEY (id, comic_type)
       );
     ''');
-    if(File('${App.dataPath}/local_path').existsSync()){
+    if (File('${App.dataPath}/local_path').existsSync()) {
       path = File('${App.dataPath}/local_path').readAsStringSync();
     } else {
-      if(App.isAndroid) {
+      if (App.isAndroid) {
         var external = await getExternalStorageDirectories();
-        if(external != null && external.isNotEmpty){
+        if (external != null && external.isNotEmpty) {
           path = '${external.first.path}/local';
         } else {
           path = '${App.dataPath}/local';
@@ -131,18 +132,18 @@ class LocalManager with ChangeNotifier {
         path = '${App.dataPath}/local';
       }
     }
-    if(!Directory(path).existsSync()) {
+    if (!Directory(path).existsSync()) {
       await Directory(path).create();
     }
   }
 
   String findValidId(ComicType type) {
-    final res = _db.select('''
+    final res = _db.select(
+      '''
       SELECT id FROM comics WHERE comic_type = ? 
       ORDER BY CAST(id AS INTEGER) DESC
       LIMIT 1;
-      '''
-      [type.value],
+      '''[type.value],
     );
     if (res.isEmpty) {
       return '1';
@@ -228,5 +229,41 @@ class LocalManager with ChangeNotifier {
       return null;
     }
     return LocalComic.fromRow(res.first);
+  }
+
+  Future<List<String>> getImages(String id, ComicType type, int ep) async {
+    var comic = find(id, type) ?? (throw "Comic Not Found");
+    var directory = Directory(FilePath.join(path, comic.directory));
+    if (comic.chapters != null) {
+      var cid = comic.chapters!.keys.elementAt(ep - 1);
+      directory = Directory(FilePath.join(directory.path, cid));
+    }
+    var files = <File>[];
+    await for (var entity in directory.list()) {
+      if (entity is File) {
+        if (entity.absolute.path.replaceFirst(path, '').substring(1) ==
+            comic.cover) {
+          continue;
+        }
+        files.add(entity);
+      }
+    }
+    files.sort((a, b) {
+      var ai = int.tryParse(a.name.split('.').first);
+      var bi = int.tryParse(b.name.split('.').first);
+      if(ai != null && bi != null) {
+        return ai.compareTo(bi);
+      }
+      return a.name.compareTo(b.name);
+    });
+    return files.map((e) => "file://${e.path}").toList();
+  }
+
+  Future<bool> isDownloaded(String id, ComicType type, int ep) async {
+    var comic = find(id, type);
+    if(comic == null) return false;
+    if(comic.chapters == null)  return true;
+    var eid = comic.chapters!.keys.elementAt(ep);
+    return Directory(FilePath.join(path, comic.directory, eid)).exists();
   }
 }

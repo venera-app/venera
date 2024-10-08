@@ -10,9 +10,11 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
-import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
+import 'package:venera/foundation/local.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -32,7 +34,7 @@ extension _ReaderContext on BuildContext {
 class Reader extends StatefulWidget {
   const Reader({
     super.key,
-    required this.source,
+    required this.type,
     required this.cid,
     required this.name,
     required this.chapters,
@@ -41,7 +43,7 @@ class Reader extends StatefulWidget {
     this.initialChapter,
   });
 
-  final ComicSource source;
+  final ComicType type;
 
   final String cid;
 
@@ -71,6 +73,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   @override
   int get maxPage => images?.length ?? 1;
+
+  ComicType get type => widget.type;
 
   String get cid => widget.cid;
 

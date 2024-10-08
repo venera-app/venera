@@ -21,23 +21,43 @@ class _ReaderImagesState extends State<_ReaderImages> {
   void load() async {
     if (inProgress) return;
     inProgress = true;
-    var res = await context.reader.widget.source.loadComicPages!(
-      context.reader.widget.cid,
-      context.reader.widget.chapters?.keys
-          .elementAt(context.reader.chapter - 1),
-    );
-    if (res.error) {
-      setState(() {
-        error = res.errorMessage;
-        context.reader.isLoading = false;
-        inProgress = false;
-      });
+    if (context.reader.type == ComicType.local ||
+        (await LocalManager().isDownloaded(
+            context.reader.cid, context.reader.type, context.reader.chapter))) {
+      try {
+        var images = await LocalManager().getImages(
+            context.reader.cid, context.reader.type, context.reader.chapter);
+        setState(() {
+          context.reader.images = images;
+          context.reader.isLoading = false;
+          inProgress = false;
+        });
+      } catch (e) {
+        setState(() {
+          error = e.toString();
+          context.reader.isLoading = false;
+          inProgress = false;
+        });
+      }
     } else {
-      setState(() {
-        context.reader.images = res.data;
-        context.reader.isLoading = false;
-        inProgress = false;
-      });
+      var res = await context.reader.type.comicSource!.loadComicPages!(
+        context.reader.widget.cid,
+        context.reader.widget.chapters?.keys
+            .elementAt(context.reader.chapter - 1),
+      );
+      if (res.error) {
+        setState(() {
+          error = res.errorMessage;
+          context.reader.isLoading = false;
+          inProgress = false;
+        });
+      } else {
+        setState(() {
+          context.reader.images = res.data;
+          context.reader.isLoading = false;
+          inProgress = false;
+        });
+      }
     }
     context.readerScaffold.update();
   }
@@ -196,12 +216,17 @@ class _GalleryModeState extends State<_GalleryMode>
 }
 
 ImageProvider _createImageProvider(int page, BuildContext context) {
-  return ReaderImageProvider(
-    context.reader.images![page - 1],
-    context.reader.widget.source.key,
-    context.reader.cid,
-    context.reader.eid,
-  );
+  var imageKey = context.reader.images![page-1];
+  if(imageKey.startsWith('file://')) {
+    return FileImage(File(imageKey.replaceFirst("file://", '')));
+  } else {
+    return ReaderImageProvider(
+      imageKey,
+      context.reader.type.comicSource!.key,
+      context.reader.cid,
+      context.reader.eid,
+    );
+  }
 }
 
 void _precacheImage(int page, BuildContext context) {

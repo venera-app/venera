@@ -462,7 +462,7 @@ abstract mixin class _ComicPageActions {
   void read([int? ep, int? page]) {
     App.rootContext.to(
       () => Reader(
-        source: comicSource,
+        type: comic.comicType,
         cid: comic.id,
         name: comic.title,
         chapters: comic.chapters,
