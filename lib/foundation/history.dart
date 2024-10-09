@@ -129,6 +129,14 @@ class History {
     HistoryManager().addHistory(history);
     return history;
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is History && type == other.type && id == other.id;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type);
 }
 
 class HistoryManager with ChangeNotifier {
@@ -190,6 +198,7 @@ class HistoryManager with ChangeNotifier {
   void clearHistory() {
     _db.execute("delete from history;");
     updateCache();
+    notifyListeners();
   }
 
   void remove(String id, ComicType type) async {

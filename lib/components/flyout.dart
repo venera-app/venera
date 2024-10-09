@@ -172,40 +172,39 @@ class FlyoutContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntrinsicWidth(
-      child: Material(
+      child: BlurEffect(
         borderRadius: BorderRadius.circular(16),
-        type: MaterialType.card,
-        elevation: 1,
-        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-        child: Container(
-          constraints: const BoxConstraints(
-            minWidth: minFlyoutWidth,
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
-              if (content != null)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: content!,
+        child: Material(
+          borderRadius: BorderRadius.circular(16),
+          type: MaterialType.card,
+          color: context.colorScheme.surface.withOpacity(0.82),
+          child: Container(
+            constraints: const BoxConstraints(
+              minWidth: minFlyoutWidth,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                if (content != null)
+                  content!,
+                const SizedBox(
+                  height: 12,
                 ),
-              const SizedBox(
-                height: 12,
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [const Spacer(), ...actions],
-              ),
-            ],
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [const Spacer(), ...actions],
+                ),
+              ],
+            ),
           ),
-        ),
-      ).paddingAll(4),
+        ).paddingAll(4),
+      ),
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
+import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
@@ -113,7 +114,9 @@ class _HistoryState extends State<_History> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () {},
+          onTap: () {
+            context.to(() => const HistoryPage());
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

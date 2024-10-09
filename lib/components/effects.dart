@@ -5,15 +5,19 @@ class BlurEffect extends StatelessWidget {
 
   final double blur;
 
+  final BorderRadius? borderRadius;
+
   const BlurEffect({
     required this.child,
+    this.borderRadius,
     this.blur = 15,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
+    return ClipRRect(
+      borderRadius: borderRadius ?? BorderRadius.zero,
       child: BackdropFilter(
         filter: ImageFilter.blur(
           sigmaX: blur,

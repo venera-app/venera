@@ -6,6 +6,7 @@ class ComicTile extends StatelessWidget {
     required this.comic,
     this.enableLongPressed = true,
     this.badge,
+    this.menuOptions,
   });
 
   final Comic comic;
@@ -14,14 +15,48 @@ class ComicTile extends StatelessWidget {
 
   final String? badge;
 
+  final List<MenuEntry>? menuOptions;
+
   void onTap() {
     App.mainNavigatorKey?.currentContext
         ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
   }
 
-  void onLongPress() {}
+  void onLongPress(BuildContext context) {
+    var renderBox = context.findRenderObject() as RenderBox;
+    var size = renderBox.size;
+    var location = renderBox.localToGlobal(
+      Offset(size.width / 2, size.height / 2),
+    );
+    showMenu(location);
+  }
 
-  void onSecondaryTap(TapDownDetails details) {}
+  void onSecondaryTap(TapDownDetails details) {
+    showMenu(details.globalPosition);
+  }
+
+  void showMenu(Offset location) {
+    showMenuX(
+      App.rootContext,
+      location,
+      [
+        MenuEntry(
+          icon: Icons.chrome_reader_mode_outlined,
+          text: 'Details'.tl,
+          onClick: onTap,
+        ),
+        MenuEntry(
+          icon: Icons.copy,
+          text: 'Copy Title'.tl,
+          onClick: () {
+            Clipboard.setData(ClipboardData(text: comic.title));
+            App.rootContext.showMessage(message: 'Title copied'.tl);
+          },
+        ),
+        ...?menuOptions,
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +149,7 @@ class ComicTile extends StatelessWidget {
       return InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
-          onLongPress: enableLongPressed ? onLongPress : null,
+          onLongPress: enableLongPressed ? () => onLongPress(context) : null,
           onSecondaryTapDown: onSecondaryTap,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
@@ -209,7 +244,8 @@ class ComicTile extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
-                  onLongPress: enableLongPressed ? onLongPress : null,
+                  onLongPress:
+                      enableLongPressed ? () => onLongPress(context) : null,
                   onSecondaryTapDown: onSecondaryTap,
                   borderRadius: BorderRadius.circular(8),
                   child: const SizedBox.expand(),
@@ -300,9 +336,8 @@ class _ComicDescription extends StatelessWidget {
               ),
             ),
           ),
-        const SizedBox(
-          height: 2,
-        ),
+        const SizedBox(height: 2),
+        const Spacer(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -420,11 +455,17 @@ class SliverGridComics extends StatelessWidget {
     super.key,
     required this.comics,
     this.onLastItemBuild,
+    this.badgeBuilder,
+    this.menuBuilder,
   });
 
   final List<Comic> comics;
 
   final void Function()? onLastItemBuild;
+
+  final String? Function(Comic)? badgeBuilder;
+
+  final List<MenuEntry> Function(Comic)? menuBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -440,6 +481,8 @@ class SliverGridComics extends StatelessWidget {
         return _SliverGridComics(
           comics: comics,
           onLastItemBuild: onLastItemBuild,
+          badgeBuilder: badgeBuilder,
+          menuBuilder: menuBuilder,
         );
       },
     );
@@ -450,11 +493,17 @@ class _SliverGridComics extends StatelessWidget {
   const _SliverGridComics({
     required this.comics,
     this.onLastItemBuild,
+    this.badgeBuilder,
+    this.menuBuilder,
   });
 
   final List<Comic> comics;
 
   final void Function()? onLastItemBuild;
+
+  final String? Function(Comic)? badgeBuilder;
+
+  final List<MenuEntry> Function(Comic)? menuBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +513,12 @@ class _SliverGridComics extends StatelessWidget {
           if (index == comics.length - 1) {
             onLastItemBuild?.call();
           }
-          return ComicTile(comic: comics[index]);
+          var badge = badgeBuilder?.call(comics[index]);
+          return ComicTile(
+            comic: comics[index],
+            badge: badge,
+            menuOptions: menuBuilder?.call(comics[index]),
+          );
         },
         childCount: comics.length,
       ),

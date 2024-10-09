@@ -178,26 +178,26 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   }
 
   void onSecondaryTapUp(Offset location) {
-    showDesktopMenu(
+    showMenuX(
       context,
       location,
       [
-        DesktopMenuEntry(
+        MenuEntry(
             text: "Settings".tl,
             onClick: () {
               context.readerScaffold.openSetting();
             }),
-        DesktopMenuEntry(
+        MenuEntry(
             text: "Chapters".tl,
             onClick: () {
               context.readerScaffold.openChapterDrawer();
             }),
-        DesktopMenuEntry(
+        MenuEntry(
             text: "Fullscreen".tl,
             onClick: () {
               context.reader.fullscreen();
             }),
-        DesktopMenuEntry(
+        MenuEntry(
             text: "Exit".tl,
             onClick: () {
               context.pop();

@@ -91,13 +91,11 @@ class SliverGridDelegateWithComics extends SliverGridDelegate{
   }
 
   SliverGridLayout getDetailedModeLayout(SliverConstraints constraints, double scale){
-    const maxCrossAxisExtent = 650;
-    final itemHeight = 164 * scale;
+    const minCrossAxisExtent = 360;
+    final itemHeight = 152 * scale;
     final width = constraints.crossAxisExtent;
-    var crossItems = width ~/ maxCrossAxisExtent;
-    if (width % maxCrossAxisExtent != 0) {
-      crossItems += 1;
-    }
+    var crossItems = width ~/ minCrossAxisExtent;
+    crossItems = math.max(1, crossItems);
     return SliverGridRegularTileLayout(
         crossAxisCount: crossItems,
         mainAxisStride: itemHeight,
