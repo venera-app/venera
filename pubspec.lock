@@ -367,6 +367,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.9"
+  scrollable_positioned_list:
+    dependency: "direct main"
+    description:
+      path: "packages/scrollable_positioned_list"
+      ref: "09e756b1f1b04e6298318d99ec20a787fb360f59"
+      resolved-ref: "09e756b1f1b04e6298318d99ec20a787fb360f59"
+      url: "https://github.com/venera-app/flutter.widgets"
+    source: git
+    version: "0.3.8+1"
   share_plus:
     dependency: "direct main"
     description:

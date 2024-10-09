@@ -35,6 +35,11 @@ dependencies:
       ref: 94724a0b
   mime: ^1.0.5
   share_plus: ^10.0.2
+  scrollable_positioned_list:
+    git:
+      url: https://github.com/venera-app/flutter.widgets
+      ref: 09e756b1f1b04e6298318d99ec20a787fb360f59
+      path: packages/scrollable_positioned_list
 
 dev_dependencies:
   flutter_test:

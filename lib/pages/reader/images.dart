@@ -85,8 +85,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
       if (reader.mode.isGallery) {
         return _GalleryMode(key: Key(reader.mode.key));
       } else {
-        // TODO: Implement other modes
-        throw UnimplementedError();
+        return _ContinuousMode(key: Key(reader.mode.key));
       }
     }
   }
@@ -217,6 +216,334 @@ class _GalleryModeState extends State<_GalleryMode>
   void handleDoubleTap(Offset location) {
     var controller = photoViewControllers[reader.page]!;
     controller.onDoubleClick?.call();
+  }
+
+  @override
+  void handleLongPressDown(Offset location) {
+    var photoViewController = photoViewControllers[reader.page]!;
+    double target = photoViewController.getInitialScale!.call()! * 1.75;
+    var size = MediaQuery.of(context).size;
+    photoViewController.animateScale?.call(
+      target,
+      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+    );
+  }
+
+  @override
+  void handleLongPressUp(Offset location) {
+    var photoViewController = photoViewControllers[reader.page]!;
+    double target = photoViewController.getInitialScale!.call()!;
+    photoViewController.animateScale?.call(target);
+  }
+
+  @override
+  void handleKeyEvent(KeyEvent event) {
+    bool? forward;
+    if (reader.mode == ReaderMode.galleryLeftToRight &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.galleryRightToLeft &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.galleryTopToBottom &&
+        event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.galleryTopToBottom &&
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      forward = false;
+    } else if (reader.mode == ReaderMode.galleryLeftToRight &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      forward = false;
+    } else if (reader.mode == ReaderMode.galleryRightToLeft &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      forward = false;
+    }
+    if(event is KeyDownEvent || event is KeyRepeatEvent) {
+      if (forward == true) {
+        controller.nextPage(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.ease,
+        );
+      } else if (forward == false) {
+        controller.previousPage(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.ease,
+        );
+      }
+    }
+  }
+}
+
+const Set<PointerDeviceKind> _kTouchLikeDeviceTypes = <PointerDeviceKind>{
+  PointerDeviceKind.touch,
+  PointerDeviceKind.mouse,
+  PointerDeviceKind.stylus,
+  PointerDeviceKind.invertedStylus,
+  PointerDeviceKind.unknown
+};
+
+class _ContinuousMode extends StatefulWidget {
+  const _ContinuousMode({super.key});
+
+  @override
+  State<_ContinuousMode> createState() => _ContinuousModeState();
+}
+
+class _ContinuousModeState extends State<_ContinuousMode>
+    implements _ImageViewController {
+  late _ReaderState reader;
+
+  var itemScrollController = ItemScrollController();
+  var itemPositionsListener = ItemPositionsListener.create();
+  var photoViewController = PhotoViewController();
+  late ScrollController scrollController;
+
+  var isCTRLPressed = false;
+  static var _isMouseScrolling = false;
+  var fingers = 0;
+
+  @override
+  void initState() {
+    reader = context.reader;
+    reader._imageViewController = this;
+    itemPositionsListener.itemPositions.addListener(onPositionChanged);
+    super.initState();
+  }
+
+  void onPositionChanged() {
+    var page = itemPositionsListener.itemPositions.value.first.index;
+    page = page.clamp(1, reader.maxPage);
+    if (page != reader.page) {
+      reader.setPage(page);
+      context.readerScaffold.update();
+    }
+  }
+
+  double? futurePosition;
+
+  void smoothTo(double offset) {
+    futurePosition ??= scrollController.offset;
+    futurePosition = futurePosition! + offset * 1.2;
+    futurePosition = futurePosition!.clamp(
+      scrollController.position.minScrollExtent,
+      scrollController.position.maxScrollExtent,
+    );
+    scrollController.animateTo(
+      futurePosition!,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.linear,
+    );
+  }
+
+  void onPointerSignal(PointerSignalEvent event) {
+    if (event is PointerScrollEvent) {
+      if (!_isMouseScrolling) {
+        setState(() {
+          _isMouseScrolling = true;
+        });
+      }
+      if (isCTRLPressed) {
+        return;
+      }
+      smoothTo(event.scrollDelta.dy);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget widget = ScrollablePositionedList.builder(
+      initialScrollIndex: reader.page,
+      itemScrollController: itemScrollController,
+      itemPositionsListener: itemPositionsListener,
+      scrollControllerCallback: (scrollController) {
+        this.scrollController = scrollController;
+      },
+      itemCount: reader.maxPage + 2,
+      addSemanticIndexes: false,
+      scrollDirection: reader.mode == ReaderMode.continuousTopToBottom
+          ? Axis.vertical
+          : Axis.horizontal,
+      reverse: reader.mode == ReaderMode.continuousRightToLeft,
+      physics: isCTRLPressed || _isMouseScrolling
+          ? const NeverScrollableScrollPhysics()
+          : const ClampingScrollPhysics(),
+      itemBuilder: (context, index) {
+        if (index == 0 || index == reader.maxPage + 1) {
+          return const SizedBox();
+        }
+        double width = MediaQuery.of(context).size.width;
+        double height = MediaQuery.of(context).size.height;
+
+        double imageWidth = width;
+
+        if (height / width < 1.2) {
+          imageWidth = height / 1.2;
+        }
+
+        _precacheImage(index, context);
+
+        ImageProvider image = _createImageProvider(index, context);
+
+        return ComicImage(
+          filterQuality: FilterQuality.medium,
+          image: image,
+          width: imageWidth,
+          height: imageWidth * 1.2,
+          fit: BoxFit.cover,
+        );
+      },
+      scrollBehavior: const MaterialScrollBehavior()
+          .copyWith(scrollbars: false, dragDevices: _kTouchLikeDeviceTypes),
+    );
+
+    widget = Listener(
+      onPointerDown: (event) {
+        fingers++;
+        futurePosition = null;
+        if (_isMouseScrolling) {
+          setState(() {
+            _isMouseScrolling = false;
+          });
+        }
+      },
+      onPointerUp: (event) {
+        fingers--;
+      },
+      onPointerPanZoomUpdate: (event) {
+        if (event.scale == 1.0) {
+          smoothTo(0 - event.panDelta.dy);
+        }
+      },
+      onPointerMove: (event) {
+        Offset value = event.delta;
+        if (photoViewController.scale == 1 || fingers != 1) {
+          return;
+        }
+        if (scrollController.offset !=
+            scrollController.position.maxScrollExtent &&
+            scrollController.offset !=
+                scrollController.position.minScrollExtent) {
+          if(reader.mode == ReaderMode.continuousTopToBottom) {
+            value = Offset(value.dx, 0);
+          } else {
+            value = Offset(0, value.dy);
+          }
+        }
+        photoViewController.updateMultiple(
+            position: photoViewController.position + value);
+      },
+      onPointerSignal: onPointerSignal,
+      child: widget,
+    );
+
+    return PhotoView.customChild(
+      backgroundDecoration: BoxDecoration(
+        color: context.colorScheme.surface,
+      ),
+      minScale: 1.0,
+      maxScale: 2.5,
+      strictScale: true,
+      controller: photoViewController,
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        child: widget,
+      ),
+    );
+  }
+
+  @override
+  Future<void> animateToPage(int page) {
+    return itemScrollController.scrollTo(
+      index: page,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.ease,
+    );
+  }
+
+  @override
+  void handleDoubleTap(Offset location) {
+    double target;
+    if (photoViewController.scale !=
+        photoViewController.getInitialScale?.call()) {
+      target = photoViewController.getInitialScale!.call()!;
+    } else {
+      target = photoViewController.getInitialScale!.call()! * 1.75;
+    }
+    var size = MediaQuery.of(context).size;
+    photoViewController.animateScale?.call(
+      target,
+      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+    );
+  }
+
+  @override
+  void handleLongPressDown(Offset location) {
+    double target = photoViewController.getInitialScale!.call()! * 1.75;
+    var size = MediaQuery.of(context).size;
+    photoViewController.animateScale?.call(
+      target,
+      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+    );
+  }
+
+  @override
+  void handleLongPressUp(Offset location) {
+    double target = photoViewController.getInitialScale!.call()!;
+    photoViewController.animateScale?.call(target);
+  }
+
+  @override
+  void toPage(int page) {
+    itemScrollController.jumpTo(index: page);
+    futurePosition = null;
+  }
+
+  @override
+  void handleKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.controlLeft ||
+        event.logicalKey == LogicalKeyboardKey.controlRight) {
+      setState(() {
+        if (event is KeyDownEvent) {
+          isCTRLPressed = true;
+        } else if (event is KeyUpEvent) {
+          isCTRLPressed = false;
+        }
+      });
+    }
+    bool? forward;
+    if (reader.mode == ReaderMode.continuousLeftToRight &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.continuousRightToLeft &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.continuousTopToBottom &&
+        event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      forward = true;
+    } else if (reader.mode == ReaderMode.continuousTopToBottom &&
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      forward = false;
+    } else if (reader.mode == ReaderMode.continuousLeftToRight &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      forward = false;
+    } else if (reader.mode == ReaderMode.continuousRightToLeft &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      forward = false;
+    }
+    if (forward == true) {
+      scrollController.animateTo(
+        scrollController.offset + context.height,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.ease,
+      );
+    } else if (forward == false) {
+      scrollController.animateTo(
+        scrollController.offset - context.height,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.ease,
+      );
+    }
   }
 }
 

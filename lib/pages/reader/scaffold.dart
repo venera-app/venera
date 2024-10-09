@@ -18,6 +18,23 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool get isOpen => _isOpen;
 
+  @override
+  void initState() {
+    sliderFocus.canRequestFocus = false;
+    sliderFocus.addListener(() {
+      if (sliderFocus.hasFocus) {
+        sliderFocus.nextFocus();
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    sliderFocus.dispose();
+    super.dispose();
+  }
+
   void openOrClose() {
     setState(() {
       _isOpen = !_isOpen;
@@ -248,8 +265,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
+  var sliderFocus = FocusNode();
+
   Widget buildSlider() {
     return Slider(
+      focusNode: sliderFocus,
       value: context.reader.page.toDouble(),
       min: 1,
       max:

@@ -4,9 +4,12 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
@@ -22,10 +25,9 @@ import 'package:venera/utils/translations.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'scaffold.dart';
-
 part 'images.dart';
-
 part 'gesture.dart';
+part 'comic_image.dart';
 
 extension _ReaderContext on BuildContext {
   _ReaderState get reader => findAncestorStateOfType<_ReaderState>()!;
@@ -92,6 +94,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   @override
   bool isLoading = false;
 
+  var focusNode = FocusNode();
+
   @override
   void initState() {
     page = widget.initialPage ?? 1;
@@ -102,12 +106,28 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   @override
+  void dispose() {
+    autoPageTurningTimer?.cancel();
+    focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _ReaderScaffold(
-      child: _ReaderGestureDetector(
-        child: _ReaderImages(key: Key(chapter.toString())),
+    return KeyboardListener(
+      focusNode: focusNode,
+      autofocus: true,
+      onKeyEvent: onKeyEvent,
+      child: _ReaderScaffold(
+        child: _ReaderGestureDetector(
+          child: _ReaderImages(key: Key(chapter.toString())),
+        ),
       ),
     );
+  }
+
+  void onKeyEvent(KeyEvent event) {
+    _imageViewController?.handleKeyEvent(event);
   }
 
   @override
@@ -279,4 +299,10 @@ abstract interface class _ImageViewController {
   Future<void> animateToPage(int page);
 
   void handleDoubleTap(Offset location);
+
+  void handleLongPressDown(Offset location);
+
+  void handleLongPressUp(Offset location);
+
+  void handleKeyEvent(KeyEvent event);
 }
