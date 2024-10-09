@@ -9,6 +9,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/pages/accounts_page.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/history_page.dart';
@@ -755,7 +756,9 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () {},
+          onTap: () {
+            context.to(() => const AccountsPage());
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
