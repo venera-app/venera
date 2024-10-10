@@ -262,6 +262,8 @@ class ContentDialog extends StatelessWidget {
       insetPadding: context.width < 400
           ? const EdgeInsets.symmetric(horizontal: 4)
           : const EdgeInsets.symmetric(horizontal: 16),
+      elevation: 2,
+      shadowColor: context.colorScheme.shadow,
       child: IntrinsicWidth(
         child: ConstrainedBox(
           constraints: BoxConstraints(

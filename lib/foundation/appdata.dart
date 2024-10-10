@@ -51,9 +51,9 @@ class _Appdata {
       return;
     }
     var json = jsonDecode(await file.readAsString());
-    for(var key in json['settings'].keys) {
-      if(json[key] != null) {
-        settings[key] = json[key];
+    for(var key in (json['settings'] as Map<String, dynamic>).keys) {
+      if(json['settings'][key] != null) {
+        settings[key] = json['settings'][key];
       }
     }
     searchHistory = List.from(json['searchHistory']);

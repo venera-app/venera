@@ -127,15 +127,15 @@ class _NaviPaneState extends State<NaviPane>
       }
       if (target == 1) {
         StateController.find<NaviPaddingWidgetController>()
-            .setWithPadding(true, true);
+            .setWithPadding(true, true, true);
         controller.value = target;
       } else if (controller.value == 1 && target == 0) {
         StateController.findOrNull<NaviPaddingWidgetController>()
-            ?.setWithPadding(false, false);
+            ?.setWithPadding(false, false, false);
         controller.value = target;
       } else {
         StateController.findOrNull<NaviPaddingWidgetController>()
-            ?.setWithPadding(true, false);
+            ?.setWithPadding(true, false, false);
         controller.animateTo(target);
       }
       animationTarget = target;
@@ -660,9 +660,13 @@ class NaviPaddingWidgetController extends StateController {
 
   bool _withTopBarPadding = false;
 
-  void setWithPadding(bool withPadding, bool withAppbarPadding) {
+  bool _withBottomBarPadding = false;
+
+  void setWithPadding(
+      bool withPadding, bool withAppbarPadding, bool withBottomBarPadding) {
     _withPadding = withPadding;
     _withTopBarPadding = withAppbarPadding;
+    _withBottomBarPadding = withBottomBarPadding;
     update();
   }
 }
@@ -683,8 +687,10 @@ class NaviPaddingWidget extends StatelessWidget {
                       (controller._withTopBarPadding
                           ? _NaviPaneState._kTopBarHeight
                           : 0),
-                  bottom:
-                      _NaviPaneState._kBottomBarHeight + context.padding.bottom,
+                  bottom: context.padding.bottom +
+                      (controller._withBottomBarPadding
+                          ? _NaviPaneState._kBottomBarHeight
+                          : 0),
                 )
               : EdgeInsets.zero,
           child: child,

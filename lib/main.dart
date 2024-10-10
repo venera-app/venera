@@ -56,6 +56,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     App.registerForceRebuild(forceRebuild);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.initState();
   }
 

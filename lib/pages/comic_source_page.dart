@@ -243,7 +243,7 @@ class _BodyState extends State<_Body> {
                   .paddingBottom(32),
               Row(
                 children: [
-                  TextButton(onPressed: chooseFile, child: Text("Choose file".tl))
+                  TextButton(onPressed: selectFile, child: Text("Select file".tl))
                       .paddingLeft(8),
                   const Spacer(),
                   TextButton(
@@ -265,7 +265,7 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  void chooseFile() async {
+  void selectFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['js'],

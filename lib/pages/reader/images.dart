@@ -258,7 +258,7 @@ class _GalleryModeState extends State<_GalleryMode>
         event.logicalKey == LogicalKeyboardKey.arrowRight) {
       forward = false;
     }
-    if(event is KeyDownEvent || event is KeyRepeatEvent) {
+    if (event is KeyDownEvent || event is KeyRepeatEvent) {
       if (forward == true) {
         controller.nextPage(
           duration: const Duration(milliseconds: 200),
@@ -371,13 +371,12 @@ class _ContinuousModeState extends State<_ContinuousMode>
         if (index == 0 || index == reader.maxPage + 1) {
           return const SizedBox();
         }
-        double width = MediaQuery.of(context).size.width;
-        double height = MediaQuery.of(context).size.height;
-
-        double imageWidth = width;
-
-        if (height / width < 1.2) {
-          imageWidth = height / 1.2;
+        double? width, height;
+        if (reader.mode == ReaderMode.continuousLeftToRight ||
+            reader.mode == ReaderMode.continuousRightToLeft) {
+          height = double.infinity;
+        } else {
+          width = double.infinity;
         }
 
         _precacheImage(index, context);
@@ -387,9 +386,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
         return ComicImage(
           filterQuality: FilterQuality.medium,
           image: image,
-          width: imageWidth,
-          height: imageWidth * 1.2,
-          fit: BoxFit.cover,
+          width: width,
+          height: height,
+          fit: BoxFit.contain,
         );
       },
       scrollBehavior: const MaterialScrollBehavior()
@@ -420,10 +419,10 @@ class _ContinuousModeState extends State<_ContinuousMode>
           return;
         }
         if (scrollController.offset !=
-            scrollController.position.maxScrollExtent &&
+                scrollController.position.maxScrollExtent &&
             scrollController.offset !=
                 scrollController.position.minScrollExtent) {
-          if(reader.mode == ReaderMode.continuousTopToBottom) {
+          if (reader.mode == ReaderMode.continuousTopToBottom) {
             value = Offset(value.dx, 0);
           } else {
             value = Offset(0, value.dy);

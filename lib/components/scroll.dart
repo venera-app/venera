@@ -55,7 +55,7 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
       return widget.builder(
         context,
         _controller,
-        const ClampingScrollPhysics(),
+        const BouncingScrollPhysics(),
       );
     }
     return Listener(
@@ -93,7 +93,7 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
         _controller,
         _isMouseScroll
             ? const NeverScrollableScrollPhysics()
-            : const ClampingScrollPhysics(),
+            : const BouncingScrollPhysics(),
       ),
     );
   }

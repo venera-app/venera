@@ -102,7 +102,9 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     chapter = widget.initialChapter ?? 1;
     mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     history = widget.history;
-    updateHistory();
+    Future.microtask(() {
+      updateHistory();
+    });
     super.initState();
   }
 

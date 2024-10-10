@@ -296,7 +296,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
       padding: tabPadding,
       radius: tabRadius,
     );
-    if (old != null) {
+    if (old != null && old.offsets != null && old.itemHeight != null) {
       painter!.update(old.offsets!, old.itemHeight!);
     }
   }

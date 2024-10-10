@@ -74,6 +74,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         buildChapters(),
         buildThumbnails(),
         buildRecommend(),
+        SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
       ],
     );
   }
@@ -108,6 +109,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             onPressed: showMoreActions, icon: const Icon(Icons.more_horiz))
       ],
     );
+
+    yield const SliverPadding(padding: EdgeInsets.only(top: 8));
 
     yield Row(
       crossAxisAlignment: CrossAxisAlignment.start,

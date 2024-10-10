@@ -260,7 +260,8 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
     if (_lastException != null) {
       // display error and retry button on screen
       return SizedBox(
-        height: 300,
+        height: widget.height == null ? 300 : null,
+        width: widget.width == null ? 300 : null,
         child: Center(
           child: SizedBox(
             height: 300,
@@ -295,87 +296,92 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
       );
     }
 
-    var width = widget.width??MediaQuery.of(context).size.width;
-    double? height;
+    return LayoutBuilder(builder: (context, constrains) {
+      var width = widget.width;
+      var height = widget.height;
 
-    Size? cacheSize = _cache[widget.image.hashCode];
-    if(cacheSize != null){
-      height = cacheSize.height * (width / cacheSize.width);
-      height = height.ceilToDouble();
-    }
-
-    var brightness = Theme.of(context).brightness;
-
-    if(_imageInfo != null){
-      // Record the height and the width of the image
-      _cache[widget.image.hashCode] = Size(
-          _imageInfo!.image.width.toDouble(),
-          _imageInfo!.image.height.toDouble()
-      );
-      // build image
-      Widget result = RawImage(
-        // Do not clone the image, because RawImage is a stateless wrapper.
-        // The image will be disposed by this state object when it is not needed
-        // anymore, such as when it is unmounted or when the image stream pushes
-        // a new image.
-        image: _imageInfo?.image,
-        debugImageLabel: _imageInfo?.debugLabel,
-        width: width,
-        height: height,
-        scale: _imageInfo?.scale ?? 1.0,
-        color: widget.color,
-        opacity: widget.opacity,
-        colorBlendMode: widget.colorBlendMode,
-        fit: widget.fit,
-        alignment: widget.alignment,
-        repeat: widget.repeat,
-        centerSlice: widget.centerSlice,
-        matchTextDirection: widget.matchTextDirection,
-        invertColors: _invertColors,
-        isAntiAlias: widget.isAntiAlias,
-        filterQuality: widget.filterQuality,
-      );
-
-      if (!widget.excludeFromSemantics) {
-        result = Semantics(
-          container: widget.semanticLabel != null,
-          image: true,
-          label: widget.semanticLabel ?? '',
-          child: result,
+      if(_imageInfo != null) {
+        // Record the height and the width of the image
+        _cache[widget.image.hashCode] = Size(
+            _imageInfo!.image.width.toDouble(),
+            _imageInfo!.image.height.toDouble()
         );
       }
-      result = SizedBox(
-        width: width,
-        height: height,
-        child: Center(
-          child: result,
-        ),
-      );
-      return result;
-    } else {
-      // build progress
-      return SizedBox(
-        width: width,
-        height: height??300,
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              backgroundColor: brightness == Brightness.dark
-                  ? Colors.white24
-                  : Colors.black12,
-              strokeWidth: 3,
-              value: (_loadingProgress != null &&
-                  _loadingProgress!.expectedTotalBytes!=null &&
-                  _loadingProgress!.expectedTotalBytes! != 0)
-                  ?_loadingProgress!.cumulativeBytesLoaded / _loadingProgress!.expectedTotalBytes!
-                  :0,
+
+      Size? cacheSize = _cache[widget.image.hashCode];
+      if(cacheSize != null){
+        if(width == double.infinity) {
+          width = constrains.maxWidth;
+          height = width * cacheSize.height / cacheSize.width;
+        } else if(height == double.infinity) {
+          height = constrains.maxHeight;
+          width = height * cacheSize.width / cacheSize.height;
+        }
+      }
+
+      if(_imageInfo != null){
+        // build image
+        Widget result = RawImage(
+          // Do not clone the image, because RawImage is a stateless wrapper.
+          // The image will be disposed by this state object when it is not needed
+          // anymore, such as when it is unmounted or when the image stream pushes
+          // a new image.
+          image: _imageInfo?.image,
+          debugImageLabel: _imageInfo?.debugLabel,
+          width: width,
+          height: height,
+          scale: _imageInfo?.scale ?? 1.0,
+          color: widget.color,
+          opacity: widget.opacity,
+          colorBlendMode: widget.colorBlendMode,
+          fit: widget.fit,
+          alignment: widget.alignment,
+          repeat: widget.repeat,
+          centerSlice: widget.centerSlice,
+          matchTextDirection: widget.matchTextDirection,
+          invertColors: _invertColors,
+          isAntiAlias: widget.isAntiAlias,
+          filterQuality: widget.filterQuality,
+        );
+
+        if (!widget.excludeFromSemantics) {
+          result = Semantics(
+            container: widget.semanticLabel != null,
+            image: true,
+            label: widget.semanticLabel ?? '',
+            child: result,
+          );
+        }
+        result = SizedBox(
+          width: width,
+          height: height,
+          child: Center(
+            child: result,
+          ),
+        );
+        return result;
+      } else {
+        // build progress
+        return SizedBox(
+          width: width,
+          height: height,
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                value: (_loadingProgress != null &&
+                    _loadingProgress!.expectedTotalBytes!=null &&
+                    _loadingProgress!.expectedTotalBytes! != 0)
+                    ?_loadingProgress!.cumulativeBytesLoaded / _loadingProgress!.expectedTotalBytes!
+                    :0,
+              ),
             ),
           ),
-        ),
-      );
-    }
+        );
+      }
+    });
   }
 
   @override
