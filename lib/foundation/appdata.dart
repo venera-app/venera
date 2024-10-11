@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:path_provider/path_provider.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/io.dart';
 
@@ -9,9 +10,9 @@ class _Appdata {
   var searchHistory = <String>[];
 
   bool _isSavingData = false;
-  
+
   Future<void> saveData() async {
-    if(_isSavingData) {
+    if (_isSavingData) {
       await Future.doWhile(() async {
         await Future.delayed(const Duration(milliseconds: 20));
         return _isSavingData;
@@ -25,11 +26,11 @@ class _Appdata {
   }
 
   void addSearchHistory(String keyword) {
-    if(searchHistory.contains(keyword)) {
+    if (searchHistory.contains(keyword)) {
       searchHistory.remove(keyword);
     }
     searchHistory.insert(0, keyword);
-    if(searchHistory.length > 50) {
+    if (searchHistory.length > 50) {
       searchHistory.removeLast();
     }
     saveData();
@@ -46,13 +47,16 @@ class _Appdata {
   }
 
   Future<void> init() async {
-    var file = File(FilePath.join(App.dataPath, 'appdata.json'));
-    if(!await file.exists()) {
+    var file = File(FilePath.join(
+      (await getApplicationSupportDirectory()).path,
+      'appdata.json',
+    ));
+    if (!await file.exists()) {
       return;
     }
     var json = jsonDecode(await file.readAsString());
-    for(var key in (json['settings'] as Map<String, dynamic>).keys) {
-      if(json['settings'][key] != null) {
+    for (var key in (json['settings'] as Map<String, dynamic>).keys) {
+      if (json['settings'][key] != null) {
         settings[key] = json['settings'][key];
       }
     }
@@ -74,7 +78,7 @@ class _Settings {
 
   final _data = <String, dynamic>{
     'comicDisplayMode': 'detailed', // detailed, brief
-    'comicTileScale': 1.0, // 0.8-1.2
+    'comicTileScale': 1.00, // 0.75-1.25
     'color': 'blue', // red, pink, purple, green, orange, blue
     'theme_mode': 'system', // light, dark, system
     'newFavoriteAddTo': 'end', // start, end
@@ -91,13 +95,14 @@ class _Settings {
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
     'enableTapToTurnPages': true,
     'enablePageAnimation': true,
+    'language': 'system', // system, zh-CN, zh-TW, en-US
   };
 
-  operator[](String key) {
+  operator [](String key) {
     return _data[key];
   }
 
-  operator[]=(String key, dynamic value) {
+  operator []=(String key, dynamic value) {
     _data[key] = value;
   }
 

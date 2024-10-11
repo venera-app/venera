@@ -40,6 +40,8 @@ dependencies:
       url: https://github.com/venera-app/flutter.widgets
       ref: 09e756b1f1b04e6298318d99ec20a787fb360f59
       path: packages/scrollable_positioned_list
+  flutter_reorderable_grid_view: 5.0.1
+  yaml: any
 
 dev_dependencies:
   flutter_test:
@@ -51,4 +53,5 @@ flutter:
   assets:
     - assets/translation.json
     - assets/init.js
+    - assets/app_icon.png
 

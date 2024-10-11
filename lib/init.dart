@@ -12,8 +12,8 @@ import 'foundation/appdata.dart';
 
 Future<void> init() async {
   await AppTranslation.init();
-  await App.init();
   await appdata.init();
+  await App.init();
   await HistoryManager().init();
   await LocalManager().init();
   await LocalFavoritesManager().init();

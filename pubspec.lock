@@ -164,6 +164,14 @@ packages:
       url: "https://github.com/wgh136/flutter_qjs"
     source: git
     version: "0.3.7"
+  flutter_reorderable_grid_view:
+    dependency: "direct main"
+    description:
+      name: flutter_reorderable_grid_view
+      sha256: "40abcc5bff228ebff119326502e7357ee6399956b60b80b17385e9770b7458c0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -597,6 +605,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  yaml:
+    dependency: "direct main"
+    description:
+      name: yaml
+      sha256: "75769501ea3489fca56601ff33454fe45507ea3bfb014161abc3b43ae25989d5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.2"
 sdks:
   dart: ">=3.4.4 <4.0.0"
   flutter: ">=3.22.3"

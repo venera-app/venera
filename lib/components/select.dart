@@ -60,7 +60,7 @@ class Select extends StatelessWidget {
           children: [
             Text(current, style: ts.s14),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_drop_down),
+            Icon(Icons.arrow_drop_down, color: context.colorScheme.primary),
           ],
         ).padding(const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
       ),

@@ -83,7 +83,7 @@ class _AppbarState extends State<Appbar> {
                 message: "Back".tl,
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.maybePop(context),
                 ),
               ),
           const SizedBox(
@@ -187,7 +187,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
                     message: "Back".tl,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.maybePop(context),
                     ),
                   )
                       : const SizedBox()),
@@ -322,7 +322,9 @@ class _FilledTabBarState extends State<FilledTabBar> {
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.zero,
           controller: controller,
-          physics: physics,
+          physics: physics is BouncingScrollPhysics
+              ? const ClampingScrollPhysics()
+              : physics,
           child: CustomPaint(
             painter: painter,
             child: _TabRow(

@@ -104,6 +104,18 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      locale: () {
+        var lang = appdata.settings['language'];
+        if(lang == 'system') {
+          return null;
+        }
+        return switch(lang) {
+          'zh-CN' => const Locale('zh', 'CN'),
+          'zh-TW' => const Locale('zh', 'TW'),
+          'en-US' => const Locale('en'),
+          _ => null
+        };
+      }(),
       supportedLocales: const [
         Locale('en'),
         Locale('zh', 'CN'),

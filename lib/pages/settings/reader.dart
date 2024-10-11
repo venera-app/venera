@@ -14,7 +14,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
   Widget build(BuildContext context) {
     return SmoothCustomScrollView(
       slivers: [
-        SliverAppbar(title: Text("Settings".tl)),
+        SliverAppbar(title: Text("Reading".tl)),
         _SwitchSetting(
           title: "Tap to turn Pages".tl,
           settingKey: "enableTapToTurnPages",

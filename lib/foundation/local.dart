@@ -100,6 +100,29 @@ class LocalManager with ChangeNotifier {
 
   late String path;
 
+  // return error message if failed
+  Future<String?> setNewPath(String newPath) async {
+    var newDir = Directory(newPath);
+    if(!await newDir.exists()) {
+      return "Directory does not exist";
+    }
+    if(!await newDir.list().isEmpty) {
+      return "Directory is not empty";
+    }
+    try {
+      await copyDirectory(
+        Directory(path),
+        newDir,
+      );
+      await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(path);
+    } catch (e) {
+      return e.toString();
+    }
+    await Directory(path).deleteIgnoreError();
+    path = newPath;
+    return null;
+  }
+
   Future<void> init() async {
     _db = sqlite3.open(
       '${App.dataPath}/local.db',
@@ -118,18 +141,18 @@ class LocalManager with ChangeNotifier {
         PRIMARY KEY (id, comic_type)
       );
     ''');
-    if (File('${App.dataPath}/local_path').existsSync()) {
-      path = File('${App.dataPath}/local_path').readAsStringSync();
+    if (File(FilePath.join(App.dataPath, 'local_path')).existsSync()) {
+      path = File(FilePath.join(App.dataPath, 'local_path')).readAsStringSync();
     } else {
       if (App.isAndroid) {
         var external = await getExternalStorageDirectories();
         if (external != null && external.isNotEmpty) {
-          path = '${external.first.path}/local';
+          path = FilePath.join(external.first.path, 'local_path');
         } else {
-          path = '${App.dataPath}/local';
+          path = FilePath.join(App.dataPath, 'local_path');
         }
       } else {
-        path = '${App.dataPath}/local';
+        path = FilePath.join(App.dataPath, 'local_path');
       }
     }
     if (!Directory(path).existsSync()) {

@@ -112,7 +112,7 @@ class AppDio with DioMixin {
   static HttpClient createHttpClient() {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 5);
-    client.findProxy = (uri) => proxy ?? "DIRECT";
+    client.findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
     client.idleTimeout = const Duration(seconds: 100);
     client.badCertificateCallback = (X509Certificate cert, String host, int port) {
       if (host.contains("cdn")) return true;

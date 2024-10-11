@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:venera/pages/categories_page.dart';
 import 'package:venera/pages/search_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/translations.dart';
 
 import '../components/components.dart';
@@ -89,7 +90,9 @@ class _MainPageState extends State<MainPage> {
         PaneActionEntry(
           icon: Icons.settings,
           label: "Settings".tl,
-          onTap: () {},
+          onTap: () {
+            to(() => const SettingsPage());
+          },
         )
       ],
       pageBuilder: (index) {
