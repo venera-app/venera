@@ -47,7 +47,7 @@ class CategoriesPage extends StatelessWidget {
                       key: Key(e),
                     );
                   }).toList(),
-                ),
+                ).paddingTop(context.padding.top),
                 Expanded(
                   child: TabBarView(
                       children:

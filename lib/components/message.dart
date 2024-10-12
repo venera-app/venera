@@ -1,12 +1,17 @@
 part of "components.dart";
 
-void showToast({required String message, required BuildContext context, Widget? icon, Widget? trailing,}) {
+void showToast({
+  required String message,
+  required BuildContext context,
+  Widget? icon,
+  Widget? trailing,
+}) {
   var newEntry = OverlayEntry(
       builder: (context) => _ToastOverlay(
-        message: message,
-        icon: icon,
-        trailing: trailing,
-      ));
+            message: message,
+            icon: icon,
+            trailing: trailing,
+          ));
 
   var state = context.findAncestorStateOfType<OverlayWidgetState>();
 
@@ -36,9 +41,11 @@ class _ToastOverlay extends StatelessWidget {
           color: Theme.of(context).colorScheme.inverseSurface,
           borderRadius: BorderRadius.circular(8),
           elevation: 2,
-          textStyle: ts.withColor(Theme.of(context).colorScheme.onInverseSurface),
+          textStyle:
+              ts.withColor(Theme.of(context).colorScheme.onInverseSurface),
           child: IconTheme(
-            data: IconThemeData(color: Theme.of(context).colorScheme.onInverseSurface),
+            data: IconThemeData(
+                color: Theme.of(context).colorScheme.onInverseSurface),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
               child: Row(
@@ -121,23 +128,28 @@ void showDialogMessage(BuildContext context, String title, String message) {
   );
 }
 
-void showConfirmDialog(BuildContext context, String title, String content,
-    void Function() onConfirm) {
+void showConfirmDialog({
+  required BuildContext context,
+  required String title,
+  required String content,
+  required void Function() onConfirm,
+}) {
   showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(onPressed: context.pop, child: Text("Cancel".tl)),
-              TextButton(
-                  onPressed: () {
-                    context.pop();
-                    onConfirm();
-                  },
-                  child: Text("Confirm".tl)),
-            ],
-          ));
+    context: context,
+    builder: (context) => ContentDialog(
+      title: title,
+      content: Text(content).paddingHorizontal(16).paddingVertical(8),
+      actions: [
+        FilledButton(
+          onPressed: () {
+            context.pop();
+            onConfirm();
+          },
+          child: Text("Confirm".tl),
+        ),
+      ],
+    ),
+  );
 }
 
 class LoadingDialogController {
@@ -234,6 +246,7 @@ class ContentDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     var content = Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Appbar(
           leading: IconButton(
@@ -280,4 +293,84 @@ class ContentDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+void showInputDialog({
+  required BuildContext context,
+  required String title,
+  required String hintText,
+  required FutureOr<Object?> Function(String) onConfirm,
+  String? initialValue,
+  String confirmText = "Confirm",
+  String cancelText = "Cancel",
+}) {
+  var controller = TextEditingController(text: initialValue);
+  bool isLoading = false;
+  String? error;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return ContentDialog(
+            title: title,
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: hintText,
+                border: const OutlineInputBorder(),
+                errorText: error,
+              ),
+            ).paddingHorizontal(12),
+            actions: [
+              Button.filled(
+                isLoading: isLoading,
+                onPressed: () async {
+                  var futureOr = onConfirm(controller.text);
+                  Object? result;
+                  if (futureOr is Future) {
+                    setState(() => isLoading = true);
+                    result = await futureOr;
+                    setState(() => isLoading = false);
+                  } else {
+                    result = futureOr;
+                  }
+                  if(result == null) {
+                    context.pop();
+                  } else {
+                    setState(() => error = result.toString());
+                  }
+                },
+                child: Text(confirmText.tl),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+void showInfoDialog({
+  required BuildContext context,
+  required String title,
+  required String content,
+  String confirmText = "OK",
+}) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return ContentDialog(
+        title: title,
+        content: Text(content).paddingHorizontal(16).paddingVertical(8),
+        actions: [
+          Button.filled(
+            onPressed: context.pop,
+            child: Text(confirmText.tl),
+          ),
+        ],
+      );
+    },
+  );
 }

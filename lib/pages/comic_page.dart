@@ -8,7 +8,7 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/res.dart';
-import 'package:venera/pages/favorites/favorite_actions.dart';
+import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
@@ -247,7 +247,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SelectableText(comic.description!),
+            child: SelectableText(comic.description!).fixWidth(double.infinity),
           ),
           const SizedBox(height: 16),
           const Divider(),

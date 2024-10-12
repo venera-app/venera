@@ -64,7 +64,7 @@ class _ExplorePageState extends State<ExplorePage>
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,
       ),
-    );
+    ).paddingTop(context.padding.top);
 
     return Stack(
       children: [

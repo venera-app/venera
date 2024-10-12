@@ -8,7 +8,7 @@ import '../components/components.dart';
 import '../foundation/app.dart';
 import '../foundation/app_page_route.dart';
 import 'explore_page.dart';
-import 'favorites_page.dart';
+import 'favorites/favorites_page.dart';
 import 'home_page.dart';
 
 class MainPage extends StatefulWidget {

@@ -49,12 +49,17 @@ class ComicSourcePage extends StatefulWidget {
       msg += "${ComicSource.find(key)?.name}: v${versions[key]}\n";
     }
     msg = msg.trim();
-    showConfirmDialog(App.rootContext, "Updates Available".tl, msg, () {
-      for (var key in shouldUpdate) {
-        var source = ComicSource.find(key);
-        _BodyState.update(source!);
-      }
-    });
+    showConfirmDialog(
+      context: App.rootContext,
+      title: "Updates Available".tl,
+      content: msg,
+      onConfirm: () {
+        for (var key in shouldUpdate) {
+          var source = ComicSource.find(key);
+          _BodyState.update(source!);
+        }
+      },
+    );
   }
 
   @override
@@ -149,10 +154,10 @@ class _BodyState extends State<_Body> {
 
   void delete(ComicSource source) {
     showConfirmDialog(
-      App.rootContext,
-      "Delete".tl,
-      "Are you sure you want to delete it?".tl,
-      () {
+      context: App.rootContext,
+      title: "Delete".tl,
+      content: "Are you sure you want to delete it?".tl,
+      onConfirm: () {
         var file = File(source.filePath);
         file.delete();
         ComicSource.remove(source.key);
@@ -243,7 +248,8 @@ class _BodyState extends State<_Body> {
                   .paddingBottom(32),
               Row(
                 children: [
-                  TextButton(onPressed: selectFile, child: Text("Select file".tl))
+                  TextButton(
+                          onPressed: selectFile, child: Text("Select file".tl))
                       .paddingLeft(8),
                   const Spacer(),
                   TextButton(

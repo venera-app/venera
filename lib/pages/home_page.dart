@@ -22,13 +22,15 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var widget = const SmoothCustomScrollView(
+    var widget = SmoothCustomScrollView(
       slivers: [
-        _SearchBar(),
-        _History(),
-        _Local(),
-        _ComicSourceWidget(),
-        _AccountsWidget(),
+        SliverPadding(padding: EdgeInsets.only(top: context.padding.top)),
+        const _SearchBar(),
+        const _History(),
+        const _Local(),
+        const _ComicSourceWidget(),
+        const _AccountsWidget(),
+        SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
     );
     return context.width > changePoint ? widget.paddingHorizontal(8) : widget;

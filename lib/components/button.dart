@@ -343,3 +343,33 @@ class _IconButtonState extends State<_IconButton> {
     );
   }
 }
+
+class MenuButton extends StatefulWidget {
+  const MenuButton({super.key, required this.entries});
+
+  final List<MenuEntry> entries;
+
+  @override
+  State<MenuButton> createState() => _MenuButtonState();
+}
+
+class _MenuButtonState extends State<MenuButton> {
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'more'.tl,
+      child: Button.icon(
+        icon: const Icon(Icons.more_horiz),
+        onPressed: () {
+          var renderBox = context.findRenderObject() as RenderBox;
+          var offset = renderBox.localToGlobal(Offset.zero);
+          showMenuX(
+            context,
+            offset,
+            widget.entries,
+          );
+        },
+      ),
+    );
+  }
+}

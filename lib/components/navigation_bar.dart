@@ -135,7 +135,7 @@ class _NaviPaneState extends State<NaviPane>
         controller.value = target;
       } else {
         StateController.findOrNull<NaviPaddingWidgetController>()
-            ?.setWithPadding(true, false, false);
+            ?.setWithPadding(false, false, false);
         controller.animateTo(target);
       }
       animationTarget = target;
@@ -555,7 +555,15 @@ class _SingleBottomNaviWidgetState extends State<_SingleBottomNaviWidget>
 class NaviObserver extends NavigatorObserver implements Listenable {
   var routes = Queue<Route>();
 
-  int get pageCount => routes.length;
+  int get pageCount {
+    int count = 0;
+    for (var route in routes) {
+      if (route is AppPageRoute) {
+        count++;
+      }
+    }
+    return count;
+  }
 
   @override
   void didPop(Route route, Route? previousRoute) {
@@ -693,7 +701,12 @@ class NaviPaddingWidget extends StatelessWidget {
                           : 0),
                 )
               : EdgeInsets.zero,
-          child: child,
+          child: MediaQuery.removePadding(
+            removeTop: controller._withPadding,
+            removeBottom: controller._withPadding,
+            context: context,
+            child: child,
+          ),
         );
       },
     );

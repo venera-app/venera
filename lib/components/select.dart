@@ -6,13 +6,16 @@ class Select extends StatelessWidget {
     required this.current,
     required this.values,
     this.onTap,
+    this.minWidth,
   });
 
-  final String current;
+  final String? current;
 
   final List<String> values;
 
   final void Function(int index)? onTap;
+
+  final double? minWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +61,12 @@ class Select extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(current, style: ts.s14),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: minWidth != null ? (minWidth! - 32) : 0,
+              ),
+              child: Text(current ?? ' ', style: ts.s14),
+            ),
             const SizedBox(width: 8),
             Icon(Icons.arrow_drop_down, color: context.colorScheme.primary),
           ],

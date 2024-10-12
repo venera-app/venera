@@ -47,8 +47,9 @@ class _Appdata {
   }
 
   Future<void> init() async {
+    var dataPath = (await getApplicationSupportDirectory()).path;
     var file = File(FilePath.join(
-      (await getApplicationSupportDirectory()).path,
+      dataPath,
       'appdata.json',
     ));
     if (!await file.exists()) {
@@ -61,6 +62,10 @@ class _Appdata {
       }
     }
     searchHistory = List.from(json['searchHistory']);
+    var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
+    if (await implicitDataFile.exists()) {
+      implicitData = jsonDecode(await implicitDataFile.readAsString());
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -68,6 +73,13 @@ class _Appdata {
       'settings': settings._data,
       'searchHistory': searchHistory,
     };
+  }
+
+  var implicitData = <String, dynamic>{};
+
+  void writeImplicitData() {
+    var file = File(FilePath.join(App.dataPath, 'implicitData.json'));
+    file.writeAsString(jsonEncode(implicitData));
   }
 }
 

@@ -1,7 +1,7 @@
 part of "components.dart";
 
 void showMenuX(BuildContext context, Offset location, List<MenuEntry> entries) {
-  Navigator.of(context).push(_MenuRoute(entries, location));
+  Navigator.of(context, rootNavigator: true).push(_MenuRoute(entries, location));
 }
 
 class _MenuRoute<T> extends PopupRoute<T> {

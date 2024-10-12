@@ -320,9 +320,6 @@ class LocalFavoritesManager {
   void deleteFolder(String name) {
     _modifiedAfterLastCache = true;
     _db.execute("""
-      delete from folder_sync where folder_name == ?;
-    """, [name]);
-    _db.execute("""
       drop table "$name";
     """);
   }

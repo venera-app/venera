@@ -53,6 +53,13 @@ class ComicTile extends StatelessWidget {
             App.rootContext.showMessage(message: 'Title copied'.tl);
           },
         ),
+        MenuEntry(
+          icon: Icons.stars_outlined,
+          text: 'Add to favorites'.tl,
+          onClick: () {
+            addFavorite(comic);
+          },
+        ),
         ...?menuOptions,
       ],
     );
