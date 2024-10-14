@@ -15,10 +15,10 @@ Future<void> init() async {
   await appdata.init();
   await App.init();
   await HistoryManager().init();
-  await LocalManager().init();
   await LocalFavoritesManager().init();
   SingleInstanceCookieJar("${App.dataPath}/cookie.db");
   await JsEngine().init();
   await ComicSource.init();
+  await LocalManager().init();
   CacheManager();
 }

@@ -95,7 +95,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
 
   Future<Res<S>> loadData();
 
-  void onDataLoaded() {}
+  FutureOr<void> onDataLoaded() {}
 
   Widget buildContent(BuildContext context, S data);
 
@@ -114,13 +114,13 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
       isLoading = true;
       error = null;
     });
-    loadData().then((value) {
+    loadData().then((value) async {
       if (value.success) {
+        await onDataLoaded();
         setState(() {
           isLoading = false;
           data = value.data;
         });
-        onDataLoaded();
       } else {
         setState(() {
           isLoading = false;

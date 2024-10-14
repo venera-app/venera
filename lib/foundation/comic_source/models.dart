@@ -139,6 +139,29 @@ class ComicDetails with HistoryMixin {
         uploadTime = json["uploadTime"],
         updateTime = json["updateTime"];
 
+  Map<String, dynamic> toJson() {
+    return {
+      "title": title,
+      "subTitle": subTitle,
+      "cover": cover,
+      "description": description,
+      "tags": tags,
+      "chapters": chapters,
+      "thumbnails": thumbnails,
+      "recommend": null,
+      "sourceKey": sourceKey,
+      "comicId": comicId,
+      "isFavorite": isFavorite,
+      "subId": subId,
+      "isLiked": isLiked,
+      "likesCount": likesCount,
+      "commentsCount": commentsCount,
+      "uploader": uploader,
+      "uploadTime": uploadTime,
+      "updateTime": updateTime,
+    };
+  }
+
   @override
   HistoryType get historyType => HistoryType(sourceKey.hashCode);
 

@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart' as s;
 
 export 'dart:io';
+export 'dart:typed_data';
 
 class FilePath {
   const FilePath._();
@@ -64,6 +65,10 @@ extension DirectoryExtension on Directory {
     newName = sanitizeFileName(newName);
     return renameSync(path.replaceLast(name, newName));
   }
+
+  File joinFile(String name) {
+    return File(FilePath.join(path, name));
+  }
 }
 
 String sanitizeFileName(String fileName) {
@@ -108,7 +113,7 @@ String findValidDirectoryName(String path, String directory) {
   var name = sanitizeFileName(directory);
   var dir = Directory("$path/$name");
   var i = 1;
-  while (dir.existsSync()) {
+  while (dir.existsSync() && dir.listSync().isNotEmpty) {
     name = sanitizeFileName("$directory($i)");
     dir = Directory("$path/$name");
     i++;

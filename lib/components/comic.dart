@@ -7,6 +7,7 @@ class ComicTile extends StatelessWidget {
     this.enableLongPressed = true,
     this.badge,
     this.menuOptions,
+    this.onTap,
   });
 
   final Comic comic;
@@ -17,7 +18,13 @@ class ComicTile extends StatelessWidget {
 
   final List<MenuEntry>? menuOptions;
 
-  void onTap() {
+  final VoidCallback? onTap;
+
+  void _onTap() {
+    if(onTap != null) {
+      onTap!();
+      return;
+    }
     App.mainNavigatorKey?.currentContext
         ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
   }
@@ -43,7 +50,7 @@ class ComicTile extends StatelessWidget {
         MenuEntry(
           icon: Icons.chrome_reader_mode_outlined,
           text: 'Details'.tl,
-          onClick: onTap,
+          onClick: _onTap,
         ),
         MenuEntry(
           icon: Icons.copy,
@@ -155,7 +162,7 @@ class ComicTile extends StatelessWidget {
       final height = constrains.maxHeight - 16;
       return InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
+          onTap: _onTap,
           onLongPress: enableLongPressed ? () => onLongPress(context) : null,
           onSecondaryTapDown: onSecondaryTap,
           child: Padding(
@@ -250,7 +257,7 @@ class ComicTile extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: onTap,
+                  onTap: _onTap,
                   onLongPress:
                       enableLongPressed ? () => onLongPress(context) : null,
                   onSecondaryTapDown: onSecondaryTap,
@@ -464,6 +471,7 @@ class SliverGridComics extends StatelessWidget {
     this.onLastItemBuild,
     this.badgeBuilder,
     this.menuBuilder,
+    this.onTap,
   });
 
   final List<Comic> comics;
@@ -473,6 +481,8 @@ class SliverGridComics extends StatelessWidget {
   final String? Function(Comic)? badgeBuilder;
 
   final List<MenuEntry> Function(Comic)? menuBuilder;
+
+  final void Function(Comic)? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -490,6 +500,7 @@ class SliverGridComics extends StatelessWidget {
           onLastItemBuild: onLastItemBuild,
           badgeBuilder: badgeBuilder,
           menuBuilder: menuBuilder,
+          onTap: onTap,
         );
       },
     );
@@ -502,6 +513,7 @@ class _SliverGridComics extends StatelessWidget {
     this.onLastItemBuild,
     this.badgeBuilder,
     this.menuBuilder,
+    this.onTap,
   });
 
   final List<Comic> comics;
@@ -511,6 +523,8 @@ class _SliverGridComics extends StatelessWidget {
   final String? Function(Comic)? badgeBuilder;
 
   final List<MenuEntry> Function(Comic)? menuBuilder;
+
+  final void Function(Comic)? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -525,6 +539,7 @@ class _SliverGridComics extends StatelessWidget {
             comic: comics[index],
             badge: badge,
             menuOptions: menuBuilder?.call(comics[index]),
+            onTap: onTap != null ? () => onTap!(comics[index]) : null,
           );
         },
         childCount: comics.length,

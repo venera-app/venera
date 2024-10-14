@@ -1,16 +1,18 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/network/download.dart';
+import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/io.dart';
 
 import 'app.dart';
+import 'history.dart';
 
-class LocalComic implements Comic {
+class LocalComic with HistoryMixin implements Comic {
   @override
   final String id;
 
@@ -37,6 +39,8 @@ class LocalComic implements Comic {
 
   final ComicType comicType;
 
+  final List<String> downloadedChapters;
+
   final DateTime createdAt;
 
   const LocalComic({
@@ -48,6 +52,7 @@ class LocalComic implements Comic {
     required this.chapters,
     required this.cover,
     required this.comicType,
+    required this.downloadedChapters,
     required this.createdAt,
   });
 
@@ -60,9 +65,14 @@ class LocalComic implements Comic {
         chapters = Map.from(jsonDecode(row[5] as String)),
         cover = row[6] as String,
         comicType = ComicType(row[7] as int),
-        createdAt = DateTime.fromMillisecondsSinceEpoch(row[8] as int);
+        downloadedChapters = List.from(jsonDecode(row[8] as String)),
+        createdAt = DateTime.fromMillisecondsSinceEpoch(row[9] as int);
 
-  File get coverFile => File('${LocalManager().path}/$directory/$cover');
+  File get coverFile => File(FilePath.join(
+        LocalManager().path,
+        directory,
+        cover,
+      ));
 
   @override
   String get description => "";
@@ -85,6 +95,31 @@ class LocalComic implements Comic {
 
   @override
   int? get maxPage => null;
+
+  void read() async {
+    var history = await HistoryManager().find(id, comicType);
+    App.rootContext.to(
+      () => Reader(
+        type: comicType,
+        cid: id,
+        name: title,
+        chapters: chapters,
+        initialChapter: history?.ep,
+        initialPage: history?.page,
+        history: history ?? History.fromModel(
+          model: this,
+          ep: 0,
+          page: 0,
+        ),
+      ),
+    );
+  }
+
+  @override
+  HistoryType get historyType => comicType;
+
+  @override
+  String? get subTitle => subtitle;
 }
 
 class LocalManager with ChangeNotifier {
@@ -103,10 +138,10 @@ class LocalManager with ChangeNotifier {
   // return error message if failed
   Future<String?> setNewPath(String newPath) async {
     var newDir = Directory(newPath);
-    if(!await newDir.exists()) {
+    if (!await newDir.exists()) {
       return "Directory does not exist";
     }
-    if(!await newDir.list().isEmpty) {
+    if (!await newDir.list().isEmpty) {
       return "Directory is not empty";
     }
     try {
@@ -137,6 +172,7 @@ class LocalManager with ChangeNotifier {
         chapters TEXT NOT NULL,
         cover TEXT NOT NULL,
         comic_type INTEGER NOT NULL,
+        downloadedChapters TEXT NOT NULL,
         created_at INTEGER,
         PRIMARY KEY (id, comic_type)
       );
@@ -147,17 +183,18 @@ class LocalManager with ChangeNotifier {
       if (App.isAndroid) {
         var external = await getExternalStorageDirectories();
         if (external != null && external.isNotEmpty) {
-          path = FilePath.join(external.first.path, 'local_path');
+          path = FilePath.join(external.first.path, 'local');
         } else {
-          path = FilePath.join(App.dataPath, 'local_path');
+          path = FilePath.join(App.dataPath, 'local');
         }
       } else {
-        path = FilePath.join(App.dataPath, 'local_path');
+        path = FilePath.join(App.dataPath, 'local');
       }
     }
     if (!Directory(path).existsSync()) {
       await Directory(path).create();
     }
+    restoreDownloadingTasks();
   }
 
   String findValidId(ComicType type) {
@@ -175,8 +212,13 @@ class LocalManager with ChangeNotifier {
   }
 
   Future<void> add(LocalComic comic, [String? id]) async {
+    var old = find(id ?? comic.id, comic.comicType);
+    var downloaded = comic.downloadedChapters;
+    if (old != null) {
+      downloaded.addAll(old.downloadedChapters);
+    }
     _db.execute(
-      'INSERT INTO comics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      'INSERT OR REPLACE INTO comics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
       [
         id ?? comic.id,
         comic.title,
@@ -186,6 +228,7 @@ class LocalManager with ChangeNotifier {
         jsonEncode(comic.chapters),
         comic.cover,
         comic.comicType.value,
+        jsonEncode(downloaded),
         comic.createdAt.millisecondsSinceEpoch,
       ],
     );
@@ -274,7 +317,7 @@ class LocalManager with ChangeNotifier {
     files.sort((a, b) {
       var ai = int.tryParse(a.name.split('.').first);
       var bi = int.tryParse(b.name.split('.').first);
-      if(ai != null && bi != null) {
+      if (ai != null && bi != null) {
         return ai.compareTo(bi);
       }
       return a.name.compareTo(b.name);
@@ -284,9 +327,80 @@ class LocalManager with ChangeNotifier {
 
   Future<bool> isDownloaded(String id, ComicType type, int ep) async {
     var comic = find(id, type);
-    if(comic == null) return false;
-    if(comic.chapters == null)  return true;
-    var eid = comic.chapters!.keys.elementAt(ep);
-    return Directory(FilePath.join(path, comic.directory, eid)).exists();
+    if (comic == null) return false;
+    if (comic.chapters == null) return true;
+    return comic.downloadedChapters
+        .contains(comic.chapters!.keys.elementAt(ep));
+  }
+
+  List<DownloadTask> downloadingTasks = [];
+
+  bool isDownloading(String id, ComicType type) {
+    return downloadingTasks
+        .any((element) => element.id == id && element.comicType == type);
+  }
+
+  Future<Directory> findValidDirectory(
+      String id, ComicType type, String name) async {
+    var comic = find(id, type);
+    if (comic != null) {
+      return Directory(FilePath.join(path, comic.directory));
+    }
+    var dir = findValidDirectoryName(path, name);
+    return Directory(FilePath.join(path, dir)).create().then((value) => value);
+  }
+
+  void completeTask(DownloadTask task) {
+    add(task.toLocalComic());
+    downloadingTasks.remove(task);
+    notifyListeners();
+    saveCurrentDownloadingTasks();
+    downloadingTasks.firstOrNull?.resume();
+  }
+
+  void removeTask(DownloadTask task) {
+    downloadingTasks.remove(task);
+    notifyListeners();
+    saveCurrentDownloadingTasks();
+  }
+
+  void moveToFirst(DownloadTask task) {
+    if (downloadingTasks.first != task) {
+      var shouldResume = !downloadingTasks.first.isPaused;
+      downloadingTasks.first.pause();
+      downloadingTasks.remove(task);
+      downloadingTasks.insert(0, task);
+      notifyListeners();
+      saveCurrentDownloadingTasks();
+      if (shouldResume) {
+        downloadingTasks.first.resume();
+      }
+    }
+  }
+
+  Future<void> saveCurrentDownloadingTasks() async {
+    var tasks = downloadingTasks.map((e) => e.toJson()).toList();
+    await File(FilePath.join(App.dataPath, 'downloading_tasks.json'))
+        .writeAsString(jsonEncode(tasks));
+  }
+
+  void restoreDownloadingTasks() {
+    var file = File(FilePath.join(App.dataPath, 'downloading_tasks.json'));
+    if (file.existsSync()) {
+      var tasks = jsonDecode(file.readAsStringSync());
+      for (var e in tasks) {
+        var task = DownloadTask.fromJson(e);
+        if (task != null) {
+          downloadingTasks.add(task);
+        }
+      }
+    }
+  }
+
+  void addTask(DownloadTask task) {
+    downloadingTasks.add(task);
+    notifyListeners();
+    saveCurrentDownloadingTasks();
+    downloadingTasks.first.resume();
   }
 }

@@ -203,13 +203,13 @@ class _SidebarBodyState extends State<SidebarBody> {
   }
 }
 
-void showSideBar(BuildContext context, Widget widget,
+Future<void> showSideBar(BuildContext context, Widget widget,
     {String? title,
     bool showBarrier = true,
     bool useSurfaceTintColor = false,
     double width = 500,
     bool addTopPadding = false}) {
-  Navigator.of(context).push(
+  return Navigator.of(context).push(
     SideBarRoute(
       title,
       widget,

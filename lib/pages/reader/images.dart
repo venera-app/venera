@@ -510,6 +510,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
       });
     }
+    if(event is KeyUpEvent) {
+      return;
+    }
     bool? forward;
     if (reader.mode == ReaderMode.continuousLeftToRight &&
         event.logicalKey == LogicalKeyboardKey.arrowRight) {

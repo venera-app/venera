@@ -7,9 +7,12 @@ import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
+import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
+import 'package:venera/network/download.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
 
@@ -31,6 +34,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   bool showAppbarTitle = false;
 
   var scrollController = ScrollController();
+
+  bool isDownloaded = false;
 
   @override
   void initState() {
@@ -92,9 +97,16 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   @override
-  onDataLoaded() {
+  Future<void> onDataLoaded() async {
     isLiked = comic.isLiked ?? false;
     isFavorite = comic.isFavorite ?? false;
+    if (comic.chapters == null) {
+      isDownloaded = await LocalManager().isDownloaded(
+        comic.id,
+        comic.comicType,
+        0,
+      );
+    }
   }
 
   Iterable<Widget> buildTitle() sync* {
@@ -173,7 +185,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   onPressed: read,
                   iconColor: context.useTextColor(Colors.orange),
                 ),
-              if (!isMobile)
+              if (!isMobile && !isDownloaded)
                 _ActionButton(
                   icon: const Icon(Icons.download),
                   text: 'Download'.tl,
@@ -219,7 +231,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               children: [
                 Expanded(
                   child: FilledButton.tonal(
-                    onPressed: () {},
+                    onPressed: download,
                     child: Text("Download".tl),
                   ),
                 ),
@@ -335,7 +347,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               children: [
                 buildTag(text: e.key, isTitle: true),
                 for (var tag in e.value)
-                  buildTag(text: tag, onTap: () => onTagTap(tag, e.key)),
+                  buildTag(text: tag, onTap: () => onTapTag(tag, e.key)),
               ],
             ),
           if (comic.uploader != null)
@@ -455,7 +467,9 @@ abstract mixin class _ComicPageActions {
     );
   }
 
-  void share() {}
+  void share() {
+    Share.shareText(comic.title);
+  }
 
   /// read the comic
   ///
@@ -482,9 +496,57 @@ abstract mixin class _ComicPageActions {
     read(ep, page);
   }
 
-  void download() {}
+  void download() async {
+    if (LocalManager().isDownloading(comic.id, comic.comicType)) {
+      App.rootContext.showMessage(message: "The comic is downloading".tl);
+      return;
+    }
+    if (comic.chapters == null &&
+        await LocalManager().isDownloaded(comic.id, comic.comicType, 0)) {
+      App.rootContext.showMessage(message: "The comic is downloaded".tl);
+      return;
+    }
+    if (comic.chapters == null) {
+      LocalManager().addTask(ImagesDownloadTask(
+        source: comicSource,
+        comicId: comic.id,
+        comic: comic,
+      ));
+    } else {
+      List<int>? selected;
+      var downloaded = <int>[];
+      var localComic = LocalManager().find(comic.id, comic.comicType);
+      if (localComic != null) {
+        for (int i = 0; i < comic.chapters!.length; i++) {
+          if (localComic.downloadedChapters
+              .contains(comic.chapters!.keys.elementAt(i))) {
+            downloaded.add(i);
+          }
+        }
+      }
+      await showSideBar(
+        App.rootContext,
+        _SelectDownloadChapter(
+          comic.chapters!.values.toList(),
+          (v) => selected = v,
+          downloaded,
+        ),
+      );
+      if (selected == null) return;
+      LocalManager().addTask(ImagesDownloadTask(
+        source: comicSource,
+        comicId: comic.id,
+        comic: comic,
+        chapters: selected!.map((i) {
+          return comic.chapters!.keys.elementAt(i);
+        }).toList(),
+      ));
+    }
+    App.rootContext.showMessage(message: "Download started".tl);
+    update();
+  }
 
-  void onTagTap(String tag, String namespace) {}
+  void onTapTag(String tag, String namespace) {}
 
   void showMoreActions() {}
 
@@ -1135,5 +1197,97 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
         ],
       );
     }
+  }
+}
+
+class _SelectDownloadChapter extends StatefulWidget {
+  const _SelectDownloadChapter(this.eps, this.finishSelect, this.downloadedEps);
+
+  final List<String> eps;
+  final void Function(List<int>) finishSelect;
+  final List<int> downloadedEps;
+
+  @override
+  State<_SelectDownloadChapter> createState() => _SelectDownloadChapterState();
+}
+
+class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
+  List<int> selected = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: Appbar(title: Text("Download".tl), backgroundColor: context.colorScheme.surfaceContainerLow,),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: widget.eps.length,
+              itemBuilder: (context, i) {
+                return CheckboxListTile(
+                    title: Text(widget.eps[i]),
+                    value: selected.contains(i) ||
+                        widget.downloadedEps.contains(i),
+                    onChanged: widget.downloadedEps.contains(i)
+                        ? null
+                        : (v) {
+                      setState(() {
+                        if (selected.contains(i)) {
+                          selected.remove(i);
+                        } else {
+                          selected.add(i);
+                        }
+                      });
+                    });
+              },
+            ),
+          ),
+          Container(
+            height: 50,
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: context.colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      var res = <int>[];
+                      for (int i = 0; i < widget.eps.length; i++) {
+                        if (!widget.downloadedEps.contains(i)) {
+                          res.add(i);
+                        }
+                      }
+                      widget.finishSelect(res);
+                      context.pop();
+                    },
+                    child: Text("Download All".tl),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      widget.finishSelect(selected);
+                      context.pop();
+                    },
+                    child: Text("Download Selected".tl),
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 4),
+        ],
+      ),
+    );
   }
 }

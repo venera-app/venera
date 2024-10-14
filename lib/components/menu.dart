@@ -54,8 +54,8 @@ class _MenuRoute<T> extends PopupRoute<T> {
               borderRadius: BorderRadius.circular(4),
               child: Material(
                 color: context.brightness == Brightness.light
-                    ? const Color(0xFFFAFAFA).withOpacity(0.72)
-                    : const Color(0xFF090909).withOpacity(0.72),
+                    ? const Color(0xFFFAFAFA).withOpacity(0.82)
+                    : const Color(0xFF090909).withOpacity(0.82),
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
                   width: width,

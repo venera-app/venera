@@ -12,10 +12,13 @@ import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/accounts_page.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
+import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
+
+import 'local_comics_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -163,8 +166,8 @@ class _HistoryState extends State<_History> {
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          width: 96,
-                          height: 128,
+                          width: 92,
+                          height: 114,
                           margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -242,7 +245,9 @@ class _LocalState extends State<_Local> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () {},
+          onTap: () {
+            context.to(() => const LocalComicsPage());
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -277,12 +282,12 @@ class _LocalState extends State<_Local> {
                     itemBuilder: (context, index) {
                       return InkWell(
                         onTap: () {
-                          // TODO: view local comic
+                          local[index].read();
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          width: 96,
-                          height: 128,
+                          width: 92,
+                          height: 114,
                           margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -307,6 +312,24 @@ class _LocalState extends State<_Local> {
                 ).paddingHorizontal(8),
               Row(
                 children: [
+                  if (LocalManager().downloadingTasks.isNotEmpty)
+                    Button.outlined(
+                      child: Row(
+                        children: [
+                          if(LocalManager().downloadingTasks.first.isPaused)
+                            const Icon(Icons.pause_circle_outline, size: 18)
+                          else
+                            const _AnimatedDownloadingIcon(),
+                          const SizedBox(width: 8),
+                          Text("@a Tasks".tlParams({
+                            'a': LocalManager().downloadingTasks.length,
+                          })),
+                        ],
+                      ),
+                      onPressed: () {
+                        showPopUpWidget(context, const DownloadingPage());
+                      },
+                    ),
                   const Spacer(),
                   Button.filled(
                     onPressed: import,
@@ -601,6 +624,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       chapters: Map.fromIterables(chapters, chapters),
       cover: coverPath,
       comicType: ComicType.local,
+      downloadedChapters: chapters,
       createdAt: DateTime.now(),
     );
   }
@@ -807,6 +831,65 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedDownloadingIcon extends StatefulWidget {
+  const _AnimatedDownloadingIcon();
+
+  @override
+  State<_AnimatedDownloadingIcon> createState() =>
+      __AnimatedDownloadingIconState();
+}
+
+class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      lowerBound: -1,
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Transform.translate(
+            offset: Offset(0, 18 * _controller.value),
+            child: Icon(
+              Icons.arrow_downward,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        );
+      },
     );
   }
 }

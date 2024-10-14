@@ -86,7 +86,7 @@ class PopupIndicatorWidget extends InheritedWidget {
 }
 
 Future<T> showPopUpWidget<T>(BuildContext context, Widget widget) async {
-  return await Navigator.of(context).push(PopUpWidget(widget));
+  return await Navigator.of(context, rootNavigator: true).push(PopUpWidget(widget));
 }
 
 class PopUpWidgetScaffold extends StatefulWidget {
@@ -124,7 +124,7 @@ class _PopUpWidgetScaffoldState extends State<PopUpWidgetScaffold> {
                   width: 8,
                 ),
                 Tooltip(
-                  message: "返回".tl,
+                  message: "Back".tl,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back_sharp),
                     onPressed: () => context.canPop()

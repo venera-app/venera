@@ -165,19 +165,24 @@ class _ButtonState extends State<Button> {
     if (height != null) {
       height = height - padding.vertical;
     }
-    Widget child = DefaultTextStyle(
-      style: TextStyle(
+    Widget child = IconTheme(
+      data: IconThemeData(
         color: textColor,
-        fontSize: 16,
       ),
-      child: isLoading
-          ? CircularProgressIndicator(
-              color: widget.type == ButtonType.filled
-                  ? context.colorScheme.inversePrimary
-                  : context.colorScheme.primary,
-              strokeWidth: 1.8,
-            ).fixWidth(16).fixHeight(16)
-          : widget.child,
+      child: DefaultTextStyle(
+        style: TextStyle(
+          color: textColor,
+          fontSize: 16,
+        ),
+        child: isLoading
+            ? CircularProgressIndicator(
+          color: widget.type == ButtonType.filled
+              ? context.colorScheme.inversePrimary
+              : context.colorScheme.primary,
+          strokeWidth: 1.8,
+        ).fixWidth(16).fixHeight(16)
+            : widget.child,
+      ),
     );
     if (width != null || height != null) {
       child = child.toCenter();
@@ -255,7 +260,7 @@ class _ButtonState extends State<Button> {
 
   Color get textColor {
     if (widget.type == ButtonType.outlined) {
-      return widget.color ?? context.colorScheme.onSurface;
+      return widget.color ?? context.colorScheme.primary;
     }
     return widget.type == ButtonType.filled
         ? context.colorScheme.onPrimary

@@ -82,7 +82,10 @@ class Log {
     addLog(LogLevel.warning, title, content);
   }
 
-  static error(String title, String content) {
+  static error(String title, String content, [Object? stackTrace]) {
+    if(stackTrace != null) {
+      content += "\n${stackTrace.toString()}";
+    }
     addLog(LogLevel.error, title, content);
   }
 
