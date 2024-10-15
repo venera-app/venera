@@ -95,7 +95,7 @@ class _Settings {
     'theme_mode': 'system', // light, dark, system
     'newFavoriteAddTo': 'end', // start, end
     'moveFavoriteAfterRead': 'none', // none, end, start
-    'proxy': 'direct', // direct, system, proxy string
+    'proxy': 'system', // direct, system, proxy string
     'explore_pages': [],
     'categories': [],
     'favorites': [],
