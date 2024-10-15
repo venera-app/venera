@@ -27,7 +27,10 @@ class _ExplorePageState extends State<ExplorePage>
   @override
   void initState() {
     pages = List<String>.from(appdata.settings["explore_pages"]);
-    var all = ComicSource.all().map((e) => e.explorePages).expand((e) => e.map((e) => e.title)).toList();
+    var all = ComicSource.all()
+        .map((e) => e.explorePages)
+        .expand((e) => e.map((e) => e.title))
+        .toList();
     pages = pages.where((e) => all.contains(e)).toList();
     controller = TabController(
       length: pages.length,
@@ -43,16 +46,18 @@ class _ExplorePageState extends State<ExplorePage>
   }
 
   Widget buildFAB() => Material(
-    color: Colors.transparent,
-    child: FloatingActionButton(
-      key: const Key("FAB"),
-      onPressed: refresh,
-      child: const Icon(Icons.refresh),
-    ),
-  );
+        color: Colors.transparent,
+        child: FloatingActionButton(
+          key: const Key("FAB"),
+          onPressed: refresh,
+          child: const Icon(Icons.refresh),
+        ),
+      );
 
   Tab buildTab(String i) {
-    return Tab(text: i.tl, key: Key(i));
+    var comicSource = ComicSource.all()
+        .firstWhere((e) => e.explorePages.any((e) => e.title == i));
+    return Tab(text: i.ts(comicSource.key), key: Key(i));
   }
 
   Widget buildBody(String i) => _SingleExplorePage(i, key: Key(i));
@@ -70,49 +75,47 @@ class _ExplorePageState extends State<ExplorePage>
       children: [
         Positioned.fill(
             child: Column(
-              children: [
-                tabBar,
-                Expanded(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (notifications) {
-                      if (notifications.metrics.axis == Axis.horizontal) {
-                        if (!showFB) {
-                          setState(() {
-                            showFB = true;
-                          });
-                        }
-                        return true;
-                      }
+          children: [
+            tabBar,
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notifications) {
+                  if (notifications.metrics.axis == Axis.horizontal) {
+                    if (!showFB) {
+                      setState(() {
+                        showFB = true;
+                      });
+                    }
+                    return true;
+                  }
 
-                      var current = notifications.metrics.pixels;
+                  var current = notifications.metrics.pixels;
 
-                      if ((current > location && current != 0) && showFB) {
-                        setState(() {
-                          showFB = false;
-                        });
-                      } else if ((current < location || current == 0) && !showFB) {
-                        setState(() {
-                          showFB = true;
-                        });
-                      }
+                  if ((current > location && current != 0) && showFB) {
+                    setState(() {
+                      showFB = false;
+                    });
+                  } else if ((current < location || current == 0) && !showFB) {
+                    setState(() {
+                      showFB = true;
+                    });
+                  }
 
-                      location = current;
-                      return false;
-                    },
-                    child: MediaQuery.removePadding(
-                      context: context,
-                      removeTop: true,
-                      child: TabBarView(
-                        controller: controller,
-                        children: pages
-                            .map((e) => buildBody(e))
-                            .toList(),
-                      ),
-                    ),
+                  location = current;
+                  return false;
+                },
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: TabBarView(
+                    controller: controller,
+                    children: pages.map((e) => buildBody(e)).toList(),
                   ),
-                )
-              ],
-            )),
+                ),
+              ),
+            )
+          ],
+        )),
         Positioned(
           right: 16,
           bottom: 16,
@@ -341,7 +344,7 @@ Iterable<Widget> _buildExplorePagePart(
               Text(
                 part.title,
                 style:
-                const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
               ),
               const Spacer(),
               if (part.viewMore != null)
