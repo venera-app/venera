@@ -88,6 +88,9 @@ class _CommentsPageState extends State<CommentsPage> {
         withAppbar: false,
       );
     } else {
+      var showAvatar = _comments!.any((e) {
+        return e.avatar != null;
+      });
       return Column(
         children: [
           Expanded(
@@ -109,6 +112,7 @@ class _CommentsPageState extends State<CommentsPage> {
                   comment: _comments![index],
                   source: widget.source,
                   comic: widget.data,
+                  showAvatar: showAvatar,
                 );
               },
             ),
@@ -204,6 +208,7 @@ class _CommentTile extends StatefulWidget {
     required this.comment,
     required this.source,
     required this.comic,
+    required this.showAvatar,
   });
 
   final Comment comment;
@@ -211,6 +216,8 @@ class _CommentTile extends StatefulWidget {
   final ComicSource source;
 
   final ComicDetails comic;
+
+  final bool showAvatar;
 
   @override
   State<_CommentTile> createState() => _CommentTileState();
@@ -239,7 +246,7 @@ class _CommentTileState extends State<_CommentTile> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.comment.avatar != null)
+          if (widget.showAvatar)
             Container(
               width: 40,
               height: 40,
@@ -247,12 +254,14 @@ class _CommentTileState extends State<_CommentTile> {
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: Theme.of(context).colorScheme.secondaryContainer),
-              child: AnimatedImage(
-                image: CachedImageProvider(
-                  widget.comment.avatar!,
-                  sourceKey: widget.source.key,
-                ),
-              ),
+              child: widget.comment.avatar == null
+                  ? null
+                  : AnimatedImage(
+                      image: CachedImageProvider(
+                        widget.comment.avatar!,
+                        sourceKey: widget.source.key,
+                      ),
+                    ),
             ).paddingRight(12),
           Expanded(
             child: Column(
@@ -313,6 +322,7 @@ class _CommentTileState extends State<_CommentTile> {
               source: widget.source,
               replyId: widget.comment.id,
             ),
+            showBarrier: false,
           );
         },
         child: Row(
@@ -376,7 +386,11 @@ class _CommentTileState extends State<_CommentTile> {
                 child: CircularProgressIndicator(),
               )
             else if (isLiked)
-              const Icon(Icons.favorite, size: 16)
+              Icon(
+                Icons.favorite,
+                size: 16,
+                color: context.useTextColor(Colors.red),
+              )
             else
               const Icon(Icons.favorite_border, size: 16),
             const SizedBox(width: 8),

@@ -1,5 +1,35 @@
+/*
+Venera JavaScript Library
+*/
+
 /// encode, decode, hash, decrypt
 let Convert = {
+    /**
+     * @param str {string}
+     * @returns {ArrayBuffer}
+     */
+    encodeUtf8: (str) => {
+        return sendMessage({
+            method: "convert",
+            type: "utf8",
+            value: str,
+            isEncode: true
+        });
+    },
+
+    /**
+     * @param value {ArrayBuffer}
+     * @returns {string}
+     */
+    decodeUtf8: (value) => {
+        return sendMessage({
+            method: "convert",
+            type: "utf8",
+            value: value,
+            isEncode: false
+        });
+    },
+
     /**
      * @param {ArrayBuffer} value
      * @returns {string}
@@ -75,6 +105,41 @@ let Convert = {
             type: "sha512",
             value: value,
             isEncode: true
+        });
+    },
+
+    /**
+     * @param key {ArrayBuffer}
+     * @param value {ArrayBuffer}
+     * @param hash {string} - md5, sha1, sha256, sha512
+     * @returns {ArrayBuffer}
+     */
+    hmac: (key, value, hash) => {
+        return sendMessage({
+            method: "convert",
+            type: "hmac",
+            value: value,
+            key: key,
+            hash: hash,
+            isEncode: true
+        });
+    },
+
+    /**
+     * @param key {ArrayBuffer}
+     * @param value {ArrayBuffer}
+     * @param hash {string} - md5, sha1, sha256, sha512
+     * @returns {string} - hex string
+     */
+    hmacString: (key, value, hash) => {
+        return sendMessage({
+            method: "convert",
+            type: "hmac",
+            value: value,
+            key: key,
+            hash: hash,
+            isEncode: true,
+            isString: true
         });
     },
 
@@ -158,6 +223,21 @@ let Convert = {
             isEncode: false
         });
     }
+}
+
+/**
+ * create a time-based uuid
+ *
+ * Note: the engine will generate a new uuid every time it is called
+ *
+ * To get the same uuid, please save it to the local storage
+ *
+ * @returns {string}
+ */
+function createUuid() {
+    return sendMessage({
+        method: "uuid"
+    });
 }
 
 function randomInt(min, max) {
@@ -520,6 +600,91 @@ let console = {
     },
 };
 
+/**
+ * Create a comic object
+ * @param id {string}
+ * @param title {string}
+ * @param subtitle {string}
+ * @param cover {string}
+ * @param tags {string[]}
+ * @param description {string}
+ * @param maxPage {number | null}
+ * @constructor
+ */
+function Comic({id, title, subtitle, cover, tags, description, maxPage}) {
+    this.id = id;
+    this.title = title;
+    this.subtitle = subtitle;
+    this.cover = cover;
+    this.tags = tags;
+    this.description = description;
+    this.maxPage = maxPage;
+}
+
+/**
+ * Create a comic details object
+ * @param title {string}
+ * @param cover {string}
+ * @param description {string | null}
+ * @param tags {Map<string, string[]> | {} | null}
+ * @param chapters {Map<string, string> | {} | null} - key: chapter id, value: chapter title
+ * @param isFavorite {boolean | null} - favorite status. If the comic source supports multiple folders, this field should be null
+ * @param subId {string | null} - a param which is passed to comments api
+ * @param thumbnails {string[] | null} - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
+ * @param recommend {Comic[] | null} - related comics
+ * @param commentCount {number | null}
+ * @param likesCount {number | null}
+ * @param isLiked {boolean | null}
+ * @param uploader {string | null}
+ * @param updateTime {string | null}
+ * @param uploadTime {string | null}
+ * @param url {string | null}
+ * @constructor
+ */
+function ComicDetails({title, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url}) {
+    this.title = title;
+    this.cover = cover;
+    this.description = description;
+    this.tags = tags;
+    this.chapters = chapters;
+    this.isFavorite = isFavorite;
+    this.subId = subId;
+    this.thumbnails = thumbnails;
+    this.recommend = recommend;
+    this.commentCount = commentCount;
+    this.likesCount = likesCount;
+    this.isLiked = isLiked;
+    this.uploader = uploader;
+    this.updateTime = updateTime;
+    this.uploadTime = uploadTime;
+    this.url = url;
+}
+
+/**
+ * Create a comment object
+ * @param userName {string}
+ * @param avatar {string?}
+ * @param content {string}
+ * @param time {string?}
+ * @param replyCount {number?}
+ * @param id {string?}
+ * @param isLiked {boolean?}
+ * @param score {number?}
+ * @param voteStatus {number?} - 1: upvote, -1: downvote, 0: none
+ * @constructor
+ */
+function Comment({userName, avatar, content, time, replyCount, id, isLiked, score, voteStatus}) {
+    this.userName = userName;
+    this.avatar = avatar;
+    this.content = content;
+    this.time = time;
+    this.replyCount = replyCount;
+    this.id = id;
+    this.isLiked = isLiked;
+    this.score = score;
+    this.voteStatus = voteStatus;
+}
+
 class ComicSource {
     name = ""
 
@@ -541,6 +706,19 @@ class ComicSource {
             method: 'load_data',
             key: this.key,
             data_key: dataKey
+        })
+    }
+
+    /**
+     * load a setting with its key
+     * @param key {string}
+     * @returns {any}
+     */
+    loadSetting(key) {
+        return sendMessage({
+            method: 'load_setting',
+            key: this.key,
+            setting_key: key
         })
     }
 
@@ -568,6 +746,17 @@ class ComicSource {
             key: this.key,
             data_key: dataKey,
         })
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    get isLogged() {
+        return sendMessage({
+            method: 'isLogged',
+            key: this.key,
+        });
     }
 
     init() { }

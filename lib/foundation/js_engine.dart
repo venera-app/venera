@@ -19,6 +19,7 @@ import 'package:pointycastle/block/modes/cbc.dart';
 import 'package:pointycastle/block/modes/cfb.dart';
 import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
+import 'package:uuid/uuid.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
 
@@ -112,6 +113,9 @@ class JsEngine with _JSEngineApi{
             {
               String key = message["key"];
               String dataKey = message["data_key"];
+              if(dataKey == 'setting'){
+                throw "setting is not allowed to be saved";
+              }
               var data = message["data"];
               var source = ComicSource.find(key)!;
               source.data[dataKey] = data;
@@ -144,6 +148,23 @@ class JsEngine with _JSEngineApi{
           case "cookie":
             {
               return handleCookieCallback(Map.from(message));
+            }
+          case "uuid":
+            {
+              return const Uuid().v1();
+            }
+          case "load_setting":
+            {
+              String key = message["key"];
+              String settingKey = message["setting_key"];
+              var source = ComicSource.find(key)!;
+              return source.data["setting"]?[settingKey]
+                  ?? source.settings?[settingKey]['default']
+                  ?? (throw "Setting not found: $settingKey");
+            }
+          case "isLogged":
+            {
+              return ComicSource.find(message["key"])!.isLogged;
             }
         }
       }
@@ -303,6 +324,10 @@ mixin class _JSEngineApi{
     bool isEncode = data["isEncode"];
     try {
       switch (type) {
+        case "utf8":
+          return isEncode
+              ? utf8.encode(value)
+              : utf8.decode(value);
         case "base64":
           if(value is String){
             value = utf8.encode(value);
@@ -318,6 +343,21 @@ mixin class _JSEngineApi{
           return Uint8List.fromList(sha256.convert(value).bytes);
         case "sha512":
           return Uint8List.fromList(sha512.convert(value).bytes);
+        case "hmac":
+          var key = data["key"];
+          var hash = data["hash"];
+          var hmac = Hmac(switch(hash) {
+            "md5" => md5,
+            "sha1" => sha1,
+            "sha256" => sha256,
+            "sha512" => sha512,
+            _ => throw "Unsupported hash: $hash"
+          }, key);
+          if(data['isString'] == true){
+            return hmac.convert(value).toString();
+          } else {
+            return Uint8List.fromList(hmac.convert(value).bytes);
+          }
         case "aes-ecb":
           if(!isEncode){
             var key = data["key"];

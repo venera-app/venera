@@ -317,6 +317,14 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
           height = constrains.maxHeight;
           width = height * cacheSize.width / cacheSize.height;
         }
+      } else {
+        if(width == double.infinity) {
+          width = constrains.maxWidth;
+          height = 300;
+        } else if(height == double.infinity) {
+          height = constrains.maxHeight;
+          width = 300;
+        }
       }
 
       if(_imageInfo != null){
@@ -371,6 +379,7 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
+                backgroundColor: context.colorScheme.surfaceContainerLow,
                 value: (_loadingProgress != null &&
                     _loadingProgress!.expectedTotalBytes!=null &&
                     _loadingProgress!.expectedTotalBytes! != 0)

@@ -5,9 +5,9 @@ import "package:venera/foundation/comic_source/comic_source.dart";
 import "package:venera/utils/translations.dart";
 
 class RankingPage extends StatefulWidget {
-  const RankingPage({required this.sourceKey, super.key});
+  const RankingPage({required this.categoryKey, super.key});
 
-  final String sourceKey;
+  final String categoryKey;
 
   @override
   State<RankingPage> createState() => _RankingPageState();
@@ -20,14 +20,14 @@ class _RankingPageState extends State<RankingPage> {
 
   void findData() {
     for (final source in ComicSource.all()) {
-      if (source.categoryData?.key == widget.sourceKey) {
+      if (source.categoryData?.key == widget.categoryKey) {
         data = source.categoryComicsData!;
         options = data.rankingData!.options;
         optionValue = options.keys.first;
         return;
       }
     }
-    throw "${widget.sourceKey} Not found";
+    throw "${widget.categoryKey} Not found";
   }
 
   @override

@@ -17,8 +17,11 @@ import '../js_engine.dart';
 import '../log.dart';
 
 part 'category.dart';
+
 part 'favorites.dart';
+
 part 'parser.dart';
+
 part 'models.dart';
 
 /// build comic list, [Res.subData] should be maxPage or null if there is no limit.
@@ -50,11 +53,16 @@ typedef LikeOrUnlikeComicFunc = Future<Res<bool>> Function(
 
 /// [isLiking] is true if the user is liking the comment, false if unliking.
 /// return the new likes count or null.
-typedef LikeCommentFunc = Future<Res<int?>> Function(String comicId, String? subId, String commentId, bool isLiking);
+typedef LikeCommentFunc = Future<Res<int?>> Function(
+    String comicId, String? subId, String commentId, bool isLiking);
 
 /// [isUp] is true if the user is upvoting the comment, false if downvoting.
 /// return the new vote count or null.
-typedef VoteCommentFunc = Future<Res<int?>> Function(String comicId, String? subId, String commentId, bool isUp, bool isCancel);
+typedef VoteCommentFunc = Future<Res<int?>> Function(
+    String comicId, String? subId, String commentId, bool isUp, bool isCancel);
+
+typedef HandleClickTagEvent = Map<String, String> Function(
+    String namespace, String tag);
 
 class ComicSource {
   static final List<ComicSource> _sources = [];
@@ -147,9 +155,6 @@ class ComicSource {
   /// Search page.
   final SearchPageData? searchPageData;
 
-  /// Settings.
-  final List<SettingItem> settings;
-
   /// Load comic info.
   final LoadComicFunc? loadComicInfo;
 
@@ -185,6 +190,12 @@ class ComicSource {
   final VoteCommentFunc? voteCommentFunc;
 
   final LikeCommentFunc? likeCommentFunc;
+
+  final Map<String, dynamic>? settings;
+
+  final Map<String, Map<String, String>>? translations;
+
+  final HandleClickTagEvent? handleClickTagEvent;
 
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
@@ -225,29 +236,32 @@ class ComicSource {
   }
 
   ComicSource(
-      this.name,
-      this.key,
-      this.account,
-      this.categoryData,
-      this.categoryComicsData,
-      this.favoriteData,
-      this.explorePages,
-      this.searchPageData,
-      this.settings,
-      this.loadComicInfo,
-      this.loadComicThumbnail,
-      this.loadComicPages,
-      this.getImageLoadingConfig,
-      this.getThumbnailLoadingConfig,
-      this.filePath,
-      this.url,
-      this.version,
-      this.commentsLoader,
-      this.sendCommentFunc,
-      this.likeOrUnlikeComic,
-      this.voteCommentFunc,
-      this.likeCommentFunc,)
-      : idMatcher = null;
+    this.name,
+    this.key,
+    this.account,
+    this.categoryData,
+    this.categoryComicsData,
+    this.favoriteData,
+    this.explorePages,
+    this.searchPageData,
+    this.settings,
+    this.loadComicInfo,
+    this.loadComicThumbnail,
+    this.loadComicPages,
+    this.getImageLoadingConfig,
+    this.getThumbnailLoadingConfig,
+    this.filePath,
+    this.url,
+    this.version,
+    this.commentsLoader,
+    this.sendCommentFunc,
+    this.likeOrUnlikeComic,
+    this.voteCommentFunc,
+    this.likeCommentFunc,
+    this.idMatcher,
+    this.translations,
+    this.handleClickTagEvent,
+  );
 }
 
 class AccountConfig {
@@ -368,21 +382,6 @@ class SearchOptions {
   String get defaultValue => options.keys.first;
 }
 
-class SettingItem {
-  final String name;
-  final String iconName;
-  final SettingType type;
-  final List<String>? options;
-
-  const SettingItem(this.name, this.iconName, this.type, this.options);
-}
-
-enum SettingType {
-  switcher,
-  selector,
-  input,
-}
-
 typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(
     String category, String? param, List<String> options, int page);
 
@@ -423,4 +422,3 @@ class CategoryComicsOptions {
 
   const CategoryComicsOptions(this.options, this.notShowWhen, this.showWhen);
 }
-

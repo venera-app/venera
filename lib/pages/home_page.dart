@@ -316,7 +316,7 @@ class _LocalState extends State<_Local> {
                     Button.outlined(
                       child: Row(
                         children: [
-                          if(LocalManager().downloadingTasks.first.isPaused)
+                          if (LocalManager().downloadingTasks.first.isPaused)
                             const Icon(Icons.pause_circle_outline, size: 18)
                           else
                             const _AnimatedDownloadingIcon(),
@@ -813,11 +813,14 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
               SizedBox(
                 width: double.infinity,
                 child: Wrap(
+                  runSpacing: 8,
+                  spacing: 8,
                   children: accounts.map((e) {
                     return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -825,7 +828,7 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
                       child: Text(e),
                     );
                   }).toList(),
-                ),
+                ).paddingHorizontal(16).paddingBottom(16),
               ),
             ],
           ),

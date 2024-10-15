@@ -116,10 +116,10 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
     });
     loadData().then((value) async {
       if (value.success) {
+        data = value.data;
         await onDataLoaded();
         setState(() {
           isLoading = false;
-          data = value.data;
         });
       } else {
         setState(() {
@@ -131,22 +131,10 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
   }
 
   Widget buildError() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            error!,
-            maxLines: 3,
-          ),
-          const SizedBox(height: 12),
-          Button.text(
-            onPressed: retry,
-            child: const Text("Retry"),
-          )
-        ],
-      ),
-    ).paddingHorizontal(16);
+    return NetworkError(
+      message: error!,
+      retry: retry,
+    );
   }
 
   @override
@@ -154,11 +142,12 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
   void initState() {
     isLoading = true;
     Future.microtask(() {
-      loadData().then((value) {
+      loadData().then((value) async {
         if (value.success) {
+          data = value.data;
+          await onDataLoaded();
           setState(() {
             isLoading = false;
-            data = value.data;
           });
         } else {
           setState(() {

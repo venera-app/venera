@@ -27,7 +27,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
     favPage.folderList = this;
     folders = LocalFavoritesManager().folderNames;
     networkFolders = ComicSource.all()
-        .where((e) => e.favoriteData != null)
+        .where((e) => e.favoriteData != null && e.isLogged)
         .map((e) => e.favoriteData!.key)
         .toList();
     super.initState();

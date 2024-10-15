@@ -114,7 +114,8 @@ class AppDio with DioMixin {
     client.connectionTimeout = const Duration(seconds: 5);
     client.findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
     client.idleTimeout = const Duration(seconds: 100);
-    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+    client.badCertificateCallback =
+        (X509Certificate cert, String host, int port) {
       if (host.contains("cdn")) return true;
       final ipv4RegExp = RegExp(
           r'^((25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3})$');
@@ -129,7 +130,8 @@ class AppDio with DioMixin {
   static String? proxy;
 
   static Future<String?> getProxy() async {
-    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct") return null;
+    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct")
+      return null;
     if (appdata.settings['proxy'] != "system") return appdata.settings['proxy'];
 
     String res;
@@ -168,7 +170,7 @@ class AppDio with DioMixin {
   }
 
   @override
-  Future<Response<T>> request<T> (
+  Future<Response<T>> request<T>(
     String path, {
     Object? data,
     Map<String, dynamic>? queryParameters,
@@ -178,11 +180,18 @@ class AppDio with DioMixin {
     ProgressCallback? onReceiveProgress,
   }) async {
     proxy = await getProxy();
-    if(_proxy != proxy) {
+    if (_proxy != proxy) {
       _proxy = proxy;
       (httpClientAdapter as IOHttpClientAdapter).close();
-      httpClientAdapter = IOHttpClientAdapter(createHttpClient: createHttpClient);
+      httpClientAdapter =
+          IOHttpClientAdapter(createHttpClient: createHttpClient);
     }
+    Log.info(
+      "Network",
+      "${options?.method ?? 'GET'} $path\n"
+          "Headers: ${options?.headers}\n"
+          "Data: $data\n",
+    );
     return super.request(
       path,
       data: data,

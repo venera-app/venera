@@ -130,7 +130,7 @@ class ComicSourceParser {
       _loadFavoriteData(),
       _loadExploreData(),
       _loadSearchData(),
-      [],
+      _parseSettings(),
       _parseLoadComicFunc(),
       _parseThumbnailLoader(),
       _parseLoadComicPagesFunc(),
@@ -144,6 +144,9 @@ class ComicSourceParser {
       _parseLikeFunc(),
       _parseVoteCommentFunc(),
       _parseLikeCommentFunc(),
+      _parseIdMatch(),
+      _parseTranslation(),
+      _parseClickTagEvent(),
     );
 
     await source.loadData();
@@ -639,13 +642,13 @@ class ComicSourceParser {
   }
 
   LikeOrUnlikeComicFunc? _parseLikeFunc() {
-    if (!_checkExists("comic.likeOrUnlikeComic")) {
+    if (!_checkExists("comic.likeComic")) {
       return null;
     }
     return (id, isLiking) async {
       try {
         await JsEngine().runCode("""
-          ComicSource.sources.$_key.comic.likeOrUnlikeComic(${jsonEncode(id)}, ${jsonEncode(isLiking)})
+          ComicSource.sources.$_key.comic.likeComic(${jsonEncode(id)}, ${jsonEncode(isLiking)})
         """);
         return const Res(true);
       } catch (e, s) {
@@ -686,6 +689,43 @@ class ComicSourceParser {
         Log.error("Network", "$e\n$s");
         return Res.error(e.toString());
       }
+    };
+  }
+
+  Map<String, dynamic> _parseSettings() {
+    return _getValue("settings") ?? {};
+  }
+
+  RegExp? _parseIdMatch() {
+    if (!_checkExists("comic.idMatch")) {
+      return null;
+    }
+    return RegExp(_getValue("comic.idMatch"));
+  }
+
+  Map<String, Map<String, String>>? _parseTranslation() {
+    if (!_checkExists("translation")) {
+      return null;
+    }
+    var data = _getValue("translation");
+    var res = <String, Map<String, String>>{};
+    for (var e in data.entries) {
+      res[e.key] = Map<String, String>.from(e.value);
+    }
+    return res;
+  }
+
+  HandleClickTagEvent? _parseClickTagEvent() {
+    if (!_checkExists("comic.onClickTag")) {
+      return null;
+    }
+    return (namespace, tag) {
+      var res = JsEngine().runCode("""
+          ComicSource.sources.$_key.comic.onClickTag(${jsonEncode(namespace)}, ${jsonEncode(tag)})
+        """);
+      var r = Map<String, String?>.from(res);
+      r.removeWhere((key, value) => value == null);
+      return Map.from(r);
     };
   }
 }

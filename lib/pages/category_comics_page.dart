@@ -26,6 +26,7 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
   late final CategoryComicsData data;
   late final List<CategoryComicsOptions> options;
   late List<String> optionsValue;
+  late String sourceKey;
 
   void findData() {
     for (final source in ComicSource.all()) {
@@ -40,6 +41,7 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
           return true;
         }).toList();
         optionsValue = options.map((e) => e.options.keys.first).toList();
+        sourceKey = source.key;
         return;
       }
     }
@@ -60,7 +62,7 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
       ),
       body: ComicList(
         key: Key(widget.category + optionsValue.toString()),
-        leadingSliver: buildOptions(),
+        leadingSliver: buildOptions().toSliver(),
         loadPage: (i) => data.load(
           widget.category,
           widget.param,
@@ -74,7 +76,7 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
   Widget buildOptionItem(
       String text, String value, int group, BuildContext context) {
     return OptionChip(
-      text: text,
+      text: text.ts(sourceKey),
       isSelected: value == optionsValue[group],
       onTap: () {
         if (value == optionsValue[group]) return;
@@ -105,12 +107,10 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
         children.add(const SizedBox(height: 8));
       }
     }
-    return SliverToBoxAdapter(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [...children, const Divider()],
-      ).paddingLeft(8).paddingRight(8),
-    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [...children, const Divider()],
+    ).paddingLeft(8).paddingRight(8);
   }
 }

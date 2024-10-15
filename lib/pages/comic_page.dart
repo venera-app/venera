@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -10,8 +12,10 @@ import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
+import 'package:venera/pages/category_comics_page.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
@@ -149,8 +153,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(comic.title, style: ts.s18),
-              if (comic.subTitle != null) Text(comic.subTitle!, style: ts.s14),
+              SelectableText(comic.title, style: ts.s18),
+              if (comic.subTitle != null)
+                SelectableText(comic.subTitle!, style: ts.s14),
               Text(
                 (ComicSource.find(comic.sourceKey)?.name) ?? '',
                 style: ts.s12,
@@ -345,7 +350,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           for (var e in comic.tags.entries)
             buildWrap(
               children: [
-                buildTag(text: e.key, isTitle: true),
+                buildTag(text: e.key.ts(comicSource.key), isTitle: true),
                 for (var tag in e.value)
                   buildTag(text: tag, onTap: () => onTapTag(tag, e.key)),
               ],
@@ -407,7 +412,6 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 }
 
-// TODO: Implement the _ComicPageActions mixin
 abstract mixin class _ComicPageActions {
   void update();
 
@@ -546,9 +550,74 @@ abstract mixin class _ComicPageActions {
     update();
   }
 
-  void onTapTag(String tag, String namespace) {}
+  void onTapTag(String tag, String namespace) {
+    var config = comicSource.handleClickTagEvent?.call(namespace, tag) ??
+        {
+          'action': 'search',
+          'keyword': tag,
+        };
+    var context = App.mainNavigatorKey!.currentContext!;
+    if (config['action'] == 'search') {
+      context.to(() => SearchResultPage(
+            text: config['keyword'] ?? '',
+            sourceKey: comicSource.key,
+            options: const [],
+          ));
+    } else if (config['action'] == 'category') {
+      context.to(
+        () => CategoryComicsPage(
+          category: config['keyword'] ?? '',
+          categoryKey: comicSource.categoryData!.key,
+          param: config['param'],
+        ),
+      );
+    }
+  }
 
-  void showMoreActions() {}
+  void showMoreActions() {
+    var context = App.rootContext;
+    showMenuX(
+        context,
+        Offset(
+          context.width - 16,
+          context.padding.top,
+        ),
+        [
+          MenuEntry(
+            icon: Icons.copy,
+            text: "Copy Title".tl,
+            onClick: () {
+              Clipboard.setData(ClipboardData(text: comic.title));
+              context.showMessage(message: "Copied".tl);
+            },
+          ),
+          MenuEntry(
+            icon: Icons.copy_rounded,
+            text: "Copy ID".tl,
+            onClick: () {
+              Clipboard.setData(ClipboardData(text: comic.id));
+              context.showMessage(message: "Copied".tl);
+            },
+          ),
+          if (comic.url != null)
+            MenuEntry(
+              icon: Icons.link,
+              text: "Copy URL".tl,
+              onClick: () {
+                Clipboard.setData(ClipboardData(text: comic.url!));
+                context.showMessage(message: "Copied".tl);
+              },
+            ),
+          if (comic.url != null)
+            MenuEntry(
+              icon: Icons.open_in_browser,
+              text: "Open in Browser".tl,
+              onClick: () {
+                launchUrlString(comic.url!);
+              },
+            ),
+        ]);
+  }
 
   void showComments() {
     showSideBar(
@@ -1217,7 +1286,10 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar(title: Text("Download".tl), backgroundColor: context.colorScheme.surfaceContainerLow,),
+      appBar: Appbar(
+        title: Text("Download".tl),
+        backgroundColor: context.colorScheme.surfaceContainerLow,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1233,14 +1305,14 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
                     onChanged: widget.downloadedEps.contains(i)
                         ? null
                         : (v) {
-                      setState(() {
-                        if (selected.contains(i)) {
-                          selected.remove(i);
-                        } else {
-                          selected.add(i);
-                        }
-                      });
-                    });
+                            setState(() {
+                              if (selected.contains(i)) {
+                                selected.remove(i);
+                              } else {
+                                selected.add(i);
+                              }
+                            });
+                          });
               },
             ),
           ),

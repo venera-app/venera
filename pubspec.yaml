@@ -42,6 +42,7 @@ dependencies:
       path: packages/scrollable_positioned_list
   flutter_reorderable_grid_view: 5.0.1
   yaml: any
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

@@ -112,6 +112,7 @@ class _SearchPageState extends State<SearchPage> {
     for (int i = 0; i < searchOptions.length; i++) {
       final option = searchOptions[i];
       children.add(ListTile(
+        contentPadding: EdgeInsets.zero,
         title: Text(option.label.tl),
       ));
       children.add(Wrap(
@@ -119,7 +120,7 @@ class _SearchPageState extends State<SearchPage> {
         spacing: 8,
         children: option.options.entries.map((e) {
           return OptionChip(
-            text: e.value.tl,
+            text: e.value.ts(searchTarget),
             isSelected: options[i] == e.key,
             onTap: () {
               options[i] = e.key;
@@ -127,7 +128,7 @@ class _SearchPageState extends State<SearchPage> {
             },
           );
         }).toList(),
-      ).paddingHorizontal(16));
+      ));
     }
 
     return SliverToBoxAdapter(
@@ -136,13 +137,7 @@ class _SearchPageState extends State<SearchPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text("Search Options".tl),
-            ),
-            ...children,
-          ],
+          children: children,
         ),
       ),
     );

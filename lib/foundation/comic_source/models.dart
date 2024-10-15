@@ -107,6 +107,8 @@ class ComicDetails with HistoryMixin {
 
   final String? updateTime;
 
+  final String? url;
+
   static Map<String, List<String>> _generateMap(Map<String, dynamic> map) {
     var res = <String, List<String>>{};
     map.forEach((key, value) {
@@ -137,7 +139,8 @@ class ComicDetails with HistoryMixin {
         commentsCount = json["commentsCount"],
         uploader = json["uploader"],
         uploadTime = json["uploadTime"],
-        updateTime = json["updateTime"];
+        updateTime = json["updateTime"],
+        url = json["url"];
 
   Map<String, dynamic> toJson() {
     return {
@@ -159,6 +162,7 @@ class ComicDetails with HistoryMixin {
       "uploader": uploader,
       "uploadTime": uploadTime,
       "updateTime": updateTime,
+      "url": url,
     };
   }
 

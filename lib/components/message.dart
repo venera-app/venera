@@ -295,20 +295,21 @@ class ContentDialog extends StatelessWidget {
   }
 }
 
-void showInputDialog({
+Future<void> showInputDialog({
   required BuildContext context,
   required String title,
-  required String hintText,
+  String? hintText,
   required FutureOr<Object?> Function(String) onConfirm,
   String? initialValue,
   String confirmText = "Confirm",
   String cancelText = "Cancel",
+  RegExp? inputValidator,
 }) {
   var controller = TextEditingController(text: initialValue);
   bool isLoading = false;
   String? error;
 
-  showDialog(
+  return showDialog(
     context: context,
     builder: (context) {
       return StatefulBuilder(
@@ -327,6 +328,11 @@ void showInputDialog({
               Button.filled(
                 isLoading: isLoading,
                 onPressed: () async {
+                  if (inputValidator != null &&
+                      !inputValidator.hasMatch(controller.text)) {
+                    setState(() => error = "Invalid input");
+                    return;
+                  }
                   var futureOr = onConfirm(controller.text);
                   Object? result;
                   if (futureOr is Future) {

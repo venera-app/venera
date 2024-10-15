@@ -146,10 +146,88 @@ class _BodyState extends State<_Body> {
           ListTile(
             title: const Text("Version"),
             subtitle: Text(source.version),
-          )
+          ),
+          ...buildSourceSettings(source),
         ],
       ),
     );
+  }
+
+  Iterable<Widget> buildSourceSettings(ComicSource source) sync* {
+    if (source.settings == null) {
+      return;
+    } else if (source.data['settings'] == null) {
+      source.data['settings'] = {};
+    }
+    for (var item in source.settings!.entries) {
+      var key = item.key;
+      String type = item.value['type'];
+      if (type == "select") {
+        var current = source.data['settings'][key];
+        if (current == null) {
+          var d = item.value['default'];
+          for (var option in item.value['options']) {
+            if (option['value'] == d) {
+              current = option['text'] ?? option['value'];
+              break;
+            }
+          }
+        }
+        yield ListTile(
+          title: Text((item.value['title'] as String).ts(source.key)),
+          trailing: Select(
+            current: (current as String).ts(source.key),
+            values: (item.value['options'] as List)
+                .map<String>(
+                    (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
+                .toList(),
+            onTap: (i) {
+              source.data['settings'][key] = item.value['options'][i]['value'];
+              source.saveData();
+              setState(() {});
+            },
+          ),
+        );
+      } else if (type == "switch") {
+        var current = source.data['settings'][key] ?? item.value['default'];
+        yield ListTile(
+          title: Text((item.value['title'] as String).ts(source.key)),
+          trailing: Switch(
+            value: current,
+            onChanged: (v) {
+              source.data['settings'][key] = v;
+              source.saveData();
+              setState(() {});
+            },
+          ),
+        );
+      } else if (type == "input") {
+        var current =
+            source.data['settings'][key] ?? item.value['default'] ?? '';
+        yield ListTile(
+          title: Text((item.value['title'] as String).ts(source.key)),
+          trailing: IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              showInputDialog(
+                context: context,
+                title: (item.value['title'] as String).ts(source.key),
+                initialValue: current,
+                inputValidator: item.value['validator'] == null
+                    ? null
+                    : RegExp(item.value['validator']),
+                onConfirm: (value) {
+                  source.data['settings'][key] = value;
+                  source.saveData();
+                  setState(() {});
+                  return null;
+                },
+              );
+            },
+          ),
+        );
+      }
+    }
   }
 
   void delete(ComicSource source) {
@@ -280,11 +358,12 @@ class _BodyState extends State<_Body> {
     if (file == null) return;
     try {
       var fileName = file.name;
-      var bytes = file.bytes!;
+      var bytes = await File(file.path!).readAsBytes();
       var content = utf8.decode(bytes);
       await addSource(content, fileName);
-    } catch (e) {
+    } catch (e, s) {
       App.rootContext.showMessage(message: e.toString());
+      Log.error("Add comic source", "$e\n$s");
     }
   }
 
