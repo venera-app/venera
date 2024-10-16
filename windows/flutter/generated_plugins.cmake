@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  desktop_webview_window
+  flutter_inappwebview_windows
   flutter_qjs
   screen_retriever
   share_plus

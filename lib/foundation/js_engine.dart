@@ -21,6 +21,7 @@ import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:venera/network/app_dio.dart';
+import 'package:venera/network/cloudflare.dart';
 import 'package:venera/network/cookie_jar.dart';
 
 import 'comic_source/comic_source.dart';
@@ -67,8 +68,7 @@ class JsEngine with _JSEngineApi{
           responseType: ResponseType.plain, validateStatus: (status) => true));
       _cookieJar ??= SingleInstanceCookieJar.instance!;
       _dio!.interceptors.add(CookieManagerSql(_cookieJar!));
-      // TODO: Cloudflare Interceptor
-      // _dio!.interceptors.add(CloudflareInterceptor());
+      _dio!.interceptors.add(CloudflareInterceptor());
       _closed = false;
       _engine = FlutterQjs();
       _engine!.dispatch();

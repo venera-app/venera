@@ -5,8 +5,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.4 <4.0.0'
-  flutter: 3.22.3
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: 3.24.3
 
 dependencies:
   flutter:
@@ -43,6 +43,11 @@ dependencies:
   flutter_reorderable_grid_view: 5.0.1
   yaml: any
   uuid: ^4.5.1
+  desktop_webview_window:
+    git:
+      url: https://github.com/wgh136/flutter_desktop_webview
+      path: packages/desktop_webview_window
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:

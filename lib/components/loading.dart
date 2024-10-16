@@ -16,6 +16,7 @@ class NetworkError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var cfe = CloudflareException.fromString(message);
     Widget body = Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -41,7 +42,7 @@ class NetworkError extends StatelessWidget {
             height: 8,
           ),
           Text(
-            message,
+            cfe == null ? message : "Cloudflare verification required".tl,
             textAlign: TextAlign.center,
             maxLines: 3,
           ),
@@ -50,7 +51,17 @@ class NetworkError extends StatelessWidget {
               height: 12,
             ),
           if (retry != null)
-            FilledButton(onPressed: retry, child: Text('重试'.tl))
+            if (cfe != null)
+              FilledButton(
+                onPressed: () => passCloudflare(
+                    CloudflareException.fromString(message)!, retry!),
+                child: Text('Verify'.tl),
+              )
+            else
+              FilledButton(
+                onPressed: retry,
+                child: Text('Retry'.tl),
+              ),
         ],
       ),
     );

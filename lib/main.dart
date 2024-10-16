@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,7 +12,10 @@ import 'foundation/app.dart';
 import 'foundation/appdata.dart';
 import 'init.dart';
 
-void main() {
+void main(List<String> args) {
+  if (runWebViewTitleBarWidget(args)) {
+    return;
+  }
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await init();

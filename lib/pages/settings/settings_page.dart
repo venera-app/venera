@@ -326,9 +326,6 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
   @override
   ValueListenable<bool> get canPopNotifier => canPop;
 
-  /*
-  flutter >=3.24.0 api
-
   @override
   void onPopInvokedWithResult(bool didPop, result) {
     if (currentPage != -1) {
@@ -346,15 +343,4 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
       });
     }
   }
-  */
-
-  // flutter <3.24.0 api
-  @override
-  PopInvokedCallback? get onPopInvoked => (bool didPop) {
-        if (currentPage != -1) {
-          setState(() {
-            currentPage = -1;
-          });
-        }
-      };
 }
