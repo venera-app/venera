@@ -6,6 +6,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/js_engine.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'foundation/appdata.dart';
@@ -20,5 +21,6 @@ Future<void> init() async {
   await JsEngine().init();
   await ComicSource.init();
   await LocalManager().init();
+  await TagsTranslation.readData();
   CacheManager();
 }

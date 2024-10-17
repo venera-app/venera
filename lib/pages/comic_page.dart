@@ -17,6 +17,7 @@ import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:math' as math;
 
@@ -341,6 +342,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       ).paddingHorizontal(16).paddingBottom(8);
     }
 
+    bool enableTranslation =
+        App.locale.languageCode == 'zh' && comicSource.enableTagsTranslate;
+
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +357,15 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               children: [
                 buildTag(text: e.key.ts(comicSource.key), isTitle: true),
                 for (var tag in e.value)
-                  buildTag(text: tag, onTap: () => onTapTag(tag, e.key)),
+                  buildTag(
+                    text: enableTranslation
+                        ? TagsTranslation.translationTagWithNamespace(
+                            tag,
+                            e.key.toLowerCase(),
+                          )
+                        : tag,
+                    onTap: () => onTapTag(tag, e.key),
+                  ),
               ],
             ),
           if (comic.uploader != null)

@@ -26,6 +26,7 @@ import 'package:venera/network/cloudflare.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 part 'image.dart';

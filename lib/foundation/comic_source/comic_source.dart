@@ -199,6 +199,10 @@ class ComicSource {
 
   final LinkHandler? linkHandler;
 
+  final bool enableTagsSuggestions;
+
+  final bool enableTagsTranslate;
+
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
     if (await file.exists()) {
@@ -264,6 +268,8 @@ class ComicSource {
     this.translations,
     this.handleClickTagEvent,
     this.linkHandler,
+    this.enableTagsSuggestions,
+    this.enableTagsTranslate,
   );
 }
 

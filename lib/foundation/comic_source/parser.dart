@@ -148,6 +148,8 @@ class ComicSourceParser {
       _parseTranslation(),
       _parseClickTagEvent(),
       _parseLinkHandler(),
+      _getValue("search.enableTagsSuggestions") ?? false,
+      _getValue("comic.enableTagsTranslate") ?? false,
     );
 
     await source.loadData();

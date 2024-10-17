@@ -294,6 +294,7 @@ class _ComicDescription extends StatelessWidget {
     if (tags != null) {
       tags!.removeWhere((element) => element.removeAllBlank == "");
     }
+    var enableTranslate = App.locale.languageCode == 'zh';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -326,25 +327,23 @@ class _ComicDescription extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.end,
                   children: [
                     for (var s in tags!)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 0, 4, 3),
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(3, 1, 3, 3),
-                          decoration: BoxDecoration(
-                            color: s == "Unavailable"
-                                ? Theme.of(context).colorScheme.errorContainer
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(8)),
-                          ),
-                          child: Text(
-                            s,
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(0, 0, 4, 3),
+                        padding: const EdgeInsets.fromLTRB(3, 1, 3, 3),
+                        decoration: BoxDecoration(
+                          color: s == "Unavailable"
+                              ? Theme.of(context).colorScheme.errorContainer
+                              : Theme.of(context)
+                              .colorScheme
+                              .secondaryContainer,
+                          borderRadius:
+                          const BorderRadius.all(Radius.circular(8)),
                         ),
-                      )
+                        child: Text(
+                          enableTranslate ? TagsTranslation.translateTag(s) : s,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -571,7 +570,6 @@ String? isBlocked(Comic item) {
           return word;
         }
       }
-      // TODO: check translated tags
     }
   }
   return null;
