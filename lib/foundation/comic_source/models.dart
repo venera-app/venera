@@ -11,11 +11,23 @@ class Comment {
   final bool? isLiked;
   final int? voteStatus; // 1: upvote, -1: downvote, 0: none
 
+  static String? parseTime(dynamic value) {
+    if(value == null) return null;
+    if(value is int) {
+      if(value < 10000000000) {
+        return DateTime.fromMillisecondsSinceEpoch(value * 1000).toString().substring(0, 19);
+      } else {
+        return DateTime.fromMillisecondsSinceEpoch(value).toString().substring(0, 19);
+      }
+    }
+    return value.toString();
+  }
+
   Comment.fromJson(Map<String, dynamic> json)
       : userName = json["userName"],
         avatar = json["avatar"],
         content = json["content"],
-        time = json["time"],
+        time = parseTime(json["time"]),
         replyCount = json["replyCount"],
         id = json["id"].toString(),
         score = json["score"],
@@ -40,8 +52,19 @@ class Comic {
 
   final int? maxPage;
 
-  const Comic(this.title, this.cover, this.id, this.subtitle, this.tags,
-      this.description, this.sourceKey, this.maxPage);
+  final String? language;
+
+  const Comic(
+    this.title,
+    this.cover,
+    this.id,
+    this.subtitle,
+    this.tags,
+    this.description,
+    this.sourceKey,
+    this.maxPage,
+    this.language,
+  );
 
   Map<String, dynamic> toJson() {
     return {
@@ -53,6 +76,7 @@ class Comic {
       "description": description,
       "sourceKey": sourceKey,
       "maxPage": maxPage,
+      "language": language,
     };
   }
 
@@ -63,7 +87,8 @@ class Comic {
         id = json["id"],
         tags = List<String>.from(json["tags"] ?? []),
         description = json["description"] ?? "",
-        maxPage = json["maxPage"];
+        maxPage = json["maxPage"],
+        language = json["language"];
 }
 
 class ComicDetails with HistoryMixin {
@@ -109,7 +134,7 @@ class ComicDetails with HistoryMixin {
 
   final String? url;
 
-  static Map<String, List<String>> _generateMap(Map<String, dynamic> map) {
+  static Map<String, List<String>> _generateMap(Map<dynamic, dynamic> map) {
     var res = <String, List<String>>{};
     map.forEach((key, value) {
       res[key] = List<String>.from(value);

@@ -197,6 +197,8 @@ class ComicSource {
 
   final HandleClickTagEvent? handleClickTagEvent;
 
+  final LinkHandler? linkHandler;
+
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
     if (await file.exists()) {
@@ -261,13 +263,12 @@ class ComicSource {
     this.idMatcher,
     this.translations,
     this.handleClickTagEvent,
+    this.linkHandler,
   );
 }
 
 class AccountConfig {
   final LoginFunction? login;
-
-  final FutureOr<void> Function(BuildContext)? onLogin;
 
   final String? loginWebsite;
 
@@ -279,10 +280,15 @@ class AccountConfig {
 
   final List<AccountInfoItem> infoItems;
 
+  final bool Function(String url, String title)? checkLoginStatus;
+
   const AccountConfig(
-      this.login, this.loginWebsite, this.registerWebsite, this.logout,
-      {this.onLogin})
-      : allowReLogin = true,
+    this.login,
+    this.loginWebsite,
+    this.registerWebsite,
+    this.logout,
+    this.checkLoginStatus,
+  )   : allowReLogin = true,
         infoItems = const [];
 }
 
@@ -315,11 +321,13 @@ class ExplorePageData {
   /// return a `List` contains `List<Comic>` or `ExplorePagePart`
   final Future<Res<List<Object>>> Function(int index)? loadMixed;
 
-  final WidgetBuilder? overridePageBuilder;
-
-  ExplorePageData(this.title, this.type, this.loadPage, this.loadMultiPart)
-      : loadMixed = null,
-        overridePageBuilder = null;
+  ExplorePageData(
+    this.title,
+    this.type,
+    this.loadPage,
+    this.loadMultiPart,
+    this.loadMixed,
+  );
 }
 
 class ExplorePagePart {
@@ -421,4 +429,13 @@ class CategoryComicsOptions {
   final List<String>? showWhen;
 
   const CategoryComicsOptions(this.options, this.notShowWhen, this.showWhen);
+}
+
+
+class LinkHandler {
+  final List<String> domains;
+
+  final String? Function(String url) linkToId;
+
+  const LinkHandler(this.domains, this.linkToId);
 }

@@ -120,6 +120,9 @@ class LocalComic with HistoryMixin implements Comic {
 
   @override
   String? get subTitle => subtitle;
+
+  @override
+  String? get language => null;
 }
 
 class LocalManager with ChangeNotifier {

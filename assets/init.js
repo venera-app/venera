@@ -1,5 +1,7 @@
 /*
 Venera JavaScript Library
+
+This library provides a set of APIs for interacting with the Venera app.
 */
 
 /// encode, decode, hash, decrypt
@@ -305,7 +307,7 @@ let Network = {
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
      * @param data - The data to send with the request.
-     * @returns {Promise<ArrayBuffer>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: ArrayBuffer}>} The response from the request.
      */
     async fetchBytes(method, url, headers, data) {
         let result = await sendMessage({
@@ -330,7 +332,7 @@ let Network = {
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
      * @param data - The data to send with the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async sendRequest(method, url, headers, data) {
         let result = await sendMessage({
@@ -352,7 +354,7 @@ let Network = {
      * Sends an HTTP GET request.
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async get(url, headers) {
         return this.sendRequest('GET', url, headers);
@@ -363,7 +365,7 @@ let Network = {
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
      * @param data - The data to send with the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async post(url, headers, data) {
         return this.sendRequest('POST', url, headers, data);
@@ -374,7 +376,7 @@ let Network = {
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
      * @param data - The data to send with the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async put(url, headers, data) {
         return this.sendRequest('PUT', url, headers, data);
@@ -385,7 +387,7 @@ let Network = {
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
      * @param data - The data to send with the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async patch(url, headers, data) {
         return this.sendRequest('PATCH', url, headers, data);
@@ -395,7 +397,7 @@ let Network = {
      * Sends an HTTP DELETE request.
      * @param {string} url - The URL to send the request to.
      * @param {Object} headers - The headers to include in the request.
-     * @returns {Promise<Object>} The response from the request.
+     * @returns {Promise<{status: number, headers: {}, body: string}>} The response from the request.
      */
     async delete(url, headers) {
         return this.sendRequest('DELETE', url, headers);
@@ -577,6 +579,91 @@ class HtmlElement {
         })
         return ks.map(k => new HtmlElement(k));
     }
+
+    /**
+     * Get the nodes of the current element.
+     * @returns {HtmlNode[]} An array of nodes.
+     */
+    get nodes() {
+        let ks = sendMessage({
+            method: "html",
+            function: "getNodes",
+            key: this.key
+        })
+        return ks.map(k => new HtmlNode(k));
+    }
+
+    /**
+     * Get inner HTML of the element.
+     * @returns {string} The inner HTML.
+     */
+    get innerHTML() {
+        return sendMessage({
+            method: "html",
+            function: "getInnerHTML",
+            key: this.key
+        })
+    }
+
+    /**
+     * Get parent element of the element. If the element has no parent, return null.
+     * @returns {HtmlElement|null}
+     */
+    get parent() {
+        let k = sendMessage({
+            method: "html",
+            function: "getParent",
+            key: this.key
+        })
+        if(!k) return null;
+        return new HtmlElement(k);
+    }
+}
+
+class HtmlNode {
+    key = 0;
+
+    constructor(k) {
+        this.key = k;
+    }
+
+    /**
+     * Get the text content of the node.
+     * @returns {string} The text content.
+     */
+    get text() {
+        return sendMessage({
+            method: "html",
+            function: "node_text",
+            key: this.key
+        })
+    }
+
+    /**
+     * Get the type of the node.
+     * @returns {string} The type of the node. ("text", "element", "comment", "document", "unknown")
+     */
+    get type() {
+        return sendMessage({
+            method: "html",
+            function: "node_type",
+            key: this.key
+        })
+    }
+
+    /**
+     * Convert the node to an HtmlElement. If the node is not an element, return null.
+     * @returns {HtmlElement|null}
+     */
+    toElement() {
+        let k = sendMessage({
+            method: "html",
+            function: "node_toElement",
+            key: this.key
+        })
+        if(!k) return null;
+        return new HtmlElement(k);
+    }
 }
 
 function log(level, title, content) {
@@ -608,10 +695,11 @@ let console = {
  * @param cover {string}
  * @param tags {string[]}
  * @param description {string}
- * @param maxPage {number | null}
+ * @param maxPage {number?}
+ * @param language {string?}
  * @constructor
  */
-function Comic({id, title, subtitle, cover, tags, description, maxPage}) {
+function Comic({id, title, subtitle, cover, tags, description, maxPage, language}) {
     this.id = id;
     this.title = title;
     this.subtitle = subtitle;
@@ -619,26 +707,27 @@ function Comic({id, title, subtitle, cover, tags, description, maxPage}) {
     this.tags = tags;
     this.description = description;
     this.maxPage = maxPage;
+    this.language = language;
 }
 
 /**
  * Create a comic details object
  * @param title {string}
  * @param cover {string}
- * @param description {string | null}
- * @param tags {Map<string, string[]> | {} | null}
- * @param chapters {Map<string, string> | {} | null} - key: chapter id, value: chapter title
- * @param isFavorite {boolean | null} - favorite status. If the comic source supports multiple folders, this field should be null
- * @param subId {string | null} - a param which is passed to comments api
- * @param thumbnails {string[] | null} - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
- * @param recommend {Comic[] | null} - related comics
- * @param commentCount {number | null}
- * @param likesCount {number | null}
- * @param isLiked {boolean | null}
- * @param uploader {string | null}
- * @param updateTime {string | null}
- * @param uploadTime {string | null}
- * @param url {string | null}
+ * @param description {string?}
+ * @param tags {Map<string, string[]> | {} | null | undefined}
+ * @param chapters {Map<string, string> | {} | null | undefined}} - key: chapter id, value: chapter title
+ * @param isFavorite {boolean | null | undefined}} - favorite status. If the comic source supports multiple folders, this field should be null
+ * @param subId {string?} - a param which is passed to comments api
+ * @param thumbnails {string[]? - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
+ * @param recommend {Comic[]?} - related comics
+ * @param commentCount {number?}
+ * @param likesCount {number?}
+ * @param isLiked {boolean?}
+ * @param uploader {string?}
+ * @param updateTime {string?}
+ * @param uploadTime {string?}
+ * @param url {string?}
  * @constructor
  */
 function ComicDetails({title, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url}) {

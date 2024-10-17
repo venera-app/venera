@@ -87,6 +87,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   getDescription(e),
                   e.type.comicSource?.key ?? "Invalid",
                   null,
+                  null,
                 );
               },
             ).toList(),

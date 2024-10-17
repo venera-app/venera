@@ -225,6 +225,7 @@ class JsEngine with _JSEngineApi{
 mixin class _JSEngineApi{
   final Map<int, dom.Document> _documents = {};
   final Map<int, dom.Element> _elements = {};
+  final Map<int, dom.Node> _nodes = {};
   CookieJarSql? _cookieJar;
 
   dynamic handleHtmlCallback(Map<String, dynamic> data) {
@@ -270,6 +271,38 @@ mixin class _JSEngineApi{
           keys.add(_elements.length - 1);
         }
         return keys;
+      case "getNodes":
+        var res = _elements[data["key"]]!.nodes;
+        var keys = <int>[];
+        for (var node in res) {
+          _nodes[_nodes.length] = node;
+          keys.add(_nodes.length - 1);
+        }
+        return keys;
+      case "getInnerHTML":
+        return _elements[data["key"]]!.innerHtml;
+      case "getParent":
+        var res = _elements[data["key"]]!.parent;
+        if(res == null) return null;
+        _elements[_elements.length] = res;
+        return _elements.length - 1;
+      case "node_text":
+        return _nodes[data["key"]]!.text;
+      case "node_type":
+        return switch(_nodes[data["key"]]!.nodeType) {
+          dom.Node.ELEMENT_NODE => "element",
+          dom.Node.TEXT_NODE => "text",
+          dom.Node.COMMENT_NODE => "comment",
+          dom.Node.DOCUMENT_NODE => "document",
+          _ => "unknown"
+        };
+      case "node_to_element":
+        var node = _nodes[data["key"]]!;
+        if(node is dom.Element){
+          _elements[_elements.length] = node;
+          return _elements.length - 1;
+        }
+        return null;
     }
   }
 
@@ -305,9 +338,10 @@ mixin class _JSEngineApi{
     }
   }
 
-  void clear(){
+  void clearHtml(){
     _documents.clear();
     _elements.clear();
+    _nodes.clear();
   }
 
   void clearCookies(List<String> domains) async{

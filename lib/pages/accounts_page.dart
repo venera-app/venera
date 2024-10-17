@@ -5,6 +5,8 @@ import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/pages/webview.dart';
 import 'package:venera/utils/translations.dart';
 
 class AccountsPageLogic extends StateController {
@@ -60,18 +62,13 @@ class AccountsPage extends StatelessWidget {
           title: Text("Log in".tl),
           trailing: const Icon(Icons.arrow_right),
           onTap: () async {
-            if (element.account!.onLogin != null) {
-              await element.account!.onLogin!(context);
-            }
-            if (element.account!.login != null && context.mounted) {
-              await context.to(
-                () => _LoginPage(
-                  login: element.account!.login!,
-                  registerWebsite: element.account!.registerWebsite,
-                ),
-              );
-              element.saveData();
-            }
+            await context.to(
+              () => _LoginPage(
+                config: element.account!,
+                source: element,
+              ),
+            );
+            element.saveData();
             logic.update();
           },
         );
@@ -121,7 +118,7 @@ class AccountsPage extends StatelessWidget {
           );
         }
         yield ListTile(
-          title: Text("Exit".tl),
+          title: Text("Log out".tl),
           onTap: () {
             element.data["account"] = null;
             element.account?.logout();
@@ -146,11 +143,11 @@ class AccountsPage extends StatelessWidget {
 }
 
 class _LoginPage extends StatefulWidget {
-  const _LoginPage({required this.login, this.registerWebsite});
+  const _LoginPage({required this.config, required this.source});
 
-  final LoginFunction login;
+  final AccountConfig config;
 
-  final String? registerWebsite;
+  final ComicSource source;
 
   @override
   State<_LoginPage> createState() => _LoginPageState();
@@ -181,6 +178,7 @@ class _LoginPageState extends State<_LoginPage> {
                   labelText: "Username".tl,
                   border: const OutlineInputBorder(),
                 ),
+                enabled: widget.config.login != null,
                 onChanged: (s) {
                   username = s;
                 },
@@ -192,21 +190,39 @@ class _LoginPageState extends State<_LoginPage> {
                   border: const OutlineInputBorder(),
                 ),
                 obscureText: true,
+                enabled: widget.config.login != null,
                 onChanged: (s) {
                   password = s;
                 },
                 onSubmitted: (s) => login(),
               ),
               const SizedBox(height: 32),
-              Button.filled(
-                isLoading: loading,
-                onPressed: login,
-                child: Text("Continue".tl),
-              ),
-              const SizedBox(height: 32),
-              if (widget.registerWebsite != null)
+              if (widget.config.login == null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline),
+                    const SizedBox(width: 8),
+                    Text("Login with password is disabled".tl),
+                  ],
+                )
+              else
+                Button.filled(
+                  isLoading: loading,
+                  onPressed: login,
+                  child: Text("Continue".tl),
+                ),
+              const SizedBox(height: 24),
+              if (widget.config.loginWebsite != null)
+                FilledButton(
+                  onPressed: loginWithWebview,
+                  child: Text("Login with webview".tl),
+                ),
+              const SizedBox(height: 8),
+              if (widget.config.registerWebsite != null)
                 TextButton(
-                  onPressed: () => launchUrlString(widget.registerWebsite!),
+                  onPressed: () =>
+                      launchUrlString(widget.config.registerWebsite!),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -235,7 +251,7 @@ class _LoginPageState extends State<_LoginPage> {
     setState(() {
       loading = true;
     });
-    widget.login(username, password).then((value) {
+    widget.config.login!(username, password).then((value) {
       if (value.error) {
         context.showMessage(message: value.errorMessage!);
         setState(() {
@@ -247,5 +263,55 @@ class _LoginPageState extends State<_LoginPage> {
         }
       }
     });
+  }
+
+  void loginWithWebview() async {
+    var url = widget.config.loginWebsite!;
+    var title = '';
+    bool success = false;
+    await context.to(
+      () => AppWebview(
+        initialUrl: widget.config.loginWebsite!,
+        onNavigation: (u, c) {
+          url = u;
+          print(url);
+          () async {
+            if (widget.config.checkLoginStatus != null) {
+              if (widget.config.checkLoginStatus!(url, title)) {
+                var cookies = (await c.getCookies(url)) ?? [];
+                SingleInstanceCookieJar.instance?.saveFromResponse(
+                  Uri.parse(url),
+                  cookies,
+                );
+                success = true;
+                App.mainNavigatorKey?.currentContext?.pop();
+              }
+            }
+          }();
+          return false;
+        },
+        onTitleChange: (t, c) {
+          () async {
+            if (widget.config.checkLoginStatus != null) {
+              if (widget.config.checkLoginStatus!(url, title)) {
+                var cookies = (await c.getCookies(url)) ?? [];
+                SingleInstanceCookieJar.instance?.saveFromResponse(
+                  Uri.parse(url),
+                  cookies,
+                );
+                success = true;
+                App.mainNavigatorKey?.currentContext?.pop();
+              }
+            }
+          }();
+          title = t;
+        },
+      ),
+    );
+    if (success) {
+      widget.source.data['account'] = 'ok';
+      widget.source.saveData();
+      context.pop();
+    }
   }
 }

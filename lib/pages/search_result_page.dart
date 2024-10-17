@@ -27,7 +27,15 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   late List<String> options;
 
-  void search([String? text]) {}
+  late String text;
+
+  void search([String? text]) {
+    if (text != null) {
+      setState(() {
+        this.text = text;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -37,12 +45,14 @@ class _SearchResultPageState extends State<SearchResultPage> {
     );
     sourceKey = widget.sourceKey;
     options = widget.options;
+    text = widget.text;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return ComicList(
+      key: Key(text + options.toString()),
       errorLeading: AppSearchBar(
         controller: controller,
       ),
@@ -52,7 +62,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
       loadPage: (i) {
         var source = ComicSource.find(sourceKey);
         return source!.searchPageData!.loadPage!(
-          controller.initialText,
+          text,
           i,
           options,
         );

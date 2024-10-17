@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/main_page.dart';
+import 'package:venera/utils/app_links.dart';
 import 'package:window_manager/window_manager.dart';
 import 'components/components.dart';
 import 'components/window_frame.dart';
@@ -19,6 +20,9 @@ void main(List<String> args) {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await init();
+    if(App.isAndroid) {
+      handleLinks();
+    }
     FlutterError.onError = (details) {
       Log.error(
           "Unhandled Exception", "${details.exception}\n${details.stack}");

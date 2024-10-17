@@ -187,13 +187,6 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
         comicSourceKey,
         key: ValueKey(key),
       );
-    } else if (data.overridePageBuilder != null) {
-      return Builder(
-        builder: (context) {
-          return data.overridePageBuilder!(context);
-        },
-        key: ValueKey(key),
-      );
     } else {
       return const Center(
         child: Text("Empty Page"),

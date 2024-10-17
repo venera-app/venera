@@ -94,7 +94,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             const BackButton(),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(context.reader.widget.name, style: ts.s18),
+              child: Text(
+                context.reader.widget.name,
+                style: ts.s18,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(width: 8),
             Tooltip(
@@ -356,7 +361,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       context,
       ReaderSettings(
         onChanged: (key) {
-          if(key == "readerMode") {
+          if (key == "readerMode") {
             context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
             App.rootContext.pop();
           }

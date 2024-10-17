@@ -1,10 +1,12 @@
 import 'dart:io' as io;
 
 import 'package:dio/dio.dart';
+import 'package:flutter_qjs/flutter_qjs.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/pages/webview.dart';
+import 'package:venera/utils/ext.dart';
 
 import 'cookie_jar.dart';
 
@@ -113,7 +115,9 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
     );
   }
 
-  if (App.isDesktop && (await DesktopWebview.isAvailable())) {
+  // windows version of package `flutter_inappwebview` cannot get some cookies
+  // Using DesktopWebview instead
+  if (App.isLinux || App.isWindows) {
     var webview = DesktopWebview(
       initialUrl: url,
       onTitleChange: (title, controller) async {
@@ -136,12 +140,12 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
       },
     );
     webview.open();
-  } else if (App.isMobile) {
+  } else {
     await App.rootContext.to(
       () => AppWebview(
         initialUrl: url,
         singlePage: true,
-        onTitleChange: (title, controller) async {
+        onLoadStop: (controller) async {
           var res = await controller.platform.evaluateJavascript(
               source:
                   "document.head.innerHTML.includes('#challenge-success-text')");
@@ -151,11 +155,11 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
               appdata.implicitData['ua'] = ua;
               appdata.writeImplicitData();
             }
-            var cookiesMap = await controller.getCookies(url) ?? {};
-            if(cookiesMap['cf_clearance'] == null) {
+            var cookies = await controller.getCookies(url) ?? [];
+            if(cookies.firstWhereOrNull((element) => element.name == 'cf_clearance') == null) {
               return;
             }
-            saveCookies(cookiesMap);
+            SingleInstanceCookieJar.instance?.saveFromResponse(uri, cookies);
             App.rootPop();
           }
         },
@@ -165,13 +169,11 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
             appdata.implicitData['ua'] = ua;
             appdata.writeImplicitData();
           }
-          var cookiesMap = await controller.getCookies(url) ?? {};
-          saveCookies(cookiesMap);
+          var cookies = await controller.getCookies(url) ?? [];
+          SingleInstanceCookieJar.instance?.saveFromResponse(uri, cookies);
         },
       ),
     );
     onFinished();
-  } else {
-    App.rootContext.showMessage(message: "Unsupported device");
   }
 }

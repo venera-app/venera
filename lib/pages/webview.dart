@@ -11,11 +11,13 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
+import 'dart:io' as io;
 
-export 'package:flutter_inappwebview/flutter_inappwebview.dart' show WebUri, URLRequest;
+export 'package:flutter_inappwebview/flutter_inappwebview.dart'
+    show WebUri, URLRequest;
 
-extension WebviewExtension on InAppWebViewController{
-  Future<Map<String, String>?> getCookies(String url) async{
+extension WebviewExtension on InAppWebViewController {
+  Future<List<io.Cookie>?> getCookies(String url) async {
     if(url.contains("https://")){
       url.replaceAll("https://", "");
     }
@@ -24,18 +26,20 @@ extension WebviewExtension on InAppWebViewController{
     }
     CookieManager cookieManager = CookieManager.instance();
     final cookies = await cookieManager.getCookies(url: WebUri(url));
-    Map<String, String> res = {};
-    for(var cookie in cookies){
-      res[cookie.name] = cookie.value;
+    var res = <io.Cookie>[];
+    for (var cookie in cookies) {
+      var c = io.Cookie(cookie.name, cookie.value);
+      c.domain = cookie.domain;
+      res.add(c);
     }
     return res;
   }
 
-  Future<String?> getUA() async{
+  Future<String?> getUA() async {
     var res = await evaluateJavascript(source: "navigator.userAgent");
-    if(res is String){
-      if(res[0] == "'" || res[0] == "\"") {
-        res = res.substring(1, res.length-1);
+    if (res is String) {
+      if (res[0] == "'" || res[0] == "\"") {
+        res = res.substring(1, res.length - 1);
       }
     }
     return res is String ? res : null;
@@ -43,16 +47,26 @@ extension WebviewExtension on InAppWebViewController{
 }
 
 class AppWebview extends StatefulWidget {
-  const AppWebview({required this.initialUrl, this.onTitleChange,
-    this.onNavigation, this.singlePage = false, this.onStarted, super.key});
+  const AppWebview(
+      {required this.initialUrl,
+      this.onTitleChange,
+      this.onNavigation,
+      this.singlePage = false,
+      this.onStarted,
+      this.onLoadStop,
+      super.key});
 
   final String initialUrl;
 
-  final void Function(String title, InAppWebViewController controller)? onTitleChange;
+  final void Function(String title, InAppWebViewController controller)?
+      onTitleChange;
 
-  final bool Function(String url)? onNavigation;
+  final bool Function(String url, InAppWebViewController controller)?
+      onNavigation;
 
   final void Function(InAppWebViewController controller)? onStarted;
+
+  final void Function(InAppWebViewController controller)? onLoadStop;
 
   final bool singlePage;
 
@@ -74,35 +88,42 @@ class _AppWebviewState extends State<AppWebview> {
         message: "More",
         child: IconButton(
           icon: const Icon(Icons.more_horiz),
-          onPressed: (){
-            showMenu(context: context, position: RelativeRect.fromLTRB(
-                MediaQuery.of(context).size.width,
-                0,
-                MediaQuery.of(context).size.width,
-                0
-            ), items: [
-              PopupMenuItem(
-                child: Text("Open in browser".tl),
-                onTap: () async => launchUrlString((await controller?.getUrl())!.path),
-              ),
-              PopupMenuItem(
-                child: Text("Copy link".tl),
-                onTap: () async => Clipboard.setData(ClipboardData(text: (await controller?.getUrl())!.path)),
-              ),
-              PopupMenuItem(
-                child: Text("Reload".tl),
-                onTap: () => controller?.reload(),
-              ),
-            ]);
+          onPressed: () {
+            showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(
+                    MediaQuery.of(context).size.width,
+                    0,
+                    MediaQuery.of(context).size.width,
+                    0),
+                items: [
+                  PopupMenuItem(
+                    child: Text("Open in browser".tl),
+                    onTap: () async =>
+                        launchUrlString((await controller?.getUrl())!.path),
+                  ),
+                  PopupMenuItem(
+                    child: Text("Copy link".tl),
+                    onTap: () async => Clipboard.setData(ClipboardData(
+                        text: (await controller?.getUrl())!.path)),
+                  ),
+                  PopupMenuItem(
+                    child: Text("Reload".tl),
+                    onTap: () => controller?.reload(),
+                  ),
+                ]);
           },
         ),
       )
     ];
 
     Widget body = InAppWebView(
+      initialSettings: InAppWebViewSettings(
+        isInspectable: true,
+      ),
       initialUrlRequest: URLRequest(url: WebUri(widget.initialUrl)),
-      onTitleChanged: (c, t){
-        if(mounted){
+      onTitleChanged: (c, t) {
+        if (mounted) {
           setState(() {
             title = t ?? "Webview";
           });
@@ -110,19 +131,24 @@ class _AppWebviewState extends State<AppWebview> {
         widget.onTitleChange?.call(title, controller!);
       },
       shouldOverrideUrlLoading: (c, r) async {
-        var res = widget.onNavigation?.call(r.request.url?.toString() ?? "") ?? false;
-        if(res) {
+        var res =
+            widget.onNavigation?.call(r.request.url?.toString() ?? "", c) ??
+                false;
+        if (res) {
           return NavigationActionPolicy.CANCEL;
         } else {
           return NavigationActionPolicy.ALLOW;
         }
       },
-      onWebViewCreated: (c){
+      onWebViewCreated: (c) {
         controller = c;
         widget.onStarted?.call(c);
       },
-      onProgressChanged: (c, p){
-        if(mounted){
+      onLoadStop: (c, r) {
+        widget.onLoadStop?.call(c);
+      },
+      onProgressChanged: (c, p) {
+        if (mounted) {
           setState(() {
             _progress = p / 100;
           });
@@ -133,19 +159,22 @@ class _AppWebviewState extends State<AppWebview> {
     body = Stack(
       children: [
         Positioned.fill(child: body),
-        if(_progress < 1.0)
-          const Positioned.fill(child: Center(
-              child: CircularProgressIndicator()))
+        if (_progress < 1.0)
+          const Positioned.fill(
+              child: Center(child: CircularProgressIndicator()))
       ],
     );
 
     return Scaffold(
-      appBar: Appbar(
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,),
-        actions: actions,
-      ),
-      body: body
-    );
+        appBar: Appbar(
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          actions: actions,
+        ),
+        body: body);
   }
 }
 
@@ -162,13 +191,12 @@ class DesktopWebview {
 
   final void Function()? onClose;
 
-  DesktopWebview({
-    required this.initialUrl,
-    this.onTitleChange,
-    this.onNavigation,
-    this.onStarted,
-    this.onClose
-  });
+  DesktopWebview(
+      {required this.initialUrl,
+      this.onTitleChange,
+      this.onNavigation,
+      this.onStarted,
+      this.onClose});
 
   Webview? _webview;
 
@@ -178,8 +206,8 @@ class DesktopWebview {
 
   void onMessage(String message) {
     var json = jsonDecode(message);
-    if(json is Map){
-      if(json["id"] == "document_created"){
+    if (json is Map) {
+      if (json["id"] == "document_created") {
         title = json["data"]["title"];
         _ua = json["data"]["ua"];
         onTitleChange?.call(title!, this);
@@ -210,14 +238,15 @@ class DesktopWebview {
         }
         collect();
       ''';
-      if(_webview != null) {
+      if (_webview != null) {
         onMessage(await evaluateJavascript(js) ?? '');
       }
     });
   }
 
   void open() async {
-    _webview = await WebviewWindow.create(configuration: CreateConfiguration(
+    _webview = await WebviewWindow.create(
+        configuration: CreateConfiguration(
       useWindowPositionAndSize: true,
       userDataFolderWindows: "${App.dataPath}\\webview",
       title: "webview",
@@ -242,11 +271,11 @@ class DesktopWebview {
     return _webview!.evaluateJavaScript(source);
   }
 
-  Future<Map<String, String>> getCookies(String url) async{
+  Future<Map<String, String>> getCookies(String url) async {
     var allCookies = await _webview!.getAllCookies();
     var res = <String, String>{};
-    for(var c in allCookies) {
-      if(_cookieMatch(url, c.domain)){
+    for (var c in allCookies) {
+      if (_cookieMatch(url, c.domain)) {
         res[_removeCode0(c.name)] = _removeCode0(c.value);
       }
     }

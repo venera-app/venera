@@ -88,7 +88,8 @@ class RandomCategoryPart extends BaseCategoryPart {
     if (randomNumber >= tags.length) {
       return tags;
     }
-    return tags.sublist(math.Random().nextInt(tags.length - randomNumber));
+    var start = math.Random().nextInt(tags.length - randomNumber);
+    return tags.sublist(start, start + randomNumber);
   }
 
   @override

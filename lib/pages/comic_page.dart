@@ -134,6 +134,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         const SizedBox(width: 16),
         Container(
           decoration: BoxDecoration(
+            color: context.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
           height: 144,
@@ -369,11 +370,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 buildTag(text: comic.uploadTime!),
               ],
             ),
-          if (comic.uploadTime != null)
+          if (comic.updateTime != null)
             buildWrap(
               children: [
                 buildTag(text: 'Update Time'.tl, isTitle: true),
-                buildTag(text: comicSource.name),
+                buildTag(text: comic.updateTime!),
               ],
             ),
           const SizedBox(height: 12),
@@ -1120,19 +1121,26 @@ class _FavoritePanelState extends State<_FavoritePanel> {
       cid: widget.cid,
       comicSource: comicSource,
       isFavorite: widget.isFavorite,
+      onFavorite: widget.onFavorite,
     );
   }
 }
 
 class _NetworkFavorites extends StatefulWidget {
-  const _NetworkFavorites(
-      {required this.cid, required this.comicSource, required this.isFavorite});
+  const _NetworkFavorites({
+    required this.cid,
+    required this.comicSource,
+    required this.isFavorite,
+    required this.onFavorite,
+  });
 
   final String cid;
 
   final ComicSource comicSource;
 
   final bool? isFavorite;
+
+  final void Function(bool) onFavorite;
 
   @override
   State<_NetworkFavorites> createState() => _NetworkFavoritesState();
@@ -1167,7 +1175,10 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
               var res = await widget.comicSource.favoriteData!
                   .addOrDelFavorite!(widget.cid, '', !isFavorite);
               if (res.success) {
+                widget.onFavorite(!isFavorite);
                 context.pop();
+                App.rootContext.showMessage(
+                    message: isFavorite ? "Removed".tl : "Added".tl);
               } else {
                 setState(() {
                   isLoading = false;

@@ -121,6 +121,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               "${e.time} | ${comicSource?.name ?? "Unknown"}",
               comicSource?.key ?? "Unknown",
               null,
+              null,
             );
           }).toList(),
           menuBuilder: (c) {
@@ -201,6 +202,7 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
             e.tags,
             "${e.time} | ${comicSource?.name ?? "Unknown"}",
             comicSource?.key ?? "Unknown",
+            null,
             null,
           ),
         );

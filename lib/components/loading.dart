@@ -199,7 +199,7 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
 
   int _page = 1;
 
-  int _maxPage = 1;
+  int? _maxPage;
 
   Future<Res<List<S>>> loadData(int page);
 
@@ -211,10 +211,10 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
 
   bool get isFirstLoading => _isFirstLoading;
 
-  bool get haveNextPage => _page <= _maxPage;
+  bool get haveNextPage => _maxPage == null || _page <= _maxPage!;
 
   void nextPage() {
-    if (_page > _maxPage) return;
+    if (_maxPage != null && _page > _maxPage!) return;
     if (_isLoading) return;
     _isLoading = true;
     loadData(_page).then((value) {

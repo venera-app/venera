@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_webview_window
   flutter_qjs
+  gtk
   screen_retriever
   sqlite3_flutter_libs
   url_launcher_linux
