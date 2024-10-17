@@ -5,6 +5,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/pages/ranking_page.dart';
+import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'category_comics_page.dart';
@@ -88,29 +89,24 @@ class _CategoryPage extends StatelessWidget {
     String categoryKey,
   ) {
     if (type == 'search') {
-      // TODO: Implement search
-      /*
       App.mainNavigatorKey?.currentContext?.to(
-            () => SearchResultPage(
-          keyword: tag,
+        () => SearchResultPage(
+          text: tag,
           options: const [],
           sourceKey: findComicSourceKey(),
         ),
       );
-       */
     } else if (type == "search_with_namespace") {
-      /*
       if (tag.contains(" ")) {
         tag = '"$tag"';
       }
       App.mainNavigatorKey?.currentContext?.to(
-            () => SearchResultPage(
-          keyword: "$namespace:$tag",
+        () => SearchResultPage(
+          text: "$namespace:$tag",
           options: const [],
           sourceKey: findComicSourceKey(),
         ),
       );
-       */
     } else if (type == "category") {
       App.mainNavigatorKey!.currentContext!.to(
         () => CategoryComicsPage(

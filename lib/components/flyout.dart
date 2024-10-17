@@ -50,10 +50,10 @@ class Flyout extends StatefulWidget {
   final FlyoutController? controller;
 
   @override
-  State<Flyout> createState() => _FlyoutState();
+  State<Flyout> createState() => FlyoutState();
 }
 
-class _FlyoutState extends State<Flyout> {
+class FlyoutState extends State<Flyout> {
   @override
   void initState() {
     if (widget.controller != null) {

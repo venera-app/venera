@@ -377,13 +377,10 @@ class SearchPageData {
 
   final bool enableLanguageFilter;
 
-  final bool enableTagsSuggestions;
-
   const SearchPageData(this.searchOptions, this.loadPage)
       : enableLanguageFilter = false,
         customOptionsBuilder = null,
-        overrideSearchResultBuilder = null,
-        enableTagsSuggestions = false;
+        overrideSearchResultBuilder = null;
 }
 
 class SearchOptions {

@@ -548,6 +548,10 @@ class SearchBarController {
 
   String get text => _state?.getText() ?? '';
 
+  set text(String text) {
+    setText(text);
+  }
+
   SearchBarController({this.onSearch, this.initialText = ''});
 }
 
@@ -558,9 +562,11 @@ abstract mixin class _SearchBarMixin {
 }
 
 class SliverSearchBar extends StatefulWidget {
-  const SliverSearchBar({super.key, required this.controller});
+  const SliverSearchBar({super.key, required this.controller, this.onChanged});
 
   final SearchBarController controller;
+
+  final void Function(String)? onChanged;
 
   @override
   State<SliverSearchBar> createState() => _SliverSearchBarState();
@@ -593,10 +599,12 @@ class _SliverSearchBarState extends State<SliverSearchBar>
   @override
   Widget build(BuildContext context) {
     return SliverPersistentHeader(
+      pinned: true,
       delegate: _SliverSearchBarDelegate(
         editingController: _editingController,
         controller: _controller,
         topPadding: MediaQuery.of(context).padding.top,
+        onChanged: widget.onChanged,
       ),
     );
   }
@@ -609,10 +617,13 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
 
   final double topPadding;
 
+  final void Function(String)? onChanged;
+
   const _SliverSearchBarDelegate({
     required this.editingController,
     required this.controller,
     required this.topPadding,
+    this.onChanged,
   });
 
   static const _kAppBarHeight = 52.0;
@@ -625,6 +636,7 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
       width: double.infinity,
       padding: EdgeInsets.only(top: topPadding),
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).colorScheme.outlineVariant,
@@ -647,6 +659,7 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
                 onSubmitted: (text) {
                   controller.onSearch?.call(text);
                 },
+                onChanged: onChanged,
               ),
             ),
           ),

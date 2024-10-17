@@ -306,7 +306,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         ];
         color = context.useBackgroundColor(colors[(i++) % (colors.length)]);
       } else {
-        color = context.colorScheme.surfaceContainer;
+        color = context.colorScheme.surfaceContainerLow;
       }
 
       final borderRadius = BorderRadius.circular(12);
