@@ -807,13 +807,13 @@ class ComicSourceParser {
   }
 
   LinkHandler? _parseLinkHandler() {
-    if (!_checkExists("linkHandler")) {
+    if (!_checkExists("comic.link")) {
       return null;
     }
-    List<String> domains = List.from(_getValue("link.domains"));
+    List<String> domains = List.from(_getValue("comic.link.domains"));
     linkToId(String link) {
       var res = JsEngine().runCode("""
-          ComicSource.sources.$_key.link.linkToId(${jsonEncode(link)})
+          ComicSource.sources.$_key.comic.link.linkToId(${jsonEncode(link)})
         """);
       return res as String?;
     }
