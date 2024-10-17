@@ -106,6 +106,22 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
 
   Future<Res<S>> loadData();
 
+  Future<Res<S>> loadDataWithRetry() async {
+    int retry = 0;
+    while (true) {
+      var res = await loadData();
+      if (res.success) {
+        return res;
+      } else {
+        if (retry >= 3) {
+          return res;
+        }
+        retry++;
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+    }
+  }
+
   FutureOr<void> onDataLoaded() {}
 
   Widget buildContent(BuildContext context, S data);
@@ -125,7 +141,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
       isLoading = true;
       error = null;
     });
-    loadData().then((value) async {
+    loadDataWithRetry().then((value) async {
       if (value.success) {
         data = value.data;
         await onDataLoaded();
@@ -153,7 +169,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
   void initState() {
     isLoading = true;
     Future.microtask(() {
-      loadData().then((value) async {
+      loadDataWithRetry().then((value) async {
         if (value.success) {
           data = value.data;
           await onDataLoaded();

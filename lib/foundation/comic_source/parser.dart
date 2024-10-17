@@ -483,7 +483,6 @@ class ComicSourceParser {
         if (res is! Map<String, dynamic>) throw "Invalid data";
         res['comicId'] = id;
         res['sourceKey'] = _key;
-        JsEngine().clearHtml();
         return Res(ComicDetails.fromJson(res));
       } catch (e, s) {
         Log.error("Network", "$e\n$s");

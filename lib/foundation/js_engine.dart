@@ -28,7 +28,6 @@ import 'comic_source/comic_source.dart';
 import 'consts.dart';
 import 'log.dart';
 
-
 class JavaScriptRuntimeException implements Exception {
   final String message;
 
@@ -40,7 +39,7 @@ class JavaScriptRuntimeException implements Exception {
   }
 }
 
-class JsEngine with _JSEngineApi{
+class JsEngine with _JSEngineApi {
   factory JsEngine() => _cache ?? (_cache = JsEngine._create());
 
   static JsEngine? _cache;
@@ -53,13 +52,13 @@ class JsEngine with _JSEngineApi{
 
   Dio? _dio;
 
-  static void reset(){
+  static void reset() {
     _cache = null;
     _cache?.dispose();
     JsEngine().init();
   }
 
-  Future<void> init() async{
+  Future<void> init() async {
     if (!_closed) {
       return;
     }
@@ -72,14 +71,14 @@ class JsEngine with _JSEngineApi{
       _closed = false;
       _engine = FlutterQjs();
       _engine!.dispatch();
-      var setGlobalFunc = _engine!.evaluate(
-          "(key, value) => { this[key] = value; }");
+      var setGlobalFunc =
+          _engine!.evaluate("(key, value) => { this[key] = value; }");
       (setGlobalFunc as JSInvokable)(["sendMessage", _messageReceiver]);
       setGlobalFunc.free();
       var jsInit = await rootBundle.load("assets/init.js");
-      _engine!.evaluate(utf8.decode(jsInit.buffer.asUint8List()), name: "<init>");
-    }
-    catch(e, s){
+      _engine!
+          .evaluate(utf8.decode(jsInit.buffer.asUint8List()), name: "<init>");
+    } catch (e, s) {
       Log.error('JS Engine', 'JS Engine Init Error:\n$e\n$s');
     }
   }
@@ -106,14 +105,13 @@ class JsEngine with _JSEngineApi{
             {
               String key = message["key"];
               String dataKey = message["data_key"];
-              return ComicSource.find(key)
-                  ?.data[dataKey];
+              return ComicSource.find(key)?.data[dataKey];
             }
           case 'save_data':
             {
               String key = message["key"];
               String dataKey = message["data_key"];
-              if(dataKey == 'setting'){
+              if (dataKey == 'setting') {
                 throw "setting is not allowed to be saved";
               }
               var data = message["data"];
@@ -158,9 +156,9 @@ class JsEngine with _JSEngineApi{
               String key = message["key"];
               String settingKey = message["setting_key"];
               var source = ComicSource.find(key)!;
-              return source.data["setting"]?[settingKey]
-                  ?? source.settings?[settingKey]['default']
-                  ?? (throw "Setting not found: $settingKey");
+              return source.data["setting"]?[settingKey] ??
+                  source.settings?[settingKey]['default'] ??
+                  (throw "Setting not found: $settingKey");
             }
           case "isLogged":
             {
@@ -168,37 +166,40 @@ class JsEngine with _JSEngineApi{
             }
         }
       }
-    }
-    catch(e, s){
+    } catch (e, s) {
       Log.error("Failed to handle message: $message\n$e\n$s", "JsEngine");
       rethrow;
     }
   }
 
-  Future<Map<String, dynamic>> _http(Map<String, dynamic> req) async{
+  Future<Map<String, dynamic>> _http(Map<String, dynamic> req) async {
     Response? response;
     String? error;
 
     try {
       var headers = Map<String, dynamic>.from(req["headers"] ?? {});
-      if(headers["user-agent"] == null && headers["User-Agent"] == null){
+      if (headers["user-agent"] == null && headers["User-Agent"] == null) {
         headers["User-Agent"] = webUA;
       }
-      response = await _dio!.request(req["url"], data: req["data"], options: Options(
-        method: req['http_method'],
-        responseType: req["bytes"] == true ? ResponseType.bytes : ResponseType.plain,
-        headers: headers
-      ));
+      response = await _dio!.request(req["url"],
+          data: req["data"],
+          options: Options(
+              method: req['http_method'],
+              responseType: req["bytes"] == true
+                  ? ResponseType.bytes
+                  : ResponseType.plain,
+              headers: headers));
     } catch (e) {
       error = e.toString();
     }
 
     Map<String, String> headers = {};
 
-    response?.headers.forEach((name, values) => headers[name] = values.join(','));
+    response?.headers
+        .forEach((name, values) => headers[name] = values.join(','));
 
     dynamic body = response?.data;
-    if(body is! Uint8List && body is List<int>) {
+    if (body is! Uint8List && body is List<int>) {
       body = Uint8List.fromList(body);
     }
 
@@ -222,28 +223,42 @@ class JsEngine with _JSEngineApi{
   }
 }
 
-mixin class _JSEngineApi{
+mixin class _JSEngineApi {
   final Map<int, dom.Document> _documents = {};
+  final Map<int, List<int>> _documentElements = {};
+  final Map<int, List<int>> _documentNodes = {};
   final Map<int, dom.Element> _elements = {};
   final Map<int, dom.Node> _nodes = {};
   CookieJarSql? _cookieJar;
+
+  int _elementKey = 0;
+  int _nodeKey = 0;
 
   dynamic handleHtmlCallback(Map<String, dynamic> data) {
     switch (data["function"]) {
       case "parse":
         _documents[data["key"]] = html.parse(data["data"]);
+        _documentElements[data["key"]] = [];
+        _documentNodes[data["key"]] = [];
+        Future.delayed(const Duration(seconds: 1), () {
+          handleHtmlCallback({"function": "dispose", "key": data["key"]});
+        });
         return null;
       case "querySelector":
         var res = _documents[data["key"]]!.querySelector(data["query"]);
-        if(res == null) return null;
-        _elements[_elements.length] = res;
-        return _elements.length - 1;
+        if (res == null) return null;
+        _elements[_elementKey] = res;
+        _elementKey++;
+        _documentElements[data["key"]]!.add(_elementKey - 1);
+        return _elementKey - 1;
       case "querySelectorAll":
         var res = _documents[data["key"]]!.querySelectorAll(data["query"]);
         var keys = <int>[];
-        for(var element in res){
-          _elements[_elements.length] = element;
-          keys.add(_elements.length - 1);
+        for (var element in res) {
+          _elements[_elementKey] = element;
+          keys.add(_elementKey);
+          _documentElements[data["key"]]!.add(_elementKey);
+          _elementKey++;
         }
         return keys;
       case "getText":
@@ -252,44 +267,58 @@ mixin class _JSEngineApi{
         return _elements[data["key"]]!.attributes;
       case "dom_querySelector":
         var res = _elements[data["key"]]!.querySelector(data["query"]);
-        if(res == null) return null;
+        if (res == null) return null;
         _elements[_elements.length] = res;
+        var docKey = _documentElements.keys
+            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
+        _documentElements[docKey]!.add(_elements.length - 1);
         return _elements.length - 1;
       case "dom_querySelectorAll":
         var res = _elements[data["key"]]!.querySelectorAll(data["query"]);
         var keys = <int>[];
-        for(var element in res){
+        var docKey = _documentElements.keys
+            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
+        for (var element in res) {
           _elements[_elements.length] = element;
           keys.add(_elements.length - 1);
+          _documentElements[docKey]!.add(_elements.length - 1);
         }
         return keys;
       case "getChildren":
         var res = _elements[data["key"]]!.children;
         var keys = <int>[];
+        var docKey = _documentElements.keys
+            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
         for (var element in res) {
           _elements[_elements.length] = element;
           keys.add(_elements.length - 1);
+          _documentElements[docKey]!.add(_elements.length - 1);
         }
         return keys;
       case "getNodes":
         var res = _elements[data["key"]]!.nodes;
         var keys = <int>[];
+        var docKey = _documentElements.keys
+            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
         for (var node in res) {
-          _nodes[_nodes.length] = node;
-          keys.add(_nodes.length - 1);
+          _nodes[_nodeKey] = node;
+          keys.add(_nodeKey);
+          _documentNodes[docKey]!.add(_nodeKey);
+          _nodeKey++;
         }
         return keys;
       case "getInnerHTML":
         return _elements[data["key"]]!.innerHtml;
       case "getParent":
         var res = _elements[data["key"]]!.parent;
-        if(res == null) return null;
-        _elements[_elements.length] = res;
-        return _elements.length - 1;
+        if (res == null) return null;
+        _elements[_elementKey] = res;
+        _documentElements[data["key"]]!.add(_elementKey);
+        return _elementKey++;
       case "node_text":
         return _nodes[data["key"]]!.text;
       case "node_type":
-        return switch(_nodes[data["key"]]!.nodeType) {
+        return switch (_nodes[data["key"]]!.nodeType) {
           dom.Node.ELEMENT_NODE => "element",
           dom.Node.TEXT_NODE => "text",
           dom.Node.COMMENT_NODE => "comment",
@@ -298,10 +327,25 @@ mixin class _JSEngineApi{
         };
       case "node_to_element":
         var node = _nodes[data["key"]]!;
-        if(node is dom.Element){
-          _elements[_elements.length] = node;
-          return _elements.length - 1;
+        if (node is dom.Element) {
+          _elements[_elementKey] = node;
+          var docKey = _documentNodes.keys
+              .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
+          _documentElements[docKey]!.add(_elementKey);
+          return _elementKey++;
         }
+        return null;
+      case "dispose":
+        var docKey = data["key"];
+        _documents.remove(docKey);
+        for (var elementKey in _documentElements[docKey]!) {
+          _elements.remove(elementKey);
+        }
+        _documentElements.remove(docKey);
+        for (var nodeKey in _documentNodes[docKey]!) {
+          _nodes.remove(nodeKey);
+        }
+        _documentNodes.remove(docKey);
         return null;
     }
   }
@@ -313,7 +357,7 @@ mixin class _JSEngineApi{
             Uri.parse(data["url"]),
             (data["cookies"] as List).map((e) {
               var c = Cookie(e["name"], e["value"]);
-              if(e['domain'] != null){
+              if (e['domain'] != null) {
                 c.domain = e['domain'];
               }
               return c;
@@ -321,33 +365,35 @@ mixin class _JSEngineApi{
         return null;
       case "get":
         var cookies = _cookieJar!.loadForRequest(Uri.parse(data["url"]));
-        return cookies.map((e) => {
-          "name": e.name,
-          "value": e.value,
-          "domain": e.domain,
-          "path": e.path,
-          "expires": e.expires,
-          "max-age": e.maxAge,
-          "secure": e.secure,
-          "httpOnly": e.httpOnly,
-          "session": e.expires == null,
-        }).toList();
+        return cookies
+            .map((e) => {
+                  "name": e.name,
+                  "value": e.value,
+                  "domain": e.domain,
+                  "path": e.path,
+                  "expires": e.expires,
+                  "max-age": e.maxAge,
+                  "secure": e.secure,
+                  "httpOnly": e.httpOnly,
+                  "session": e.expires == null,
+                })
+            .toList();
       case "delete":
         clearCookies([data["url"]]);
         return null;
     }
   }
 
-  void clearHtml(){
+  void clearHtml() {
     _documents.clear();
     _elements.clear();
     _nodes.clear();
   }
 
-  void clearCookies(List<String> domains) async{
-    for(var domain in domains){
+  void clearCookies(List<String> domains) async {
+    for (var domain in domains) {
       var uri = Uri.tryParse(domain);
-      if(uri == null) continue;
+      if (uri == null) continue;
       _cookieJar!.deleteUri(uri);
     }
   }
@@ -359,16 +405,12 @@ mixin class _JSEngineApi{
     try {
       switch (type) {
         case "utf8":
-          return isEncode
-              ? utf8.encode(value)
-              : utf8.decode(value);
+          return isEncode ? utf8.encode(value) : utf8.decode(value);
         case "base64":
-          if(value is String){
+          if (value is String) {
             value = utf8.encode(value);
           }
-          return isEncode
-              ? base64Encode(value)
-              : base64Decode(value);
+          return isEncode ? base64Encode(value) : base64Decode(value);
         case "md5":
           return Uint8List.fromList(md5.convert(value).bytes);
         case "sha1":
@@ -380,20 +422,22 @@ mixin class _JSEngineApi{
         case "hmac":
           var key = data["key"];
           var hash = data["hash"];
-          var hmac = Hmac(switch(hash) {
-            "md5" => md5,
-            "sha1" => sha1,
-            "sha256" => sha256,
-            "sha512" => sha512,
-            _ => throw "Unsupported hash: $hash"
-          }, key);
-          if(data['isString'] == true){
+          var hmac = Hmac(
+              switch (hash) {
+                "md5" => md5,
+                "sha1" => sha1,
+                "sha256" => sha256,
+                "sha512" => sha512,
+                _ => throw "Unsupported hash: $hash"
+              },
+              key);
+          if (data['isString'] == true) {
             return hmac.convert(value).toString();
           } else {
             return Uint8List.fromList(hmac.convert(value).bytes);
           }
         case "aes-ecb":
-          if(!isEncode){
+          if (!isEncode) {
             var key = data["key"];
             var cipher = ECBBlockCipher(AESEngine());
             cipher.init(false, KeyParameter(key));
@@ -401,7 +445,7 @@ mixin class _JSEngineApi{
           }
           return null;
         case "aes-cbc":
-          if(!isEncode){
+          if (!isEncode) {
             var key = data["key"];
             var iv = data["iv"];
             var cipher = CBCBlockCipher(AESEngine());
@@ -410,7 +454,7 @@ mixin class _JSEngineApi{
           }
           return null;
         case "aes-cfb":
-          if(!isEncode){
+          if (!isEncode) {
             var key = data["key"];
             var blockSize = data["blockSize"];
             var cipher = CFBBlockCipher(AESEngine(), blockSize);
@@ -419,7 +463,7 @@ mixin class _JSEngineApi{
           }
           return null;
         case "aes-ofb":
-          if(!isEncode){
+          if (!isEncode) {
             var key = data["key"];
             var blockSize = data["blockSize"];
             var cipher = OFBBlockCipher(AESEngine(), blockSize);
@@ -428,19 +472,18 @@ mixin class _JSEngineApi{
           }
           return null;
         case "rsa":
-          if(!isEncode){
+          if (!isEncode) {
             var key = data["key"];
             final cipher = PKCS1Encoding(RSAEngine());
-            cipher.init(
-                false, PrivateKeyParameter<RSAPrivateKey>(_parsePrivateKey(key)));
+            cipher.init(false,
+                PrivateKeyParameter<RSAPrivateKey>(_parsePrivateKey(key)));
             return _processInBlocks(cipher, value);
           }
           return null;
         default:
           return value;
       }
-    }
-    catch(e) {
+    } catch (e) {
       Log.error("JS Engine", "Failed to convert $type: $e");
       return null;
     }
@@ -460,11 +503,11 @@ mixin class _JSEngineApi{
     final p = pkSeq.elements![4] as ASN1Integer;
     final q = pkSeq.elements![5] as ASN1Integer;
 
-    return RSAPrivateKey(modulus.integer!, privateExponent.integer!, p.integer!, q.integer!);
+    return RSAPrivateKey(
+        modulus.integer!, privateExponent.integer!, p.integer!, q.integer!);
   }
 
-  Uint8List _processInBlocks(
-      AsymmetricBlockCipher engine, Uint8List input) {
+  Uint8List _processInBlocks(AsymmetricBlockCipher engine, Uint8List input) {
     final numBlocks = input.length ~/ engine.inputBlockSize +
         ((input.length % engine.inputBlockSize != 0) ? 1 : 0);
 
