@@ -478,8 +478,8 @@ class HtmlDocument {
             key: this.key,
             query: query
         })
-        if(!k) return null;
-        return new HtmlElement(k);
+        if(k == null) return null;
+        return new HtmlElement(k, this.key);
     }
 
     /**
@@ -494,7 +494,19 @@ class HtmlDocument {
             key: this.key,
             query: query
         })
-        return ks.map(k => new HtmlElement(k));
+        return ks.map(k => new HtmlElement(k, this.key));
+    }
+
+    /**
+     * Dispose the HTML document.
+     * This should be called when the document is no longer needed.
+     */
+    dispose() {
+        sendMessage({
+            method: "html",
+            function: "dispose",
+            key: this.key
+        })
     }
 }
 
@@ -504,12 +516,16 @@ class HtmlDocument {
 class HtmlElement {
     key = 0;
 
+    doc = 0;
+
     /**
      * Constructor for HtmlDom.
      * @param {number} k - The key of the element.
+     * @param {number} doc - The key of the document.
      */
-    constructor(k) {
+    constructor(k, doc) {
         this.key = k;
+        this.doc = doc;
     }
 
     /**
@@ -520,7 +536,8 @@ class HtmlElement {
         return sendMessage({
             method: "html",
             function: "getText",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
     }
 
@@ -532,7 +549,8 @@ class HtmlElement {
         return sendMessage({
             method: "html",
             function: "getAttributes",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
     }
 
@@ -546,10 +564,11 @@ class HtmlElement {
             method: "html",
             function: "dom_querySelector",
             key: this.key,
-            query: query
+            query: query,
+            doc: this.doc,
         })
-        if(!k) return null;
-        return new HtmlElement(k);
+        if(k == null) return null;
+        return new HtmlElement(k, this.doc);
     }
 
     /**
@@ -562,9 +581,10 @@ class HtmlElement {
             method: "html",
             function: "dom_querySelectorAll",
             key: this.key,
-            query: query
+            query: query,
+            doc: this.doc,
         })
-        return ks.map(k => new HtmlElement(k));
+        return ks.map(k => new HtmlElement(k, this.doc));
     }
 
     /**
@@ -575,9 +595,10 @@ class HtmlElement {
         let ks = sendMessage({
             method: "html",
             function: "getChildren",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
-        return ks.map(k => new HtmlElement(k));
+        return ks.map(k => new HtmlElement(k, this.doc));
     }
 
     /**
@@ -588,9 +609,10 @@ class HtmlElement {
         let ks = sendMessage({
             method: "html",
             function: "getNodes",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
-        return ks.map(k => new HtmlNode(k));
+        return ks.map(k => new HtmlNode(k, this.doc));
     }
 
     /**
@@ -601,7 +623,8 @@ class HtmlElement {
         return sendMessage({
             method: "html",
             function: "getInnerHTML",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
     }
 
@@ -613,9 +636,10 @@ class HtmlElement {
         let k = sendMessage({
             method: "html",
             function: "getParent",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
-        if(!k) return null;
+        if(k == null) return null;
         return new HtmlElement(k);
     }
 }
@@ -623,8 +647,11 @@ class HtmlElement {
 class HtmlNode {
     key = 0;
 
-    constructor(k) {
+    doc = 0;
+
+    constructor(k, doc) {
         this.key = k;
+        this.doc = doc;
     }
 
     /**
@@ -635,7 +662,8 @@ class HtmlNode {
         return sendMessage({
             method: "html",
             function: "node_text",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
     }
 
@@ -647,7 +675,8 @@ class HtmlNode {
         return sendMessage({
             method: "html",
             function: "node_type",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
     }
 
@@ -659,10 +688,11 @@ class HtmlNode {
         let k = sendMessage({
             method: "html",
             function: "node_toElement",
-            key: this.key
+            key: this.key,
+            doc: this.doc,
         })
-        if(!k) return null;
-        return new HtmlElement(k);
+        if(k == null) return null;
+        return new HtmlElement(k, this.doc);
     }
 }
 

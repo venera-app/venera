@@ -83,7 +83,7 @@ class JsEngine with _JSEngineApi {
     }
   }
 
-  dynamic _messageReceiver(dynamic message) {
+  Object? _messageReceiver(dynamic message) {
     try {
       if (message is Map<dynamic, dynamic>) {
         String method = message["method"] as String;
@@ -166,6 +166,7 @@ class JsEngine with _JSEngineApi {
             }
         }
       }
+      return null;
     } catch (e, s) {
       Log.error("Failed to handle message: $message\n$e\n$s", "JsEngine");
       rethrow;
@@ -224,130 +225,57 @@ class JsEngine with _JSEngineApi {
 }
 
 mixin class _JSEngineApi {
-  final Map<int, dom.Document> _documents = {};
-  final Map<int, List<int>> _documentElements = {};
-  final Map<int, List<int>> _documentNodes = {};
-  final Map<int, dom.Element> _elements = {};
-  final Map<int, dom.Node> _nodes = {};
   CookieJarSql? _cookieJar;
 
-  int _elementKey = 0;
-  int _nodeKey = 0;
+  final _documents = <int, DocumentWrapper>{};
 
-  dynamic handleHtmlCallback(Map<String, dynamic> data) {
+  Object? handleHtmlCallback(Map<String, dynamic> data) {
+    print(data);
     switch (data["function"]) {
       case "parse":
-        _documents[data["key"]] = html.parse(data["data"]);
-        _documentElements[data["key"]] = [];
-        _documentNodes[data["key"]] = [];
-        Future.delayed(const Duration(seconds: 1), () {
-          handleHtmlCallback({"function": "dispose", "key": data["key"]});
-        });
+        _documents[data["key"]] = DocumentWrapper.parse(data["data"]);
         return null;
       case "querySelector":
-        var res = _documents[data["key"]]!.querySelector(data["query"]);
-        if (res == null) return null;
-        _elements[_elementKey] = res;
-        _elementKey++;
-        _documentElements[data["key"]]!.add(_elementKey - 1);
-        return _elementKey - 1;
+        var key = data["key"];
+        return _documents[key]!.querySelector(data["query"]);
       case "querySelectorAll":
-        var res = _documents[data["key"]]!.querySelectorAll(data["query"]);
-        var keys = <int>[];
-        for (var element in res) {
-          _elements[_elementKey] = element;
-          keys.add(_elementKey);
-          _documentElements[data["key"]]!.add(_elementKey);
-          _elementKey++;
-        }
-        return keys;
+        var key = data["key"];
+        return _documents[key]!.querySelectorAll(data["query"]);
       case "getText":
-        return _elements[data["key"]]!.text;
+        return _documents[data["doc"]]!.elementGetText(data["key"]);
       case "getAttributes":
-        return _elements[data["key"]]!.attributes;
+        var res = _documents[data["doc"]]!.elementGetAttributes(data["key"]);
+        return res;
       case "dom_querySelector":
-        var res = _elements[data["key"]]!.querySelector(data["query"]);
-        if (res == null) return null;
-        _elements[_elements.length] = res;
-        var docKey = _documentElements.keys
-            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
-        _documentElements[docKey]!.add(_elements.length - 1);
-        return _elements.length - 1;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementQuerySelector(data["key"], data["query"]);
       case "dom_querySelectorAll":
-        var res = _elements[data["key"]]!.querySelectorAll(data["query"]);
-        var keys = <int>[];
-        var docKey = _documentElements.keys
-            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
-        for (var element in res) {
-          _elements[_elements.length] = element;
-          keys.add(_elements.length - 1);
-          _documentElements[docKey]!.add(_elements.length - 1);
-        }
-        return keys;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementQuerySelectorAll(data["key"], data["query"]);
       case "getChildren":
-        var res = _elements[data["key"]]!.children;
-        var keys = <int>[];
-        var docKey = _documentElements.keys
-            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
-        for (var element in res) {
-          _elements[_elements.length] = element;
-          keys.add(_elements.length - 1);
-          _documentElements[docKey]!.add(_elements.length - 1);
-        }
-        return keys;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementGetChildren(data["key"]);
       case "getNodes":
-        var res = _elements[data["key"]]!.nodes;
-        var keys = <int>[];
-        var docKey = _documentElements.keys
-            .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
-        for (var node in res) {
-          _nodes[_nodeKey] = node;
-          keys.add(_nodeKey);
-          _documentNodes[docKey]!.add(_nodeKey);
-          _nodeKey++;
-        }
-        return keys;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementGetNodes(data["key"]);
       case "getInnerHTML":
-        return _elements[data["key"]]!.innerHtml;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementGetInnerHTML(data["key"]);
       case "getParent":
-        var res = _elements[data["key"]]!.parent;
-        if (res == null) return null;
-        _elements[_elementKey] = res;
-        _documentElements[data["key"]]!.add(_elementKey);
-        return _elementKey++;
+        var doc = _documents[data["doc"]]!;
+        return doc.elementGetParent(data["key"]);
       case "node_text":
-        return _nodes[data["key"]]!.text;
+        return _documents[data["doc"]]!.nodeGetText(data["key"]);
       case "node_type":
-        return switch (_nodes[data["key"]]!.nodeType) {
-          dom.Node.ELEMENT_NODE => "element",
-          dom.Node.TEXT_NODE => "text",
-          dom.Node.COMMENT_NODE => "comment",
-          dom.Node.DOCUMENT_NODE => "document",
-          _ => "unknown"
-        };
+        return _documents[data["doc"]]!.nodeType(data["key"]);
       case "node_to_element":
-        var node = _nodes[data["key"]]!;
-        if (node is dom.Element) {
-          _elements[_elementKey] = node;
-          var docKey = _documentNodes.keys
-              .firstWhere((key) => _documentElements[key]!.contains(data["key"]));
-          _documentElements[docKey]!.add(_elementKey);
-          return _elementKey++;
-        }
-        return null;
+        return _documents[data["doc"]]!.nodeToElement(data["key"]);
       case "dispose":
         var docKey = data["key"];
         _documents.remove(docKey);
-        for (var elementKey in _documentElements[docKey]!) {
-          _elements.remove(elementKey);
-        }
-        _documentElements.remove(docKey);
-        for (var nodeKey in _documentNodes[docKey]!) {
-          _nodes.remove(nodeKey);
-        }
-        _documentNodes.remove(docKey);
         return null;
     }
+    return null;
   }
 
   dynamic handleCookieCallback(Map<String, dynamic> data) {
@@ -384,11 +312,7 @@ mixin class _JSEngineApi {
     }
   }
 
-  void clearHtml() {
-    _documents.clear();
-    _elements.clear();
-    _nodes.clear();
-  }
+  void clearHtml() {}
 
   void clearCookies(List<String> domains) async {
     for (var domain in domains) {
@@ -398,7 +322,7 @@ mixin class _JSEngineApi {
     }
   }
 
-  dynamic _convert(Map<String, dynamic> data) {
+  Object? _convert(Map<String, dynamic> data) {
     String type = data["type"];
     var value = data["value"];
     bool isEncode = data["isEncode"];
@@ -533,5 +457,115 @@ mixin class _JSEngineApi {
 
   int _randomInt(int min, int max) {
     return (min + (max - min) * math.Random().nextDouble()).toInt();
+  }
+}
+
+class DocumentWrapper {
+  final dom.Document doc;
+
+  DocumentWrapper.parse(String doc) : doc = html.parse(doc);
+
+  var elements = <dom.Element>[];
+
+  var nodes = <dom.Node>[];
+
+  int? querySelector(String query) {
+    var element = doc.querySelector(query);
+    if (element == null) return null;
+    elements.add(element);
+    return elements.length - 1;
+  }
+
+  List<int> querySelectorAll(String query) {
+    var res = doc.querySelectorAll(query);
+    var keys = <int>[];
+    for (var element in res) {
+      elements.add(element);
+      keys.add(elements.length - 1);
+    }
+    return keys;
+  }
+
+  String? elementGetText(int key) {
+    return elements[key].text;
+  }
+
+  Map<String, String> elementGetAttributes(int key) {
+    return elements[key].attributes.map(
+          (key, value) => MapEntry(
+            key.toString(),
+            value,
+          ),
+        );
+  }
+
+  String? elementGetInnerHTML(int key) {
+    return elements[key].innerHtml;
+  }
+
+  int? elementGetParent(int key) {
+    var res = elements[key].parent;
+    if (res == null) return null;
+    elements.add(res);
+    return elements.length - 1;
+  }
+
+  int? elementQuerySelector(int key, String query) {
+    var res = elements[key].querySelector(query);
+    if (res == null) return null;
+    elements.add(res);
+    return elements.length - 1;
+  }
+
+  List<int> elementQuerySelectorAll(int key, String query) {
+    var res = elements[key].querySelectorAll(query);
+    var keys = <int>[];
+    for (var element in res) {
+      elements.add(element);
+      keys.add(elements.length - 1);
+    }
+    return keys;
+  }
+
+  List<int> elementGetChildren(int key) {
+    var res = elements[key].children;
+    var keys = <int>[];
+    for (var element in res) {
+      elements.add(element);
+      keys.add(elements.length - 1);
+    }
+    return keys;
+  }
+
+  List<int> elementGetNodes(int key) {
+    var res = elements[key].nodes;
+    var keys = <int>[];
+    for (var node in res) {
+      nodes.add(node);
+      keys.add(nodes.length - 1);
+    }
+    return keys;
+  }
+
+  String? nodeGetText(int key) {
+    return nodes[key].text;
+  }
+
+  String nodeType(int key) {
+    return switch (nodes[key].nodeType) {
+      dom.Node.ELEMENT_NODE => "element",
+      dom.Node.TEXT_NODE => "text",
+      dom.Node.COMMENT_NODE => "comment",
+      dom.Node.DOCUMENT_NODE => "document",
+      _ => "unknown"
+    };
+  }
+
+  int? nodeToElement(int key) {
+    if (nodes[key] is dom.Element) {
+      elements.add(nodes[key] as dom.Element);
+      return elements.length - 1;
+    }
+    return null;
   }
 }
