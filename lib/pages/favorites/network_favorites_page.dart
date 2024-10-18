@@ -1,5 +1,59 @@
 part of 'favorites_page.dart';
 
+// TODO: Add a menu option to delete a comic from favorites
+
+Future<bool> _deleteComic(String cid, String? fid, String sourceKey) async {
+  var source = ComicSource.find(sourceKey);
+  if (source == null) {
+    return false;
+  }
+
+  var result = false;
+
+  await showDialog(
+    context: App.rootContext,
+    builder: (context) {
+      bool loading = false;
+      return StatefulBuilder(builder: (context, setState) {
+        return ContentDialog(
+          title: "Delete".tl,
+          content: Text("Are you sure you want to delete this comic?".tl)
+              .paddingHorizontal(16),
+          actions: [
+            Button.filled(
+              isLoading: loading,
+              color: context.colorScheme.error,
+              onPressed: () async {
+                setState(() {
+                  loading = true;
+                });
+                var res = await source.favoriteData!.addOrDelFavorite!(
+                  cid,
+                  fid ?? '',
+                  false,
+                );
+                if (res.success) {
+                  context.showMessage(message: "Deleted".tl);
+                  result = true;
+                  context.pop();
+                } else {
+                  setState(() {
+                    loading = false;
+                  });
+                  context.showMessage(message: res.errorMessage!);
+                }
+              },
+              child: Text("Confirm".tl),
+            ),
+          ],
+        );
+      });
+    },
+  );
+
+  return result;
+}
+
 class NetworkFavoritePage extends StatelessWidget {
   const NetworkFavoritePage(this.data, {super.key});
 
@@ -14,13 +68,16 @@ class NetworkFavoritePage extends StatelessWidget {
 }
 
 class _NormalFavoritePage extends StatelessWidget {
-  const _NormalFavoritePage(this.data);
+  _NormalFavoritePage(this.data);
 
   final FavoriteData data;
+
+  final comicListKey = GlobalKey<ComicListState>();
 
   @override
   Widget build(BuildContext context) {
     return ComicList(
+      key: comicListKey,
       leadingSliver: SliverAppbar(
         leading: Tooltip(
           message: "Folders".tl,
@@ -52,6 +109,20 @@ class _NormalFavoritePage extends StatelessWidget {
         title: Text(data.title),
       ),
       loadPage: (i) => data.loadComic(i),
+      menuBuilder: (comic) {
+        return [
+          MenuEntry(
+            icon: Icons.delete_outline,
+            text: "Remove".tl,
+            onClick: () async {
+              var res = await _deleteComic(comic.id, null, comic.sourceKey);
+              if (res) {
+                comicListKey.currentState!.remove(comic);
+              }
+            },
+          ),
+        ];
+      },
     );
   }
 }
@@ -413,7 +484,7 @@ class _CreateFolderDialogState extends State<_CreateFolderDialog> {
 }
 
 class _FavoriteFolder extends StatelessWidget {
-  const _FavoriteFolder(this.data, this.folderID, this.title);
+  _FavoriteFolder(this.data, this.folderID, this.title);
 
   final FavoriteData data;
 
@@ -421,13 +492,30 @@ class _FavoriteFolder extends StatelessWidget {
 
   final String title;
 
+  final comicListKey = GlobalKey<ComicListState>();
+
   @override
   Widget build(BuildContext context) {
     return ComicList(
+      key: comicListKey,
       leadingSliver: SliverAppbar(
         title: Text(title),
       ),
       loadPage: (i) => data.loadComic(i, folderID),
+      menuBuilder: (comic) {
+        return [
+          MenuEntry(
+            icon: Icons.delete_outline,
+            text: "Remove".tl,
+            onClick: () async {
+              var res = await _deleteComic(comic.id, null, comic.sourceKey);
+              if (res) {
+                comicListKey.currentState!.remove(comic);
+              }
+            },
+          ),
+        ];
+      },
     );
   }
 }

@@ -12,12 +12,16 @@ class Comment {
   final int? voteStatus; // 1: upvote, -1: downvote, 0: none
 
   static String? parseTime(dynamic value) {
-    if(value == null) return null;
-    if(value is int) {
-      if(value < 10000000000) {
-        return DateTime.fromMillisecondsSinceEpoch(value * 1000).toString().substring(0, 19);
+    if (value == null) return null;
+    if (value is int) {
+      if (value < 10000000000) {
+        return DateTime.fromMillisecondsSinceEpoch(value * 1000)
+            .toString()
+            .substring(0, 19);
       } else {
-        return DateTime.fromMillisecondsSinceEpoch(value).toString().substring(0, 19);
+        return DateTime.fromMillisecondsSinceEpoch(value)
+            .toString()
+            .substring(0, 19);
       }
     }
     return value.toString();
@@ -89,6 +93,15 @@ class Comic {
         description = json["description"] ?? "",
         maxPage = json["maxPage"],
         language = json["language"];
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! Comic) return false;
+    return other.id == id && other.sourceKey == sourceKey;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ sourceKey.hashCode;
 }
 
 class ComicDetails with HistoryMixin {

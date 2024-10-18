@@ -61,13 +61,18 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                   const SizedBox(width: 8),
                   const CloseButton(),
                   const SizedBox(width: 8),
-                  Text("Folders".tl, style: ts.s18,),
+                  Text(
+                    "Folders".tl,
+                    style: ts.s18,
+                  ),
                 ],
               ),
             ).paddingTop(context.padding.top),
           Expanded(
             child: ListView.builder(
-              padding: widget.withAppbar ? EdgeInsets.zero : EdgeInsets.only(top: context.padding.top),
+              padding: widget.withAppbar
+                  ? EdgeInsets.zero
+                  : EdgeInsets.only(top: context.padding.top),
               itemCount: folders.length + networkFolders.length + 2,
               itemBuilder: (context, index) {
                 if (index == 0) {
@@ -76,8 +81,11 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                     child: Row(
                       children: [
                         const SizedBox(width: 16),
-                        const Icon(Icons.local_activity),
-                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.local_activity,
+                          color: context.colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 12),
                         Text("Local".tl),
                         const Spacer(),
                         IconButton(
@@ -103,12 +111,23 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                 index -= folders.length;
                 if (index == 0) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: context.colorScheme.outlineVariant,
+                          width: 0.6,
+                        ),
+                      ),
+                    ),
                     child: Row(
                       children: [
                         const SizedBox(width: 16),
-                        const Icon(Icons.cloud),
-                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.cloud,
+                          color: context.colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 12),
                         Text("Network".tl),
                       ],
                     ),

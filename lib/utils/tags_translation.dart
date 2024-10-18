@@ -56,7 +56,7 @@ extension TagsTranslation on String{
   String get translateTagsToCN => _translateTags(this);
 
   static String translateTag(String tag) {
-    if(tag.contains(':')) {
+    if(tag.contains(':') && tag.indexOf(':') == tag.lastIndexOf(':')) {
       var [namespace, text] = tag.split(':');
       return translationTagWithNamespace(text, namespace);
     } else {

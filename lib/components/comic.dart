@@ -21,7 +21,7 @@ class ComicTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   void _onTap() {
-    if(onTap != null) {
+    if (onTap != null) {
       onTap!();
       return;
     }
@@ -192,6 +192,9 @@ class ComicTile extends StatelessWidget {
                     badge: badge,
                     tags: comic.tags,
                     maxLines: 2,
+                    enableTranslate: ComicSource.find(comic.sourceKey)
+                            ?.enableTagsTranslate ??
+                        false,
                   ),
                 ),
               ],
@@ -274,13 +277,15 @@ class ComicTile extends StatelessWidget {
 }
 
 class _ComicDescription extends StatelessWidget {
-  const _ComicDescription(
-      {required this.title,
-      required this.subtitle,
-      required this.description,
-      this.badge,
-      this.maxLines = 2,
-      this.tags});
+  const _ComicDescription({
+    required this.title,
+    required this.subtitle,
+    required this.description,
+    required this.enableTranslate,
+    this.badge,
+    this.maxLines = 2,
+    this.tags,
+  });
 
   final String title;
   final String subtitle;
@@ -288,13 +293,15 @@ class _ComicDescription extends StatelessWidget {
   final String? badge;
   final List<String>? tags;
   final int maxLines;
+  final bool enableTranslate;
 
   @override
   Widget build(BuildContext context) {
     if (tags != null) {
       tags!.removeWhere((element) => element.removeAllBlank == "");
     }
-    var enableTranslate = App.locale.languageCode == 'zh';
+    var enableTranslate =
+        App.locale.languageCode == 'zh' && this.enableTranslate;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -334,10 +341,10 @@ class _ComicDescription extends StatelessWidget {
                           color: s == "Unavailable"
                               ? Theme.of(context).colorScheme.errorContainer
                               : Theme.of(context)
-                              .colorScheme
-                              .secondaryContainer,
+                                  .colorScheme
+                                  .secondaryContainer,
                           borderRadius:
-                          const BorderRadius.all(Radius.circular(8)),
+                              const BorderRadius.all(Radius.circular(8)),
                         ),
                         child: Text(
                           enableTranslate ? TagsTranslation.translateTag(s) : s,
@@ -583,6 +590,7 @@ class ComicList extends StatefulWidget {
     this.leadingSliver,
     this.trailingSliver,
     this.errorLeading,
+    this.menuBuilder,
   });
 
   final Future<Res<List<Comic>>> Function(int page)? loadPage;
@@ -595,32 +603,45 @@ class ComicList extends StatefulWidget {
 
   final Widget? errorLeading;
 
+  final List<MenuEntry> Function(Comic)? menuBuilder;
+
   @override
-  State<ComicList> createState() => _ComicListState();
+  State<ComicList> createState() => ComicListState();
 }
 
-class _ComicListState extends State<ComicList> {
-  int? maxPage;
+class ComicListState extends State<ComicList> {
+  int? _maxPage;
 
-  Map<int, List<Comic>> data = {};
+  final Map<int, List<Comic>> _data = {};
 
-  int page = 1;
+  int _page = 1;
 
-  String? error;
+  String? _error;
 
-  Map<int, bool> loading = {};
+  final Map<int, bool> _loading = {};
 
-  String? nextUrl;
+  String? _nextUrl;
 
-  Widget buildPageSelector() {
+  void remove(Comic c) {
+    if(_data[_page] == null || !_data[_page]!.remove(c)) {
+      for(var page in _data.values) {
+        if(page.remove(c)) {
+          break;
+        }
+      }
+    }
+    setState(() {});
+  }
+
+  Widget _buildPageSelector() {
     return Row(
       children: [
         FilledButton(
-          onPressed: page > 1
+          onPressed: _page > 1
               ? () {
                   setState(() {
-                    error = null;
-                    page--;
+                    _error = null;
+                    _page--;
                   });
                 }
               : null,
@@ -661,10 +682,10 @@ class _ComicListState extends State<ComicList> {
                                 context.showMessage(message: "Invalid page".tl);
                               } else {
                                 if (page > 0 &&
-                                    (maxPage == null || page <= maxPage!)) {
+                                    (_maxPage == null || page <= _maxPage!)) {
                                   setState(() {
-                                    error = null;
-                                    this.page = page;
+                                    _error = null;
+                                    this._page = page;
                                   });
                                 } else {
                                   context.showMessage(
@@ -682,18 +703,18 @@ class _ComicListState extends State<ComicList> {
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: Text("Page $page / ${maxPage ?? '?'}"),
+                  child: Text("Page $_page / ${_maxPage ?? '?'}"),
                 ),
               ),
             ),
           ),
         ),
         FilledButton(
-          onPressed: page < (maxPage ?? (page + 1))
+          onPressed: _page < (_maxPage ?? (_page + 1))
               ? () {
                   setState(() {
-                    error = null;
-                    page++;
+                    _error = null;
+                    _page++;
                   });
                 }
               : null,
@@ -703,63 +724,63 @@ class _ComicListState extends State<ComicList> {
     ).paddingVertical(8).paddingHorizontal(16);
   }
 
-  Widget buildSliverPageSelector() {
+  Widget _buildSliverPageSelector() {
     return SliverToBoxAdapter(
-      child: buildPageSelector(),
+      child: _buildPageSelector(),
     );
   }
 
-  Future<void> loadPage(int page) async {
-    if (loading[page] == true) {
+  Future<void> _loadPage(int page) async {
+    if (_loading[page] == true) {
       return;
     }
-    loading[page] = true;
+    _loading[page] = true;
     try {
       if (widget.loadPage != null) {
         var res = await widget.loadPage!(page);
         if (res.success) {
           if (res.data.isEmpty) {
-            data[page] = const [];
+            _data[page] = const [];
             setState(() {
-              maxPage = page;
+              _maxPage = page;
             });
           } else {
             setState(() {
-              data[page] = res.data;
+              _data[page] = res.data;
               if (res.subData != null && res.subData is int) {
-                maxPage = res.subData;
+                _maxPage = res.subData;
               }
             });
           }
         } else {
           setState(() {
-            error = res.errorMessage ?? "Unknown error".tl;
+            _error = res.errorMessage ?? "Unknown error".tl;
           });
         }
       } else {
         try {
-          while (data[page] == null) {
-            await fetchNext();
+          while (_data[page] == null) {
+            await _fetchNext();
           }
           setState(() {});
         } catch (e) {
           setState(() {
-            error = e.toString();
+            _error = e.toString();
           });
         }
       }
     } finally {
-      loading[page] = false;
+      _loading[page] = false;
     }
   }
 
-  Future<void> fetchNext() async {
-    var res = await widget.loadNext!(nextUrl);
-    data[data.length + 1] = res.data;
+  Future<void> _fetchNext() async {
+    var res = await widget.loadNext!(_nextUrl);
+    _data[_data.length + 1] = res.data;
     if (res.subData['next'] == null) {
-      maxPage = data.length;
+      _maxPage = _data.length;
     } else {
-      nextUrl = res.subData['next'];
+      _nextUrl = res.subData['next'];
     }
   }
 
@@ -768,18 +789,18 @@ class _ComicListState extends State<ComicList> {
     if (widget.loadPage == null && widget.loadNext == null) {
       throw Exception("loadPage and loadNext can't be null at the same time");
     }
-    if (error != null) {
+    if (_error != null) {
       return Column(
         children: [
           if (widget.errorLeading != null) widget.errorLeading!,
-          buildPageSelector(),
+          _buildPageSelector(),
           Expanded(
             child: NetworkError(
               withAppbar: false,
-              message: error!,
+              message: _error!,
               retry: () {
                 setState(() {
-                  error = null;
+                  _error = null;
                 });
               },
             ),
@@ -787,8 +808,8 @@ class _ComicListState extends State<ComicList> {
         ],
       );
     }
-    if (data[page] == null) {
-      loadPage(page);
+    if (_data[_page] == null) {
+      _loadPage(_page);
       return const Center(
         child: CircularProgressIndicator(),
       );
@@ -796,9 +817,12 @@ class _ComicListState extends State<ComicList> {
     return SmoothCustomScrollView(
       slivers: [
         if (widget.leadingSliver != null) widget.leadingSliver!,
-        buildSliverPageSelector(),
-        SliverGridComics(comics: data[page] ?? const []),
-        if (data[page]!.length > 6) buildSliverPageSelector(),
+        _buildSliverPageSelector(),
+        SliverGridComics(
+          comics: _data[_page] ?? const [],
+          menuBuilder: widget.menuBuilder,
+        ),
+        if (_data[_page]!.length > 6) _buildSliverPageSelector(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );

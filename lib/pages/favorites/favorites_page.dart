@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_reorderable_grid_view/widgets/reorderable_builder.dart';
 import 'package:venera/components/components.dart';
@@ -90,9 +92,8 @@ class _FavoritesPageState extends State<FavoritesPage>  {
         return Align(
           alignment: Alignment.centerLeft,
           child: Material(
-            color: context.colorScheme.surfaceContainerLow,
             child: SizedBox(
-              width: 256,
+              width: min(300, context.width-16),
               child: _LeftBar(
                 withAppbar: true,
                 favPage: this,
