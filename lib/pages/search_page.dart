@@ -174,7 +174,7 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text("Search From".tl),
+              title: Text("Search in".tl),
             ),
             Wrap(
               spacing: 8,

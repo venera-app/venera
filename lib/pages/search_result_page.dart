@@ -49,7 +49,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
   }
 
   void onChanged(String s) {
-    if(!ComicSource.find(sourceKey)!.enableTagsSuggestions){
+    if (!ComicSource.find(sourceKey)!.enableTagsSuggestions) {
       return;
     }
     suggestionsController.findSuggestions();
@@ -96,13 +96,15 @@ class _SearchResultPageState extends State<SearchResultPage> {
   @override
   Widget build(BuildContext context) {
     return ComicList(
-      key: Key(text + options.toString()),
+      key: Key(text + options.toString() + sourceKey),
       errorLeading: AppSearchBar(
         controller: controller,
+        action: buildAction(),
       ),
       leadingSliver: SliverSearchBar(
         controller: controller,
         onChanged: onChanged,
+        action: buildAction(),
       ),
       loadPage: (i) {
         var source = ComicSource.find(sourceKey);
@@ -112,6 +114,25 @@ class _SearchResultPageState extends State<SearchResultPage> {
           options,
         );
       },
+    );
+  }
+
+  Widget buildAction() {
+    return Tooltip(
+      message: "Settings".tl,
+      child: IconButton(
+        icon: const Icon(Icons.tune),
+        onPressed: () async {
+          await showDialog(
+            context: context,
+            useRootNavigator: true,
+            builder: (context) {
+              return _SearchSettingsDialog(state: this);
+            },
+          );
+          setState(() {});
+        },
+      ),
     );
   }
 }
@@ -308,7 +329,7 @@ class _SuggestionsState extends State<_Suggestions> {
       controller.text =
           controller.text.replaceLast(words[words.length - 1], "");
     }
-    if(text.contains(' ')) {
+    if (text.contains(' ')) {
       text = "'$text'";
     }
     if (type != null) {
@@ -318,5 +339,119 @@ class _SuggestionsState extends State<_Suggestions> {
     }
     widget.controller.suggestions.clear();
     widget.controller.remove();
+  }
+}
+
+class _SearchSettingsDialog extends StatefulWidget {
+  const _SearchSettingsDialog({required this.state});
+
+  final _SearchResultPageState state;
+
+  @override
+  State<_SearchSettingsDialog> createState() => _SearchSettingsDialogState();
+}
+
+class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
+  late String searchTarget;
+
+  late List<String> options;
+
+  @override
+  void initState() {
+    searchTarget = widget.state.sourceKey;
+    options = widget.state.options;
+    super.initState();
+  }
+
+  void onChanged() {
+    widget.state.sourceKey = searchTarget;
+    widget.state.options = options;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentDialog(
+      title: "Settings".tl,
+      content: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text("Search in".tl),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ComicSource.all().map((e) {
+              return OptionChip(
+                text: e.name.tl,
+                isSelected: searchTarget == e.key,
+                onTap: () {
+                  setState(() {
+                    searchTarget = e.key;
+                    options.clear();
+                    onChanged();
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          buildSearchOptions(),
+          const SizedBox(height: 24),
+          FilledButton(
+            child: Text("Confirm".tl),
+            onPressed: () {
+              context.pop();
+            },
+          ),
+        ],
+      ).fixWidth(400),
+    );
+  }
+
+  Widget buildSearchOptions() {
+    var children = <Widget>[];
+
+    final searchOptions =
+        ComicSource.find(searchTarget)!.searchPageData!.searchOptions ??
+            <SearchOptions>[];
+    if (searchOptions.length != options.length) {
+      options = searchOptions.map((e) => e.defaultValue).toList();
+    }
+    if (searchOptions.isEmpty) {
+      return const SizedBox();
+    }
+    for (int i = 0; i < searchOptions.length; i++) {
+      final option = searchOptions[i];
+      children.add(ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(option.label.tl),
+      ));
+      children.add(Wrap(
+        runSpacing: 8,
+        spacing: 8,
+        children: option.options.entries.map((e) {
+          return OptionChip(
+            text: e.value.ts(searchTarget),
+            isSelected: options[i] == e.key,
+            onTap: () {
+              setState(() {
+                options[i] = e.key;
+              });
+              onChanged();
+            },
+          );
+        }).toList(),
+      ));
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      ),
+    );
   }
 }

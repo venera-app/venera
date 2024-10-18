@@ -184,12 +184,12 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
               leading ??
                   (Navigator.of(context).canPop()
                       ? Tooltip(
-                    message: "Back".tl,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.maybePop(context),
-                    ),
-                  )
+                          message: "Back".tl,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Navigator.maybePop(context),
+                          ),
+                        )
                       : const SizedBox()),
               const SizedBox(
                 width: 24,
@@ -197,7 +197,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
               Expanded(
                 child: DefaultTextStyle(
                   style:
-                  DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
+                      DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   child: title,
@@ -562,11 +562,18 @@ abstract mixin class _SearchBarMixin {
 }
 
 class SliverSearchBar extends StatefulWidget {
-  const SliverSearchBar({super.key, required this.controller, this.onChanged});
+  const SliverSearchBar({
+    super.key,
+    required this.controller,
+    this.onChanged,
+    this.action,
+  });
 
   final SearchBarController controller;
 
   final void Function(String)? onChanged;
+
+  final Widget? action;
 
   @override
   State<SliverSearchBar> createState() => _SliverSearchBarState();
@@ -605,6 +612,7 @@ class _SliverSearchBarState extends State<SliverSearchBar>
         controller: _controller,
         topPadding: MediaQuery.of(context).padding.top,
         onChanged: widget.onChanged,
+        action: widget.action,
       ),
     );
   }
@@ -619,11 +627,14 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
 
   final void Function(String)? onChanged;
 
+  final Widget? action;
+
   const _SliverSearchBarDelegate({
     required this.editingController,
     required this.controller,
     required this.topPadding,
     this.onChanged,
+    this.action,
   });
 
   static const _kAppBarHeight = 52.0;
@@ -677,6 +688,7 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
                     );
             },
           ),
+          if (action != null) action!,
           const SizedBox(width: 8),
         ],
       ),
@@ -699,9 +711,11 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class AppSearchBar extends StatefulWidget {
-  const AppSearchBar({super.key, required this.controller});
+  const AppSearchBar({super.key, required this.controller, this.action});
 
   final SearchBarController controller;
+
+  final Widget? action;
 
   @override
   State<AppSearchBar> createState() => _SearchBarState();
@@ -777,6 +791,7 @@ class _SearchBarState extends State<AppSearchBar> with _SearchBarMixin {
                     );
             },
           ),
+          if (widget.action != null) widget.action!,
           const SizedBox(width: 8),
         ],
       ),

@@ -277,17 +277,21 @@ class ContentDialog extends StatelessWidget {
           : const EdgeInsets.symmetric(horizontal: 16),
       elevation: 2,
       shadowColor: context.colorScheme.shadow,
-      child: IntrinsicWidth(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 600,
-            minWidth: math.min(400, context.width - 16),
-          ),
-          child: MediaQuery.removePadding(
-            removeTop: true,
-            removeBottom: true,
-            context: context,
-            child: content,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        alignment: Alignment.topCenter,
+        child: IntrinsicWidth(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 600,
+              minWidth: math.min(400, context.width - 16),
+            ),
+            child: MediaQuery.removePadding(
+              removeTop: true,
+              removeBottom: true,
+              context: context,
+              child: content,
+            ),
           ),
         ),
       ),
