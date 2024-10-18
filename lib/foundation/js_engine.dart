@@ -230,9 +230,11 @@ mixin class _JSEngineApi {
   final _documents = <int, DocumentWrapper>{};
 
   Object? handleHtmlCallback(Map<String, dynamic> data) {
-    print(data);
     switch (data["function"]) {
       case "parse":
+        if(_documents.length > 2) {
+          _documents.remove(_documents.keys.first);
+        }
         _documents[data["key"]] = DocumentWrapper.parse(data["data"]);
         return null;
       case "querySelector":
@@ -311,8 +313,6 @@ mixin class _JSEngineApi {
         return null;
     }
   }
-
-  void clearHtml() {}
 
   void clearCookies(List<String> domains) async {
     for (var domain in domains) {
