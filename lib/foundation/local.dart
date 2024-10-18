@@ -7,6 +7,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 
 import 'app.dart';
@@ -62,7 +63,7 @@ class LocalComic with HistoryMixin implements Comic {
         subtitle = row[2] as String,
         tags = List.from(jsonDecode(row[3] as String)),
         directory = row[4] as String,
-        chapters = Map.from(jsonDecode(row[5] as String)),
+        chapters = MapOrNull.from(jsonDecode(row[5] as String)),
         cover = row[6] as String,
         comicType = ComicType(row[7] as int),
         downloadedChapters = List.from(jsonDecode(row[8] as String)),

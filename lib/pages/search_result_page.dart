@@ -394,7 +394,7 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
                 },
               );
             }).toList(),
-          ),
+          ).fixWidth(double.infinity).paddingHorizontal(16),
           buildSearchOptions(),
           const SizedBox(height: 24),
           FilledButton(
@@ -404,7 +404,7 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
             },
           ),
         ],
-      ).fixWidth(400),
+      ).fixWidth(double.infinity),
     );
   }
 
