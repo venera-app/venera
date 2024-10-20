@@ -242,9 +242,31 @@ function createUuid() {
     });
 }
 
+/**
+ * Generate a random integer between min and max
+ * @param min {number}
+ * @param max {number}
+ * @returns {number}
+ */
 function randomInt(min, max) {
     return sendMessage({
         method: 'random',
+        type: 'int',
+        min: min,
+        max: max
+    });
+}
+
+/**
+ * Generate a random double between min and max
+ * @param min {number}
+ * @param max {number}
+ * @returns {number}
+ */
+function randomDouble(min, max) {
+    return sendMessage({
+        method: 'random',
+        type: 'double',
         min: min,
         max: max
     });
@@ -642,6 +664,45 @@ class HtmlElement {
         if(k == null) return null;
         return new HtmlElement(k);
     }
+
+    /**
+     * Get class names of the element.
+     * @returns {string[]} An array of class names.
+     */
+    get classNames() {
+        return sendMessage({
+            method: "html",
+            function: "getClassNames",
+            key: this.key,
+            doc: this.doc,
+        })
+    }
+
+    /**
+     * Get id of the element.
+     * @returns {string | null} The id of the element.
+     */
+    get id() {
+        return sendMessage({
+            method: "html",
+            function: "getId",
+            key: this.key,
+            doc: this.doc,
+        })
+    }
+
+    /**
+     * Get local name of the element.
+     * @returns {string} The tag name of the element.
+     */
+    get localName() {
+        return sendMessage({
+            method: "html",
+            function: "getLocalName",
+            key: this.key,
+            doc: this.doc,
+        })
+    }
 }
 
 class HtmlNode {
@@ -727,9 +788,10 @@ let console = {
  * @param description {string}
  * @param maxPage {number?}
  * @param language {string?}
+ * @param favoriteId {string?} - Only set this field if the comic is from favorites page
  * @constructor
  */
-function Comic({id, title, subtitle, cover, tags, description, maxPage, language}) {
+function Comic({id, title, subtitle, cover, tags, description, maxPage, language, favoriteId}) {
     this.id = id;
     this.title = title;
     this.subtitle = subtitle;
@@ -738,6 +800,7 @@ function Comic({id, title, subtitle, cover, tags, description, maxPage, language
     this.description = description;
     this.maxPage = maxPage;
     this.language = language;
+    this.favoriteId = favoriteId;
 }
 
 /**
@@ -749,7 +812,7 @@ function Comic({id, title, subtitle, cover, tags, description, maxPage, language
  * @param chapters {Map<string, string> | {} | null | undefined}} - key: chapter id, value: chapter title
  * @param isFavorite {boolean | null | undefined}} - favorite status. If the comic source supports multiple folders, this field should be null
  * @param subId {string?} - a param which is passed to comments api
- * @param thumbnails {string[]? - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
+ * @param thumbnails {string[]?} - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
  * @param recommend {Comic[]?} - related comics
  * @param commentCount {number?}
  * @param likesCount {number?}

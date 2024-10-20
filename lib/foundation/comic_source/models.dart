@@ -58,6 +58,8 @@ class Comic {
 
   final String? language;
 
+  final String? favoriteId;
+
   const Comic(
     this.title,
     this.cover,
@@ -68,7 +70,7 @@ class Comic {
     this.sourceKey,
     this.maxPage,
     this.language,
-  );
+  ): favoriteId = null;
 
   Map<String, dynamic> toJson() {
     return {
@@ -81,6 +83,7 @@ class Comic {
       "sourceKey": sourceKey,
       "maxPage": maxPage,
       "language": language,
+      "favoriteId": favoriteId,
     };
   }
 
@@ -92,7 +95,8 @@ class Comic {
         tags = List<String>.from(json["tags"] ?? []),
         description = json["description"] ?? "",
         maxPage = json["maxPage"],
-        language = json["language"];
+        language = json["language"],
+        favoriteId = json["favoriteId"];
 
   @override
   bool operator ==(Object other) {

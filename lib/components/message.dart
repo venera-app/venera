@@ -57,6 +57,7 @@ class _ToastOverlay extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w500),
                     maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (trailing != null) trailing!.paddingLeft(8)
                 ],

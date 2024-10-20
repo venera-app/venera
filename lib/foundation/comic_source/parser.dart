@@ -202,7 +202,7 @@ class ComicSourceParser {
       JsEngine().runCode("ComicSource.sources.$_key.account.logout()");
     }
 
-    if(!_checkExists('account.loginWithWebview')) {
+    if (!_checkExists('account.loginWithWebview')) {
       return AccountConfig(
         login,
         null,
@@ -378,7 +378,7 @@ class ComicSourceParser {
   CategoryComicsData? _loadCategoryComicsData() {
     if (!_checkExists("categoryComics")) return null;
     var options = <CategoryComicsOptions>[];
-    for (var element in _getValue("categoryComics.optionList")) {
+    for (var element in _getValue("categoryComics.optionList") ?? []) {
       LinkedHashMap<String, String> map = LinkedHashMap<String, String>();
       for (var option in element["options"]) {
         if (option.isEmpty || !option.contains("-")) {
@@ -528,7 +528,12 @@ class ComicSourceParser {
       return res;
     }
 
-    Future<Res<bool>> addOrDelFavFunc(comicId, folderId, isAdding) async {
+    Future<Res<bool>> addOrDelFavFunc(
+      String comicId,
+      String folderId,
+      bool isAdding,
+      String? favId,
+    ) async {
       func() async {
         try {
           await JsEngine().runCode("""
@@ -703,13 +708,13 @@ class ComicSourceParser {
   }
 
   ComicThumbnailLoader? _parseThumbnailLoader() {
-    if (!_checkExists("comic.loadThumbnail")) {
+    if (!_checkExists("comic.loadThumbnails")) {
       return null;
     }
     return (id, next) async {
       try {
         var res = await JsEngine().runCode("""
-          ComicSource.sources.$_key.comic.loadThumbnail(${jsonEncode(id)}, ${jsonEncode(next)})
+          ComicSource.sources.$_key.comic.loadThumbnails(${jsonEncode(id)}, ${jsonEncode(next)})
         """);
         return Res(List<String>.from(res['thumbnails']), subData: res['next']);
       } catch (e, s) {
@@ -818,6 +823,7 @@ class ComicSourceParser {
         """);
       return res as String?;
     }
+
     return LinkHandler(domains, linkToId);
   }
 }

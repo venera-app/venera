@@ -141,7 +141,11 @@ class JsEngine with _JSEngineApi {
             }
           case "random":
             {
-              return _randomInt(message["min"], message["max"]);
+              return _random(
+                message["min"] ?? 0,
+                message["max"] ?? 1,
+                message["type"],
+              );
             }
           case "cookie":
             {
@@ -232,7 +236,7 @@ mixin class _JSEngineApi {
   Object? handleHtmlCallback(Map<String, dynamic> data) {
     switch (data["function"]) {
       case "parse":
-        if(_documents.length > 2) {
+        if (_documents.length > 2) {
           _documents.remove(_documents.keys.first);
         }
         _documents[data["key"]] = DocumentWrapper.parse(data["data"]);
@@ -276,6 +280,12 @@ mixin class _JSEngineApi {
         var docKey = data["key"];
         _documents.remove(docKey);
         return null;
+      case "getClassNames":
+        return _documents[data["doc"]]!.getClassNames(data["key"]);
+      case "getId":
+        return _documents[data["doc"]]!.getId(data["key"]);
+      case "getLocalName":
+        return _documents[data["doc"]]!.getLocalName(data["key"]);
     }
     return null;
   }
@@ -455,7 +465,10 @@ mixin class _JSEngineApi {
         : output.sublist(0, outputOffset);
   }
 
-  int _randomInt(int min, int max) {
+  num _random(num min, num max, String type) {
+    if (type == "double") {
+      return min + (max - min) * math.Random().nextDouble();
+    }
     return (min + (max - min) * math.Random().nextDouble()).toInt();
   }
 }
@@ -567,5 +580,17 @@ class DocumentWrapper {
       return elements.length - 1;
     }
     return null;
+  }
+
+  List<String> getClassNames(int key) {
+    return (elements[key]).classes.toList();
+  }
+
+  String? getId(int key) {
+    return (elements[key]).id;
+  }
+
+  String? getLocalName(int key) {
+    return (elements[key]).localName;
   }
 }

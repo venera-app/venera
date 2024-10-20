@@ -840,43 +840,38 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
 
   late List<String> thumbnails;
 
-  bool isInitialLoading = false;
+  bool isInitialLoading = true;
 
   String? next;
+
+  String? error;
 
   @override
   void didChangeDependencies() {
     state = context.findAncestorStateOfType<_ComicPageState>()!;
+    loadNext();
     thumbnails = List.from(state.comic.thumbnails ?? []);
     super.didChangeDependencies();
   }
 
-  bool isLoading = false;
-
   void loadNext() async {
-    if (state.comicSource.loadComicThumbnail == null || isLoading) return;
+    if (state.comicSource.loadComicThumbnail == null) return;
     if (!isInitialLoading && next == null) {
       return;
     }
-    setState(() {
-      isLoading = true;
-    });
     var res = await state.comicSource.loadComicThumbnail!(state.comic.id, next);
     if (res.success) {
       thumbnails.addAll(res.data);
       next = res.subData;
       isInitialLoading = false;
+    } else {
+      error = res.errorMessage;
     }
-    setState(() {
-      isLoading = false;
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (thumbnails.isEmpty) {
-      Future.microtask(loadNext);
-    }
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -887,7 +882,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
         SliverGrid(
           delegate: SliverChildBuilderDelegate(childCount: thumbnails.length,
               (context, index) {
-            if (index == thumbnails.length - 1) {
+            if (index == thumbnails.length - 1 && error == null) {
               loadNext();
             }
             return Padding(
@@ -940,7 +935,19 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
             childAspectRatio: 0.65,
           ),
         ),
-        if (isLoading)
+        if(error != null)
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                Text(error!),
+                Button.outlined(
+                  onPressed: loadNext,
+                  child: Text("Retry".tl),
+                )
+              ],
+            ),
+          )
+        else if (next != null || isInitialLoading)
           const SliverToBoxAdapter(
             child: ListLoadingIndicator(),
           ),
@@ -1185,7 +1192,7 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
                 isLoading = true;
               });
               var res = await widget.comicSource.favoriteData!
-                  .addOrDelFavorite!(widget.cid, '', !isFavorite);
+                  .addOrDelFavorite!(widget.cid, '', !isFavorite, null);
               if (res.success) {
                 widget.onFavorite(!isFavorite);
                 context.pop();
@@ -1272,16 +1279,32 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
             ),
           ),
           Center(
-            child: FilledButton(
-              onPressed: () {
+            child: Button.filled(
+              isLoading: isLoading,
+              onPressed: () async {
                 if (selected == null) {
                   return;
                 }
-                widget.comicSource.favoriteData!.addOrDelFavorite!(
-                    widget.cid, selected!, !addedFolders.contains(selected!));
-                context.pop();
+                setState(() {
+                  isLoading = true;
+                });
+                var res = await widget.comicSource.favoriteData!.addOrDelFavorite!(
+                  widget.cid,
+                  selected!,
+                  !addedFolders.contains(selected!),
+                  null,
+                );
+                if (res.success) {
+                  context.showMessage(message: "Success".tl);
+                  context.pop();
+                } else {
+                  context.showMessage(message: res.errorMessage!);
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
-              child: addedFolders.contains(selected!)
+              child: selected != null && addedFolders.contains(selected!)
                   ? Text("Remove".tl)
                   : Text("Add".tl),
             ).paddingVertical(8),

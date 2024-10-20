@@ -1,8 +1,11 @@
 part of 'favorites_page.dart';
 
-// TODO: Add a menu option to delete a comic from favorites
-
-Future<bool> _deleteComic(String cid, String? fid, String sourceKey) async {
+Future<bool> _deleteComic(
+  String cid,
+  String? fid,
+  String sourceKey,
+  String? favId,
+) async {
   var source = ComicSource.find(sourceKey);
   if (source == null) {
     return false;
@@ -31,6 +34,7 @@ Future<bool> _deleteComic(String cid, String? fid, String sourceKey) async {
                   cid,
                   fid ?? '',
                   false,
+                  favId,
                 );
                 if (res.success) {
                   context.showMessage(message: "Deleted".tl);
@@ -115,7 +119,12 @@ class _NormalFavoritePage extends StatelessWidget {
             icon: Icons.delete_outline,
             text: "Remove".tl,
             onClick: () async {
-              var res = await _deleteComic(comic.id, null, comic.sourceKey);
+              var res = await _deleteComic(
+                comic.id,
+                null,
+                comic.sourceKey,
+                comic.favoriteId,
+              );
               if (res) {
                 comicListKey.currentState!.remove(comic);
               }
@@ -291,14 +300,16 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
                     ),
                     onPressed: () {
                       showDialog(
-                          context: context,
-                          builder: (context) {
-                            return _CreateFolderDialog(
-                                widget.data,
-                                () => setState(() {
-                                      _loading = true;
-                                    }));
-                          });
+                        context: context,
+                        builder: (context) {
+                          return _CreateFolderDialog(
+                            widget.data,
+                            () => setState(() {
+                              _loading = true;
+                            }),
+                          );
+                        },
+                      );
                     },
                   ),
                 ),
@@ -382,7 +393,7 @@ class _FolderTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Delete".tl,
-            content: Text("Are you sure you want to delete this folder?".tl),
+            content: Text("Are you sure you want to delete this folder?".tl).paddingHorizontal(16),
             actions: [
               Button.filled(
                 isLoading: loading,
@@ -448,36 +459,37 @@ class _CreateFolderDialogState extends State<_CreateFolderDialog> {
           height: 10,
         ),
         if (loading)
-          const SizedBox(
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+          Center(
+            child: const CircularProgressIndicator(
+              strokeWidth: 2,
+            ).fixWidth(24).fixHeight(24),
           )
         else
           SizedBox(
-              height: 35,
-              child: Center(
-                child: TextButton(
-                    onPressed: () {
+            height: 35,
+            child: Center(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    loading = true;
+                  });
+                  widget.data.addFolder!(controller.text).then((b) {
+                    if (b.error) {
+                      context.showMessage(message: b.errorMessage!);
                       setState(() {
-                        loading = true;
+                        loading = false;
                       });
-                      widget.data.addFolder!(controller.text).then((b) {
-                        if (b.error) {
-                          context.showMessage(message: b.errorMessage!);
-                          setState(() {
-                            loading = false;
-                          });
-                        } else {
-                          context.pop();
-                          context.showMessage(
-                              message: "Created successfully".tl);
-                          widget.updateState();
-                        }
-                      });
-                    },
-                    child: Text("Submit".tl)),
-              ))
+                    } else {
+                      context.pop();
+                      context.showMessage(message: "Created successfully".tl);
+                      widget.updateState();
+                    }
+                  });
+                },
+                child: Text("Submit".tl),
+              ),
+            ),
+          )
       ],
     );
   }
@@ -501,6 +513,9 @@ class _FavoriteFolder extends StatelessWidget {
       leadingSliver: SliverAppbar(
         title: Text(title),
       ),
+      errorLeading: Appbar(
+        title: Text(title),
+      ),
       loadPage: (i) => data.loadComic(i, folderID),
       menuBuilder: (comic) {
         return [
@@ -508,7 +523,12 @@ class _FavoriteFolder extends StatelessWidget {
             icon: Icons.delete_outline,
             text: "Remove".tl,
             onClick: () async {
-              var res = await _deleteComic(comic.id, null, comic.sourceKey);
+              var res = await _deleteComic(
+                comic.id,
+                null,
+                comic.sourceKey,
+                comic.favoriteId,
+              );
               if (res) {
                 comicListKey.currentState!.remove(comic);
               }

@@ -1,6 +1,6 @@
 part of 'comic_source.dart';
 
-typedef AddOrDelFavFunc = Future<Res<bool>> Function(String comicId, String folderId, bool isAdding);
+typedef AddOrDelFavFunc = Future<Res<bool>> Function(String comicId, String folderId, bool isAdding, String? favId);
 
 class FavoriteData{
   final String key;
