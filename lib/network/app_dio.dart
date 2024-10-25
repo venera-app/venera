@@ -6,9 +6,12 @@ import 'package:dio/io.dart';
 import 'package:flutter/services.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/network/cache.dart';
 import 'package:venera/utils/ext.dart';
 
 import '../foundation/app.dart';
+import 'cloudflare.dart';
+import 'cookie_jar.dart';
 
 export 'package:dio/dio.dart';
 
@@ -107,6 +110,9 @@ class AppDio with DioMixin {
     this.options = options ?? BaseOptions();
     interceptors.add(MyLogInterceptor());
     httpClientAdapter = IOHttpClientAdapter(createHttpClient: createHttpClient);
+    interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
+    interceptors.add(NetworkCacheManager());
+    interceptors.add(CloudflareInterceptor());
   }
 
   static HttpClient createHttpClient() {

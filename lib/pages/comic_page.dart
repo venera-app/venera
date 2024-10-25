@@ -352,6 +352,18 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           ListTile(
             title: Text("Information".tl),
           ),
+          if (comic.stars != null)
+            Row(
+              children: [
+                StarRating(
+                  value: comic.stars!,
+                  size: 24,
+                  onTap: starRating,
+                ),
+                const SizedBox(width: 8),
+                Text(comic.stars!.toStringAsFixed(2)),
+              ],
+            ).paddingLeft(16).paddingVertical(8),
           for (var e in comic.tags.entries)
             buildWrap(
               children: [
@@ -641,6 +653,72 @@ abstract mixin class _ComicPageActions {
       ),
     );
   }
+
+  void starRating() {
+    if (!comicSource.isLogged) {
+      return;
+    }
+    var rating = 0.0;
+    var isLoading = false;
+    showDialog(
+      context: App.rootContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => SimpleDialog(
+          title: const Text("Rating"),
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              height: 100,
+              child: Center(
+                child: SizedBox(
+                  width: 210,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      RatingWidget(
+                        padding: 2,
+                        onRatingUpdate: (value) => rating = value,
+                        value: 1,
+                        selectable: true,
+                        size: 40,
+                      ),
+                      const Spacer(),
+                      Button.filled(
+                        isLoading: isLoading,
+                        onPressed: () {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          comicSource.starRatingFunc!
+                                  (comic.id, rating.round())
+                              .then((value) {
+                            if (value.success) {
+                              App.rootContext
+                                  .showMessage(message: "Success".tl);
+                              Navigator.of(dialogContext).pop();
+                            } else {
+                              App.rootContext
+                                  .showMessage(message: value.errorMessage!);
+                              setState(() {
+                                isLoading = false;
+                              });
+                            }
+                          });
+                        },
+                        child: Text("Submit".tl),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ActionButton extends StatelessWidget {
@@ -880,62 +958,88 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
           ),
         ),
         SliverGrid(
-          delegate: SliverChildBuilderDelegate(childCount: thumbnails.length,
-              (context, index) {
-            if (index == thumbnails.length - 1 && error == null) {
-              loadNext();
-            }
-            return Padding(
-              padding: context.width < changePoint
-                  ? const EdgeInsets.all(4)
-                  : const EdgeInsets.all(8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => state.read(null, index + 1),
-                      borderRadius: const BorderRadius.all(Radius.circular(16)),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(16)),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                        width: double.infinity,
-                        height: double.infinity,
-                        child: ClipRRect(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(16)),
-                          child: AnimatedImage(
-                            image: CachedImageProvider(
-                              thumbnails[index],
-                              sourceKey: state.widget.sourceKey,
+          delegate: SliverChildBuilderDelegate(
+            childCount: thumbnails.length,
+            (context, index) {
+              if (index == thumbnails.length - 1 && error == null) {
+                loadNext();
+              }
+              var url = thumbnails[index];
+              ImagePart? part;
+              if (url.contains('@')) {
+                var params = url.split('@')[1].split('&');
+                url = url.split('@')[0];
+                double? x1, y1, x2, y2;
+                try {
+                  for (var p in params) {
+                    if (p.startsWith('x')) {
+                      var r = p.split('=')[1];
+                      x1 = double.parse(r.split('-')[0]);
+                      x2 = double.parse(r.split('-')[1]);
+                    }
+                    if (p.startsWith('y')) {
+                      var r = p.split('=')[1];
+                      y1 = double.parse(r.split('-')[0]);
+                      y2 = double.parse(r.split('-')[1]);
+                    }
+                  }
+                } finally {}
+                part = ImagePart(x1: x1, y1: y1, x2: x2, y2: y2);
+              }
+              return Padding(
+                padding: context.width < changePoint
+                    ? const EdgeInsets.all(4)
+                    : const EdgeInsets.all(8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => state.read(null, index + 1),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(16)),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(16)),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
                             ),
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
+                          ),
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: ClipRRect(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(16)),
+                            child: AnimatedImage(
+                              image: CachedImageProvider(
+                                url,
+                                sourceKey: state.widget.sourceKey,
+                              ),
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                              part: part,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Text((index + 1).toString()),
-                ],
-              ),
-            );
-          }),
+                    const SizedBox(
+                      height: 4,
+                    ),
+                    Text((index + 1).toString()),
+                  ],
+                ),
+              );
+            },
+          ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
             childAspectRatio: 0.65,
           ),
         ),
-        if(error != null)
+        if (error != null)
           SliverToBoxAdapter(
             child: Column(
               children: [
@@ -1288,7 +1392,8 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
                 setState(() {
                   isLoading = true;
                 });
-                var res = await widget.comicSource.favoriteData!.addOrDelFavorite!(
+                var res =
+                    await widget.comicSource.favoriteData!.addOrDelFavorite!(
                   widget.cid,
                   selected!,
                   !addedFolders.contains(selected!),

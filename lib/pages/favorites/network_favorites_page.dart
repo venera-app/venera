@@ -112,7 +112,8 @@ class _NormalFavoritePage extends StatelessWidget {
         ),
         title: Text(data.title),
       ),
-      loadPage: (i) => data.loadComic(i),
+      loadPage: data.loadComic == null ? null : (i) => data.loadComic!(i),
+      loadNext: data.loadNext == null ? null : (next) => data.loadNext!(next),
       menuBuilder: (comic) {
         return [
           MenuEntry(
@@ -393,7 +394,8 @@ class _FolderTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Delete".tl,
-            content: Text("Are you sure you want to delete this folder?".tl).paddingHorizontal(16),
+            content: Text("Are you sure you want to delete this folder?".tl)
+                .paddingHorizontal(16),
             actions: [
               Button.filled(
                 isLoading: loading,
@@ -516,7 +518,11 @@ class _FavoriteFolder extends StatelessWidget {
       errorLeading: Appbar(
         title: Text(title),
       ),
-      loadPage: (i) => data.loadComic(i, folderID),
+      loadPage:
+          data.loadComic == null ? null : (i) => data.loadComic!(i, folderID),
+      loadNext: data.loadNext == null
+          ? null
+          : (next) => data.loadNext!(next, folderID),
       menuBuilder: (comic) {
         return [
           MenuEntry(

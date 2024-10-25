@@ -1,20 +1,26 @@
 part of 'comic_source.dart';
 
-typedef AddOrDelFavFunc = Future<Res<bool>> Function(String comicId, String folderId, bool isAdding, String? favId);
+typedef AddOrDelFavFunc = Future<Res<bool>> Function(
+    String comicId, String folderId, bool isAdding, String? favId);
 
-class FavoriteData{
+class FavoriteData {
   final String key;
 
   final String title;
 
   final bool multiFolder;
 
-  final Future<Res<List<Comic>>> Function(int page, [String? folder]) loadComic;
+  final Future<Res<List<Comic>>> Function(int page, [String? folder])?
+      loadComic;
+
+  final Future<Res<List<Comic>>> Function(String? next, [String? folder])?
+      loadNext;
 
   /// key-id, value-name
   ///
   /// if comicId is not null, Res.subData is the folders that the comic is in
-  final Future<Res<Map<String, String>>> Function([String? comicId])? loadFolders;
+  final Future<Res<Map<String, String>>> Function([String? comicId])?
+      loadFolders;
 
   /// A value of null disables this feature
   final Future<Res<bool>> Function(String key)? deleteFolder;
@@ -32,19 +38,21 @@ class FavoriteData{
     required this.title,
     required this.multiFolder,
     required this.loadComic,
+    required this.loadNext,
     this.loadFolders,
     this.deleteFolder,
     this.addFolder,
     this.allFavoritesId,
-    this.addOrDelFavorite});
+    this.addOrDelFavorite,
+  });
 }
 
-FavoriteData getFavoriteData(String key){
+FavoriteData getFavoriteData(String key) {
   var source = ComicSource.find(key) ?? (throw "Unknown source key: $key");
   return source.favoriteData!;
 }
 
-FavoriteData? getFavoriteDataOrNull(String key){
+FavoriteData? getFavoriteDataOrNull(String key) {
   var source = ComicSource.find(key);
   return source?.favoriteData;
 }

@@ -46,7 +46,12 @@ class _RankingPageState extends State<RankingPage> {
         children: [
           Expanded(
             child: ComicList(
-              loadPage: (i) => data.rankingData!.load(optionValue, i),
+              loadPage: data.rankingData!.load == null
+                  ? null
+                  : (i) => data.rankingData!.load!(optionValue, i),
+              loadNext: data.rankingData!.loadWithNext == null
+                  ? null
+                  : (i) => data.rankingData!.loadWithNext!(optionValue, i),
             ),
           ),
         ],

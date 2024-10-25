@@ -179,7 +179,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
   Widget build(BuildContext context) {
     if (data.loadMultiPart != null) {
       return buildMultiPart();
-    } else if (data.loadPage != null) {
+    } else if (data.loadPage != null || data.loadNext != null) {
       return buildComicList();
     } else if (data.loadMixed != null) {
       return _MixedExplorePage(
@@ -196,7 +196,8 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
 
   Widget buildComicList() {
     return ComicList(
-      loadPage: data.loadPage!,
+      loadPage: data.loadPage,
+      loadNext: data.loadNext,
       key: ValueKey(key),
     );
   }

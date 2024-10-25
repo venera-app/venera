@@ -7,7 +7,8 @@ import 'package:venera/foundation/consts.dart';
 import 'app_dio.dart';
 
 class ImageDownloader {
-  static Stream<ImageDownloadProgress> loadThumbnail(String url, String? sourceKey) async* {
+  static Stream<ImageDownloadProgress> loadThumbnail(
+      String url, String? sourceKey) async* {
     final cacheKey = "$url@$sourceKey";
     final cache = await CacheManager().findCache(cacheKey);
 
@@ -25,12 +26,14 @@ class ImageDownloader {
       var comicSource = ComicSource.find(sourceKey);
       configs = comicSource!.getThumbnailLoadingConfig?.call(url) ?? {};
     }
-    configs['headers'] ??= {
-      'user-agent': webUA,
-    };
+    configs['headers'] ??= {};
+    if(configs['headers']['user-agent'] == null
+        && configs['headers']['User-Agent'] == null) {
+      configs['headers']['user-agent'] = webUA;
+    }
 
     var dio = AppDio(BaseOptions(
-      headers: configs['headers'],
+      headers: Map<String, dynamic>.from(configs['headers']),
       method: configs['method'] ?? 'GET',
       responseType: ResponseType.stream,
     ));
@@ -53,7 +56,7 @@ class ImageDownloader {
       }
     }
 
-    if(configs['onResponse'] != null) {
+    if (configs['onResponse'] != null) {
       buffer = configs['onResponse'](buffer);
     }
 
@@ -65,7 +68,8 @@ class ImageDownloader {
     );
   }
 
-  static Stream<ImageDownloadProgress> loadComicImage(String imageKey, String? sourceKey, String cid, String eid) async* {
+  static Stream<ImageDownloadProgress> loadComicImage(
+      String imageKey, String? sourceKey, String cid, String eid) async* {
     final cacheKey = "$imageKey@$sourceKey@$cid@$eid";
     final cache = await CacheManager().findCache(cacheKey);
 
@@ -81,7 +85,8 @@ class ImageDownloader {
     var configs = <String, dynamic>{};
     if (sourceKey != null) {
       var comicSource = ComicSource.find(sourceKey);
-      configs = comicSource!.getImageLoadingConfig?.call(imageKey, cid, eid) ?? {};
+      configs = (await comicSource!.getImageLoadingConfig
+              ?.call(imageKey, cid, eid)) ?? {};
     }
     configs['headers'] ??= {
       'user-agent': webUA,
@@ -111,7 +116,7 @@ class ImageDownloader {
       }
     }
 
-    if(configs['onResponse'] != null) {
+    if (configs['onResponse'] != null) {
       buffer = configs['onResponse'](buffer);
     }
 

@@ -21,7 +21,6 @@ import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:venera/network/app_dio.dart';
-import 'package:venera/network/cloudflare.dart';
 import 'package:venera/network/cookie_jar.dart';
 
 import 'comic_source/comic_source.dart';
@@ -66,8 +65,6 @@ class JsEngine with _JSEngineApi {
       _dio ??= AppDio(BaseOptions(
           responseType: ResponseType.plain, validateStatus: (status) => true));
       _cookieJar ??= SingleInstanceCookieJar.instance!;
-      _dio!.interceptors.add(CookieManagerSql(_cookieJar!));
-      _dio!.interceptors.add(CloudflareInterceptor());
       _closed = false;
       _engine = FlutterQjs();
       _engine!.dispatch();
@@ -160,7 +157,7 @@ class JsEngine with _JSEngineApi {
               String key = message["key"];
               String settingKey = message["setting_key"];
               var source = ComicSource.find(key)!;
-              return source.data["setting"]?[settingKey] ??
+              return source.data["settings"]?[settingKey] ??
                   source.settings?[settingKey]['default'] ??
                   (throw "Setting not found: $settingKey");
             }
@@ -236,8 +233,14 @@ mixin class _JSEngineApi {
   Object? handleHtmlCallback(Map<String, dynamic> data) {
     switch (data["function"]) {
       case "parse":
-        if (_documents.length > 2) {
-          _documents.remove(_documents.keys.first);
+        if (_documents.length > 8) {
+          var shouldDelete = _documents.keys.first;
+          Log.warning(
+            "JS Engine",
+            "Too many documents, deleting the oldest: $shouldDelete\n"
+            "Current documents: ${_documents.keys}",
+          );
+          _documents.remove(shouldDelete);
         }
         _documents[data["key"]] = DocumentWrapper.parse(data["data"]);
         return null;
@@ -286,6 +289,12 @@ mixin class _JSEngineApi {
         return _documents[data["doc"]]!.getId(data["key"]);
       case "getLocalName":
         return _documents[data["doc"]]!.getLocalName(data["key"]);
+      case "getElementById":
+        return _documents[data["key"]]!.getElementById(data["id"]);
+      case "getPreviousSibling":
+        return _documents[data["doc"]]!.getPreviousSibling(data["key"]);
+      case "getNextSibling":
+        return _documents[data["doc"]]!.getNextSibling(data["key"]);
     }
     return null;
   }
@@ -592,5 +601,26 @@ class DocumentWrapper {
 
   String? getLocalName(int key) {
     return (elements[key]).localName;
+  }
+
+  int? getElementById(String id) {
+    var element = doc.getElementById(id);
+    if (element == null) return null;
+    elements.add(element);
+    return elements.length - 1;
+  }
+
+  int? getPreviousSibling(int key) {
+    var res = elements[key].previousElementSibling;
+    if (res == null) return null;
+    elements.add(res);
+    return elements.length - 1;
+  }
+
+  int? getNextSibling(int key) {
+    var res = elements[key].nextElementSibling;
+    if (res == null) return null;
+    elements.add(res);
+    return elements.length - 1;
   }
 }

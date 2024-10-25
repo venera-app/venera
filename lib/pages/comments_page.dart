@@ -267,7 +267,7 @@ class _CommentTileState extends State<_CommentTile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.comment.userName),
+                Text(widget.comment.userName, style: ts.bold,),
                 if (widget.comment.time != null)
                   Text(widget.comment.time!, style: ts.s12),
                 const SizedBox(height: 4),
@@ -403,38 +403,45 @@ class _CommentTileState extends State<_CommentTile> {
 
   int? voteStatus;
 
-  bool isVoteUp = false;
+  bool isVotingUp = false;
 
-  bool isVoteDown = false;
+  bool isVotingDown = false;
 
   void vote(bool isUp) async {
-    if (isVoteUp || isVoteDown) return;
+    if (isVotingUp || isVotingDown) return;
     setState(() {
       if (isUp) {
-        isVoteUp = true;
+        isVotingUp = true;
       } else {
-        isVoteDown = true;
+        isVotingDown = true;
       }
     });
+    var isCancel = (isUp && voteStatus == 1) || (!isUp && voteStatus == -1);
     var res = await widget.source.voteCommentFunc!(
       widget.comic.comicId,
       widget.comic.subId,
       widget.comment.id!,
       isUp,
-      (isUp && voteStatus == 1) || (!isUp && voteStatus == -1),
+      isCancel,
     );
     if (res.success) {
-      if (isUp) {
-        voteStatus = 1;
+      if(isCancel) {
+        voteStatus = 0;
       } else {
-        voteStatus = -1;
+        if (isUp) {
+          voteStatus = 1;
+        } else {
+          voteStatus = -1;
+        }
       }
+      widget.comment.voteStatus = voteStatus;
+      widget.comment.score = res.data ?? widget.comment.score;
     } else {
       context.showMessage(message: res.errorMessage ?? "Error");
     }
     setState(() {
-      isVoteUp = false;
-      isVoteDown = false;
+      isVotingUp = false;
+      isVotingDown = false;
     });
   }
 
@@ -461,7 +468,7 @@ class _CommentTileState extends State<_CommentTile> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Button.icon(
-            isLoading: isVoteUp,
+            isLoading: isVotingUp,
             icon: const Icon(Icons.arrow_upward),
             size: 18,
             color: upColor,
@@ -471,7 +478,7 @@ class _CommentTileState extends State<_CommentTile> {
           Text(widget.comment.score.toString()),
           const SizedBox(width: 4),
           Button.icon(
-            isLoading: isVoteDown,
+            isLoading: isVotingDown,
             icon: const Icon(Icons.arrow_downward),
             size: 18,
             color: downColor,

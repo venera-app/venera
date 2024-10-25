@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -97,8 +99,12 @@ class WindowFrame extends StatelessWidget {
                             ).toAlign(Alignment.centerLeft).paddingLeft(4),
                           ),
                         ),
-                        if (!App.isMacOS)
-                          const WindowButtons()
+                        if (kDebugMode)
+                          const TextButton(
+                            onPressed: debug,
+                            child: Text('Debug'),
+                          ),
+                        if (!App.isMacOS) const WindowButtons()
                       ],
                     ),
                   );
@@ -621,4 +627,8 @@ TransitionBuilder VirtualWindowFrameInit() {
       child: child!,
     );
   };
+}
+
+void debug() {
+  ComicSource.reload();
 }

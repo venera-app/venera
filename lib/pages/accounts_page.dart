@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
@@ -158,6 +159,8 @@ class _LoginPageState extends State<_LoginPage> {
   String password = "";
   bool loading = false;
 
+  final Map<String, String> _cookies = {};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,31 +176,44 @@ class _LoginPageState extends State<_LoginPage> {
             children: [
               Text("Login".tl, style: const TextStyle(fontSize: 24)),
               const SizedBox(height: 32),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: "Username".tl,
-                  border: const OutlineInputBorder(),
-                ),
-                enabled: widget.config.login != null,
-                onChanged: (s) {
-                  username = s;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: "Password".tl,
-                  border: const OutlineInputBorder(),
-                ),
-                obscureText: true,
-                enabled: widget.config.login != null,
-                onChanged: (s) {
-                  password = s;
-                },
-                onSubmitted: (s) => login(),
-              ),
-              const SizedBox(height: 32),
-              if (widget.config.login == null)
+              if (widget.config.cookieFields == null)
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: "Username".tl,
+                    border: const OutlineInputBorder(),
+                  ),
+                  enabled: widget.config.login != null,
+                  onChanged: (s) {
+                    username = s;
+                  },
+                ).paddingBottom(16),
+              if (widget.config.cookieFields == null)
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: "Password".tl,
+                    border: const OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  enabled: widget.config.login != null,
+                  onChanged: (s) {
+                    password = s;
+                  },
+                  onSubmitted: (s) => login(),
+                ).paddingBottom(16),
+              for (var field in widget.config.cookieFields ?? <String>[])
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: field,
+                    border: const OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  enabled: widget.config.validateCookies != null,
+                  onChanged: (s) {
+                    _cookies[field] = s;
+                  },
+                ).paddingBottom(16),
+              if (widget.config.login == null &&
+                  widget.config.cookieFields == null)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -214,7 +230,7 @@ class _LoginPageState extends State<_LoginPage> {
                 ),
               const SizedBox(height: 24),
               if (widget.config.loginWebsite != null)
-                FilledButton(
+                TextButton(
                   onPressed: loginWithWebview,
                   child: Text("Login with webview".tl),
                 ),
@@ -240,71 +256,81 @@ class _LoginPageState extends State<_LoginPage> {
   }
 
   void login() {
-    if (username.isEmpty || password.isEmpty) {
-      showToast(
-        message: "Cannot be empty".tl,
-        icon: const Icon(Icons.error_outline),
-        context: context,
-      );
-      return;
-    }
-    setState(() {
-      loading = true;
-    });
-    widget.config.login!(username, password).then((value) {
-      if (value.error) {
-        context.showMessage(message: value.errorMessage!);
-        setState(() {
-          loading = false;
-        });
-      } else {
-        if (mounted) {
-          context.pop();
-        }
+    if (widget.config.login != null) {
+      if (username.isEmpty || password.isEmpty) {
+        showToast(
+          message: "Cannot be empty".tl,
+          icon: const Icon(Icons.error_outline),
+          context: context,
+        );
+        return;
       }
-    });
+      setState(() {
+        loading = true;
+      });
+      widget.config.login!(username, password).then((value) {
+        if (value.error) {
+          context.showMessage(message: value.errorMessage!);
+          setState(() {
+            loading = false;
+          });
+        } else {
+          if (mounted) {
+            context.pop();
+          }
+        }
+      });
+    } else if (widget.config.validateCookies != null) {
+      setState(() {
+        loading = true;
+      });
+      var cookies =
+          widget.config.cookieFields!.map((e) => _cookies[e] ?? '').toList();
+      widget.config.validateCookies!(cookies).then((value) {
+        if (value) {
+          widget.source.data['account'] = 'ok';
+          widget.source.saveData();
+          context.pop();
+        } else {
+          context.showMessage(message: "Invalid cookies".tl);
+          setState(() {
+            loading = false;
+          });
+        }
+      });
+    }
   }
 
   void loginWithWebview() async {
     var url = widget.config.loginWebsite!;
     var title = '';
     bool success = false;
+
+    void validate(InAppWebViewController c) async {
+      if (widget.config.checkLoginStatus != null
+          && widget.config.checkLoginStatus!(url, title)) {
+        var cookies = (await c.getCookies(url)) ?? [];
+        SingleInstanceCookieJar.instance?.saveFromResponse(
+          Uri.parse(url),
+          cookies,
+        );
+        success = true;
+        widget.config.onLoginWithWebviewSuccess?.call();
+        App.mainNavigatorKey?.currentContext?.pop();
+      }
+    }
+
     await context.to(
       () => AppWebview(
         initialUrl: widget.config.loginWebsite!,
         onNavigation: (u, c) {
           url = u;
-          print(url);
-          () async {
-            if (widget.config.checkLoginStatus != null) {
-              if (widget.config.checkLoginStatus!(url, title)) {
-                var cookies = (await c.getCookies(url)) ?? [];
-                SingleInstanceCookieJar.instance?.saveFromResponse(
-                  Uri.parse(url),
-                  cookies,
-                );
-                success = true;
-                App.mainNavigatorKey?.currentContext?.pop();
-              }
-            }
-          }();
+          validate(c);
           return false;
         },
         onTitleChange: (t, c) {
-          () async {
-            if (widget.config.checkLoginStatus != null) {
-              if (widget.config.checkLoginStatus!(url, title)) {
-                var cookies = (await c.getCookies(url)) ?? [];
-                SingleInstanceCookieJar.instance?.saveFromResponse(
-                  Uri.parse(url),
-                  cookies,
-                );
-                success = true;
-                App.mainNavigatorKey?.currentContext?.pop();
-              }
-            }
-          }();
           title = t;
+          validate(c);
         },
       ),
     );

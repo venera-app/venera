@@ -7,9 +7,9 @@ class Comment {
   final String? time;
   final int? replyCount;
   final String? id;
-  final int? score;
+  int? score;
   final bool? isLiked;
-  final int? voteStatus; // 1: upvote, -1: downvote, 0: none
+  int? voteStatus; // 1: upvote, -1: downvote, 0: none
 
   static String? parseTime(dynamic value) {
     if (value == null) return null;
@@ -60,6 +60,9 @@ class Comic {
 
   final String? favoriteId;
 
+  /// 0-5
+  final double? stars;
+
   const Comic(
     this.title,
     this.cover,
@@ -70,7 +73,7 @@ class Comic {
     this.sourceKey,
     this.maxPage,
     this.language,
-  ): favoriteId = null;
+  ): favoriteId = null, stars = null;
 
   Map<String, dynamic> toJson() {
     return {
@@ -96,7 +99,8 @@ class Comic {
         description = json["description"] ?? "",
         maxPage = json["maxPage"],
         language = json["language"],
-        favoriteId = json["favoriteId"];
+        favoriteId = json["favoriteId"],
+        stars = (json["stars"] as num?)?.toDouble();
 
   @override
   bool operator ==(Object other) {
@@ -151,6 +155,11 @@ class ComicDetails with HistoryMixin {
 
   final String? url;
 
+  final double? stars;
+
+  @override
+  final int? maxPage;
+
   static Map<String, List<String>> _generateMap(Map<dynamic, dynamic> map) {
     var res = <String, List<String>>{};
     map.forEach((key, value) {
@@ -182,7 +191,9 @@ class ComicDetails with HistoryMixin {
         uploader = json["uploader"],
         uploadTime = json["uploadTime"],
         updateTime = json["updateTime"],
-        url = json["url"];
+        url = json["url"],
+        stars = (json["stars"] as num?)?.toDouble(),
+        maxPage = json["maxPage"];
 
   Map<String, dynamic> toJson() {
     return {

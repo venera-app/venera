@@ -19,7 +19,7 @@ class BlurEffect extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
       child: BackdropFilter(
-        filter: ImageFilter.blur(
+        filter: ui.ImageFilter.blur(
           sigmaX: blur,
           sigmaY: blur,
           tileMode: TileMode.mirror,

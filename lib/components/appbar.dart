@@ -567,6 +567,7 @@ class SliverSearchBar extends StatefulWidget {
     required this.controller,
     this.onChanged,
     this.action,
+    this.focusNode,
   });
 
   final SearchBarController controller;
@@ -574,6 +575,8 @@ class SliverSearchBar extends StatefulWidget {
   final void Function(String)? onChanged;
 
   final Widget? action;
+
+  final FocusNode? focusNode;
 
   @override
   State<SliverSearchBar> createState() => _SliverSearchBarState();
@@ -613,6 +616,7 @@ class _SliverSearchBarState extends State<SliverSearchBar>
         topPadding: MediaQuery.of(context).padding.top,
         onChanged: widget.onChanged,
         action: widget.action,
+        focusNode: widget.focusNode,
       ),
     );
   }
@@ -629,12 +633,15 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
 
   final Widget? action;
 
+  final FocusNode? focusNode;
+
   const _SliverSearchBarDelegate({
     required this.editingController,
     required this.controller,
     required this.topPadding,
     this.onChanged,
     this.action,
+    this.focusNode,
   });
 
   static const _kAppBarHeight = 52.0;
@@ -662,6 +669,7 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: TextField(
+                focusNode: focusNode,
                 controller: editingController,
                 decoration: InputDecoration(
                   hintText: "Search".tl,

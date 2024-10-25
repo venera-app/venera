@@ -308,14 +308,17 @@ function setInterval(callback, delay) {
     return timer;
 }
 
-function Cookie(name, value, domain = null) {
-    let obj = {};
-    obj.name = name;
-    obj.value = value;
-    if (domain) {
-        obj.domain = domain;
-    }
-    return obj;
+/**
+ * Create a cookie object.
+ * @param name {string}
+ * @param value {string}
+ * @param domain {string}
+ * @constructor
+ */
+function Cookie({name, value, domain}) {
+    this.name = name;
+    this.value = value;
+    this.domain = domain;
 }
 
 /**
@@ -491,7 +494,7 @@ class HtmlDocument {
     /**
      * Query a single element from the HTML document.
      * @param {string} query - The query string.
-     * @returns {HtmlElement} The first matching element.
+     * @returns {HtmlElement | null} The first matching element.
      */
     querySelector(query) {
         let k = sendMessage({
@@ -529,6 +532,22 @@ class HtmlDocument {
             function: "dispose",
             key: this.key
         })
+    }
+
+    /**
+     * Get the element by its id.
+     * @param id {string}
+     * @returns {HtmlElement|null}
+     */
+    getElementById(id) {
+        let k = sendMessage({
+            method: "html",
+            function: "getElementById",
+            key: this.key,
+            id: id
+        })
+        if(k == null) return null;
+        return new HtmlElement(k, this.key);
     }
 }
 
@@ -703,6 +722,36 @@ class HtmlElement {
             doc: this.doc,
         })
     }
+
+    /**
+     * Get the previous sibling element of the element. If the element has no previous sibling, return null.
+     * @returns {HtmlElement|null}
+     */
+    get previousElementSibling() {
+        let k = sendMessage({
+            method: "html",
+            function: "getPreviousSibling",
+            key: this.key,
+            doc: this.doc,
+        })
+        if(k == null) return null;
+        return new HtmlElement(k, this.doc);
+    }
+
+    /**
+     * Get the next sibling element of the element. If the element has no next sibling, return null.
+     * @returns {HtmlElement|null}
+     */
+    get nextElementSibling() {
+        let k = sendMessage({
+            method: "html",
+            function: "getNextSibling",
+            key: this.key,
+            doc: this.doc,
+        })
+        if (k == null) return null;
+        return new HtmlElement(k, this.doc);
+    }
 }
 
 class HtmlNode {
@@ -789,9 +838,10 @@ let console = {
  * @param maxPage {number?}
  * @param language {string?}
  * @param favoriteId {string?} - Only set this field if the comic is from favorites page
+ * @param stars {number?} - 0-5, double
  * @constructor
  */
-function Comic({id, title, subtitle, cover, tags, description, maxPage, language, favoriteId}) {
+function Comic({id, title, subtitle, cover, tags, description, maxPage, language, favoriteId, stars}) {
     this.id = id;
     this.title = title;
     this.subtitle = subtitle;
@@ -801,6 +851,7 @@ function Comic({id, title, subtitle, cover, tags, description, maxPage, language
     this.maxPage = maxPage;
     this.language = language;
     this.favoriteId = favoriteId;
+    this.stars = stars;
 }
 
 /**
@@ -821,9 +872,11 @@ function Comic({id, title, subtitle, cover, tags, description, maxPage, language
  * @param updateTime {string?}
  * @param uploadTime {string?}
  * @param url {string?}
+ * @param stars {number?} - 0-5, double
+ * @param maxPage {number?}
  * @constructor
  */
-function ComicDetails({title, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url}) {
+function ComicDetails({title, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url, stars, maxPage}) {
     this.title = title;
     this.cover = cover;
     this.description = description;
@@ -840,6 +893,8 @@ function ComicDetails({title, cover, description, tags, chapters, isFavorite, su
     this.updateTime = updateTime;
     this.uploadTime = uploadTime;
     this.url = url;
+    this.stars = stars;
+    this.maxPage = maxPage;
 }
 
 /**

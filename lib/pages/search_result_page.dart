@@ -4,6 +4,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
@@ -87,10 +88,25 @@ class _SearchResultPageState extends State<SearchResultPage> {
     );
     sourceKey = widget.sourceKey;
     options = widget.options;
+    validateOptions();
     text = widget.text;
     appdata.addSearchHistory(text);
     suggestionsController = _SuggestionsController(controller);
     super.initState();
+  }
+
+  void validateOptions() {
+    var source = ComicSource.find(sourceKey);
+    if (source == null) {
+      return;
+    }
+    var searchOptions = source.searchPageData!.searchOptions;
+    if (searchOptions == null) {
+      return;
+    }
+    if (options.length != searchOptions.length) {
+      options = searchOptions.map((e) => e.defaultValue).toList();
+    }
   }
 
   @override
@@ -422,25 +438,15 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
     }
     for (int i = 0; i < searchOptions.length; i++) {
       final option = searchOptions[i];
-      children.add(ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(option.label.tl),
-      ));
-      children.add(Wrap(
-        runSpacing: 8,
-        spacing: 8,
-        children: option.options.entries.map((e) {
-          return OptionChip(
-            text: e.value.ts(searchTarget),
-            isSelected: options[i] == e.key,
-            onTap: () {
-              setState(() {
-                options[i] = e.key;
-              });
-              onChanged();
-            },
-          );
-        }).toList(),
+      children.add(SearchOptionWidget(
+        option: option,
+        value: options[i],
+        onChanged: (value) {
+          setState(() {
+            options[i] = value;
+          });
+        },
+        sourceKey: searchTarget,
       ));
     }
 

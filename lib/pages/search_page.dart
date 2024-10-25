@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
@@ -23,6 +25,8 @@ class _SearchPageState extends State<SearchPage> {
   late final SearchBarController controller;
 
   String searchTarget = "";
+
+  var focusNode = FocusNode();
 
   var options = <String>[];
 
@@ -138,6 +142,12 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SmoothCustomScrollView(
@@ -152,6 +162,7 @@ class _SearchPageState extends State<SearchPage> {
       onChanged: (s) {
         findSuggestions();
       },
+      focusNode: focusNode,
     );
     if (suggestions.isNotEmpty) {
       yield buildSuggestions(context);
@@ -186,6 +197,7 @@ class _SearchPageState extends State<SearchPage> {
                   onTap: () {
                     setState(() {
                       searchTarget = e.key;
+                      useDefaultOptions();
                     });
                   },
                 );
@@ -197,6 +209,13 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  void useDefaultOptions() {
+    final searchOptions =
+        ComicSource.find(searchTarget)!.searchPageData!.searchOptions ??
+            <SearchOptions>[];
+    options = searchOptions.map((e) => e.defaultValue).toList();
+  }
+
   Widget buildSearchOptions() {
     var children = <Widget>[];
 
@@ -204,30 +223,21 @@ class _SearchPageState extends State<SearchPage> {
         ComicSource.find(searchTarget)!.searchPageData!.searchOptions ??
             <SearchOptions>[];
     if (searchOptions.length != options.length) {
-      options = searchOptions.map((e) => e.defaultValue).toList();
+      useDefaultOptions();
     }
     if (searchOptions.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox());
     }
     for (int i = 0; i < searchOptions.length; i++) {
       final option = searchOptions[i];
-      children.add(ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(option.label.tl),
-      ));
-      children.add(Wrap(
-        runSpacing: 8,
-        spacing: 8,
-        children: option.options.entries.map((e) {
-          return OptionChip(
-            text: e.value.ts(searchTarget),
-            isSelected: options[i] == e.key,
-            onTap: () {
-              options[i] = e.key;
-              update();
-            },
-          );
-        }).toList(),
+      children.add(SearchOptionWidget(
+        option: option,
+        value: options[i],
+        onChanged: (value) {
+          options[i] = value;
+          update();
+        },
+        sourceKey: searchTarget,
       ));
     }
 
@@ -336,7 +346,9 @@ class _SearchPageState extends State<SearchPage> {
       } else {
         controller.text += "$text ";
       }
+      suggestions.clear();
       update();
+      focusNode.requestFocus();
     }
 
     bool showMethod = MediaQuery.of(context).size.width < 600;
@@ -440,6 +452,80 @@ class _SearchPageState extends State<SearchPage> {
             childCount: suggestions.length,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class SearchOptionWidget extends StatelessWidget {
+  const SearchOptionWidget({
+    super.key,
+    required this.option,
+    required this.value,
+    required this.onChanged,
+    required this.sourceKey,
+  });
+
+  final SearchOptions option;
+
+  final String value;
+
+  final void Function(String) onChanged;
+
+  final String sourceKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(option.label.ts(sourceKey)),
+        ),
+        if(option.type == 'select')
+          Wrap(
+            runSpacing: 8,
+            spacing: 8,
+            children: option.options.entries.map((e) {
+              return OptionChip(
+                text: e.value.ts(sourceKey),
+                isSelected: value == e.key,
+                onTap: () {
+                  onChanged(e.key);
+                },
+              );
+            }).toList(),
+          ),
+        if(option.type == 'multi-select')
+          Wrap(
+            runSpacing: 8,
+            spacing: 8,
+            children: option.options.entries.map((e) {
+              return OptionChip(
+                text: e.value.ts(sourceKey),
+                isSelected: (jsonDecode(value) as List).contains(e.key),
+                onTap: () {
+                  var list = jsonDecode(value) as List;
+                  if(list.contains(e.key)) {
+                    list.remove(e.key);
+                  } else {
+                    list.add(e.key);
+                  }
+                  onChanged(jsonEncode(list));
+                },
+              );
+            }).toList(),
+          ),
+        if(option.type == 'dropdown')
+          Select(
+            current: option.options[value],
+            values: option.options.values.toList(),
+            onTap: (index) {
+              onChanged(option.options.keys.elementAt(index));
+            },
+            minWidth: 96,
+          )
       ],
     );
   }

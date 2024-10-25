@@ -27,6 +27,10 @@ part 'models.dart';
 /// build comic list, [Res.subData] should be maxPage or null if there is no limit.
 typedef ComicListBuilder = Future<Res<List<Comic>>> Function(int page);
 
+/// build comic list with next param, [Res.subData] should be next page param or null if there is no next page.
+typedef ComicListBuilderWithNext = Future<Res<List<Comic>>> Function(
+    String? next);
+
 typedef LoginFunction = Future<Res<bool>> Function(String, String);
 
 typedef LoadComicFunc = Future<Res<ComicDetails>> Function(String id);
@@ -40,7 +44,7 @@ typedef CommentsLoader = Future<Res<List<Comment>>> Function(
 typedef SendCommentFunc = Future<Res<bool>> Function(
     String id, String? subId, String content, String? replyTo);
 
-typedef GetImageLoadingConfigFunc = Map<String, dynamic> Function(
+typedef GetImageLoadingConfigFunc = Future<Map<String, dynamic>> Function(
     String imageKey, String comicId, String epId)?;
 typedef GetThumbnailLoadingConfigFunc = Map<String, dynamic> Function(
     String imageKey)?;
@@ -63,6 +67,9 @@ typedef VoteCommentFunc = Future<Res<int?>> Function(
 
 typedef HandleClickTagEvent = Map<String, String> Function(
     String namespace, String tag);
+
+/// [rating] is the rating value, 0-10. 1 represents 0.5 star.
+typedef StarRatingFunc = Future<Res<bool>> Function(String comicId, int rating);
 
 class ComicSource {
   static final List<ComicSource> _sources = [];
@@ -163,8 +170,7 @@ class ComicSource {
   /// Load comic pages.
   final LoadComicPagesFunc? loadComicPages;
 
-  final Map<String, dynamic> Function(
-      String imageKey, String comicId, String epId)? getImageLoadingConfig;
+  final GetImageLoadingConfigFunc? getImageLoadingConfig;
 
   final Map<String, dynamic> Function(String imageKey)?
       getThumbnailLoadingConfig;
@@ -202,6 +208,8 @@ class ComicSource {
   final bool enableTagsSuggestions;
 
   final bool enableTagsTranslate;
+
+  final StarRatingFunc? starRatingFunc;
 
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
@@ -270,6 +278,7 @@ class ComicSource {
     this.linkHandler,
     this.enableTagsSuggestions,
     this.enableTagsTranslate,
+    this.starRatingFunc,
   );
 }
 
@@ -288,12 +297,21 @@ class AccountConfig {
 
   final bool Function(String url, String title)? checkLoginStatus;
 
+  final void Function()? onLoginWithWebviewSuccess;
+
+  final List<String>? cookieFields;
+
+  final Future<bool> Function(List<String>)? validateCookies;
+
   const AccountConfig(
     this.login,
     this.loginWebsite,
     this.registerWebsite,
     this.logout,
     this.checkLoginStatus,
+    this.onLoginWithWebviewSuccess,
+    this.cookieFields,
+    this.validateCookies,
   )   : allowReLogin = true,
         infoItems = const [];
 }
@@ -322,6 +340,8 @@ class ExplorePageData {
 
   final ComicListBuilder? loadPage;
 
+  final ComicListBuilderWithNext? loadNext;
+
   final Future<Res<List<ExplorePagePart>>> Function()? loadMultiPart;
 
   /// return a `List` contains `List<Comic>` or `ExplorePagePart`
@@ -331,6 +351,7 @@ class ExplorePageData {
     this.title,
     this.type,
     this.loadPage,
+    this.loadNext,
     this.loadMultiPart,
     this.loadMixed,
   );
@@ -388,9 +409,13 @@ class SearchOptions {
 
   final String label;
 
-  const SearchOptions(this.options, this.label);
+  final String type;
 
-  String get defaultValue => options.keys.first;
+  final String? defaultVal;
+
+  const SearchOptions(this.options, this.label, this.type, this.defaultVal);
+
+  String get defaultValue => defaultVal ?? options.keys.first;
 }
 
 typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(
@@ -401,7 +426,7 @@ class CategoryComicsData {
   final List<CategoryComicsOptions> options;
 
   /// [category] is the one clicked by the user on the category page.
-
+  ///
   /// if [BaseCategoryPart.categoryParams] is not null, [param] will be not null.
   ///
   /// [Res.subData] should be maxPage or null if there is no limit.
@@ -415,9 +440,12 @@ class CategoryComicsData {
 class RankingData {
   final Map<String, String> options;
 
-  final Future<Res<List<Comic>>> Function(String option, int page) load;
+  final Future<Res<List<Comic>>> Function(String option, int page)? load;
 
-  const RankingData(this.options, this.load);
+  final Future<Res<List<Comic>>> Function(String option, String? next)?
+      loadWithNext;
+
+  const RankingData(this.options, this.load, this.loadWithNext);
 }
 
 class CategoryComicsOptions {
@@ -433,7 +461,6 @@ class CategoryComicsOptions {
 
   const CategoryComicsOptions(this.options, this.notShowWhen, this.showWhen);
 }
-
 
 class LinkHandler {
   final List<String> domains;

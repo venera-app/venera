@@ -21,11 +21,11 @@ class AnimatedImage extends StatefulWidget {
     this.gaplessPlayback = false,
     this.filterQuality = FilterQuality.medium,
     this.isAntiAlias = false,
+    this.part,
     Map<String, String>? headers,
     int? cacheWidth,
     int? cacheHeight,
-  }
-      ): image = ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, image),
+  })  : image = ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, image),
         assert(cacheWidth == null || cacheWidth > 0),
         assert(cacheHeight == null || cacheHeight > 0);
 
@@ -61,13 +61,16 @@ class AnimatedImage extends StatefulWidget {
 
   final bool isAntiAlias;
 
+  final ImagePart? part;
+
   static void clear() => _AnimatedImageState.clear();
 
   @override
   State<AnimatedImage> createState() => _AnimatedImageState();
 }
 
-class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserver {
+class _AnimatedImageState extends State<AnimatedImage>
+    with WidgetsBindingObserver {
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
   ImageChunkEvent? _loadingProgress;
@@ -138,8 +141,8 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
   }
 
   void _updateInvertColors() {
-    _invertColors = MediaQuery.maybeInvertColorsOf(context)
-        ?? SemanticsBinding.instance.accessibilityFeatures.invertColors;
+    _invertColors = MediaQuery.maybeInvertColorsOf(context) ??
+        SemanticsBinding.instance.accessibilityFeatures.invertColors;
   }
 
   void _resolveImage() {
@@ -148,16 +151,19 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
       imageProvider: widget.image,
     );
     final ImageStream newStream =
-    provider.resolve(createLocalImageConfiguration(
+        provider.resolve(createLocalImageConfiguration(
       context,
-      size: widget.width != null && widget.height != null ? Size(widget.width!, widget.height!) : null,
+      size: widget.width != null && widget.height != null
+          ? Size(widget.width!, widget.height!)
+          : null,
     ));
     _updateSourceStream(newStream);
   }
 
   ImageStreamListener? _imageStreamListener;
+
   ImageStreamListener _getListener({bool recreateListener = false}) {
-    if(_imageStreamListener == null || recreateListener) {
+    if (_imageStreamListener == null || recreateListener) {
       _lastException = null;
       _imageStreamListener = ImageStreamListener(
         _handleImageFrame,
@@ -191,7 +197,8 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
 
   void _replaceImage({required ImageInfo? info}) {
     final ImageInfo? oldImageInfo = _imageInfo;
-    SchedulerBinding.instance.addPostFrameCallback((_) => oldImageInfo?.dispose());
+    SchedulerBinding.instance
+        .addPostFrameCallback((_) => oldImageInfo?.dispose());
     _imageInfo = info;
   }
 
@@ -208,7 +215,9 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
     }
 
     if (!widget.gaplessPlayback) {
-      setState(() { _replaceImage(info: null); });
+      setState(() {
+        _replaceImage(info: null);
+      });
     }
 
     setState(() {
@@ -247,7 +256,9 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
       return;
     }
 
-    if (keepStreamAlive && _completerHandle == null && _imageStream?.completer != null) {
+    if (keepStreamAlive &&
+        _completerHandle == null &&
+        _imageStream?.completer != null) {
       _completerHandle = _imageStream!.completer!.keepAlive();
     }
 
@@ -259,7 +270,19 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
   Widget build(BuildContext context) {
     Widget result;
 
-    if(_imageInfo != null){
+    if (_imageInfo != null) {
+      if(widget.part != null) {
+        return CustomPaint(
+          painter: ImagePainter(
+            image: _imageInfo!.image,
+            part: widget.part!,
+          ),
+          child: SizedBox(
+            width: widget.width,
+            height: widget.height,
+          ),
+        );
+      }
       result = RawImage(
         image: _imageInfo?.image,
         width: widget.width,
@@ -291,7 +314,7 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
           child: result,
         );
       }
-    } else{
+    } else {
       result = const Center();
     }
 
@@ -307,8 +330,59 @@ class _AnimatedImageState extends State<AnimatedImage> with WidgetsBindingObserv
     super.debugFillProperties(description);
     description.add(DiagnosticsProperty<ImageStream>('stream', _imageStream));
     description.add(DiagnosticsProperty<ImageInfo>('pixels', _imageInfo));
-    description.add(DiagnosticsProperty<ImageChunkEvent>('loadingProgress', _loadingProgress));
+    description.add(DiagnosticsProperty<ImageChunkEvent>(
+        'loadingProgress', _loadingProgress));
     description.add(DiagnosticsProperty<int>('frameNumber', _frameNumber));
-    description.add(DiagnosticsProperty<bool>('wasSynchronouslyLoaded', _wasSynchronouslyLoaded));
+    description.add(DiagnosticsProperty<bool>(
+        'wasSynchronouslyLoaded', _wasSynchronouslyLoaded));
+  }
+}
+
+class ImagePart {
+  final double? x1;
+  final double? y1;
+  final double? x2;
+  final double? y2;
+
+  const ImagePart({
+    this.x1,
+    this.y1,
+    this.x2,
+    this.y2,
+  });
+}
+
+class ImagePainter extends CustomPainter {
+  final ui.Image image;
+
+  final ImagePart part;
+
+  /// Render a part of the image.
+  const ImagePainter({
+    required this.image,
+    this.part = const ImagePart(),
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect src = Rect.fromPoints(
+      Offset(part.x1 ?? 0, part.y1 ?? 0),
+      Offset(
+        part.x2 ?? image.width.toDouble(),
+        part.y2 ?? image.height.toDouble(),
+      ),
+    );
+    final Rect dst = Offset.zero & size;
+    canvas.drawImageRect(image, src, dst, Paint());
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return oldDelegate is! ImagePainter ||
+        oldDelegate.image != image ||
+        oldDelegate.part.x1 != part.x1 ||
+        oldDelegate.part.y1 != part.y1 ||
+        oldDelegate.part.x2 != part.x2 ||
+        oldDelegate.part.y2 != part.y2;
   }
 }

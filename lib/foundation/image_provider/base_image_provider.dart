@@ -55,6 +55,12 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
             _cacheSize += data.length;
           }
         } catch (e) {
+          if(e.toString().contains("Invalid Status Code: 404")) {
+            rethrow;
+          }
+          if(e.toString().contains("Invalid Status Code: 403")) {
+            rethrow;
+          }
           if (e.toString().contains("handshake")) {
             if (retryTime < 5) {
               retryTime = 5;

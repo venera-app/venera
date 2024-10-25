@@ -62,6 +62,7 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
+        _futurePosition = null;
         if (_isMouseScroll) {
           setState(() {
             _isMouseScroll = false;

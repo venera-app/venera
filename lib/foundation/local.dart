@@ -127,6 +127,9 @@ class LocalComic with HistoryMixin implements Comic {
 
   @override
   String? get favoriteId => null;
+
+  @override
+  double? get stars => null;
 }
 
 class LocalManager with ChangeNotifier {
