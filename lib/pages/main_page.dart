@@ -6,7 +6,6 @@ import 'package:venera/utils/translations.dart';
 
 import '../components/components.dart';
 import '../foundation/app.dart';
-import '../foundation/app_page_route.dart';
 import 'explore_page.dart';
 import 'favorites/favorites_page.dart';
 import 'home_page.dart';
@@ -56,6 +55,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return NaviPane(
       observer: _observer,
+      navigatorKey: _navigatorKey!,
       paneItems: [
         PaneItemEntry(
           label: 'Home'.tl,
@@ -96,32 +96,7 @@ class _MainPageState extends State<MainPage> {
         )
       ],
       pageBuilder: (index) {
-        return Navigator(
-          observers: [_observer],
-          key: _navigatorKey,
-          onGenerateRoute: (settings) => AppPageRoute(
-            preventRebuild: false,
-            isRootRoute: true,
-            builder: (context) {
-              return NaviPaddingWidget(child: _pages[index]);
-            },
-          ),
-        );
-      },
-      onPageChange: (index) {
-        setState(() {
-          this.index = index;
-        });
-        _navigatorKey!.currentState?.pushAndRemoveUntil(
-          AppPageRoute(
-            preventRebuild: false,
-            isRootRoute: true,
-            builder: (context) {
-              return NaviPaddingWidget(child: _pages[index]);
-            },
-          ),
-          (route) => false,
-        );
+        return _pages[index];
       },
     );
   }
