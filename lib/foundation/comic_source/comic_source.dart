@@ -384,24 +384,18 @@ enum ExplorePageType {
 typedef SearchFunction = Future<Res<List<Comic>>> Function(
     String keyword, int page, List<String> searchOption);
 
+typedef SearchNextFunction = Future<Res<List<Comic>>> Function(
+    String keyword, String? next, List<String> searchOption);
+
 class SearchPageData {
   /// If this is not null, the default value of search options will be first element.
   final List<SearchOptions>? searchOptions;
 
-  final Widget Function(BuildContext, List<String> initialValues,
-      void Function(List<String>))? customOptionsBuilder;
-
-  final Widget Function(String keyword, List<String> options)?
-      overrideSearchResultBuilder;
-
   final SearchFunction? loadPage;
 
-  final bool enableLanguageFilter;
+  final SearchNextFunction? loadNext;
 
-  const SearchPageData(this.searchOptions, this.loadPage)
-      : enableLanguageFilter = false,
-        customOptionsBuilder = null,
-        overrideSearchResultBuilder = null;
+  const SearchPageData(this.searchOptions, this.loadPage, this.loadNext);
 }
 
 class SearchOptions {

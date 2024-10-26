@@ -185,7 +185,7 @@ class ComicSourceParser {
 
     Future<Res<bool>> Function(String account, String pwd)? login;
 
-    if(_checkExists("account.login")) {
+    if (_checkExists("account.login")) {
       login = (account, pwd) async {
         try {
           await JsEngine().runCode("""
@@ -536,21 +536,47 @@ class ComicSourceParser {
         element['default'] == null ? null : jsonEncode(element['default']),
       ));
     }
-    return SearchPageData(options, (keyword, page, searchOption) async {
-      try {
-        var res = await JsEngine().runCode("""
+
+    SearchFunction? loadPage;
+
+    SearchNextFunction? loadNext;
+
+    if (_checkExists('search.load')) {
+      loadPage = (keyword, page, searchOption) async {
+        try {
+          var res = await JsEngine().runCode("""
           ComicSource.sources.$_key.search.load(
             ${jsonEncode(keyword)}, ${jsonEncode(searchOption)}, ${jsonEncode(page)})
         """);
-        return Res(
+          return Res(
+              List.generate(res["comics"].length,
+                  (index) => Comic.fromJson(res["comics"][index], _key!)),
+              subData: res["maxPage"]);
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      };
+    } else {
+      loadNext = (keyword, next, searchOption) async {
+        try {
+          var res = await JsEngine().runCode("""
+          ComicSource.sources.$_key.search.loadNext(
+            ${jsonEncode(keyword)}, ${jsonEncode(searchOption)}, ${jsonEncode(next)})
+        """);
+          return Res(
             List.generate(res["comics"].length,
                 (index) => Comic.fromJson(res["comics"][index], _key!)),
-            subData: res["maxPage"]);
-      } catch (e, s) {
-        Log.error("Network", "$e\n$s");
-        return Res.error(e.toString());
-      }
-    });
+            subData: res["next"],
+          );
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      };
+    }
+
+    return SearchPageData(options, loadPage, loadNext);
   }
 
   LoadComicFunc? _parseLoadComicFunc() {

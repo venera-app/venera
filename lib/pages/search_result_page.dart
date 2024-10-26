@@ -111,6 +111,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    var source = ComicSource.find(sourceKey);
     return ComicList(
       key: Key(text + options.toString() + sourceKey),
       errorLeading: AppSearchBar(
@@ -122,9 +123,15 @@ class _SearchResultPageState extends State<SearchResultPage> {
         onChanged: onChanged,
         action: buildAction(),
       ),
-      loadPage: (i) {
-        var source = ComicSource.find(sourceKey);
-        return source!.searchPageData!.loadPage!(
+      loadPage: source!.searchPageData!.loadPage == null ? null : (i) {
+        return source.searchPageData!.loadPage!(
+          text,
+          i,
+          options,
+        );
+      },
+      loadNext: source.searchPageData!.loadNext == null ? null : (i) {
+        return source.searchPageData!.loadNext!(
           text,
           i,
           options,
