@@ -206,6 +206,7 @@ class _BodyState extends State<_Body> {
             source.data['settings'][key] ?? item.value['default'] ?? '';
         yield ListTile(
           title: Text((item.value['title'] as String).ts(source.key)),
+          subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
           trailing: IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {

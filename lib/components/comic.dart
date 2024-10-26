@@ -735,6 +735,12 @@ class ComicListState extends State<ComicList> {
   }
 
   Future<void> _loadPage(int page) async {
+    if (widget.loadPage == null && widget.loadNext == null) {
+      _error = "loadPage and loadNext can't be null at the same time";
+      Future.microtask(() {
+        setState(() {});
+      });
+    }
     if (_loading[page] == true) {
       return;
     }
@@ -790,9 +796,6 @@ class ComicListState extends State<ComicList> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.loadPage == null && widget.loadNext == null) {
-      throw Exception("loadPage and loadNext can't be null at the same time");
-    }
     if (_error != null) {
       return Column(
         children: [
@@ -814,19 +817,27 @@ class ComicListState extends State<ComicList> {
     }
     if (_data[_page] == null) {
       _loadPage(_page);
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Column(
+        children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
       );
     }
     return SmoothCustomScrollView(
       slivers: [
         if (widget.leadingSliver != null) widget.leadingSliver!,
-        _buildSliverPageSelector(),
+        if (_maxPage != 1) _buildSliverPageSelector(),
         SliverGridComics(
           comics: _data[_page] ?? const [],
           menuBuilder: widget.menuBuilder,
         ),
-        if (_data[_page]!.length > 6) _buildSliverPageSelector(),
+        if (_data[_page]!.length > 6 && _maxPage != 1)
+          _buildSliverPageSelector(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );

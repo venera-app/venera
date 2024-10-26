@@ -92,6 +92,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   @override
   Future<Res<ComicDetails>> loadData() async {
     var comicSource = ComicSource.find(widget.sourceKey);
+    if(comicSource == null) {
+      return const Res.error('Comic source not found');
+    }
     isAddToLocalFav = LocalFavoritesManager().isExist(
       widget.id,
       ComicType(widget.sourceKey.hashCode),

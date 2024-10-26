@@ -73,8 +73,12 @@ class _AppbarState extends State<Appbar> {
 
   @override
   Widget build(BuildContext context) {
-    var content = SizedBox(
-      height: _kAppBarHeight,
+    var content = Container(
+      decoration: BoxDecoration(
+        color: widget.backgroundColor ??
+            context.colorScheme.surface.withOpacity(0.72),
+      ),
+      height: _kAppBarHeight + context.padding.top,
       child: Row(
         children: [
           const SizedBox(width: 8),
@@ -102,17 +106,12 @@ class _AppbarState extends State<Appbar> {
             width: 8,
           )
         ],
-      ),
-    ).paddingTop(context.padding.top);
-    if (widget.backgroundColor != Colors.transparent) {
-      return Material(
-        elevation: (_scrolledUnder && context.width < changePoint) ? 1 : 0,
-        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-        color: widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        child: content,
-      );
-    }
-    return content;
+      ).paddingTop(context.padding.top),
+    );
+    return BlurEffect(
+      blur: _scrolledUnder ? 15 : 0,
+      child: content,
+    );
   }
 }
 
@@ -192,7 +191,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
                         )
                       : const SizedBox()),
               const SizedBox(
-                width: 24,
+                width: 16,
               ),
               Expanded(
                 child: DefaultTextStyle(

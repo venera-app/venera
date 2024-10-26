@@ -116,6 +116,7 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
         route.fullscreenDialog ||
         route.animation!.status != AnimationStatus.completed ||
         route.secondaryAnimation!.status != AnimationStatus.dismissed ||
+        !route.popGestureEnabled ||
         route.navigator!.userGestureInProgress) {
       return false;
     }

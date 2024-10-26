@@ -71,11 +71,16 @@ class NetworkFavoritePage extends StatelessWidget {
   }
 }
 
-class _NormalFavoritePage extends StatelessWidget {
-  _NormalFavoritePage(this.data);
+class _NormalFavoritePage extends StatefulWidget {
+  const _NormalFavoritePage(this.data);
 
   final FavoriteData data;
 
+  @override
+  State<_NormalFavoritePage> createState() => _NormalFavoritePageState();
+}
+
+class _NormalFavoritePageState extends State<_NormalFavoritePage> {
   final comicListKey = GlobalKey<ComicListState>();
 
   @override
@@ -95,7 +100,7 @@ class _NormalFavoritePage extends StatelessWidget {
                 )
               : null,
         ),
-        title: Text(data.title),
+        title: Text(widget.data.title),
       ),
       errorLeading: Appbar(
         leading: Tooltip(
@@ -110,10 +115,10 @@ class _NormalFavoritePage extends StatelessWidget {
                 )
               : null,
         ),
-        title: Text(data.title),
+        title: Text(widget.data.title),
       ),
-      loadPage: data.loadComic == null ? null : (i) => data.loadComic!(i),
-      loadNext: data.loadNext == null ? null : (next) => data.loadNext!(next),
+      loadPage: widget.data.loadComic == null ? null : (i) => widget.data.loadComic!(i),
+      loadNext: widget.data.loadNext == null ? null : (next) => widget.data.loadNext!(next),
       menuBuilder: (comic) {
         return [
           MenuEntry(
@@ -280,7 +285,7 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
               }
             }),
             maxCrossAxisExtent: 450,
-            itemHeight: 64,
+            itemHeight: 52,
           ),
           if (widget.data.addFolder != null)
             SliverToBoxAdapter(
@@ -342,17 +347,13 @@ class _FolderTile extends StatelessWidget {
     return Material(
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(
             children: [
-              const SizedBox(
-                width: 16,
-              ),
               Icon(
                 Icons.folder,
-                size: 35,
+                size: 28,
                 color: Theme.of(context).colorScheme.secondary,
               ),
               const SizedBox(
@@ -370,15 +371,11 @@ class _FolderTile extends StatelessWidget {
               ),
               if (deleteFolder != null)
                 IconButton(
-                  icon: const Icon(Icons.delete_forever_outlined),
+                  icon: const Icon(Icons.delete_outline),
                   onPressed: () => onDeleteFolder(context),
                 )
               else
                 const Icon(Icons.arrow_right),
-              if (deleteFolder == null)
-                const SizedBox(
-                  width: 8,
-                )
             ],
           ),
         ),

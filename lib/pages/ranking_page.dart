@@ -38,23 +38,23 @@ class _RankingPageState extends State<RankingPage> {
 
   @override
   Widget build(BuildContext context) {
+    var topPadding = context.padding.top + 56;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: Appbar(
         title: Text("Ranking".tl),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ComicList(
-              loadPage: data.rankingData!.load == null
-                  ? null
-                  : (i) => data.rankingData!.load!(optionValue, i),
-              loadNext: data.rankingData!.loadWithNext == null
-                  ? null
-                  : (i) => data.rankingData!.loadWithNext!(optionValue, i),
-            ),
-          ),
-        ],
+      body: ComicList(
+        key: Key(optionValue),
+        errorLeading: SizedBox(height: topPadding),
+        leadingSliver:
+            buildOptions().sliverPadding(EdgeInsets.only(top: topPadding)),
+        loadPage: data.rankingData!.load == null
+            ? null
+            : (i) => data.rankingData!.load!(optionValue, i),
+        loadNext: data.rankingData!.loadWithNext == null
+            ? null
+            : (i) => data.rankingData!.loadWithNext!(optionValue, i),
       ),
     );
   }

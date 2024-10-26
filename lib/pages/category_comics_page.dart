@@ -56,13 +56,16 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
 
   @override
   Widget build(BuildContext context) {
+    var topPadding = context.padding.top + 56.0;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: Appbar(
         title: Text(widget.category),
       ),
       body: ComicList(
         key: Key(widget.category + optionsValue.toString()),
-        leadingSliver: buildOptions().toSliver(),
+        errorLeading: SizedBox(height: topPadding),
+        leadingSliver: buildOptions().paddingTop(topPadding).toSliver(),
         loadPage: (i) => data.load(
           widget.category,
           widget.param,

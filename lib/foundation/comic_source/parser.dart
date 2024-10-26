@@ -728,28 +728,32 @@ class ComicSourceParser {
 
         return retryZone(func);
       };
-      addFolder = (name) async {
-        try {
-          await JsEngine().runCode("""
+      if(_checkExists("favorites.addFolder")) {
+        addFolder = (name) async {
+          try {
+            await JsEngine().runCode("""
             ComicSource.sources.$_key.favorites.addFolder(${jsonEncode(name)})
           """);
-          return const Res(true);
-        } catch (e, s) {
-          Log.error("Network", "$e\n$s");
-          return Res.error(e.toString());
-        }
-      };
-      deleteFolder = (key) async {
-        try {
-          await JsEngine().runCode("""
+            return const Res(true);
+          } catch (e, s) {
+            Log.error("Network", "$e\n$s");
+            return Res.error(e.toString());
+          }
+        };
+      }
+      if(_checkExists("favorites.deleteFolder")) {
+        deleteFolder = (key) async {
+          try {
+            await JsEngine().runCode("""
             ComicSource.sources.$_key.favorites.deleteFolder(${jsonEncode(key)})
           """);
-          return const Res(true);
-        } catch (e, s) {
-          Log.error("Network", "$e\n$s");
-          return Res.error(e.toString());
-        }
-      };
+            return const Res(true);
+          } catch (e, s) {
+            Log.error("Network", "$e\n$s");
+            return Res.error(e.toString());
+          }
+        };
+      }
     }
 
     return FavoriteData(
