@@ -86,7 +86,7 @@ class AccountsPage extends StatelessWidget {
             );
           }
         }
-        if (element.account!.allowReLogin) {
+        if (element.data["account"] is List) {
           bool loading = logic._reLogin[element.key] == true;
           yield ListTile(
             title: Text("Re-login".tl),

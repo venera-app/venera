@@ -291,8 +291,6 @@ class AccountConfig {
 
   final void Function() logout;
 
-  final bool allowReLogin;
-
   final List<AccountInfoItem> infoItems;
 
   final bool Function(String url, String title)? checkLoginStatus;
@@ -312,8 +310,7 @@ class AccountConfig {
     this.onLoginWithWebviewSuccess,
     this.cookieFields,
     this.validateCookies,
-  )   : allowReLogin = true,
-        infoItems = const [];
+  )   : infoItems = const [];
 }
 
 class AccountInfoItem {

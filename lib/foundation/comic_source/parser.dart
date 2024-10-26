@@ -657,7 +657,7 @@ class ComicSourceParser {
 
     Future<Res<List<Comic>>> Function(String? next, [String? folder])? loadNext;
 
-    if (_checkExists("favorites.loadComic")) {
+    if (_checkExists("favorites.loadComics")) {
       loadComic = (int page, [String? folder]) async {
         Future<Res<List<Comic>>> func() async {
           try {
