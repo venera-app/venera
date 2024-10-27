@@ -34,25 +34,25 @@ class AppDelegate: FlutterAppDelegate {
       }
     }
 
-    func getDirectoryPath() {
+  func getDirectoryPath() {
       let openPanel = NSOpenPanel()
       openPanel.canChooseDirectories = true
       openPanel.canChooseFiles = false
       openPanel.allowsMultipleSelection = false
 
       openPanel.begin { (result) in
-        if result == .OK {
-          self.directoryPath = openPanel.urls.first
-          if !self.directoryPath?.startAccessingSecurityScopedResource() ?? false {
-            self.flutterResult?(nil)
-            return
+          if result == .OK {
+              self.directoryPath = openPanel.urls.first
+              if let directoryPath = self.directoryPath, !directoryPath.startAccessingSecurityScopedResource() {
+                  self.flutterResult?(nil)
+                  return
+              }
+              self.flutterResult?(self.directoryPath?.path)
+          } else {
+              self.flutterResult?(nil)
           }
-          self.flutterResult?(self.directoryPath?.path)
-        } else {
-          self.flutterResult?(nil)
-        }
       }
-    }
+  }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return true
