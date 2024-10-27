@@ -13,6 +13,10 @@ import UniformTypeIdentifiers
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
+    guard let controller = window?.rootViewController as? FlutterViewController else {
+          fatalError("rootViewController is not of type FlutterViewController")
+    }
+
     let methodChannel = FlutterMethodChannel(name: "venera/method_channel", binaryMessenger: controller.binaryMessenger)
     methodChannel.setMethodCallHandler { (call, result) in
       if call.method == "getProxy" {
