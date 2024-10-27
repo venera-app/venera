@@ -1,0 +1,43 @@
+name: Build IOS
+run-name: Build IOS
+on:
+  workflow_dispatch: {}
+jobs:
+  Build_IOS:
+    runs-on: macos-13
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version-file: pubspec.yaml
+        architecture: x64
+    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+    - run: flutter pub get
+    - run: flutter build ios --release --no-codesign
+    - run: |
+        mkdir -p /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
+        mv /Users/runner/work/venera/venera/build/ios/iphoneos/Runner.app /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
+        cd /Users/runner/work/venera/venera/build/ios/iphoneos/
+        zip -r venera-ios.ipa Payload
+    - uses: actions/upload-artifact@v4
+      with:
+        name: app-ios.ipa
+        path: /Users/runner/work/venera/venera/build/ios/iphoneos/venera-ios.ipa
+  Build_MacOS:
+    runs-on: macos-13
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version-file: pubspec.yaml
+        architecture: x64
+    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+    - run: flutter pub get
+    - run: flutter build macos --release
+    - uses: actions/upload-artifact@v4
+      with:
+        name: macos-build.zip
+        path: build/macos/Build/Products/Release/venera.app
+ 

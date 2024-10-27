@@ -1,0 +1,17 @@
+flutter_app: 
+  command: venera
+  arch: x64
+  parent: /usr/local/lib
+  nonInteractive: false
+
+control:
+  Package: venera
+  Version: {{Version}}
+  Architecture: amd64
+  Priority: optional
+  Depends: libwebkit2gtk-4.1-0, libgtk-3-0
+  Maintainer: nyne
+  Description: venera
+  
+#options:
+#  exec_out_dir: debian/packages

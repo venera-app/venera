@@ -6,7 +6,7 @@ version: 1.0.0+1
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
-  flutter: 3.24.3
+  flutter: 3.24.4
 
 dependencies:
   flutter:
@@ -55,6 +55,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_to_arch:
+    git: https://github.com/wgh136/flutter_to_arch
+  flutter_to_debian:
 
 flutter:
   uses-material-design: true
@@ -65,3 +68,12 @@ flutter:
     - assets/tags.json
     - assets/tags_tw.json
 
+flutter_to_arch:
+  name: Venera
+  icon: debian/gui/venera.png
+  categories: Utility
+  keywords: Flutter;comic;images;
+  url: https://github.com/venera-app/venera
+  depends:
+    - gtk3
+    - webkit2gtk-4.1

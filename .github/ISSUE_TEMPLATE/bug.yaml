@@ -1,0 +1,48 @@
+name: Report a bug
+description: Reporting problems with the APP
+title: "[Bug]: "
+labels: ["bug🐞"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem, please complete the title and fill in the following information.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Description
+      description: Describe the problem
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: | 
+        App version
+        Please try to update if it is not the latest version
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - Windows
+        - macOS
+        - linux
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: logs
+  - type: textarea
+    id: screenshotOrVideo
+    attributes:
+      label: Screenshot or video
+      description: Upload relevant screenshots or videos here

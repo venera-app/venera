@@ -1,0 +1,36 @@
+name: Feature Request
+description: Suggest improvements to the APP
+title: "[Enhancement]: "
+labels: ["enhancement🚀"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to make a feature request, please fill in the following information after completing the title.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Description
+      description: Describe your suggestion.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating System
+      description: If the feature is for a particular platform, please select here
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - Windows
+        - macOS
+        - linux
+        - other
+    validations:
+      required: false
+  - type: textarea
+    id: screenshotOrVideo
+    attributes:
+      label: picture
+      description: If you need to use a picture, please upload it here.
