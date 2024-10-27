@@ -49,6 +49,7 @@ dependencies:
       path: packages/desktop_webview_window
   flutter_inappwebview: ^6.1.5
   app_links: ^6.3.2
+  sliver_tools: ^0.2.12
 
 dev_dependencies:
   flutter_test:

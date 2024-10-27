@@ -29,6 +29,16 @@ class CategoriesPage extends StatelessWidget {
             .where((element) => allCategories.contains(element))
             .toList();
 
+        if(categories.isEmpty) {
+          return NetworkError(
+            message: "No Category Pages".tl,
+            retry: () {
+              controller.update();
+            },
+            withAppbar: false,
+          );
+        }
+
         return Material(
           child: DefaultTabController(
             length: categories.length,

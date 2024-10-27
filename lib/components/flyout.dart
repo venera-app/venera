@@ -94,7 +94,11 @@ class FlyoutState extends State<Flyout> {
   void show() {
     var renderBox = context.findRenderObject() as RenderBox;
     var rect = renderBox.localToGlobal(Offset.zero) & renderBox.size;
-    var navigator = widget.navigator ?? Navigator.of(context);
+    var navigator = widget.navigator ??
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        );
     navigator.push(PageRouteBuilder(
         fullscreenDialog: true,
         barrierDismissible: true,
@@ -173,9 +177,9 @@ class FlyoutContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return IntrinsicWidth(
       child: BlurEffect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         child: Material(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           type: MaterialType.card,
           color: context.colorScheme.surface.withOpacity(0.82),
           child: Container(
@@ -190,8 +194,7 @@ class FlyoutContent extends StatelessWidget {
                 Text(title,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16)),
-                if (content != null)
-                  content!,
+                if (content != null) content!,
                 const SizedBox(
                   height: 12,
                 ),

@@ -62,8 +62,22 @@ class _ExplorePageState extends State<ExplorePage>
 
   Widget buildBody(String i) => _SingleExplorePage(i, key: Key(i));
 
+  Widget buildEmpty() {
+    return NetworkError(
+      message: "No Explore Pages".tl,
+      retry: () {
+        setState(() {});
+      },
+      withAppbar: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (pages.isEmpty) {
+      return buildEmpty();
+    }
+
     Widget tabBar = Material(
       child: FilledTabBar(
         tabs: pages.map((e) => buildTab(e)).toList(),
