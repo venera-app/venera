@@ -3,6 +3,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'dart:io';
 
 import 'app.dart';
+import 'comic_source/comic_source.dart';
 import 'comic_type.dart';
 
 String _getCurTime() {
@@ -12,11 +13,13 @@ String _getCurTime() {
       .substring(0, 19);
 }
 
-class FavoriteItem {
+class FavoriteItem implements Comic {
   String name;
   String author;
   ComicType type;
+  @override
   List<String> tags;
+  @override
   String id;
   String coverPath;
   String time = _getCurTime();
@@ -56,6 +59,38 @@ class FavoriteItem {
       return s.substring(0, 100);
     }
     return s;
+  }
+
+  @override
+  String get cover => coverPath;
+
+  @override
+  String get description => "$time | ${type.comicSource?.name ?? "Unknown"}";
+
+  @override
+  String? get favoriteId => null;
+
+  @override
+  String? get language => null;
+
+  @override
+  int? get maxPage => null;
+
+  @override
+  String get sourceKey => type.comicSource?.key ?? "Unknown:${type.value}";
+
+  @override
+  double? get stars => null;
+
+  @override
+  String? get subtitle => author;
+
+  @override
+  String get title => name;
+
+  @override
+  Map<String, dynamic> toJson() {
+    throw UnimplementedError();
   }
 }
 

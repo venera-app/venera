@@ -180,7 +180,7 @@ class _SidebarBodyState extends State<SidebarBody> {
                   width: 8,
                 ),
                 Tooltip(
-                  message: "返回",
+                  message: "Back".tl,
                   child: IconButton(
                     iconSize: 25,
                     icon: const Icon(Icons.arrow_back),

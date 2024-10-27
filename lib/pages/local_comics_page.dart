@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
-import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/utils/translations.dart';
@@ -57,6 +56,17 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             comics: comics,
             onTap: (c) {
               (c as LocalComic).read();
+            },
+            menuBuilder: (c) {
+              return [
+                MenuEntry(
+                  icon: Icons.delete,
+                  text: "Delete".tl,
+                  onClick: () {
+                    LocalManager().deleteComic(c as LocalComic);
+                  }
+                ),
+              ];
             },
           ),
         ],

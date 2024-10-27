@@ -42,7 +42,12 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   )
                 : const SizedBox(),
           ),
-          title: Text(favPage.folder ?? "Unselected".tl),
+          title: GestureDetector(
+            onTap: context.width < _kTwoPanelChangeWidth
+                ? favPage.showFolderSelector
+                : null,
+            child: Text(favPage.folder ?? "Unselected".tl),
+          ),
           actions: [
             MenuButton(
               entries: [
@@ -110,20 +115,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           ],
         ),
         SliverGridComics(
-          comics: comics.map((e) {
-            var comicSource = e.type.comicSource;
-            return Comic(
-              e.name,
-              e.coverPath,
-              e.id,
-              e.author,
-              e.tags,
-              "${e.time} | ${comicSource?.name ?? "Unknown"}",
-              comicSource?.key ?? "Unknown",
-              null,
-              null,
-            );
-          }).toList(),
+          comics: comics,
           menuBuilder: (c) {
             return [
               MenuEntry(
@@ -138,7 +130,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       LocalFavoritesManager().deleteComicWithId(
                         widget.folder,
                         c.id,
-                        ComicType(c.sourceKey.hashCode),
+                        (c as FavoriteItem).type,
                       );
                       updateComics();
                     },

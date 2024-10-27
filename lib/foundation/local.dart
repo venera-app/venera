@@ -26,7 +26,7 @@ class LocalComic with HistoryMixin implements Comic {
   @override
   final List<String> tags;
 
-  /// name of the directory, which is in `LocalManager.path`
+  /// The name of the directory where the comic is stored
   final String directory;
 
   /// key: chapter id, value: chapter title
@@ -143,6 +143,7 @@ class LocalManager with ChangeNotifier {
 
   late Database _db;
 
+  /// path to the directory where all the comics are stored
   late String path;
 
   // return error message if failed
@@ -412,5 +413,12 @@ class LocalManager with ChangeNotifier {
     notifyListeners();
     saveCurrentDownloadingTasks();
     downloadingTasks.first.resume();
+  }
+
+  void deleteComic(LocalComic c) {
+    var dir = Directory(FilePath.join(path, c.directory));
+    dir.deleteSync(recursive: true);
+    remove(c.id, c.comicType);
+    notifyListeners();
   }
 }

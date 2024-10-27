@@ -50,7 +50,10 @@ class ComicTile extends StatelessWidget {
         MenuEntry(
           icon: Icons.chrome_reader_mode_outlined,
           text: 'Details'.tl,
-          onClick: _onTap,
+          onClick: () {
+            App.mainNavigatorKey?.currentContext
+                ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+          },
         ),
         MenuEntry(
           icon: Icons.copy,

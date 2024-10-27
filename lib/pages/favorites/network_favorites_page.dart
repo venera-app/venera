@@ -83,6 +83,12 @@ class _NormalFavoritePage extends StatefulWidget {
 class _NormalFavoritePageState extends State<_NormalFavoritePage> {
   final comicListKey = GlobalKey<ComicListState>();
 
+  void showFolders() {
+    context
+        .findAncestorStateOfType<_FavoritesPageState>()!
+        .showFolderSelector();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ComicList(
@@ -94,13 +100,14 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
               ? IconButton(
                   icon: const Icon(Icons.menu),
                   color: context.colorScheme.primary,
-                  onPressed: context
-                      .findAncestorStateOfType<_FavoritesPageState>()!
-                      .showFolderSelector,
+                  onPressed: showFolders,
                 )
               : null,
         ),
-        title: Text(widget.data.title),
+        title: GestureDetector(
+          onTap: context.width < _kTwoPanelChangeWidth ? showFolders : null,
+          child: Text(widget.data.title),
+        ),
       ),
       errorLeading: Appbar(
         leading: Tooltip(
@@ -115,10 +122,17 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
                 )
               : null,
         ),
-        title: Text(widget.data.title),
+        title: GestureDetector(
+          onTap: context.width < _kTwoPanelChangeWidth ? showFolders : null,
+          child: Text(widget.data.title),
+        ),
       ),
-      loadPage: widget.data.loadComic == null ? null : (i) => widget.data.loadComic!(i),
-      loadNext: widget.data.loadNext == null ? null : (next) => widget.data.loadNext!(next),
+      loadPage: widget.data.loadComic == null
+          ? null
+          : (i) => widget.data.loadComic!(i),
+      loadNext: widget.data.loadNext == null
+          ? null
+          : (next) => widget.data.loadNext!(next),
       menuBuilder: (comic) {
         return [
           MenuEntry(
@@ -159,6 +173,12 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
 
   Map<String, String>? folders;
 
+  void showFolders() {
+    context
+        .findAncestorStateOfType<_FavoritesPageState>()!
+        .showFolderSelector();
+  }
+
   void loadPage() async {
     var res = await widget.data.loadFolders!();
     _loading = false;
@@ -186,13 +206,14 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
             ? IconButton(
                 icon: const Icon(Icons.menu),
                 color: context.colorScheme.primary,
-                onPressed: context
-                    .findAncestorStateOfType<_FavoritesPageState>()!
-                    .showFolderSelector,
+                onPressed: showFolders,
               )
             : null,
       ),
-      title: Text(widget.data.title),
+      title: GestureDetector(
+        onTap: context.width < _kTwoPanelChangeWidth ? showFolders : null,
+        child: Text(widget.data.title),
+      ),
     );
 
     var appBar = Appbar(
@@ -202,13 +223,14 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
             ? IconButton(
                 icon: const Icon(Icons.menu),
                 color: context.colorScheme.primary,
-                onPressed: context
-                    .findAncestorStateOfType<_FavoritesPageState>()!
-                    .showFolderSelector,
+                onPressed: showFolders,
               )
             : null,
       ),
-      title: Text(widget.data.title),
+      title: GestureDetector(
+        onTap: context.width < _kTwoPanelChangeWidth ? showFolders : null,
+        child: Text(widget.data.title),
+      ),
     );
 
     if (_loading) {
