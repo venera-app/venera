@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -84,9 +82,7 @@ class CacheManager {
     if(_currentSize != null) {
       _currentSize = _currentSize! + data.length;
     }
-    if(_currentSize != null && _currentSize! > _limitSize){
-      await checkCache();
-    }
+    checkCacheIfRequired();
   }
 
   Future<CachingFile> openWrite(String key) async{
@@ -122,6 +118,12 @@ class CacheManager {
   }
 
   bool _isChecking = false;
+
+  void checkCacheIfRequired() {
+    if(_currentSize != null && _currentSize! > _limitSize){
+      checkCache();
+    }
+  }
 
   Future<void> checkCache() async{
     if(_isChecking){
@@ -279,6 +281,7 @@ class CachingFile{
     CacheManager()._db.execute('''
       INSERT OR REPLACE INTO cache (key, dir, name, expires) VALUES (?, ?, ?, ?)
     ''', [key, dir, name, DateTime.now().millisecondsSinceEpoch + 7 * 24 * 60 * 60 * 1000]);
+    CacheManager().checkCacheIfRequired();
   }
 
   Future<void> cancel() async{
