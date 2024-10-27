@@ -11,6 +11,14 @@ class ComicType {
   @override
   int get hashCode => value.hashCode;
 
+  String get sourceKey {
+    if(this == local) {
+      return "local";
+    } else {
+      return comicSource!.key;
+    }
+  }
+
   ComicSource? get comicSource {
     if(this == local) {
       return null;

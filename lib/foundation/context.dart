@@ -19,6 +19,11 @@ extension Navigation on BuildContext {
         .push<T>(AppPageRoute(builder: (context) => builder()));
   }
 
+  Future<void> toReplacement<T>(Widget Function() builder) {
+    return Navigator.of(this)
+        .pushReplacement(AppPageRoute(builder: (context) => builder()));
+  }
+
   double get width => MediaQuery.of(this).size.width;
 
   double get height => MediaQuery.of(this).size.height;

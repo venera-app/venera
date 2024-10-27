@@ -66,7 +66,16 @@ class _ExplorePageState extends State<ExplorePage>
     return NetworkError(
       message: "No Explore Pages".tl,
       retry: () {
-        setState(() {});
+        setState(() {
+          pages = ComicSource.all()
+              .map((e) => e.explorePages)
+              .expand((e) => e.map((e) => e.title))
+              .toList();
+          controller = TabController(
+            length: pages.length,
+            vsync: this,
+          );
+        });
       },
       withAppbar: false,
     );

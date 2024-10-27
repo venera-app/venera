@@ -196,7 +196,7 @@ class _SearchPageState extends State<SearchPage> {
               runSpacing: 8,
               children: sources.map((e) {
                 return OptionChip(
-                  text: e.name.tl,
+                  text: e.name,
                   isSelected: searchTarget == e.key,
                   onTap: () {
                     setState(() {

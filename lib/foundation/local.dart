@@ -79,7 +79,7 @@ class LocalComic with HistoryMixin implements Comic {
   String get description => "";
 
   @override
-  String get sourceKey => comicType.comicSource?.key ?? '_local_';
+  String get sourceKey => comicType == ComicType.local ? "local" : "";
 
   @override
   Map<String, dynamic> toJson() {
@@ -214,7 +214,7 @@ class LocalManager with ChangeNotifier {
       SELECT id FROM comics WHERE comic_type = ? 
       ORDER BY CAST(id AS INTEGER) DESC
       LIMIT 1;
-      '''[type.value],
+      ''', [type.value],
     );
     if (res.isEmpty) {
       return '1';
@@ -341,7 +341,7 @@ class LocalManager with ChangeNotifier {
     if (comic == null) return false;
     if (comic.chapters == null) return true;
     return comic.downloadedChapters
-        .contains(comic.chapters!.keys.elementAt(ep));
+        .contains(comic.chapters!.keys.elementAt(ep-1));
   }
 
   List<DownloadTask> downloadingTasks = [];

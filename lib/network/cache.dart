@@ -161,7 +161,7 @@ class NetworkCacheManager implements Interceptor {
       return handler.next(response);
     }
     var size = _calculateSize(response.data);
-    if(size != null && size < 1024 * 1024) {
+    if(size != null && size < 1024 * 1024 && size > 1024) {
       var cache = NetworkCache(
         uri: response.requestOptions.uri,
         requestHeaders: response.requestOptions.headers,

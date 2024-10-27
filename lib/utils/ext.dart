@@ -75,7 +75,7 @@ extension StringExt on String{
 
   bool _isURL(){
     final regex = RegExp(
-        r'^((http|https|ftp)://)?[\w-]+(\.[\w-]+)+([\w.,@?^=%&:/~+#-|]*[\w@?^=%&/~+#-])?$',
+        r'^((http|https|ftp)://)[\w-]+(\.[\w-]+)+([\w.,@?^=%&:/~+#-|]*[\w@?^=%&/~+#-])?$',
         caseSensitive: false);
     return regex.hasMatch(this);
   }

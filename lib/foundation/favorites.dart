@@ -55,7 +55,7 @@ class FavoriteItem implements Comic {
   @override
   String toString() {
     var s = "FavoriteItem: $name $author $coverPath $hashCode $tags";
-    if(s.length > 100) {
+    if (s.length > 100) {
       return s.substring(0, 100);
     }
     return s;
@@ -65,7 +65,9 @@ class FavoriteItem implements Comic {
   String get cover => coverPath;
 
   @override
-  String get description => "$time | ${type.comicSource?.name ?? "Unknown"}";
+  String get description {
+    return "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}";
+  }
 
   @override
   String? get favoriteId => null;
@@ -77,7 +79,7 @@ class FavoriteItem implements Comic {
   int? get maxPage => null;
 
   @override
-  String get sourceKey => type.comicSource?.key ?? "Unknown:${type.value}";
+  String get sourceKey => type == ComicType.local ? 'local' : type.comicSource?.key ?? "Unknown:${type.value}";
 
   @override
   double? get stars => null;
@@ -514,6 +516,13 @@ class LocalFavoritesManager {
       update "$folder"
       set name = ?, author = ?, cover_path = ?, tags = ?
       where id == ? and type == ?;
-    """, [comic.name, comic.author, comic.coverPath, comic.tags.join(","), comic.id, comic.type.value]);
+    """, [
+      comic.name,
+      comic.author,
+      comic.coverPath,
+      comic.tags.join(","),
+      comic.id,
+      comic.type.value
+    ]);
   }
 }

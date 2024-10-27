@@ -15,6 +15,7 @@ import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -155,12 +156,26 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
+                      var cover = history[index].cover;
+                      ImageProvider imageProvider = CachedImageProvider(
+                        cover,
+                        sourceKey: history[index].type.comicSource?.key,
+                      );
+                      if (!cover.isURL) {
+                        var localComic = LocalManager().find(
+                          history[index].id,
+                          history[index].type,
+                        );
+                        if (localComic != null) {
+                          imageProvider = FileImage(localComic.coverFile);
+                        }
+                      }
                       return InkWell(
                         onTap: () {
                           context.to(
                             () => ComicPage(
                               id: history[index].id,
-                              sourceKey: history[index].type.comicSource!.key,
+                              sourceKey: history[index].type.sourceKey,
                             ),
                           );
                         },
@@ -177,10 +192,7 @@ class _HistoryState extends State<_History> {
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: AnimatedImage(
-                            image: CachedImageProvider(
-                              history[index].cover,
-                              sourceKey: history[index].type.comicSource?.key,
-                            ),
+                            image: imageProvider,
                             width: 96,
                             height: 128,
                             fit: BoxFit.cover,

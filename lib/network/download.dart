@@ -203,6 +203,8 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   @override
   void resume() async {
     if (_isRunning) return;
+    _isError = false;
+    _message = "Resuming...";
     _isRunning = true;
     notifyListeners();
     runRecorder();

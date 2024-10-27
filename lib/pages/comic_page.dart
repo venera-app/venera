@@ -72,6 +72,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     }
   }
 
+  var isFirst = true;
+
   @override
   Widget buildContent(BuildContext context, ComicDetails data) {
     return SmoothCustomScrollView(
@@ -91,8 +93,37 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   @override
   Future<Res<ComicDetails>> loadData() async {
+    if (widget.sourceKey == 'local') {
+      var localComic = LocalManager().find(widget.id, ComicType.local);
+      if (localComic == null) {
+        return const Res.error('Local comic not found');
+      }
+      var history = await HistoryManager().find(widget.id, ComicType.local);
+      if(isFirst) {
+        Future.microtask(() {
+          App.rootContext.to(() {
+            return Reader(
+              type: ComicType.local,
+              cid: widget.id,
+              name: localComic.title,
+              chapters: localComic.chapters,
+              history: history ??
+                  History.fromModel(
+                    model: localComic,
+                    ep: 0,
+                    page: 0,
+                  ),
+            );
+          });
+          App.mainNavigatorKey!.currentContext!.pop();
+        });
+        isFirst = false;
+      }
+      await Future.delayed(const Duration(milliseconds: 200));
+      return const Res.error('Local comic');
+    }
     var comicSource = ComicSource.find(widget.sourceKey);
-    if(comicSource == null) {
+    if (comicSource == null) {
       return const Res.error('Comic source not found');
     }
     isAddToLocalFav = LocalFavoritesManager().isExist(
@@ -101,7 +132,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     );
     history = await HistoryManager()
         .find(widget.id, ComicType(widget.sourceKey.hashCode));
-    return comicSource!.loadComicInfo!(widget.id);
+    return comicSource.loadComicInfo!(widget.id);
   }
 
   @override
@@ -500,7 +531,11 @@ abstract mixin class _ComicPageActions {
   }
 
   void share() {
-    Share.shareText(comic.title);
+    var text = comic.title;
+    if (comic.url != null) {
+      text += '\n${comic.url}';
+    }
+    Share.shareText(text);
   }
 
   /// read the comic
@@ -694,8 +729,7 @@ abstract mixin class _ComicPageActions {
                           setState(() {
                             isLoading = true;
                           });
-                          comicSource.starRatingFunc!
-                                  (comic.id, rating.round())
+                          comicSource.starRatingFunc!(comic.id, rating.round())
                               .then((value) {
                             if (value.success) {
                               App.rootContext

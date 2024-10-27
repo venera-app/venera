@@ -113,6 +113,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
       if (res.success) {
         return res;
       } else {
+        if(!mounted) return res;
         if (retry >= 3) {
           return res;
         }
@@ -170,6 +171,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
     isLoading = true;
     Future.microtask(() {
       loadDataWithRetry().then((value) async {
+        if(!mounted) return;
         if (value.success) {
           data = value.data;
           await onDataLoaded();
