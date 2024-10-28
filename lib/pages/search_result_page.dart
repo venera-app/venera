@@ -42,10 +42,14 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   void search([String? text]) {
     if (text != null) {
+      if(suggestionsController.entry != null) {
+        suggestionsController.remove();
+      }
       setState(() {
         this.text = text;
       });
       appdata.addSearchHistory(text);
+      controller.currentText = text;
     }
   }
 
@@ -81,9 +85,17 @@ class _SearchResultPageState extends State<SearchResultPage> {
   }
 
   @override
+  void dispose() {
+    Future.microtask(() {
+      suggestionsController.remove();
+    });
+    super.dispose();
+  }
+
+  @override
   void initState() {
     controller = SearchBarController(
-      initialText: widget.text,
+      currentText: widget.text,
       onSearch: search,
     );
     sourceKey = widget.sourceKey;

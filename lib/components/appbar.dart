@@ -539,7 +539,7 @@ class SearchBarController {
 
   final void Function(String text)? onSearch;
 
-  final String initialText;
+  String currentText;
 
   void setText(String text) {
     _state?.setText(text);
@@ -551,7 +551,7 @@ class SearchBarController {
     setText(text);
   }
 
-  SearchBarController({this.onSearch, this.initialText = ''});
+  SearchBarController({this.onSearch, this.currentText = ''});
 }
 
 abstract mixin class _SearchBarMixin {
@@ -591,7 +591,7 @@ class _SliverSearchBarState extends State<SliverSearchBar>
   void initState() {
     _controller = widget.controller;
     _controller._state = this;
-    _editingController = TextEditingController(text: _controller.initialText);
+    _editingController = TextEditingController(text: _controller.currentText);
     super.initState();
   }
 
@@ -747,7 +747,7 @@ class _SearchBarState extends State<AppSearchBar> with _SearchBarMixin {
   void initState() {
     _controller = widget.controller;
     _controller._state = this;
-    _editingController = TextEditingController(text: _controller.initialText);
+    _editingController = TextEditingController(text: _controller.currentText);
     super.initState();
   }
 

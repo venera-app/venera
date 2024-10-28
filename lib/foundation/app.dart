@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 
 import 'appdata.dart';
 
-
 export "widget_utils.dart";
 export "context.dart";
 
@@ -14,12 +13,18 @@ class _App {
   final version = "1.0.0";
 
   bool get isAndroid => Platform.isAndroid;
+
   bool get isIOS => Platform.isIOS;
+
   bool get isWindows => Platform.isWindows;
+
   bool get isLinux => Platform.isLinux;
+
   bool get isMacOS => Platform.isMacOS;
+
   bool get isDesktop =>
       Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
   bool get isMobile => Platform.isAndroid || Platform.isIOS;
 
   Locale get locale {
@@ -27,6 +32,12 @@ class _App {
     if (deviceLocale.languageCode == "zh" &&
         deviceLocale.scriptCode == "Hant") {
       deviceLocale = const Locale("zh", "TW");
+    }
+    if (appdata.settings['language'] != 'system') {
+      return Locale(
+        appdata.settings['language'].split('-')[0],
+        appdata.settings['language'].split('-')[1],
+      );
     }
     return deviceLocale;
   }
@@ -45,7 +56,7 @@ class _App {
   }
 
   void pop() {
-    if(rootNavigatorKey.currentState?.canPop() ?? false) {
+    if (rootNavigatorKey.currentState?.canPop() ?? false) {
       rootNavigatorKey.currentState?.pop();
     } else if (mainNavigatorKey?.currentState?.canPop() ?? false) {
       mainNavigatorKey?.currentState?.pop();
@@ -57,7 +68,7 @@ class _App {
   Future<void> init() async {
     cachePath = (await getApplicationCacheDirectory()).path;
     dataPath = (await getApplicationSupportDirectory()).path;
-    mainColor = switch(appdata.settings['color']) {
+    mainColor = switch (appdata.settings['color']) {
       'red' => Colors.red,
       'pink' => Colors.pink,
       'purple' => Colors.purple,
