@@ -277,7 +277,8 @@ class ComicTile extends StatelessWidget {
                   onTap: _onTap,
                   onLongPress:
                       enableLongPressed ? () => onLongPress(context) : null,
-                  onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
+                  onSecondaryTapDown: (detail) =>
+                      onSecondaryTap(detail, context),
                   borderRadius: BorderRadius.circular(8),
                   child: const SizedBox.expand(),
                 ),
@@ -296,7 +297,7 @@ class ComicTile extends StatelessWidget {
         var words = <String>[];
         var all = <String>[];
         all.addAll(comic.title.split(' ').where((element) => element != ''));
-        if(comic.subtitle != null && comic.subtitle != "") {
+        if (comic.subtitle != null && comic.subtitle != "") {
           all.add(comic.subtitle!);
         }
         all.addAll(comic.tags ?? []);
@@ -332,7 +333,8 @@ class ComicTile extends StatelessWidget {
                   }
                   appdata.saveData();
                   context.showMessage(message: 'Blocked'.tl);
-                  comicTileContext.findAncestorStateOfType<_SliverGridComicsState>()!
+                  comicTileContext
+                      .findAncestorStateOfType<_SliverGridComicsState>()!
                       .update();
                 },
                 child: Text('Block'.tl),
@@ -370,6 +372,9 @@ class _ComicDescription extends StatelessWidget {
   Widget build(BuildContext context) {
     if (tags != null) {
       tags!.removeWhere((element) => element.removeAllBlank == "");
+      for (var s in tags!) {
+        s = s.replaceAll("\n", " ");
+      }
     }
     var enableTranslate =
         App.locale.languageCode == 'zh' && this.enableTranslate;
@@ -384,50 +389,57 @@ class _ComicDescription extends StatelessWidget {
           ),
           maxLines: maxLines,
           overflow: TextOverflow.ellipsis,
+          softWrap: true,
         ),
         if (subtitle != "")
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 10.0),
+            style: TextStyle(
+                fontSize: 10.0,
+                color: context.colorScheme.onSurface.withOpacity(0.7)),
             maxLines: 1,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
           ),
         const SizedBox(
           height: 4,
         ),
         if (tags != null)
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) => Padding(
-                padding: EdgeInsets.only(bottom: constraints.maxHeight % 23),
-                child: Wrap(
-                  runAlignment: WrapAlignment.start,
-                  clipBehavior: Clip.antiAlias,
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  children: [
-                    for (var s in tags!)
-                      Container(
-                        margin: const EdgeInsets.fromLTRB(0, 0, 4, 3),
-                        padding: const EdgeInsets.fromLTRB(3, 1, 3, 3),
-                        decoration: BoxDecoration(
-                          color: s == "Unavailable"
-                              ? Theme.of(context).colorScheme.errorContainer
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .secondaryContainer,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(8)),
-                        ),
-                        child: Text(
-                          enableTranslate ? TagsTranslation.translateTag(s) : s,
-                          style: const TextStyle(fontSize: 12),
-                        ),
+          LayoutBuilder(builder: (context, constraints) {
+            return Container(
+              constraints: const BoxConstraints(maxHeight: 45),
+              child: Wrap(
+                runAlignment: WrapAlignment.start,
+                clipBehavior: Clip.antiAlias,
+                crossAxisAlignment: WrapCrossAlignment.end,
+                spacing: 4,
+                runSpacing: 3,
+                children: [
+                  for (var s in tags!)
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(3, 1, 3, 3),
+                      constraints: BoxConstraints(
+                        maxWidth: constraints.maxWidth * 0.45,
                       ),
-                  ],
-                ),
+                      decoration: BoxDecoration(
+                        color: s == "Unavailable"
+                            ? Theme.of(context).colorScheme.errorContainer
+                            : Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: Text(
+                        enableTranslate ? TagsTranslation.translateTag(s) : s,
+                        style: const TextStyle(fontSize: 12),
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ),
-        const SizedBox(height: 2),
+            );
+          }),
         const Spacer(),
         if (rating != null) StarRating(value: rating!, size: 18),
         Row(

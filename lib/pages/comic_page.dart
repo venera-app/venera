@@ -245,7 +245,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   iconColor: context.useTextColor(Colors.red),
                 ),
               _ActionButton(
-                icon: const Icon(Icons.bookmark_border),
+                icon: const Icon(Icons.bookmark_outline_outlined),
                 activeIcon: const Icon(Icons.bookmark),
                 isActive: isFavorite || isAddToLocalFav,
                 text: 'Favorite'.tl,
@@ -514,8 +514,9 @@ abstract mixin class _ComicPageActions {
         cid: comic.id,
         type: comic.comicType,
         isFavorite: isFavorite,
-        onFavorite: (b) {
-          isFavorite = b;
+        onFavorite: (local,network) {
+          isFavorite=network??isFavorite;
+          isAddToLocalFav=local??isAddToLocalFav;
           update();
         },
         favoriteItem: FavoriteItem(
@@ -759,6 +760,7 @@ abstract mixin class _ComicPageActions {
 }
 
 class _ActionButton extends StatelessWidget {
+
   const _ActionButton({
     required this.icon,
     required this.text,
@@ -768,7 +770,6 @@ class _ActionButton extends StatelessWidget {
     this.isLoading,
     this.iconColor,
   });
-
   final Widget icon;
 
   final Widget? activeIcon;
@@ -782,7 +783,6 @@ class _ActionButton extends StatelessWidget {
   final bool? isLoading;
 
   final Color? iconColor;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -823,6 +823,7 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+
 
 class _ComicChapters extends StatefulWidget {
   const _ComicChapters();
@@ -1118,7 +1119,7 @@ class _FavoritePanel extends StatefulWidget {
   /// if null, the comic source does not support favorite or support multiple favorite lists
   final bool? isFavorite;
 
-  final void Function(bool) onFavorite;
+  final void Function(bool?,bool?) onFavorite;
 
   final FavoriteItem favoriteItem;
 
@@ -1262,10 +1263,12 @@ class _FavoritePanelState extends State<_FavoritePanel> {
                   LocalFavoritesManager()
                       .deleteComicWithId(folder, widget.cid, widget.type);
                 }
+                widget.onFavorite(false,null);
               } else {
                 for (var folder in selectedLocalFolders) {
                   LocalFavoritesManager().addComic(folder, widget.favoriteItem);
                 }
+                widget.onFavorite(true,null);
               }
               context.pop();
             },
@@ -1281,7 +1284,9 @@ class _FavoritePanelState extends State<_FavoritePanel> {
       cid: widget.cid,
       comicSource: comicSource,
       isFavorite: widget.isFavorite,
-      onFavorite: widget.onFavorite,
+      onFavorite: (network){
+        widget.onFavorite(null,network);
+      },
     );
   }
 }
@@ -1332,6 +1337,7 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
               setState(() {
                 isLoading = true;
               });
+
               var res = await widget.comicSource.favoriteData!
                   .addOrDelFavorite!(widget.cid, '', !isFavorite, null);
               if (res.success) {
