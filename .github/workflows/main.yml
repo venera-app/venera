@@ -6,40 +6,101 @@ jobs:
   Build_IOS:
     runs-on: macos-13
     steps:
-    - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        flutter-version-file: pubspec.yaml
-        architecture: x64
-    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - run: flutter pub get
-    - run: flutter build ios --release --no-codesign
-    - run: |
-        mkdir -p /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
-        mv /Users/runner/work/venera/venera/build/ios/iphoneos/Runner.app /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
-        cd /Users/runner/work/venera/venera/build/ios/iphoneos/
-        zip -r venera-ios.ipa Payload
-    - uses: actions/upload-artifact@v4
-      with:
-        name: app-ios.ipa
-        path: /Users/runner/work/venera/venera/build/ios/iphoneos/venera-ios.ipa
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version-file: pubspec.yaml
+          architecture: x64
+      - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - run: |
+          mkdir -p /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
+          mv /Users/runner/work/venera/venera/build/ios/iphoneos/Runner.app /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
+          cd /Users/runner/work/venera/venera/build/ios/iphoneos/
+          zip -r venera-ios.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-ios.ipa
+          path: /Users/runner/work/venera/venera/build/ios/iphoneos/venera-ios.ipa
   Build_MacOS:
     runs-on: macos-13
     steps:
-    - uses: actions/checkout@v3
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        flutter-version-file: pubspec.yaml
-        architecture: x64
-    - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - run: flutter pub get
-    - run: flutter build macos --release
-    - run: npm install --global create-dmg
-    - run: create-dmg 'build/macos/Build/Products/Release/venera.app'
-    - uses: actions/upload-artifact@v4
-      with:
-        name: macos-dmg
-        path: build/macos/Build/Products/Release/*.dmg
- 
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version-file: pubspec.yaml
+          architecture: x64
+      - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+      - run: flutter pub get
+      - run: flutter build macos --release
+        # Step 1: Decode and install the certificate
+      - name: Decode and install certificate
+        env:
+          CERTIFICATE: ${{ secrets.CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$CERTIFICATE" | base64 --decode > signing_certificate.p12
+          security import signing_certificate.p12 -k ~/Library/Keychains/login.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+
+      # Step 2: Build the Flutter macOS app
+      - name: Build Flutter macOS App
+        run: flutter build macos --release
+
+      # Step 3: Code-sign the app
+      - name: Code sign application
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+        run: |
+          codesign --deep --force --verbose --sign "$APPLE_DEVELOPER_ID" build/macos/Build/Products/Release/venera.app
+
+      # Step 4: Create the DMG file
+      - name: Create DMG
+        run: |
+          mkdir -p dist
+          hdiutil create -volname "venera" -srcfolder build/macos/Build/Products/Release/venera.app -ov -format UDZO "dist/venera.dmg"
+
+      # Step 5: Code-sign the DMG
+      - name: Code sign DMG
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+        run: |
+          codesign --force --sign "$APPLE_DEVELOPER_ID" dist/venera.dmg
+
+      # Step 6: Notarize the DMG (optional but recommended for macOS Catalina and later)
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: |
+          xcrun altool --notarize-app -f dist/venera.dmg --primary-bundle-id "com.github.wgh136.venera" -u "$APPLE_ID" -p "$APP_PASSWORD"
+
+      # Step 7: Wait for notarization (optional, if notarizing)
+      - name: Wait for notarization
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: |
+          REQUEST_UUID=$(xcrun altool --notarization-info <UUID> -u "$APPLE_ID" -p "$APP_PASSWORD" | grep "RequestUUID" | awk '{print $3}')
+          while true; do
+            STATUS=$(xcrun altool --notarization-info "$REQUEST_UUID" -u "$APPLE_ID" -p "$APP_PASSWORD" | grep "Status" | awk '{print $2}')
+            if [ "$STATUS" == "success" ]; then
+              echo "Notarization successful!"
+              break
+            elif [ "$STATUS" == "in progress" ]; then
+              echo "Notarization in progress..."
+              sleep 30
+            else
+              echo "Notarization failed!"
+              exit 1
+            fi
+          done
+
+      # Step 8: Attach and upload artifacts (optional)
+      - name: Upload DMG
+        uses: actions/upload-artifact@v3
+        with:
+          name: venera.dmg
+          path: dist/venera.dmg
