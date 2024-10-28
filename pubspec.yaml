@@ -51,6 +51,9 @@ dependencies:
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
+  zip_flutter:
+    git:
+      url: https://github.com/wgh136/zip_flutter
 
 dev_dependencies:
   flutter_test:

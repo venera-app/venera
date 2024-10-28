@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
+import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/downloading_page.dart';
+import 'package:venera/utils/cbz.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
 class LocalComicsPage extends StatefulWidget {
@@ -60,12 +63,29 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             menuBuilder: (c) {
               return [
                 MenuEntry(
-                  icon: Icons.delete,
-                  text: "Delete".tl,
-                  onClick: () {
-                    LocalManager().deleteComic(c as LocalComic);
-                  }
-                ),
+                    icon: Icons.delete,
+                    text: "Delete".tl,
+                    onClick: () {
+                      LocalManager().deleteComic(c as LocalComic);
+                    }),
+                MenuEntry(
+                    icon: Icons.delete,
+                    text: "Export as cbz".tl,
+                    onClick: () async {
+                      var controller = showLoadingDialog(
+                        context,
+                        allowCancel: false,
+                      );
+                      try {
+                        var file = await CBZ.export(c as LocalComic);
+                        await saveFile(filename: file.name, file: file);
+                        await file.delete();
+                      }
+                      catch (e) {
+                        context.showMessage(message: e.toString());
+                      }
+                      controller.close();
+                    }),
               ];
             },
           ),

@@ -221,7 +221,7 @@ class LocalManager with ChangeNotifier {
     if (res.isEmpty) {
       return '1';
     }
-    return ((res.first[0] as int) + 1).toString();
+    return (int.parse((res.first[0])) + 1).toString();
   }
 
   Future<void> add(LocalComic comic, [String? id]) async {
@@ -424,7 +424,7 @@ class LocalManager with ChangeNotifier {
 
   void deleteComic(LocalComic c) {
     var dir = Directory(FilePath.join(path, c.directory));
-    dir.deleteSync(recursive: true);
+    dir.deleteIgnoreError(recursive: true);
     remove(c.id, c.comicType);
     notifyListeners();
   }

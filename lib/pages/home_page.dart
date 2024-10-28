@@ -15,6 +15,7 @@ import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
+import 'package:venera/utils/cbz.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
@@ -391,9 +392,11 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    String info = type == 0
-        ? "Select a directory which contains the comic files.".tl
-        : "Select a directory which contains the comic directories.".tl;
+    String info = [
+      "Select a directory which contains the comic files.".tl,
+      "Select a directory which contains the comic directories.".tl,
+      "Select a cbz file.".tl,
+    ][type];
 
     return ContentDialog(
       dismissible: !loading,
@@ -424,6 +427,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 RadioListTile(
                   title: Text("Multiple Comics".tl),
                   value: 1,
+                  groupValue: type,
+                  onChanged: (value) {
+                    setState(() {
+                      type = value as int;
+                    });
+                  },
+                ),
+                RadioListTile(
+                  title: Text("A cbz file".tl),
+                  value: 2,
                   groupValue: type,
                   onChanged: (value) {
                     setState(() {
@@ -490,6 +503,21 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
   }
 
   void selectAndImport() async {
+    if (type == 2) {
+      var xFile = await selectFile(ext: ['cbz']);
+      var controller = showLoadingDialog(context, allowCancel: false);
+      try {
+        var cache = FilePath.join(App.cachePath, xFile?.name ?? 'temp.cbz');
+        await xFile!.saveTo(cache);
+        await CBZ.import(File(cache));
+        await File(cache).delete();
+      } catch (e, s) {
+        Log.error("Import Comic", e.toString(), s);
+        context.showMessage(message: e.toString());
+      }
+      controller.close();
+      return;
+    }
     height = key.currentContext!.size!.height;
     setState(() {
       loading = true;
@@ -583,16 +611,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
   Future<LocalComic?> checkSingleComic(Directory directory) async {
     if (!(await directory.exists())) return null;
     var name = directory.name;
+    if (LocalManager().findByName(name) != null) {
+      Log.info("Import Comic", "Comic already exists: $name");
+      return null;
+    }
     bool hasChapters = false;
     var chapters = <String>[];
     var coverPath = ''; // relative path to the cover image
     await for (var entry in directory.list()) {
       if (entry is Directory) {
         hasChapters = true;
-        if (LocalManager().findByName(entry.name) != null) {
-          Log.info("Import Comic", "Comic already exists: $name");
-          return null;
-        }
         chapters.add(entry.name);
         await for (var file in entry.list()) {
           if (file is Directory) {

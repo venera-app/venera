@@ -839,6 +839,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  zip_flutter:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: d5721f1fd8179ee4a5db59f932ae7c89d94e12a0
+      url: "https://github.com/wgh136/zip_flutter"
+    source: git
+    version: "0.0.1"
 sdks:
   dart: ">=3.5.0 <4.0.0"
   flutter: ">=3.24.4"
