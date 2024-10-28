@@ -79,7 +79,9 @@ class LocalComic with HistoryMixin implements Comic {
   String get description => "";
 
   @override
-  String get sourceKey => comicType == ComicType.local ? "local" : "";
+  String get sourceKey => comicType == ComicType.local
+      ? "local"
+      : comicType.sourceKey;
 
   @override
   Map<String, dynamic> toJson() {
@@ -308,11 +310,16 @@ class LocalManager with ChangeNotifier {
     return LocalComic.fromRow(res.first);
   }
 
-  Future<List<String>> getImages(String id, ComicType type, int ep) async {
+  Future<List<String>> getImages(String id, ComicType type, Object ep) async {
+    if(ep is! String && ep is! int) {
+      throw "Invalid ep";
+    }
     var comic = find(id, type) ?? (throw "Comic Not Found");
     var directory = Directory(FilePath.join(path, comic.directory));
     if (comic.chapters != null) {
-      var cid = comic.chapters!.keys.elementAt(ep - 1);
+      var cid = ep is int
+          ? comic.chapters!.keys.elementAt(ep - 1)
+          : (ep as String);
       directory = Directory(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
