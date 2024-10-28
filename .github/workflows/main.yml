@@ -37,7 +37,7 @@ jobs:
     - run: flutter pub get
     - run: flutter build macos --release
     - run: npm install --global create-dmg
-    - run: create-dmg 'uild/macos/Build/Products/Release/venera.app'
+    - run: create-dmg 'build/macos/Build/Products/Release/venera.app'
     - uses: actions/upload-artifact@v4
       with:
         name: macos-dmg
