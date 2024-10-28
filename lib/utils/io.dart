@@ -160,11 +160,15 @@ class DirectoryPicker {
 Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
   file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
     label: 'files',
-    extensions: ext,
+    extensions: App.isMacOS || App.isIOS ? null : ext,
   );
   final file_selector.XFile? file = await file_selector.openFile(
     acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
   );
+  if (file == null) return null;
+  if (!ext.contains(file?.path.split(".").last)) {
+    return null;
+  }
   return file;
 }
 
@@ -175,18 +179,18 @@ Future<String?> selectDirectory() async {
 
 Future<void> saveFile(
     {Uint8List? data, required String filename, File? file}) async {
-  if(data == null && file == null) {
+  if (data == null && file == null) {
     throw Exception("data and file cannot be null at the same time");
   }
-  if(data != null) {
+  if (data != null) {
     var cache = FilePath.join(App.cachePath, filename);
-    if(File(cache).existsSync()) {
+    if (File(cache).existsSync()) {
       File(cache).deleteSync();
     }
     await File(cache).writeAsBytes(data);
     file = File(cache);
   }
-  if(App.isMobile) {
+  if (App.isMobile) {
     final params = SaveFileDialogParams(sourceFilePath: file!.path);
     await FlutterFileDialog.saveFile(params: params);
   } else {
