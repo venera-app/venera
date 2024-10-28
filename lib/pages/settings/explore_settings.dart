@@ -61,7 +61,7 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           },
         ).toSliver(),
         _PopupWindowSetting(
-          title: "Explore Pages".tl,
+          title: "Network Favorite Pages".tl,
           builder: () {
             var pages = <String, String>{};
             for (var c in ComicSource.all()) {

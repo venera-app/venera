@@ -35,14 +35,14 @@ class ComicTile extends StatelessWidget {
     var location = renderBox.localToGlobal(
       Offset(size.width / 2, size.height / 2),
     );
-    showMenu(location);
+    showMenu(location, context);
   }
 
-  void onSecondaryTap(TapDownDetails details) {
-    showMenu(details.globalPosition);
+  void onSecondaryTap(TapDownDetails details, BuildContext context) {
+    showMenu(details.globalPosition, context);
   }
 
-  void showMenu(Offset location) {
+  void showMenu(Offset location, BuildContext context) {
     showMenuX(
       App.rootContext,
       location,
@@ -69,6 +69,11 @@ class ComicTile extends StatelessWidget {
           onClick: () {
             addFavorite(comic);
           },
+        ),
+        MenuEntry(
+          icon: Icons.block,
+          text: 'Block'.tl,
+          onClick: () => block(context),
         ),
         ...?menuOptions,
       ],
@@ -172,7 +177,7 @@ class ComicTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: _onTap,
           onLongPress: enableLongPressed ? () => onLongPress(context) : null,
-          onSecondaryTapDown: onSecondaryTap,
+          onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
             child: Row(
@@ -272,7 +277,7 @@ class ComicTile extends StatelessWidget {
                   onTap: _onTap,
                   onLongPress:
                       enableLongPressed ? () => onLongPress(context) : null,
-                  onSecondaryTapDown: onSecondaryTap,
+                  onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
                   borderRadius: BorderRadius.circular(8),
                   child: const SizedBox.expand(),
                 ),
@@ -281,6 +286,61 @@ class ComicTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void block(BuildContext comicTileContext) {
+    showDialog(
+      context: App.rootContext,
+      builder: (context) {
+        var words = <String>[];
+        var all = <String>[];
+        all.addAll(comic.title.split(' ').where((element) => element != ''));
+        if(comic.subtitle != null && comic.subtitle != "") {
+          all.add(comic.subtitle!);
+        }
+        all.addAll(comic.tags ?? []);
+        return StatefulBuilder(builder: (context, setState) {
+          return ContentDialog(
+            title: 'Block'.tl,
+            content: Wrap(
+              runSpacing: 8,
+              spacing: 8,
+              children: [
+                for (var word in all)
+                  OptionChip(
+                    text: word,
+                    isSelected: words.contains(word),
+                    onTap: () {
+                      setState(() {
+                        if (!words.contains(word)) {
+                          words.add(word);
+                        } else {
+                          words.remove(word);
+                        }
+                      });
+                    },
+                  ),
+              ],
+            ).paddingHorizontal(16),
+            actions: [
+              Button.filled(
+                onPressed: () {
+                  context.pop();
+                  for (var word in words) {
+                    appdata.settings['blockedWords'].add(word);
+                  }
+                  appdata.saveData();
+                  context.showMessage(message: 'Blocked'.tl);
+                  comicTileContext.findAncestorStateOfType<_SliverGridComicsState>()!
+                      .update();
+                },
+                child: Text('Block'.tl),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 }
@@ -480,9 +540,7 @@ class _ReadingHistoryPainter extends CustomPainter {
   }
 }
 
-class SliverGridComicsController extends StateController {}
-
-class SliverGridComics extends StatelessWidget {
+class SliverGridComics extends StatefulWidget {
   const SliverGridComics({
     super.key,
     required this.comics,
@@ -503,24 +561,41 @@ class SliverGridComics extends StatelessWidget {
   final void Function(Comic)? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return StateBuilder<SliverGridComicsController>(
-      init: SliverGridComicsController(),
-      builder: (controller) {
-        List<Comic> comics = [];
-        for (var comic in this.comics) {
-          if (isBlocked(comic) == null) {
-            comics.add(comic);
-          }
+  State<SliverGridComics> createState() => _SliverGridComicsState();
+}
+
+class _SliverGridComicsState extends State<SliverGridComics> {
+  List<Comic> comics = [];
+
+  @override
+  void initState() {
+    for (var comic in widget.comics) {
+      if (isBlocked(comic) == null) {
+        comics.add(comic);
+      }
+    }
+    super.initState();
+  }
+
+  void update() {
+    setState(() {
+      comics.clear();
+      for (var comic in widget.comics) {
+        if (isBlocked(comic) == null) {
+          comics.add(comic);
         }
-        return _SliverGridComics(
-          comics: comics,
-          onLastItemBuild: onLastItemBuild,
-          badgeBuilder: badgeBuilder,
-          menuBuilder: menuBuilder,
-          onTap: onTap,
-        );
-      },
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SliverGridComics(
+      comics: comics,
+      onLastItemBuild: widget.onLastItemBuild,
+      badgeBuilder: widget.badgeBuilder,
+      menuBuilder: widget.menuBuilder,
+      onTap: widget.onTap,
     );
   }
 }

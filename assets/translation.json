@@ -57,7 +57,7 @@
     "Password": "密码",
     "Continue": "继续",
     "Create Account": "创建账户",
-    "Next": "下一步",
+    "Next": "前进",
     "Login with webview": "通过网页登录",
     "Read": "阅读",
     "Download": "下载",
@@ -122,7 +122,11 @@
     "Proxy": "代理",
     "Venera is a free and open-source app for comic reading.": "Venera是一个免费的开源漫画阅读应用。",
     "Check for updates": "检查更新",
-    "Check": "检查"
+    "Check": "检查",
+    "Network Favorite Pages": "网络收藏页面",
+    "Block": "屏蔽",
+    "Add new favorite to": "添加新收藏到",
+    "Move favorite after reading": "阅读后移动收藏"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -182,7 +186,7 @@
     "Password": "密碼",
     "Continue": "繼續",
     "Create Account": "創建帳戶",
-    "Next": "下一步",
+    "Next": "前進",
     "Login with webview": "通過網頁登錄",
     "Read": "閱讀",
     "Download": "下載",
@@ -247,6 +251,10 @@
     "Proxy": "代理",
     "Venera is a free and open-source app for comic reading.": "Venera是一個免費的開源漫畫閱讀應用。",
     "Check for updates": "檢查更新",
-    "Check": "檢查"
+    "Check": "檢查",
+    "Network Favorite Pages": "網路收藏頁面",
+    "Block": "屏蔽",
+    "Add new favorite to": "添加新收藏到",
+    "Move favorite after reading": "閱讀後移動收藏"
   }
 }

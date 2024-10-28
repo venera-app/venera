@@ -13,16 +13,16 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("Local Favorites".tl)),
-        const SelectSetting(
-          title: "Add new favorite to",
+        SelectSetting(
+          title: "Add new favorite to".tl,
           settingKey: "newFavoriteAddTo",
-          optionTranslation: {
+          optionTranslation: const {
             "start": "Start",
             "end": "End",
           },
         ).toSliver(),
-        const SelectSetting(
-          title: "Move favorite after read",
+        SelectSetting(
+          title: "Move favorite after reading".tl,
           settingKey: "moveFavoriteAfterRead",
           optionTranslation: {
             "none": "None",
