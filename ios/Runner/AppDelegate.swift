@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import UniformTypeIdentifiers
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate, UIDocumentPickerDelegate {
   var flutterResult: FlutterResult?
   var directoryPath: URL!

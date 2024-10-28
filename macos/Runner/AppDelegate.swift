@@ -1,7 +1,7 @@
 import Cocoa
 import FlutterMacOS
 
-@NSApplicationMain
+@main
 class AppDelegate: FlutterAppDelegate {
   var flutterResult: FlutterResult?
   var directoryPath: URL!
@@ -13,15 +13,21 @@ class AppDelegate: FlutterAppDelegate {
       methodChannel.setMethodCallHandler { (call, result) in
         switch call.method {
         case "getProxy":
-          if let proxySettings = CFNetworkCopySystemProxySettings()?.takeUnretainedValue() as NSDictionary?,
-            let dict = proxySettings.object(forKey: kCFNetworkProxiesHTTPProxy) as? NSDictionary,
-            let host = dict.object(forKey: kCFNetworkProxiesHTTPProxy) as? String,
-            let port = dict.object(forKey: kCFNetworkProxiesHTTPPort) as? Int {
-            let proxyConfig = "\(host):\(port)"
-            result(proxyConfig)
-          } else {
-            result("")
-          }
+            if let proxySettings = CFNetworkCopySystemProxySettings()?.takeUnretainedValue() as NSDictionary? {
+                if let httpProxy = proxySettings[kCFNetworkProxiesHTTPProxy] as? String,
+                   let httpPort = proxySettings[kCFNetworkProxiesHTTPPort] as? Int {
+                    let proxyConfig = "\(httpProxy):\(httpPort)"
+                    result(proxyConfig)
+                } else if let socksProxy = proxySettings[kCFNetworkProxiesSOCKSProxy] as? String,
+                          let socksPort = proxySettings[kCFNetworkProxiesSOCKSPort] as? Int {
+                    let proxyConfig = "\(socksProxy):\(socksPort)"
+                    result(proxyConfig)
+                } else {
+                    result("")
+                }
+            } else {
+                result("")
+            }
         case "getDirectoryPath":
           self.flutterResult = result
           self.getDirectoryPath()

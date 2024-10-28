@@ -96,7 +96,7 @@ class WindowFrame extends StatelessWidget {
                                     ? Colors.white
                                     : Colors.black,
                               ),
-                            ).toAlign(Alignment.centerLeft).paddingLeft(4),
+                            ).toAlign(Alignment.centerLeft).paddingLeft(4+(App.isMacOS?25:0)),
                           ),
                         ),
                         if (kDebugMode)
