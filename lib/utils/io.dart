@@ -213,7 +213,7 @@ class Share {
       );
     } else {
       // write to cache
-      var file = File(FilePath.join(Directory.systemTemp.path, filename));
+      var file = File(FilePath.join(App.cachePath, filename));
       file.writeAsBytesSync(data);
       s.Share.shareXFiles([s.XFile(file.path)]);
     }
