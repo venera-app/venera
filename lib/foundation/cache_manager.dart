@@ -135,7 +135,7 @@ class CacheManager {
       WHERE expires < ?
     ''', [DateTime.now().millisecondsSinceEpoch]);
     for(var row in res){
-      var dir = row[1] as int;
+      var dir = row[1] as String;
       var name = row[2] as String;
       var file = File('$cachePath/$dir/$name');
       if(await file.exists()){
@@ -158,12 +158,12 @@ class CacheManager {
     while((_currentSize != null && _currentSize! > _limitSize) ||  count > 2000){
       var res = _db.select('''
         SELECT * FROM cache
-        ORDER BY time ASC
+        ORDER BY expires ASC
         limit 10
       ''');
       for(var row in res){
         var key = row[0] as String;
-        var dir = row[1] as int;
+        var dir = row[1] as String;
         var name = row[2] as String;
         var file = File('$cachePath/$dir/$name');
         if(await file.exists()){
