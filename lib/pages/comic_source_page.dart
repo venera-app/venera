@@ -1,7 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
@@ -11,6 +8,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
 class ComicSourcePage extends StatefulWidget {
@@ -328,7 +326,7 @@ class _BodyState extends State<_Body> {
               Row(
                 children: [
                   TextButton(
-                          onPressed: selectFile, child: Text("Select file".tl))
+                          onPressed: _selectFile, child: Text("Select file".tl))
                       .paddingLeft(8),
                   const Spacer(),
                   TextButton(
@@ -350,16 +348,12 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  void selectFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['js'],
-    );
-    final file = result?.files.first;
+  void _selectFile() async {
+    final file = await selectFile(ext: ["js"]);
     if (file == null) return;
     try {
       var fileName = file.name;
-      var bytes = await File(file.path!).readAsBytes();
+      var bytes = await file.readAsBytes();
       var content = utf8.decode(bytes);
       await addSource(content, fileName);
     } catch (e, s) {

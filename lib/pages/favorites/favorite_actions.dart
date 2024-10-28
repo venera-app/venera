@@ -27,10 +27,26 @@ Future<void> newFolder() async {
                       });
                     }
                   },
-                )
+                ),
               ],
             ).paddingHorizontal(16),
             actions: [
+              TextButton(
+                child: Text("Import from file".tl),
+                onPressed: () async {
+                  var file = await selectFile(ext: ['json']);
+                  if(file == null) return;
+                  var data = await file.readAsBytes();
+                  try {
+                    LocalFavoritesManager().fromJson(utf8.decode(data));
+                  }
+                  catch(e) {
+                    context.showMessage(message: "Failed to import".tl);
+                    return;
+                  }
+                  context.pop();
+                },
+              ).paddingRight(4),
               FilledButton(
                 onPressed: () {
                   var e = validateFolderName(controller.text);

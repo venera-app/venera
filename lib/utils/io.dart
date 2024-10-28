@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart' as s;
+import 'package:file_selector/file_selector.dart' as file_selector;
 
 export 'dart:io';
 export 'dart:typed_data';
@@ -128,7 +129,7 @@ class DirectoryPicker {
 
   Future<Directory?> pickDirectory() async {
     if (App.isWindows || App.isLinux) {
-      var d = await FilePicker.platform.getDirectoryPath();
+      var d = await file_selector.getDirectoryPath();
       _directory = d;
       return d == null ? null : Directory(d);
     } else if (App.isAndroid) {
@@ -156,15 +157,46 @@ class DirectoryPicker {
   }
 }
 
-Future<void> saveFile(
-    {required Uint8List data, required String filename}) async {
-  var res = await FilePicker.platform.saveFile(
-    bytes: data,
-    fileName: filename,
-    lockParentWindow: true,
+Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
+  file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
+    label: 'files',
+    extensions: ext,
   );
-  if (App.isDesktop && res != null) {
-    await File(res).writeAsBytes(data);
+  final file_selector.XFile? file = await file_selector.openFile(
+    acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
+  );
+  return file;
+}
+
+Future<String?> selectDirectory() async {
+  var path = await file_selector.getDirectoryPath();
+  return path;
+}
+
+Future<void> saveFile(
+    {Uint8List? data, required String filename, File? file}) async {
+  if(data == null && file == null) {
+    throw Exception("data and file cannot be null at the same time");
+  }
+  if(data != null) {
+    var cache = FilePath.join(App.cachePath, filename);
+    if(File(cache).existsSync()) {
+      File(cache).deleteSync();
+    }
+    await File(cache).writeAsBytes(data);
+    file = File(cache);
+  }
+  if(App.isMobile) {
+    final params = SaveFileDialogParams(sourceFilePath: file!.path);
+    await FlutterFileDialog.saveFile(params: params);
+  } else {
+    final result = await file_selector.getSaveLocation(
+      suggestedName: filename,
+    );
+    if (result != null) {
+      var xFile = file_selector.XFile(file!.path);
+      await xFile.saveTo(result.path);
+    }
   }
 }
 

@@ -126,7 +126,10 @@
     "Network Favorite Pages": "网络收藏页面",
     "Block": "屏蔽",
     "Add new favorite to": "添加新收藏到",
-    "Move favorite after reading": "阅读后移动收藏"
+    "Move favorite after reading": "阅读后移动收藏",
+    "Are you sure you want to delete this folder?" : "确定要删除这个收藏夹吗？",
+    "Import from file": "从文件导入",
+    "Failed to import": "导入失败"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -255,6 +258,9 @@
     "Network Favorite Pages": "網路收藏頁面",
     "Block": "屏蔽",
     "Add new favorite to": "添加新收藏到",
-    "Move favorite after reading": "閱讀後移動收藏"
+    "Move favorite after reading": "閱讀後移動收藏",
+    "Are you sure you want to delete this folder?" : "確定要刪除這個收藏夾嗎？",
+    "Import from file": "從文件匯入",
+    "Failed to import": "匯入失敗"
   }
 }

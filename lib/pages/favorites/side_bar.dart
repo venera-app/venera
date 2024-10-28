@@ -211,11 +211,13 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
 
   @override
   void update() {
+    if(!mounted) return;
     setState(() {});
   }
 
   @override
   void updateFolders() {
+    if(!mounted) return;
     setState(() {
       folders = LocalFavoritesManager().folderNames;
       networkFolders = ComicSource.all()

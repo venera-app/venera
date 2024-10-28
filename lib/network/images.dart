@@ -24,7 +24,7 @@ class ImageDownloader {
     var configs = <String, dynamic>{};
     if (sourceKey != null) {
       var comicSource = ComicSource.find(sourceKey);
-      configs = comicSource!.getThumbnailLoadingConfig?.call(url) ?? {};
+      configs = comicSource?.getThumbnailLoadingConfig?.call(url) ?? {};
     }
     configs['headers'] ??= {};
     if(configs['headers']['user-agent'] == null

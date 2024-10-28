@@ -568,6 +568,19 @@ class _SliverGridComicsState extends State<SliverGridComics> {
   List<Comic> comics = [];
 
   @override
+  void didUpdateWidget(covariant SliverGridComics oldWidget) {
+    if (oldWidget.comics != widget.comics) {
+      comics.clear();
+      for (var comic in widget.comics) {
+        if (isBlocked(comic) == null) {
+          comics.add(comic);
+        }
+      }
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void initState() {
     for (var comic in widget.comics) {
       if (isBlocked(comic) == null) {

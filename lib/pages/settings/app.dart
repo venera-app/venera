@@ -25,8 +25,11 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Set New Storage Path".tl,
           actionTitle: "Set".tl,
           callback: () async {
-            var picker = FilePicker.platform;
-            var result = await picker.getDirectoryPath();
+            if(App.isIOS) {
+              context.showMessage(message: "Not supported on iOS".tl);
+              return;
+            }
+            var result = await selectDirectory();
             if (result == null) return;
             var loadingDialog = showLoadingDialog(
               App.rootContext,

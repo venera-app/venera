@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/res.dart';
+import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
 part 'favorite_actions.dart';
@@ -134,7 +136,12 @@ class _FavoritesPageState extends State<FavoritesPage>  {
                     )
                   : null,
             ),
-            title: Text("Unselected".tl),
+            title: GestureDetector(
+              onTap: context.width < _kTwoPanelChangeWidth
+                  ? showFolderSelector
+                  : null,
+              child: Text("Unselected".tl),
+            ),
           ),
         ],
       );

@@ -15,8 +15,10 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   late List<FavoriteItem> comics;
 
   void updateComics() {
+    print(comics.length);
     setState(() {
       comics = LocalFavoritesManager().getAllComics(widget.folder);
+      print(comics.length);
     });
   }
 
@@ -64,7 +66,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                           favPage.setFolder(false, null);
                           LocalFavoritesManager().deleteFolder(widget.folder);
                           favPage.folderList?.updateFolders();
-                          context.pop();
                         },
                       );
                     }),
@@ -108,6 +109,18 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         (value) {
                           setState(() {});
                         },
+                      );
+                    }),
+                MenuEntry(
+                    icon: Icons.upload_file,
+                    text: "Export".tl,
+                    onClick: () {
+                      var json = LocalFavoritesManager().folderToJson(
+                        widget.folder,
+                      );
+                      saveFile(
+                        data: utf8.encode(json),
+                        filename: "${widget.folder}.json",
                       );
                     }),
               ],

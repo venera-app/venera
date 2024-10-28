@@ -1145,7 +1145,7 @@ class _FavoritePanelState extends State<_FavoritePanel> {
         title: Text("Favorite".tl),
       ),
       body: DefaultTabController(
-        length: comicSource.favoriteData == null ? 1 : 2,
+        length: hasNetwork ? 2 : 1,
         child: Column(
           children: [
             TabBar(tabs: [
