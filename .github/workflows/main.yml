@@ -69,35 +69,6 @@ jobs:
         run: |
           codesign --force --sign "$APPLE_DEVELOPER_ID" dist/venera.dmg
 
-      # Step 6: Notarize the DMG (optional but recommended for macOS Catalina and later)
-      - name: Notarize DMG
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-        run: |
-          xcrun altool --notarize-app -f dist/venera.dmg --primary-bundle-id "com.github.wgh136.venera" -u "$APPLE_ID" -p "$APP_PASSWORD"
-
-      # Step 7: Wait for notarization (optional, if notarizing)
-      - name: Wait for notarization
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-        run: |
-          REQUEST_UUID=$(xcrun altool --notarization-info <UUID> -u "$APPLE_ID" -p "$APP_PASSWORD" | grep "RequestUUID" | awk '{print $3}')
-          while true; do
-            STATUS=$(xcrun altool --notarization-info "$REQUEST_UUID" -u "$APPLE_ID" -p "$APP_PASSWORD" | grep "Status" | awk '{print $2}')
-            if [ "$STATUS" == "success" ]; then
-              echo "Notarization successful!"
-              break
-            elif [ "$STATUS" == "in progress" ]; then
-              echo "Notarization in progress..."
-              sleep 30
-            else
-              echo "Notarization failed!"
-              exit 1
-            fi
-          done
-
       # Step 8: Attach and upload artifacts (optional)
       - name: Upload DMG
         uses: actions/upload-artifact@v3
