@@ -84,10 +84,14 @@ class SliverGridDelegateWithComics extends SliverGridDelegate {
   SliverGridLayout getLayout(SliverConstraints constraints) {
     if (appdata.settings['comicDisplayMode'] == 'brief' || useBriefMode) {
       return getBriefModeLayout(
-          constraints, scale ?? appdata.settings['comicTileScale']);
+        constraints,
+        scale ?? (appdata.settings['comicTileScale'] as num).toDouble(),
+      );
     } else {
-      return getDetailedModeLayout(constraints,
-          scale ?? (appdata.settings['comicTileScale'] as num).toDouble());
+      return getDetailedModeLayout(
+        constraints,
+        scale ?? (appdata.settings['comicTileScale'] as num).toDouble(),
+      );
     }
   }
 
