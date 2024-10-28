@@ -129,7 +129,10 @@
     "Move favorite after reading": "阅读后移动收藏",
     "Are you sure you want to delete this folder?" : "确定要删除这个收藏夹吗？",
     "Import from file": "从文件导入",
-    "Failed to import": "导入失败"
+    "Failed to import": "导入失败",
+    "Cache Limit": "缓存限制",
+    "Set Cache Limit": "设置缓存限制",
+    "Size in MB": "大小（MB）"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -261,6 +264,9 @@
     "Move favorite after reading": "閱讀後移動收藏",
     "Are you sure you want to delete this folder?" : "確定要刪除這個收藏夾嗎？",
     "Import from file": "從文件匯入",
-    "Failed to import": "匯入失敗"
+    "Failed to import": "匯入失敗",
+    "Cache Limit": "緩存限制",
+    "Set Cache Limit": "設置緩存限制",
+    "Size in MB": "大小（MB）"
   }
 }

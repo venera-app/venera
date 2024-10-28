@@ -22,5 +22,5 @@ Future<void> init() async {
   await ComicSource.init();
   await LocalManager().init();
   await TagsTranslation.readData();
-  CacheManager();
+  CacheManager().setLimitSize(appdata.settings['cacheSize']);
 }

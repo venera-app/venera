@@ -108,6 +108,7 @@ class _Settings {
     'enableTapToTurnPages': true,
     'enablePageAnimation': true,
     'language': 'system', // system, zh-CN, zh-TW, en-US
+    'cacheSize': 2048, // in MB
   };
 
   operator [](String key) {

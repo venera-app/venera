@@ -25,8 +25,8 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Set New Storage Path".tl,
           actionTitle: "Set".tl,
           callback: () async {
-            if(App.isIOS) {
-              context.showMessage(message: "Not supported on iOS".tl);
+            if (App.isMobile) {
+              context.showMessage(message: "Not supported".tl);
               return;
             }
             var result = await selectDirectory();
@@ -64,6 +64,27 @@ class _AppSettingsState extends State<AppSettings> {
             context.showMessage(message: "Cache cleared".tl);
             setState(() {});
           },
+        ).toSliver(),
+        _CallbackSetting(
+          title: "Cache Limit".tl,
+          subtitle: "${appdata.settings['cacheSize']} MB",
+          callback: () {
+            showInputDialog(
+              context: context,
+              title: "Set Cache Limit".tl,
+              hintText: "Size in MB".tl,
+              inputValidator: RegExp(r"^\d+$"),
+              onConfirm: (value) {
+                appdata.settings['cacheSize'] = int.parse(value);
+                appdata.saveData();
+                setState(() {});
+                CacheManager()
+                    .setLimitSize(appdata.settings['cacheSize'] * 1024 * 1024);
+                return null;
+              },
+            );
+          },
+          actionTitle: 'Set'.tl,
         ).toSliver(),
         _SettingPartTitle(
           title: "Log".tl,
