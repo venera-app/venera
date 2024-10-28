@@ -32,10 +32,9 @@ jobs:
         with:
           channel: "stable"
           flutter-version-file: pubspec.yaml
-          architecture: x64
+          architecture: arm64
       - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
       - run: flutter pub get
-      - run: flutter build macos --release
         # Step 1: Decode and install the certificate
       - name: Decode and install certificate
         env:
@@ -47,14 +46,8 @@ jobs:
 
       # Step 2: Build the Flutter macOS app
       - name: Build Flutter macOS App
-        run: flutter build macos --release
+        run: flutter build macos --release --dart-define=FLUTTER_ARCH=arm64
 
-      # Step 3: Code-sign the app
-      - name: Code sign application
-        env:
-          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
-        run: |
-          codesign --deep --force --verbose --sign "$APPLE_DEVELOPER_ID" build/macos/Build/Products/Release/venera.app
 
       # Step 4: Create the DMG file
       - name: Create DMG
@@ -62,12 +55,7 @@ jobs:
           mkdir -p dist
           hdiutil create -volname "venera" -srcfolder build/macos/Build/Products/Release/venera.app -ov -format UDZO "dist/venera.dmg"
 
-      # Step 5: Code-sign the DMG
-      - name: Code sign DMG
-        env:
-          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
-        run: |
-          codesign --force --sign "$APPLE_DEVELOPER_ID" dist/venera.dmg
+
 
       # Step 8: Attach and upload artifacts (optional)
       - name: Upload DMG
