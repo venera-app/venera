@@ -36,8 +36,10 @@ jobs:
     - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - run: flutter pub get
     - run: flutter build macos --release
+    - run: npm install --global create-dmg
+    - run: create-dmg 'build/macos/Build/Products/Release/venera.app'
     - uses: actions/upload-artifact@v4
       with:
-        name: macos-build.zip
-        path: build/macos/Build/Products/Release/venera.app
+        name: macos-dmg
+        path: build/macos/Build/Products/Release/*.dmg
  
