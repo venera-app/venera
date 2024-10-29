@@ -12,7 +12,7 @@ if os.path.exists("build/app-windows.zip"):
 
 version = str.split(str.split(content, 'version: ')[1], '+')[0]
 
-subprocess.run(["tar", "-a", "-c", "-f", f"build/windows/Venera-{version}-windows.zip", "-C", "build/windows/x64/runner/Release", "."]
+subprocess.run(["tar", "-a", "-c", "-f", f"build/windows/Venera-{version}-windows.zip", "-C", "build/windows/x64/runner/Release", "*"]
                , shell=True)
 
 issContent = ""
