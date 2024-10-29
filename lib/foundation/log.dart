@@ -41,6 +41,7 @@ class Log {
 
   static void addLog(LogLevel level, String title, String content) {
     if (!ignoreLimitation && content.length > maxLogLength) {
+      File("D://debug.txt").writeAsString(content);
       content = "${content.substring(0, maxLogLength)}...";
     }
 

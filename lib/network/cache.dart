@@ -160,6 +160,9 @@ class NetworkCacheManager implements Interceptor {
     if (response.requestOptions.method != "GET") {
       return handler.next(response);
     }
+    if(response.statusCode != null && response.statusCode! >= 400){
+      return handler.next(response);
+    }
     var size = _calculateSize(response.data);
     if(size != null && size < 1024 * 1024 && size > 0) {
       var cache = NetworkCache(
@@ -188,6 +191,9 @@ class NetworkCacheManager implements Interceptor {
     }
     if(data is String) {
       if(data.trim().isEmpty){
+        return 0;
+      }
+      if(data.length < 512 && data.contains("IP address")){
         return 0;
       }
       return data.length * 4;
