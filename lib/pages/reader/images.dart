@@ -323,6 +323,13 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   void smoothTo(double offset) {
     futurePosition ??= scrollController.offset;
+    if (futurePosition! > scrollController.position.maxScrollExtent &&
+        offset > 0) {
+      return;
+    } else if (futurePosition! < scrollController.position.minScrollExtent &&
+        offset < 0) {
+      return;
+    }
     futurePosition = futurePosition! + offset * 1.2;
     futurePosition = futurePosition!.clamp(
       scrollController.position.minScrollExtent,
@@ -435,6 +442,27 @@ class _ContinuousModeState extends State<_ContinuousMode>
       child: widget,
     );
 
+    widget = NotificationListener<ScrollUpdateNotification>(
+      onNotification: (notification) {
+        var length = reader.maxChapter;
+        if (!scrollController.hasClients) return false;
+        if (scrollController.position.pixels <=
+                scrollController.position.minScrollExtent &&
+            reader.chapter != 1) {
+          context.readerScaffold.setFloatingButton(-1);
+        } else if (scrollController.position.pixels >=
+                scrollController.position.maxScrollExtent &&
+            reader.chapter < length) {
+          context.readerScaffold.setFloatingButton(1);
+        } else {
+          context.readerScaffold.setFloatingButton(0);
+        }
+
+        return true;
+      },
+      child: widget,
+    );
+
     return PhotoView.customChild(
       backgroundDecoration: BoxDecoration(
         color: context.colorScheme.surface,
@@ -510,7 +538,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
       });
     }
-    if(event is KeyUpEvent) {
+    if (event is KeyUpEvent) {
       return;
     }
     bool? forward;
