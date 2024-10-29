@@ -1,16 +1,25 @@
 # venera
 
-A comic app.
+[![flutter](https://img.shields.io/badge/flutter-3.24.4-blue)](https://flutter.dev/)
+[![License](https://img.shields.io/github/license/venera-app/venera)](https://github.com/venera-app/venera/blob/master/LICENSE)
+[![Download](https://img.shields.io/github/v/release/venera-app/venera)](https://github.com/venera-app/venera/releases)
+[![stars](https://img.shields.io/github/stars/venera-app/venera)](https://github.com/venera-app/venera/stargazers)
 
-## Getting Started
+A comic reader that support reading local and network comics.
 
-This project is a starting point for a Flutter application.
+## Current Status
 
-A few resources to get you started if this is your first Flutter project:
+The project is still under development, and the current version is not stable.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Use the project at your own risk.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Create a new comic source
+
+See [venera-configs](https://github.com/venera-app/venera-configs)
+
+## Thanks
+
+### Tags Translation
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=EhTagTranslation&repo=Database)](https://github.com/EhTagTranslation/Database)
+
+The Chinese translation of the manga tags is from this project.
