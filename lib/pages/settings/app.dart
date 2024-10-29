@@ -79,7 +79,7 @@ class _AppSettingsState extends State<AppSettings> {
                 appdata.saveData();
                 setState(() {});
                 CacheManager()
-                    .setLimitSize(appdata.settings['cacheSize'] * 1024 * 1024);
+                    .setLimitSize(appdata.settings['cacheSize']);
                 return null;
               },
             );
