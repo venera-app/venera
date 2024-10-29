@@ -405,46 +405,57 @@ class _ComicDescription extends StatelessWidget {
           height: 4,
         ),
         if (tags != null)
-          LayoutBuilder(builder: (context, constraints) {
-            return Container(
-              constraints: const BoxConstraints(maxHeight: 47),
-              child: Wrap(
-                runAlignment: WrapAlignment.start,
+          Expanded(
+            child: LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxHeight < 22) {
+                return Container();
+              }
+              int cnt = (constraints.maxHeight - 22).toInt() ~/ 25;
+              return Container(
                 clipBehavior: Clip.antiAlias,
-                crossAxisAlignment: WrapCrossAlignment.end,
-                spacing: 4,
-                runSpacing: 3,
-                children: [
-                  for (var s in tags!)
-                    Container(
-                        height: 22,
-                        padding: const EdgeInsets.fromLTRB(3,2,3,2),
-                        constraints: BoxConstraints(
-                          maxWidth: constraints.maxWidth * 0.45,
-                        ),
-                        decoration: BoxDecoration(
-                          color: s == "Unavailable"
-                              ? Theme.of(context).colorScheme.errorContainer
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .secondaryContainer,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(8)),
-                        ),
-                        child: Text(
-                          enableTranslate
-                              ? TagsTranslation.translateTag(s)
-                              : s,
-                          style: const TextStyle(fontSize: 12),
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        )),
-                ],
-              ),
-            );
-          }),
-        const Spacer(),
+                height: 22 + cnt * 25,
+                width: double.infinity,
+                decoration: const BoxDecoration(),
+                child: Wrap(
+                  runAlignment: WrapAlignment.start,
+                  clipBehavior: Clip.antiAlias,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 4,
+                  runSpacing: 3,
+                  children: [
+                    for (var s in tags!)
+                      Container(
+                          height: 22,
+                          padding: const EdgeInsets.fromLTRB(3, 2, 3, 2),
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth * 0.45,
+                          ),
+                          decoration: BoxDecoration(
+                            color: s == "Unavailable"
+                                ? Theme.of(context).colorScheme.errorContainer
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(8)),
+                          ),
+                          child: Center(
+                              widthFactor: 1,
+                              child: Text(
+                                enableTranslate
+                                    ? TagsTranslation.translateTag(s)
+                                    : s,
+                                style: const TextStyle(fontSize: 12),
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ))),
+                  ],
+                ),
+              ).toAlign(Alignment.topCenter);
+            }),
+          ),
+        // const Spacer(),
         if (rating != null) StarRating(value: rating!, size: 18),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
