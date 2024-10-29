@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/image_provider/local_favorite_image.dart';
 import 'package:venera/foundation/log.dart';
 import 'dart:io';
 
@@ -403,6 +404,7 @@ class LocalFavoritesManager {
 
   void deleteComicWithId(String folder, String id, ComicType type) {
     _modifiedAfterLastCache = true;
+    LocalFavoriteImageProvider.delete(id, type.value);
     _db.execute("""
       delete from "$folder"
       where id == ? and type == ?;

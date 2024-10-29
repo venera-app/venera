@@ -19,6 +19,14 @@ class LocalFavoriteImageProvider
 
   final int intKey;
 
+  static void delete(String id, int intKey) {
+    var fileName = (id + intKey.toString()).hashCode.toString();
+    var file = File(FilePath.join(App.dataPath, 'favorite_cover', fileName));
+    if(file.existsSync()) {
+      file.delete();
+    }
+  }
+
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
     var sourceKey = ComicSource.fromIntKey(intKey)?.key;
