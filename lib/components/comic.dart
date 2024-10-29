@@ -473,7 +473,7 @@ class _ComicDescription extends StatelessWidget {
                   badge!,
                   style: const TextStyle(fontSize: 12),
                 ),
-              )
+              ),
           ],
         )
       ],
