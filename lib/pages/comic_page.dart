@@ -99,7 +99,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         return const Res.error('Local comic not found');
       }
       var history = await HistoryManager().find(widget.id, ComicType.local);
-      if(isFirst) {
+      if (isFirst) {
         Future.microtask(() {
           App.rootContext.to(() {
             return Reader(
@@ -398,22 +398,23 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 Text(comic.stars!.toStringAsFixed(2)),
               ],
             ).paddingLeft(16).paddingVertical(8),
-          for (var e in comic.tags.entries)
-            buildWrap(
-              children: [
-                buildTag(text: e.key.ts(comicSource.key), isTitle: true),
-                for (var tag in e.value)
-                  buildTag(
-                    text: enableTranslation
-                        ? TagsTranslation.translationTagWithNamespace(
-                            tag,
-                            e.key.toLowerCase(),
-                          )
-                        : tag,
-                    onTap: () => onTapTag(tag, e.key),
-                  ),
-              ],
-            ),
+            for (var e in comic.tags.entries)
+              buildWrap(
+                children: [
+                  if(e.value.isNotEmpty)
+                  buildTag(text: e.key.ts(comicSource.key), isTitle: true),
+                  for (var tag in e.value)
+                    buildTag(
+                      text: enableTranslation
+                          ? TagsTranslation.translationTagWithNamespace(
+                              tag,
+                              e.key.toLowerCase(),
+                            )
+                          : tag,
+                      onTap: () => onTapTag(tag, e.key),
+                    ),
+                ],
+              ),
           if (comic.uploader != null)
             buildWrap(
               children: [
@@ -514,9 +515,9 @@ abstract mixin class _ComicPageActions {
         cid: comic.id,
         type: comic.comicType,
         isFavorite: isFavorite,
-        onFavorite: (local,network) {
-          isFavorite=network??isFavorite;
-          isAddToLocalFav=local??isAddToLocalFav;
+        onFavorite: (local, network) {
+          isFavorite = network ?? isFavorite;
+          isAddToLocalFav = local ?? isAddToLocalFav;
           update();
         },
         favoriteItem: FavoriteItem(
@@ -760,7 +761,6 @@ abstract mixin class _ComicPageActions {
 }
 
 class _ActionButton extends StatelessWidget {
-
   const _ActionButton({
     required this.icon,
     required this.text,
@@ -823,7 +823,6 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
-
 
 class _ComicChapters extends StatefulWidget {
   const _ComicChapters();
@@ -1119,7 +1118,7 @@ class _FavoritePanel extends StatefulWidget {
   /// if null, the comic source does not support favorite or support multiple favorite lists
   final bool? isFavorite;
 
-  final void Function(bool?,bool?) onFavorite;
+  final void Function(bool?, bool?) onFavorite;
 
   final FavoriteItem favoriteItem;
 
@@ -1263,12 +1262,12 @@ class _FavoritePanelState extends State<_FavoritePanel> {
                   LocalFavoritesManager()
                       .deleteComicWithId(folder, widget.cid, widget.type);
                 }
-                widget.onFavorite(false,null);
+                widget.onFavorite(false, null);
               } else {
                 for (var folder in selectedLocalFolders) {
                   LocalFavoritesManager().addComic(folder, widget.favoriteItem);
                 }
-                widget.onFavorite(true,null);
+                widget.onFavorite(true, null);
               }
               context.pop();
             },
@@ -1284,8 +1283,8 @@ class _FavoritePanelState extends State<_FavoritePanel> {
       cid: widget.cid,
       comicSource: comicSource,
       isFavorite: widget.isFavorite,
-      onFavorite: (network){
-        widget.onFavorite(null,network);
+      onFavorite: (network) {
+        widget.onFavorite(null, network);
       },
     );
   }
