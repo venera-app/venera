@@ -202,7 +202,7 @@ class ComicTile extends StatelessWidget {
                         : "[${comic.maxPage}P]${comic.title.replaceAll("\n", "")}",
                     subtitle: comic.subtitle ?? '',
                     description: comic.description,
-                    badge: badge,
+                    badge: badge ?? comic.language,
                     tags: comic.tags,
                     maxLines: 2,
                     enableTranslate: ComicSource.find(comic.sourceKey)

@@ -18,6 +18,27 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool get isOpen => _isOpen;
 
+  int showFloatingButtonValue = 0;
+
+  double fABValue = 0;
+
+  void setFloatingButton(int value) {
+    if (value == 0) {
+      if (showFloatingButtonValue != 0) {
+        showFloatingButtonValue = 0;
+        fABValue = 0;
+        update();
+      }
+    }
+    if (value == 1 && showFloatingButtonValue == 0) {
+      showFloatingButtonValue = 1;
+      update();
+    } else if (value == -1 && showFloatingButtonValue == 0) {
+      showFloatingButtonValue = -1;
+      update();
+    }
+  }
+
   @override
   void initState() {
     sliderFocus.canRequestFocus = false;
@@ -70,6 +91,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           right: 0,
           height: kBottomBarHeight + context.padding.bottom,
           child: buildBottom(),
+        ),
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 180),
+          right: 16,
+          bottom: showFloatingButtonValue == 0 ? -58 : 16,
+          child: buildEpChangeButton(),
         ),
       ],
     );
@@ -333,7 +360,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       return await File(imageKey.substring(7)).readAsBytes();
     } else {
       return (await CacheManager()
-              .findCache("$imageKey@${context.reader.type.comicSource!.key}"))!
+              .findCache("$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
           .readAsBytes();
     }
   }
@@ -370,6 +397,75 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       ),
       width: 400,
     );
+  }
+
+  Widget buildEpChangeButton() {
+    if (context.reader.widget.chapters == null) return const SizedBox();
+    switch (showFloatingButtonValue) {
+      case -1:
+        return FloatingActionButton(
+          onPressed: () => context.reader.toPrevChapter(),
+          child: const Icon(Icons.arrow_back_ios_outlined),
+        );
+      case 0:
+        return Container(
+          width: 58,
+          height: 58,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios,
+            size: 24,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        );
+      case 1:
+        return Container(
+          width: 58,
+          height: 58,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.reader.toNextChapter(),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Center(
+                        child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 24,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    )),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: fABValue,
+                child: ColoredBox(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceTint
+                      .withOpacity(0.2),
+                  child: const SizedBox.expand(),
+                ),
+              )
+            ],
+          ),
+        );
+    }
+    return const SizedBox();
   }
 }
 
