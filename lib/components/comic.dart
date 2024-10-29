@@ -407,7 +407,7 @@ class _ComicDescription extends StatelessWidget {
         if (tags != null)
           LayoutBuilder(builder: (context, constraints) {
             return Container(
-              constraints: const BoxConstraints(maxHeight: 45),
+              constraints: const BoxConstraints(maxHeight: 47),
               child: Wrap(
                 runAlignment: WrapAlignment.start,
                 clipBehavior: Clip.antiAlias,
@@ -417,25 +417,29 @@ class _ComicDescription extends StatelessWidget {
                 children: [
                   for (var s in tags!)
                     Container(
-                      padding: const EdgeInsets.fromLTRB(3, 1, 3, 3),
-                      constraints: BoxConstraints(
-                        maxWidth: constraints.maxWidth * 0.45,
-                      ),
-                      decoration: BoxDecoration(
-                        color: s == "Unavailable"
-                            ? Theme.of(context).colorScheme.errorContainer
-                            : Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(8)),
-                      ),
-                      child: Text(
-                        enableTranslate ? TagsTranslation.translateTag(s) : s,
-                        style: const TextStyle(fontSize: 12),
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
+                        height: 22,
+                        padding: const EdgeInsets.fromLTRB(3,2,3,2),
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth * 0.45,
+                        ),
+                        decoration: BoxDecoration(
+                          color: s == "Unavailable"
+                              ? Theme.of(context).colorScheme.errorContainer
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: Text(
+                          enableTranslate
+                              ? TagsTranslation.translateTag(s)
+                              : s,
+                          style: const TextStyle(fontSize: 12),
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        )),
                 ],
               ),
             );
