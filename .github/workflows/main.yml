@@ -17,7 +17,7 @@ jobs:
         # Step 1: Decode and install the certificate
       - name: Decode and install certificate
         env:
-          CERTIFICATE: ${{ secrets.CERTIFICATE˚ }}
+          CERTIFICATE: ${{ secrets.CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
         run: |
           echo "$CERTIFICATE" | base64 --decode > signing_certificate.p12
