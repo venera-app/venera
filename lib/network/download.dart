@@ -508,6 +508,8 @@ class _ImageDownloadWrapper {
 
   var completers = <Completer<_ImageDownloadWrapper>>[];
 
+  var retry = 3;
+
   void start() async {
     int lastBytes = 0;
     try {
@@ -531,6 +533,11 @@ class _ImageDownloadWrapper {
       }
     } catch (e, s) {
       Log.error("Download", e.toString(), s);
+      retry--;
+      if (retry > 0) {
+        start();
+        return;
+      }
       error = e.toString();
       for (var c in completers) {
         if (!c.isCompleted) {
@@ -561,6 +568,9 @@ abstract mixin class _TransferSpeedMixin {
 
   void onData(int length) {
     if (timer == null) return;
+    if(length < 0) {
+      return;
+    }
     _bytesSinceLastSecond += length;
   }
 
@@ -573,6 +583,7 @@ abstract mixin class _TransferSpeedMixin {
     if (timer != null) {
       timer!.cancel();
     }
+    _bytesSinceLastSecond = 0;
     timer = Timer.periodic(const Duration(seconds: 1), onNextSecond);
   }
 

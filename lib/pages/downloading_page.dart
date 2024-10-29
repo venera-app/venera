@@ -172,11 +172,13 @@ class _DownloadTaskTileState extends State<_DownloadTaskTile> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      widget.task.title,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Expanded(
+                      child: Text(
+                        widget.task.title,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        maxLines: 2,
+                      ),
                     ),
-                    const Spacer(),
                     MenuButton(
                       entries: [
                         MenuEntry(
