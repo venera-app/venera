@@ -59,7 +59,7 @@ class ComicChapter {
 }
 
 abstract class CBZ {
-  static Future<void> import(File file) async {
+  static Future<LocalComic> import(File file) async {
     var cache = Directory(FilePath.join(App.cachePath, 'cbz_import'));
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
@@ -130,20 +130,21 @@ abstract class CBZ {
         }
       }
     }
-    LocalManager().add(
-      LocalComic(
-        id: LocalManager().findValidId(ComicType.local),
-        title: metaData.title,
-        subtitle: metaData.author,
-        tags: metaData.tags,
-        comicType: ComicType.local,
-        directory: dest.name,
-        chapters: cpMap,
-        downloadedChapters: cpMap?.keys.toList() ?? [],
-        cover: 'cover.${coverFile.path.split('.').last}',
-        createdAt: DateTime.now(),
-      ),
+    var comic = LocalComic(
+      id: LocalManager().findValidId(ComicType.local),
+      title: metaData.title,
+      subtitle: metaData.author,
+      tags: metaData.tags,
+      comicType: ComicType.local,
+      directory: dest.name,
+      chapters: cpMap,
+      downloadedChapters: cpMap?.keys.toList() ?? [],
+      cover: 'cover.${coverFile.path.split('.').last}',
+      createdAt: DateTime.now(),
     );
+    LocalManager().add(comic);
+    await cache.delete(recursive: true);
+    return comic;
   }
 
   static Future<File> export(LocalComic comic) async {

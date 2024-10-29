@@ -69,7 +69,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                       LocalManager().deleteComic(c as LocalComic);
                     }),
                 MenuEntry(
-                    icon: Icons.delete,
+                    icon: Icons.outbox_outlined,
                     text: "Export as cbz".tl,
                     onClick: () async {
                       var controller = showLoadingDialog(

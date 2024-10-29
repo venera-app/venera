@@ -5,6 +5,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -384,6 +385,10 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   var height = 200.0;
 
+  var folders = LocalFavoritesManager().folderNames;
+
+  String? selectedFolder;
+
   @override
   void dispose() {
     loading = false;
@@ -444,6 +449,19 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                     });
                   },
                 ),
+                ListTile(
+                  title: Text("Add to favorites".tl),
+                  trailing: Select(
+                    current: selectedFolder,
+                    values: folders,
+                    minWidth: 112,
+                    onTap: (v) {
+                      setState(() {
+                        selectedFolder = folders[v];
+                      });
+                    },
+                  ),
+                ).paddingHorizontal(8),
                 const SizedBox(height: 8),
                 Text(info).paddingHorizontal(24),
               ],
@@ -509,8 +527,18 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       try {
         var cache = FilePath.join(App.cachePath, xFile?.name ?? 'temp.cbz');
         await xFile!.saveTo(cache);
-        await CBZ.import(File(cache));
-        await File(cache).delete();
+        var comic = await CBZ.import(File(cache));
+        if (selectedFolder != null) {
+          LocalFavoritesManager().addComic(selectedFolder!, FavoriteItem(
+            id: comic.id,
+            name: comic.title,
+            coverPath: comic.cover,
+            author: comic.subtitle,
+            type: comic.comicType,
+            tags: comic.tags,
+          ));
+        }
+        await File(cache).deleteIgnoreError();
       } catch (e, s) {
         Log.error("Import Comic", e.toString(), s);
         context.showMessage(message: e.toString());
@@ -581,6 +609,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     }
     for (var comic in comics.values) {
       LocalManager().add(comic, LocalManager().findValidId(ComicType.local));
+      if (selectedFolder != null) {
+        LocalFavoritesManager().addComic(selectedFolder!, FavoriteItem(
+          id: comic.id,
+          name: comic.title,
+          coverPath: comic.cover,
+          author: comic.subtitle,
+          type: comic.comicType,
+          tags: comic.tags,
+        ));
+      }
     }
     context.pop();
     context.showMessage(
