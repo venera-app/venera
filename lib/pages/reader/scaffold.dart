@@ -360,7 +360,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       return await File(imageKey.substring(7)).readAsBytes();
     } else {
       return (await CacheManager()
-              .findCache("$imageKey@${context.reader.type.comicSource!.key}"))!
+              .findCache("$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
           .readAsBytes();
     }
   }
