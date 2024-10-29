@@ -11,7 +11,7 @@ jobs:
         with:
           channel: "stable"
           flutter-version-file: pubspec.yaml
-          architecture: aarch64
+          architecture: x64
       - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
       - run: flutter pub get
         # Step 1: Decode and install the certificate
