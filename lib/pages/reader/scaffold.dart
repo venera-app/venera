@@ -47,6 +47,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         sliderFocus.nextFocus();
       }
     });
+    if(rotation != null) {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    }
     super.initState();
   }
 

@@ -105,6 +105,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     Future.microtask(() {
       updateHistory();
     });
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     super.initState();
   }
 
@@ -112,6 +113,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   void dispose() {
     autoPageTurningTimer?.cancel();
     focusNode.dispose();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
