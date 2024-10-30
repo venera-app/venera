@@ -22,22 +22,66 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   var lastValue = 0;
 
-  double fABValue = 0;
+  var fABValue = ValueNotifier<double>(0);
+
+  _ReaderGestureDetectorState? _gestureDetectorState;
 
   void setFloatingButton(int value) {
     lastValue = showFloatingButtonValue;
     if (value == 0) {
       if (showFloatingButtonValue != 0) {
         showFloatingButtonValue = 0;
-        fABValue = 0;
+        fABValue.value = 0;
         update();
       }
+      _gestureDetectorState!.dragListener = null;
     }
+    var readerMode = context.reader.mode;
     if (value == 1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = 1;
+      _gestureDetectorState!.dragListener = _DragListener(
+        onMove: (offset) {
+          if (readerMode == ReaderMode.continuousTopToBottom) {
+            fABValue.value -= offset.dy;
+          } else if (readerMode == ReaderMode.continuousLeftToRight) {
+            fABValue.value -= offset.dx;
+          } else if (readerMode == ReaderMode.continuousRightToLeft) {
+            fABValue.value += offset.dx;
+          }
+        },
+        onEnd: () {
+          if (fABValue.value.abs() > 58 * 3) {
+            setState(() {
+              showFloatingButtonValue = 0;
+            });
+            context.reader.toNextChapter();
+          }
+          fABValue.value = 0;
+        },
+      );
       update();
     } else if (value == -1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = -1;
+      _gestureDetectorState!.dragListener = _DragListener(
+        onMove: (offset) {
+          if (readerMode == ReaderMode.continuousTopToBottom) {
+            fABValue.value += offset.dy;
+          } else if (readerMode == ReaderMode.continuousLeftToRight) {
+            fABValue.value += offset.dx;
+          } else if (readerMode == ReaderMode.continuousRightToLeft) {
+            fABValue.value -= offset.dx;
+          }
+        },
+        onEnd: () {
+          if (fABValue.value.abs() > 58 * 3) {
+            setState(() {
+              showFloatingButtonValue = 0;
+            });
+            context.reader.toPrevChapter();
+          }
+          fABValue.value = 0;
+        },
+      );
       update();
     }
   }
@@ -50,7 +94,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         sliderFocus.nextFocus();
       }
     });
-    if(rotation != null) {
+    if (rotation != null) {
       SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     }
     super.initState();
@@ -167,8 +211,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               const SizedBox(width: 8),
               IconButton.filledTonal(
                 onPressed: () {
-                  if(!context.reader.toPrevChapter()) {
+                  if (!context.reader.toPrevChapter()) {
                     context.reader.toPage(1);
+                  } else {
+                    if(showFloatingButtonValue != 0) {
+                      setState(() {
+                        showFloatingButtonValue = 0;
+                      });
+                    }
                   }
                 },
                 icon: const Icon(Icons.first_page),
@@ -178,8 +228,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               ),
               IconButton.filledTonal(
                   onPressed: () {
-                    if(!context.reader.toNextChapter()) {
+                    if (!context.reader.toNextChapter()) {
                       context.reader.toPage(context.reader.maxPage);
+                    } else {
+                      if(showFloatingButtonValue != 0) {
+                        setState(() {
+                          showFloatingButtonValue = 0;
+                        });
+                      }
                     }
                   },
                   icon: const Icon(Icons.last_page)),
@@ -373,8 +429,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     if (imageKey.startsWith("file://")) {
       return await File(imageKey.substring(7)).readAsBytes();
     } else {
-      return (await CacheManager()
-              .findCache("$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
           .readAsBytes();
     }
   }
@@ -416,14 +472,6 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   Widget buildEpChangeButton() {
     if (context.reader.widget.chapters == null) return const SizedBox();
     switch (showFloatingButtonValue) {
-      case -1:
-        return FloatingActionButton(
-          onPressed: () {
-            setFloatingButton(0);
-            context.reader.toPrevChapter();
-          },
-          child: const Icon(Icons.arrow_back_ios_outlined),
-        );
       case 0:
         return Container(
           width: 58,
@@ -441,6 +489,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         );
+      case -1:
       case 1:
         return Container(
           width: 58,
@@ -450,40 +499,54 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      setFloatingButton(0);
-                      context.reader.toNextChapter();
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Center(
-                        child: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 24,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    )),
+          child: ValueListenableBuilder(
+            valueListenable: fABValue,
+            builder: (context, value, child) {
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setFloatingButton(0);
+                          if (showFloatingButtonValue == 1) {
+                            context.reader.toNextChapter();
+                          } else {
+                            context.reader.toPrevChapter();
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Center(
+                          child: Icon(
+                            showFloatingButtonValue == 1
+                                ? Icons.arrow_forward_ios
+                                : Icons.arrow_back_ios_outlined,
+                            size: 24,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: fABValue,
-                child: ColoredBox(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceTint
-                      .withOpacity(0.2),
-                  child: const SizedBox.expand(),
-                ),
-              )
-            ],
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: value.clamp(0, 58*3) / 3,
+                    child: ColoredBox(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceTint
+                          .withOpacity(0.2),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         );
     }

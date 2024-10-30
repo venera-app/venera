@@ -12,13 +12,15 @@ class _ReaderGestureDetector extends StatefulWidget {
 class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   late TapGestureRecognizer _tapGestureRecognizer;
 
-  static const _kDoubleTapMinTime = Duration(milliseconds: 200);
+  static const _kDoubleTapMaxTime = Duration(milliseconds: 200);
 
-  static const _kLongPressMinTime = Duration(milliseconds: 200);
+  static const _kLongPressMinTime = Duration(milliseconds: 250);
 
   static const _kDoubleTapMaxDistanceSquared = 20.0 * 20.0;
 
   static const _kTapToTurnPagePercent = 0.3;
+
+  _DragListener? dragListener;
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
         onSecondaryTapUp(details.globalPosition);
       };
     super.initState();
+    context.readerScaffold._gestureDetectorState = this;
   }
 
   @override
@@ -38,11 +41,20 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
         _lastTapPointer = event.pointer;
         _lastTapMoveDistance = Offset.zero;
         _tapGestureRecognizer.addPointer(event);
+        if(_dragInProgress) {
+          dragListener?.onEnd?.call();
+          _dragInProgress = false;
+        }
         Future.delayed(_kLongPressMinTime, () {
-          if (_lastTapPointer == event.pointer &&
-              _lastTapMoveDistance!.distanceSquared < 20.0 * 20.0) {
-            onLongPressedDown(event.position);
-            _longPressInProgress = true;
+          if (_lastTapPointer == event.pointer) {
+            if(_lastTapMoveDistance!.distanceSquared < 20.0 * 20.0) {
+              onLongPressedDown(event.position);
+              _longPressInProgress = true;
+            } else {
+              _dragInProgress = true;
+              dragListener?.onStart?.call(event.position);
+              dragListener?.onMove?.call(_lastTapMoveDistance!);
+            }
           }
         });
       },
@@ -50,10 +62,17 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
         if (event.pointer == _lastTapPointer) {
           _lastTapMoveDistance = event.delta + _lastTapMoveDistance!;
         }
+        if(_dragInProgress) {
+          dragListener?.onMove?.call(event.delta);
+        }
       },
       onPointerUp: (event) {
         if (_longPressInProgress) {
           onLongPressedUp(event.position);
+        }
+        if(_dragInProgress) {
+          dragListener?.onEnd?.call();
+          _dragInProgress = false;
         }
         _lastTapPointer = null;
         _lastTapMoveDistance = null;
@@ -89,6 +108,8 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   bool _longPressInProgress = false;
 
+  bool _dragInProgress = false;
+
   void onTapUp(TapUpDetails event) {
     if (_longPressInProgress) {
       _longPressInProgress = false;
@@ -107,7 +128,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
       }
     }
     _previousEvent = event;
-    Future.delayed(_kDoubleTapMinTime, () {
+    Future.delayed(_kDoubleTapMaxTime, () {
       if (_previousEvent == event) {
         onTap(location);
         _previousEvent = null;
@@ -221,4 +242,12 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   void onLongPressedDown(Offset location) {
     context.reader._imageViewController?.handleLongPressDown(location);
   }
+}
+
+class _DragListener {
+  void Function(Offset point)? onStart;
+  void Function(Offset offset)? onMove;
+  void Function()? onEnd;
+
+  _DragListener({this.onStart, this.onMove, this.onEnd});
 }
