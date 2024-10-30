@@ -699,7 +699,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       subtitle: '',
       tags: [],
       directory: directory.name,
-      chapters: Map.fromIterables(chapters, chapters),
+      chapters: hasChapters ? Map.fromIterables(chapters, chapters) : null,
       cover: coverPath,
       comicType: ComicType.local,
       downloadedChapters: chapters,
