@@ -455,7 +455,6 @@ class _ComicDescription extends StatelessWidget {
               ).toAlign(Alignment.topCenter);
             }),
           ),
-        // const Spacer(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -480,10 +479,12 @@ class _ComicDescription extends StatelessWidget {
                   color: Theme.of(context).colorScheme.tertiaryContainer,
                   borderRadius: const BorderRadius.all(Radius.circular(8)),
                 ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                child: Center(
+                  child:Text(
+                    "${badge![0].toUpperCase()}${badge!.substring(1).toLowerCase()}",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                )
               ),
           ],
         )
