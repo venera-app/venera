@@ -458,7 +458,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   Widget buildRecommend() {
-    if (comic.recommend == null) {
+    if (comic.recommend == null||comic.recommend!.isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
     return SliverMainAxisGroup(slivers: [
