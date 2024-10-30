@@ -116,6 +116,9 @@ class _GalleryModeState extends State<_GalleryMode>
     controller = PageController(initialPage: reader.page);
     reader._imageViewController = this;
     cached = List.filled(reader.maxPage + 2, false);
+    Future.microtask(() {
+      context.readerScaffold.setFloatingButton(0);
+    });
     super.initState();
   }
 
@@ -180,11 +183,11 @@ class _GalleryModeState extends State<_GalleryMode>
       ),
       onPageChanged: (i) {
         if (i == 0) {
-          if (!reader.toNextChapter()) {
+          if (!reader.toPrevChapter()) {
             reader.toPage(1);
           }
         } else if (i == reader.maxPage + 1) {
-          if (!reader.toPrevChapter()) {
+          if (!reader.toNextChapter()) {
             reader.toPage(reader.maxPage);
           }
         } else {

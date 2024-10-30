@@ -20,9 +20,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   int showFloatingButtonValue = 0;
 
+  var lastValue = 0;
+
   double fABValue = 0;
 
   void setFloatingButton(int value) {
+    lastValue = showFloatingButtonValue;
     if (value == 0) {
       if (showFloatingButtonValue != 0) {
         showFloatingButtonValue = 0;
@@ -81,6 +84,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         buildPageInfoText(),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
+          right: 16,
+          bottom: showFloatingButtonValue == 0 ? -58 : 16,
+          child: buildEpChangeButton(),
+        ),
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 180),
           top: _isOpen ? 0 : -(kTopBarHeight + context.padding.top),
           left: 0,
           right: 0,
@@ -94,12 +103,6 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           right: 0,
           height: kBottomBarHeight + context.padding.bottom,
           child: buildBottom(),
-        ),
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 180),
-          right: 16,
-          bottom: showFloatingButtonValue == 0 ? -58 : 16,
-          child: buildEpChangeButton(),
         ),
       ],
     );
@@ -163,14 +166,22 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             children: [
               const SizedBox(width: 8),
               IconButton.filledTonal(
-                onPressed: context.reader.toPrevChapter,
+                onPressed: () {
+                  if(!context.reader.toPrevChapter()) {
+                    context.reader.toPage(1);
+                  }
+                },
                 icon: const Icon(Icons.first_page),
               ),
               Expanded(
                 child: buildSlider(),
               ),
               IconButton.filledTonal(
-                  onPressed: context.reader.toNextChapter,
+                  onPressed: () {
+                    if(!context.reader.toNextChapter()) {
+                      context.reader.toPage(context.reader.maxPage);
+                    }
+                  },
                   icon: const Icon(Icons.last_page)),
               const SizedBox(
                 width: 8,
@@ -407,7 +418,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     switch (showFloatingButtonValue) {
       case -1:
         return FloatingActionButton(
-          onPressed: () => context.reader.toPrevChapter(),
+          onPressed: () {
+            setFloatingButton(0);
+            context.reader.toPrevChapter();
+          },
           child: const Icon(Icons.arrow_back_ios_outlined),
         );
       case 0:
@@ -420,7 +434,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
-            Icons.arrow_forward_ios,
+            lastValue == 1
+                ? Icons.arrow_forward_ios
+                : Icons.arrow_back_ios_outlined,
             size: 24,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
@@ -440,7 +456,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => context.reader.toNextChapter(),
+                    onTap: () {
+                      setFloatingButton(0);
+                      context.reader.toNextChapter();
+                    },
                     borderRadius: BorderRadius.circular(16),
                     child: Center(
                         child: Icon(
