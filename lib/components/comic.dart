@@ -456,7 +456,6 @@ class _ComicDescription extends StatelessWidget {
             }),
           ),
         // const Spacer(),
-        if (rating != null) StarRating(value: rating!, size: 18),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -464,6 +463,7 @@ class _ComicDescription extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (rating != null) StarRating(value: rating!, size: 18),
                   Text(
                     description,
                     style: const TextStyle(
