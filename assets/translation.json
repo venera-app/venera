@@ -144,7 +144,9 @@
     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles." : "目录名称将被用作漫画标题。章节目录的名称将被用作章节标题。",
     "Export as cbz": "导出为cbz",
     "Select a cbz file." : "选择一个cbz文件",
-    "A cbz file" : "一个cbz文件"
+    "A cbz file" : "一个cbz文件",
+    "Fullscreen": "全屏",
+    "Exit": "退出"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -291,6 +293,8 @@
     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles." : "目錄名稱將被用作漫畫標題。章節目錄的名稱將被用作章節標題。",
     "Export as cbz": "匯出為cbz",
     "Select a cbz file." : "選擇一個cbz文件",
-    "A cbz file" : "一個cbz文件"
+    "A cbz file" : "一個cbz文件",
+    "Fullscreen": "全螢幕",
+    "Exit": "退出"
   }
 }

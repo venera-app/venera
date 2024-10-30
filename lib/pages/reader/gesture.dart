@@ -183,25 +183,33 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
       location,
       [
         MenuEntry(
-            text: "Settings".tl,
-            onClick: () {
-              context.readerScaffold.openSetting();
-            }),
+          icon: Icons.settings,
+          text: "Settings".tl,
+          onClick: () {
+            context.readerScaffold.openSetting();
+          },
+        ),
         MenuEntry(
-            text: "Chapters".tl,
-            onClick: () {
-              context.readerScaffold.openChapterDrawer();
-            }),
+          icon: Icons.menu,
+          text: "Chapters".tl,
+          onClick: () {
+            context.readerScaffold.openChapterDrawer();
+          },
+        ),
         MenuEntry(
-            text: "Fullscreen".tl,
-            onClick: () {
-              context.reader.fullscreen();
-            }),
+          icon: Icons.fullscreen,
+          text: "Fullscreen".tl,
+          onClick: () {
+            context.reader.fullscreen();
+          },
+        ),
         MenuEntry(
-            text: "Exit".tl,
-            onClick: () {
-              context.pop();
-            }),
+          icon: Icons.exit_to_app,
+          text: "Exit".tl,
+          onClick: () {
+            context.pop();
+          },
+        ),
       ],
     );
   }
