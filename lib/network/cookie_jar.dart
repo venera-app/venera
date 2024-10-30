@@ -135,6 +135,7 @@ class CookieJarSql {
     for (var header in cookieHeader) {
       try{
         var cookie = Cookie.fromSetCookieValue(header);
+        cookies.add(cookie);
       }
       catch(_) {
         Log.warning("Network", "Invalid cookie header: $header");
