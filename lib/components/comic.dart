@@ -444,7 +444,7 @@ class _ComicDescription extends StatelessWidget {
                               child: Text(
                                 enableTranslate
                                     ? TagsTranslation.translateTag(s)
-                                    : s,
+                                    : s.split(':').last,
                                 style: const TextStyle(fontSize: 12),
                                 softWrap: true,
                                 overflow: TextOverflow.ellipsis,
