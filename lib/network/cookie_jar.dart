@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/ext.dart';
 
 class CookieJarSql {
@@ -130,9 +131,16 @@ class CookieJarSql {
   }
 
   void saveFromResponseCookieHeader(Uri uri, List<String> cookieHeader) {
-    var cookies = cookieHeader
-        .map((header) => Cookie.fromSetCookieValue(header))
-        .toList();
+    var cookies = <Cookie>[];
+    for (var header in cookieHeader) {
+      try{
+        var cookie = Cookie.fromSetCookieValue(header);
+      }
+      catch(_) {
+        Log.warning("Network", "Invalid cookie header: $header");
+        continue;
+      }
+    }
     saveFromResponse(uri, cookies);
   }
 
