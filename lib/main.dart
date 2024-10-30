@@ -150,9 +150,7 @@ class _MyAppState extends State<MyApp> {
                 ),
               },
               child: MouseBackDetector(
-                onTapDown: (event) {
-                  App.pop();
-                },
+                onTapDown: App.pop,
                 child: WindowFrame(widget),
               ),
             );
