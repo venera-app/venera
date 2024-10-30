@@ -20,7 +20,7 @@ void main(List<String> args) {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await init();
-    if(App.isAndroid) {
+    if (App.isAndroid) {
       handleLinks();
     }
     FlutterError.onError = (details) {
@@ -73,6 +73,7 @@ class _MyAppState extends State<MyApp> {
       el.markNeedsBuild();
       el.visitChildren(rebuild);
     }
+
     (context as Element).visitChildren(rebuild);
     setState(() {});
   }
@@ -114,10 +115,10 @@ class _MyAppState extends State<MyApp> {
       ],
       locale: () {
         var lang = appdata.settings['language'];
-        if(lang == 'system') {
+        if (lang == 'system') {
           return null;
         }
-        return switch(lang) {
+        return switch (lang) {
           'zh-CN' => const Locale('zh', 'CN'),
           'zh-TW' => const Locale('zh', 'TW'),
           'en-US' => const Locale('en'),
@@ -148,7 +149,12 @@ class _MyAppState extends State<MyApp> {
                   App.pop,
                 ),
               },
-              child: WindowFrame(widget),
+              child: MouseBackDetector(
+                onTapDown: (event) {
+                  App.pop();
+                },
+                child: WindowFrame(widget),
+              ),
             );
           }
           return _SystemUiProvider(Material(
