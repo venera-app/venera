@@ -40,6 +40,7 @@ class ComicSourcePage extends StatefulWidget {
     }
     controller?.close();
     if (shouldUpdate.isEmpty) {
+      App.rootContext.showMessage(message: "No Update Available".tl);
       return;
     }
     var msg = "";
