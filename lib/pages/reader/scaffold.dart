@@ -147,7 +147,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
-          bottom: _isOpen ? 0 : -kBottomBarHeight,
+          bottom: _isOpen ? 0 : -(kBottomBarHeight + MediaQuery.of(context).padding.bottom),
           left: 0,
           right: 0,
           child: buildBottom(),
