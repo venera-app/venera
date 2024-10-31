@@ -107,6 +107,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void openOrClose() {
+    if(!_isOpen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    }
     setState(() {
       _isOpen = !_isOpen;
     });
@@ -142,10 +147,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
-          bottom: _isOpen ? 0 : -(kBottomBarHeight + context.padding.bottom),
+          bottom: _isOpen ? 0 : -kBottomBarHeight,
           left: 0,
           right: 0,
-          height: kBottomBarHeight + context.padding.bottom,
           child: buildBottom(),
         ),
       ],
@@ -200,7 +204,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
 
     Widget child = SizedBox(
-      height: kBottomBarHeight + MediaQuery.of(context).padding.bottom,
+      height: kBottomBarHeight,
       child: Column(
         children: [
           const SizedBox(

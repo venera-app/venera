@@ -16,7 +16,14 @@ class SmoothCustomScrollView extends StatelessWidget {
         return CustomScrollView(
           controller: controller,
           physics: physics,
-          slivers: slivers,
+          slivers: [
+            ...slivers,
+            SliverPadding(
+              padding: EdgeInsets.only(
+                bottom: context.padding.bottom,
+              ),
+            ),
+          ],
         );
       },
     );
@@ -87,7 +94,7 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
             _controller.position.minScrollExtent,
             _controller.position.maxScrollExtent,
           );
-          if(_futurePosition == old) return;
+          if (_futurePosition == old) return;
           _controller.animateTo(_futurePosition!,
               duration: _fastAnimationDuration, curve: Curves.linear);
         }
