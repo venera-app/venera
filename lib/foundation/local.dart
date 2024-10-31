@@ -166,7 +166,7 @@ class LocalManager with ChangeNotifier {
     } catch (e) {
       return e.toString();
     }
-    await Directory(path).deleteIgnoreError();
+    await Directory(path).deleteIgnoreError(recursive:true);
     path = newPath;
     return null;
   }
