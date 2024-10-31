@@ -820,6 +820,7 @@ class _AccountsWidgetState extends State<_AccountsWidget> {
 
   void onComicSourceChange() {
     setState(() {
+      accounts.clear();
       for (var c in ComicSource.all()) {
         if (c.isLogged) {
           accounts.add(c.name);

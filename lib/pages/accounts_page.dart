@@ -70,6 +70,7 @@ class AccountsPage extends StatelessWidget {
               ),
             );
             element.saveData();
+            ComicSource.notifyListeners();
             logic.update();
           },
         );
@@ -124,6 +125,7 @@ class AccountsPage extends StatelessWidget {
             element.data["account"] = null;
             element.account?.logout();
             element.saveData();
+            ComicSource.notifyListeners();
             logic.update();
           },
           trailing: const Icon(Icons.logout),
