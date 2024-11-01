@@ -197,6 +197,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           _scheduleTasks();
         }
       });
+      downloading++;
     }
   }
 
@@ -590,5 +591,7 @@ abstract mixin class _TransferSpeedMixin {
   void stopRecorder() {
     timer?.cancel();
     timer = null;
+    _currentSpeed = 0;
+    _bytesSinceLastSecond = 0;
   }
 }
