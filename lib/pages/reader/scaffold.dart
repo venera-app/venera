@@ -513,12 +513,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          setFloatingButton(0);
                           if (showFloatingButtonValue == 1) {
                             context.reader.toNextChapter();
-                          } else {
+                          } else if (showFloatingButtonValue == -1) {
                             context.reader.toPrevChapter();
                           }
+                          setFloatingButton(0);
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: Center(
