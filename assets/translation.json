@@ -151,7 +151,8 @@
     "Sort": "排序",
     "Name": "名称",
     "Date": "日期",
-    "Date Desc": "日期降序"
+    "Date Desc": "日期降序",
+    "Start": "开始"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -305,6 +306,7 @@
     "Sort": "排序",
     "Name": "名稱",
     "Date": "日期",
-    "Date Desc": "日期降序"
+    "Date Desc": "日期降序",
+    "Start": "開始"
   }
 }
