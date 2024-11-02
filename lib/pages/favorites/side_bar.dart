@@ -89,6 +89,13 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                         Text("Local".tl),
                         const Spacer(),
                         IconButton(
+                          icon: const Icon(Icons.search),
+                          color: context.colorScheme.primary,
+                          onPressed: () {
+                            context.to(() => const LocalSearchPage());
+                          },
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.add),
                           color: context.colorScheme.primary,
                           onPressed: () {
@@ -112,6 +119,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                 if (index == 0) {
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    margin: const EdgeInsets.only(top: 8),
                     decoration: BoxDecoration(
                       border: Border(
                         top: BorderSide(

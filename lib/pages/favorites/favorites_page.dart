@@ -17,6 +17,7 @@ part 'favorite_actions.dart';
 part 'side_bar.dart';
 part 'local_favorites_page.dart';
 part 'network_favorites_page.dart';
+part 'local_search_page.dart';
 
 const _kLeftBarWidth = 256.0;
 
