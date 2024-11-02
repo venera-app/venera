@@ -147,7 +147,11 @@
     "A cbz file" : "一个cbz文件",
     "Fullscreen": "全屏",
     "Exit": "退出",
-    "View more": "查看更多"
+    "View more": "查看更多",
+    "Sort": "排序",
+    "Name": "名称",
+    "Date": "日期",
+    "Date Desc": "日期降序"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -297,6 +301,10 @@
     "A cbz file" : "一個cbz文件",
     "Fullscreen": "全螢幕",
     "Exit": "退出",
-    "View more": "查看更多"
+    "View more": "查看更多",
+    "Sort": "排序",
+    "Name": "名稱",
+    "Date": "日期",
+    "Date Desc": "日期降序"
   }
 }

@@ -261,8 +261,14 @@ class LocalManager with ChangeNotifier {
     notifyListeners();
   }
 
-  List<LocalComic> getComics() {
-    final res = _db.select('SELECT * FROM comics;');
+  List<LocalComic> getComics(LocalSortType sortType) {
+    var res = _db.select('''
+      SELECT * FROM comics
+      ORDER BY 
+        ${sortType.value == 'name' ? 'title' : 'created_at'} 
+        ${sortType.value == 'time_asc' ? 'ASC' : 'DESC'}
+      ;
+    ''');
     return res.map((row) => LocalComic.fromRow(row)).toList();
   }
 
@@ -308,6 +314,15 @@ class LocalManager with ChangeNotifier {
       return null;
     }
     return LocalComic.fromRow(res.first);
+  }
+
+  List<LocalComic> search(String keyword) {
+    final res = _db.select('''
+      SELECT * FROM comics
+      WHERE title LIKE ? OR tags LIKE ? OR subtitle LIKE ?
+      ORDER BY created_at DESC;
+    ''', ['%$keyword%', '%$keyword%', '%$keyword%']);
+    return res.map((row) => LocalComic.fromRow(row)).toList();
   }
 
   Future<List<String>> getImages(String id, ComicType type, Object ep) async {
@@ -427,5 +442,24 @@ class LocalManager with ChangeNotifier {
     dir.deleteIgnoreError(recursive: true);
     remove(c.id, c.comicType);
     notifyListeners();
+  }
+}
+
+enum LocalSortType {
+  name("name"),
+  timeAsc("time_asc"),
+  timeDesc("time_desc");
+
+  final String value;
+
+  const LocalSortType(this.value);
+
+  static LocalSortType fromString(String value) {
+    for (var type in values) {
+      if (type.value == value) {
+        return type;
+      }
+    }
+    return name;
   }
 }
