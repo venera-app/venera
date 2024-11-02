@@ -597,4 +597,8 @@ class LocalFavoritesManager {
       }
     }
   }
+
+  void close() {
+    _db.dispose();
+  }
 }

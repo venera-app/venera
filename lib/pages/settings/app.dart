@@ -86,6 +86,36 @@ class _AppSettingsState extends State<AppSettings> {
           },
           actionTitle: 'Set'.tl,
         ).toSliver(),
+        _CallbackSetting(
+          title: "Export App Data".tl,
+          callback: () async {
+            var controller = showLoadingDialog(context);
+            var file = await exportAppData();
+            await saveFile(filename: "data.venera", file: file);
+            controller.close();
+          },
+          actionTitle: 'Export'.tl,
+        ).toSliver(),
+        _CallbackSetting(
+          title: "Import App Data".tl,
+          callback: () async {
+            var controller = showLoadingDialog(context);
+            var file = await selectFile(ext: ['venera']);
+            if(file != null) {
+              var cacheFile = File(FilePath.join(App.cachePath, "temp.venera"));
+              await file.saveTo(cacheFile.path);
+              try {
+                await importAppData(cacheFile);
+              }
+              catch(e, s) {
+                Log.error("Import data", e.toString(), s);
+                context.showMessage(message: "Failed to import data".tl);
+              }
+            }
+            controller.close();
+          },
+          actionTitle: 'Import'.tl,
+        ).toSliver(),
         _SettingPartTitle(
           title: "Log".tl,
           icon: Icons.error_outline,

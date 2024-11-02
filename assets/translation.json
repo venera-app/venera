@@ -152,7 +152,10 @@
     "Name": "名称",
     "Date": "日期",
     "Date Desc": "日期降序",
-    "Start": "开始"
+    "Start": "开始",
+    "Export App Data": "导出应用数据",
+    "Import App Data": "导入应用数据",
+    "Export": "导出"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -307,6 +310,9 @@
     "Name": "名稱",
     "Date": "日期",
     "Date Desc": "日期降序",
-    "Start": "開始"
+    "Start": "開始",
+    "Export App Data": "匯出應用數據",
+    "Import App Data": "匯入應用數據",
+    "Export": "匯出"
   }
 }

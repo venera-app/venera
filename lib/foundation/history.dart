@@ -172,6 +172,8 @@ class HistoryManager with ChangeNotifier {
           max_page int
         );
       """);
+
+    notifyListeners();
   }
 
   /// add history. if exists, update time.
@@ -274,5 +276,9 @@ class HistoryManager with ChangeNotifier {
       select count(*) from history;
     """);
     return res.first[0] as int;
+  }
+
+  void close() {
+    _db.dispose();
   }
 }

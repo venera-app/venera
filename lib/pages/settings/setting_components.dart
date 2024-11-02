@@ -434,7 +434,7 @@ class _CallbackSetting extends StatelessWidget {
     return ListTile(
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
-      trailing: FilledButton(
+      trailing: Button.normal(
         onPressed: callback,
         child: Text(actionTitle),
       ).fixHeight(28),

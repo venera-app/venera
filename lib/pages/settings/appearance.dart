@@ -21,6 +21,9 @@ class _AppearanceSettingsState extends State<AppearanceSettings> {
             "light": "Light".tl,
             "dark": "Dark".tl,
           },
+          onChanged: () async {
+            App.forceRebuild();
+          },
         ).toSliver(),
         SelectSetting(
           title: "Theme Color".tl,
