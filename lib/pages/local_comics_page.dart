@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/utils/cbz.dart';
@@ -17,15 +18,29 @@ class LocalComicsPage extends StatefulWidget {
 class _LocalComicsPageState extends State<LocalComicsPage> {
   late List<LocalComic> comics;
 
+  late LocalSortType sortType;
+
+  String keyword = "";
+
+  bool searchMode = false;
+
   void update() {
-    setState(() {
-      comics = LocalManager().getComics();
-    });
+    if(keyword.isEmpty) {
+      setState(() {
+        comics = LocalManager().getComics(sortType);
+      });
+    } else {
+      setState(() {
+        comics = LocalManager().search(keyword);
+      });
+    }
   }
 
   @override
   void initState() {
-    comics = LocalManager().getComics();
+    var sort = appdata.implicitData["local_sort"] ?? "name";
+    sortType = LocalSortType.fromString(sort);
+    comics = LocalManager().getComics(sortType);
     LocalManager().addListener(update);
     super.initState();
   }
@@ -36,25 +51,129 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     super.dispose();
   }
 
+  void sort() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return ContentDialog(
+            title: "Sort".tl,
+            content: Column(
+              children: [
+                RadioListTile<LocalSortType>(
+                  title: Text("Name".tl),
+                  value: LocalSortType.name,
+                  groupValue: sortType,
+                  onChanged: (v) {
+                    setState(() {
+                      sortType = v!;
+                    });
+                  },
+                ),
+                RadioListTile<LocalSortType>(
+                  title: Text("Date".tl),
+                  value: LocalSortType.timeAsc,
+                  groupValue: sortType,
+                  onChanged: (v) {
+                    setState(() {
+                      sortType = v!;
+                    });
+                  },
+                ),
+                RadioListTile<LocalSortType>(
+                  title: Text("Date Desc".tl),
+                  value: LocalSortType.timeDesc,
+                  groupValue: sortType,
+                  onChanged: (v) {
+                    setState(() {
+                      sortType = v!;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () {
+                  appdata.implicitData["local_sort"] =
+                      sortType.value;
+                  appdata.writeImplicitData();
+                  Navigator.pop(context);
+                  update();
+                },
+                child: Text("Confirm".tl),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SmoothCustomScrollView(
         slivers: [
-          SliverAppbar(
-            title: Text("Local".tl),
-            actions: [
-              Tooltip(
-                message: "Downloading".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.download),
+          if(!searchMode)
+            SliverAppbar(
+              title: Text("Local".tl),
+              actions: [
+                Tooltip(
+                  message: "Search".tl,
+                  child: IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      setState(() {
+                        searchMode = true;
+                      });
+                    },
+                  ),
+                ),
+                Tooltip(
+                  message: "Sort".tl,
+                  child: IconButton(
+                    icon: const Icon(Icons.sort),
+                    onPressed: sort,
+                  ),
+                ),
+                Tooltip(
+                  message: "Downloading".tl,
+                  child: IconButton(
+                    icon: const Icon(Icons.download),
+                    onPressed: () {
+                      showPopUpWidget(context, const DownloadingPage());
+                    },
+                  ),
+                )
+              ],
+            )
+          else
+            SliverAppbar(
+              title: TextField(
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: "Search".tl,
+                  border: InputBorder.none,
+                ),
+                onChanged: (v) {
+                  keyword = v;
+                  update();
+                },
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.close),
                   onPressed: () {
-                    showPopUpWidget(context, const DownloadingPage());
+                    setState(() {
+                      searchMode = false;
+                      keyword = "";
+                      update();
+                    });
                   },
                 ),
-              )
-            ],
-          ),
+              ],
+            ),
           SliverGridComics(
             comics: comics,
             onTap: (c) {
@@ -80,8 +199,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                         var file = await CBZ.export(c as LocalComic);
                         await saveFile(filename: file.name, file: file);
                         await file.delete();
-                      }
-                      catch (e) {
+                      } catch (e) {
                         context.showMessage(message: e.toString());
                       }
                       controller.close();

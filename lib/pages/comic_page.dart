@@ -42,10 +42,39 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   bool isDownloaded = false;
 
+  void updateHistory() async {
+    var newHistory = await HistoryManager()
+        .find(widget.id, ComicType(widget.sourceKey.hashCode));
+    if(newHistory?.ep != history?.ep || newHistory?.page != history?.page) {
+      history = newHistory;
+      update();
+    }
+  }
+
+  @override
+  Widget buildLoading() {
+    return Column(
+      children: [
+        const Appbar(title: Text("")),
+        Expanded(
+          child: super.buildLoading(),
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     scrollController.addListener(onScroll);
+    HistoryManager().addListener(updateHistory);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    scrollController.removeListener(onScroll);
+    HistoryManager().removeListener(updateHistory);
+    super.dispose();
   }
 
   @override
@@ -205,6 +234,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   Widget buildActions() {
     bool isMobile = context.width < changePoint;
+    bool hasHistory = history != null && (history!.ep > 1 || history!.page > 1);
     return SliverToBoxAdapter(
       child: Column(
         children: [
@@ -212,17 +242,17 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
-              if (history != null && (history!.ep > 1 || history!.page > 1))
+              if (hasHistory && !isMobile)
                 _ActionButton(
                   icon: const Icon(Icons.menu_book),
                   text: 'Continue'.tl,
                   onPressed: continueRead,
                   iconColor: context.useTextColor(Colors.yellow),
                 ),
-              if (!isMobile)
+              if(!isMobile || hasHistory)
                 _ActionButton(
                   icon: const Icon(Icons.play_circle_outline),
-                  text: 'Read'.tl,
+                  text: 'Start'.tl,
                   onPressed: read,
                   iconColor: context.useTextColor(Colors.orange),
                 ),
@@ -278,7 +308,10 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: FilledButton(onPressed: read, child: Text("Read".tl)),
+                  child: hasHistory
+                      ? FilledButton(
+                          onPressed: continueRead, child: Text("Continue".tl))
+                      : FilledButton(onPressed: read, child: Text("Read".tl)),
                 )
               ],
             ).paddingHorizontal(16).paddingVertical(8),
@@ -398,23 +431,23 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 Text(comic.stars!.toStringAsFixed(2)),
               ],
             ).paddingLeft(16).paddingVertical(8),
-            for (var e in comic.tags.entries)
-              buildWrap(
-                children: [
-                  if(e.value.isNotEmpty)
+          for (var e in comic.tags.entries)
+            buildWrap(
+              children: [
+                if (e.value.isNotEmpty)
                   buildTag(text: e.key.ts(comicSource.key), isTitle: true),
-                  for (var tag in e.value)
-                    buildTag(
-                      text: enableTranslation
-                          ? TagsTranslation.translationTagWithNamespace(
-                              tag,
-                              e.key.toLowerCase(),
-                            )
-                          : tag,
-                      onTap: () => onTapTag(tag, e.key),
-                    ),
-                ],
-              ),
+                for (var tag in e.value)
+                  buildTag(
+                    text: enableTranslation
+                        ? TagsTranslation.translationTagWithNamespace(
+                            tag,
+                            e.key.toLowerCase(),
+                          )
+                        : tag,
+                    onTap: () => onTapTag(tag, e.key),
+                  ),
+              ],
+            ),
           if (comic.uploader != null)
             buildWrap(
               children: [
@@ -458,7 +491,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   Widget buildRecommend() {
-    if (comic.recommend == null||comic.recommend!.isEmpty) {
+    if (comic.recommend == null || comic.recommend!.isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
     return SliverMainAxisGroup(slivers: [
@@ -770,6 +803,7 @@ class _ActionButton extends StatelessWidget {
     this.isLoading,
     this.iconColor,
   });
+
   final Widget icon;
 
   final Widget? activeIcon;
@@ -783,6 +817,7 @@ class _ActionButton extends StatelessWidget {
   final bool? isLoading;
 
   final Color? iconColor;
+
   @override
   Widget build(BuildContext context) {
     return Container(

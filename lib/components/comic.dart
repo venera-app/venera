@@ -872,6 +872,7 @@ class ComicListState extends State<ComicList> {
     try {
       if (widget.loadPage != null) {
         var res = await widget.loadPage!(page);
+        if(!mounted) return;
         if (res.success) {
           if (res.data.isEmpty) {
             _data[page] = const [];

@@ -169,7 +169,8 @@ Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
     acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
   );
   if (file == null) return null;
-  if (!ext.contains(file?.path.split(".").last)) {
+  if (!ext.contains(file.path.split(".").last)) {
+    App.rootContext.showMessage(message: "Invalid file type");
     return null;
   }
   return file;

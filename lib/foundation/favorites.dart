@@ -83,7 +83,9 @@ class FavoriteItem implements Comic {
   int? get maxPage => null;
 
   @override
-  String get sourceKey => type == ComicType.local ? 'local' : type.comicSource?.key ?? "Unknown:${type.value}";
+  String get sourceKey => type == ComicType.local
+      ? 'local'
+      : type.comicSource?.key ?? "Unknown:${type.value}";
 
   @override
   double? get stars => null;
@@ -108,17 +110,17 @@ class FavoriteItem implements Comic {
 
   static FavoriteItem fromJson(Map<String, dynamic> json) {
     var type = json["type"] as int;
-    if(type == 0 && json['coverPath'].toString().startsWith('http')) {
+    if (type == 0 && json['coverPath'].toString().startsWith('http')) {
       type = 'picacg'.hashCode;
-    } else if(type == 1) {
+    } else if (type == 1) {
       type = 'ehentai'.hashCode;
-    } else if(type == 2) {
+    } else if (type == 2) {
       type = 'jm'.hashCode;
-    } else if(type == 3) {
+    } else if (type == 3) {
       type = 'hitomi'.hashCode;
-    } else if(type == 4) {
+    } else if (type == 4) {
       type = 'wnacg'.hashCode;
-    } else if(type == 6) {
+    } else if (type == 6) {
       type = 'nhentai'.hashCode;
     }
     return FavoriteItem(
@@ -132,21 +134,18 @@ class FavoriteItem implements Comic {
   }
 }
 
-class FavoriteItemWithFolderInfo {
-  FavoriteItem comic;
+class FavoriteItemWithFolderInfo extends FavoriteItem {
   String folder;
 
-  FavoriteItemWithFolderInfo(this.comic, this.folder);
-
-  @override
-  bool operator ==(Object other) {
-    return other is FavoriteItemWithFolderInfo &&
-        other.comic == comic &&
-        other.folder == folder;
-  }
-
-  @override
-  int get hashCode => comic.hashCode ^ folder.hashCode;
+  FavoriteItemWithFolderInfo(FavoriteItem item, this.folder)
+      : super(
+          id: item.id,
+          name: item.name,
+          coverPath: item.coverPath,
+          author: item.author,
+          type: item.type,
+          tags: item.tags,
+        );
 }
 
 class LocalFavoritesManager {
@@ -498,11 +497,11 @@ class LocalFavoritesManager {
     }
 
     bool test(FavoriteItemWithFolderInfo comic, String keyword) {
-      if (comic.comic.name.contains(keyword)) {
+      if (comic.name.contains(keyword)) {
         return true;
-      } else if (comic.comic.author.contains(keyword)) {
+      } else if (comic.author.contains(keyword)) {
         return true;
-      } else if (comic.comic.tags.any((element) => element.contains(keyword))) {
+      } else if (comic.tags.any((element) => element.contains(keyword))) {
         return true;
       }
       return false;
@@ -577,7 +576,7 @@ class LocalFavoritesManager {
   void fromJson(String json) {
     var data = jsonDecode(json);
     var folder = data["name"];
-    if(folder == null || folder is! String) {
+    if (folder == null || folder is! String) {
       throw "Invalid data";
     }
     if (folderNames.contains(folder)) {
@@ -591,10 +590,13 @@ class LocalFavoritesManager {
     for (var comic in data["comics"]) {
       try {
         addComic(folder, FavoriteItem.fromJson(comic));
-      }
-      catch(e) {
+      } catch (e) {
         Log.error("Import Data", e.toString());
       }
     }
+  }
+
+  void close() {
+    _db.dispose();
   }
 }

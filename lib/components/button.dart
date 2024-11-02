@@ -156,7 +156,7 @@ class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     var padding = widget.padding ??
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 4);
     var width = widget.width;
     if (width != null) {
       width = width - padding.horizontal;
@@ -172,7 +172,7 @@ class _ButtonState extends State<Button> {
       child: DefaultTextStyle(
         style: TextStyle(
           color: textColor,
-          fontSize: 16,
+          fontSize: 14,
         ),
         child: isLoading
             ? CircularProgressIndicator(
@@ -210,11 +210,11 @@ class _ButtonState extends State<Button> {
           decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: (isHover && !isLoading && widget.type == ButtonType.filled)
+            boxShadow: (isHover && !isLoading && (widget.type == ButtonType.filled || widget.type == ButtonType.normal))
                 ? [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
+                      blurRadius: 2,
                       offset: const Offset(0, 1),
                     )
                   ]
@@ -246,6 +246,14 @@ class _ButtonState extends State<Button> {
   Color get buttonColor {
     if (widget.type == ButtonType.filled) {
       var color = widget.color ?? context.colorScheme.primary;
+      if (isHover) {
+        return color.withOpacity(0.9);
+      } else {
+        return color;
+      }
+    }
+    if (widget.type == ButtonType.normal) {
+      var color = widget.color ?? context.colorScheme.surfaceContainer;
       if (isHover) {
         return color.withOpacity(0.9);
       } else {

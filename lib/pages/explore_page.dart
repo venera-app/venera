@@ -5,7 +5,11 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/search_result_page.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
+
+import 'category_comics_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -15,7 +19,7 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<ExplorePage> {
   late TabController controller;
 
   bool showFB = true;
@@ -23,6 +27,24 @@ class _ExplorePageState extends State<ExplorePage>
   double location = 0;
 
   late List<String> pages;
+
+  void onSettingsChanged() {
+    var explorePages = List<String>.from(appdata.settings["explore_pages"]);
+    var all = ComicSource.all()
+        .map((e) => e.explorePages)
+        .expand((e) => e.map((e) => e.title))
+        .toList();
+    explorePages = explorePages.where((e) => all.contains(e)).toList();
+    if (!pages.isEqualsTo(explorePages)) {
+      setState(() {
+        pages = explorePages;
+        controller = TabController(
+          length: pages.length,
+          vsync: this,
+        );
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -36,7 +58,15 @@ class _ExplorePageState extends State<ExplorePage>
       length: pages.length,
       vsync: this,
     );
+    appdata.settings.addListener(onSettingsChanged);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    appdata.settings.removeListener(onSettingsChanged);
+    super.dispose();
   }
 
   void refresh() {
@@ -83,12 +113,14 @@ class _ExplorePageState extends State<ExplorePage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (pages.isEmpty) {
       return buildEmpty();
     }
 
     Widget tabBar = Material(
       child: FilledTabBar(
+        key: Key(pages.toString()),
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,
       ),
@@ -97,48 +129,50 @@ class _ExplorePageState extends State<ExplorePage>
     return Stack(
       children: [
         Positioned.fill(
-            child: Column(
-          children: [
-            tabBar,
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notifications) {
-                  if (notifications.metrics.axis == Axis.horizontal) {
-                    if (!showFB) {
+          child: Column(
+            children: [
+              tabBar,
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notifications) {
+                    if (notifications.metrics.axis == Axis.horizontal) {
+                      if (!showFB) {
+                        setState(() {
+                          showFB = true;
+                        });
+                      }
+                      return true;
+                    }
+
+                    var current = notifications.metrics.pixels;
+
+                    if ((current > location && current != 0) && showFB) {
+                      setState(() {
+                        showFB = false;
+                      });
+                    } else if ((current < location || current == 0) &&
+                        !showFB) {
                       setState(() {
                         showFB = true;
                       });
                     }
-                    return true;
-                  }
 
-                  var current = notifications.metrics.pixels;
-
-                  if ((current > location && current != 0) && showFB) {
-                    setState(() {
-                      showFB = false;
-                    });
-                  } else if ((current < location || current == 0) && !showFB) {
-                    setState(() {
-                      showFB = true;
-                    });
-                  }
-
-                  location = current;
-                  return false;
-                },
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeTop: true,
-                  child: TabBarView(
-                    controller: controller,
-                    children: pages.map((e) => buildBody(e)).toList(),
+                    location = current;
+                    return false;
+                  },
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: TabBarView(
+                      controller: controller,
+                      children: pages.map((e) => buildBody(e)).toList(),
+                    ),
                   ),
                 ),
-              ),
-            )
-          ],
-        )),
+              )
+            ],
+          ),
+        ),
         Positioned(
           right: 16,
           bottom: 16,
@@ -159,6 +193,9 @@ class _ExplorePageState extends State<ExplorePage>
       ],
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class _SingleExplorePage extends StatefulWidget {
@@ -170,7 +207,8 @@ class _SingleExplorePage extends StatefulWidget {
   State<_SingleExplorePage> createState() => _SingleExplorePageState();
 }
 
-class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
+class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
+    with AutomaticKeepAliveClientMixin<_SingleExplorePage> {
   late final ExplorePageData data;
 
   bool loading = true;
@@ -182,6 +220,16 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
   late final String comicSourceKey;
 
   int key = 0;
+
+  bool _wantKeepAlive = true;
+
+  void onSettingsChanged() {
+    var explorePages = appdata.settings["explore_pages"];
+    if (!explorePages.contains(widget.title)) {
+      _wantKeepAlive = false;
+      updateKeepAlive();
+    }
+  }
 
   @override
   void initState() {
@@ -195,11 +243,19 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
         }
       }
     }
+    appdata.settings.addListener(onSettingsChanged);
     throw "Explore Page ${widget.title} Not Found!";
   }
 
   @override
+  void dispose() {
+    appdata.settings.removeListener(onSettingsChanged);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (data.loadMultiPart != null) {
       return buildMultiPart();
     } else if (data.loadPage != null || data.loadNext != null) {
@@ -284,6 +340,9 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage> {
       });
     }
   }
+
+  @override
+  bool get wantKeepAlive => _wantKeepAlive;
 }
 
 class _MixedExplorePage extends StatefulWidget {
@@ -367,13 +426,12 @@ Iterable<Widget> _buildExplorePagePart(
               if (part.viewMore != null)
                 TextButton(
                   onPressed: () {
-                    // TODO: view more
-                    /*
                     var context = App.mainNavigatorKey!.currentContext!;
                     if (part.viewMore!.startsWith("search:")) {
                       context.to(
-                            () => SearchResultPage(
-                          keyword: part.viewMore!.replaceFirst("search:", ""),
+                        () => SearchResultPage(
+                          text: part.viewMore!.replaceFirst("search:", ""),
+                          options: const [],
                           sourceKey: sourceKey,
                         ),
                       );
@@ -385,16 +443,16 @@ Iterable<Widget> _buildExplorePagePart(
                         p = null;
                       }
                       context.to(
-                            () => CategoryComicsPage(
+                        () => CategoryComicsPage(
                           category: c,
                           categoryKey:
-                          ComicSource.find(sourceKey)!.categoryData!.key,
+                              ComicSource.find(sourceKey)!.categoryData!.key,
                           param: p,
                         ),
                       );
-                    }*/
+                    }
                   },
-                  child: Text("查看更多".tl),
+                  child: Text("View more".tl),
                 )
             ],
           ),
