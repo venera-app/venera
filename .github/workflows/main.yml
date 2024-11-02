@@ -27,16 +27,16 @@ jobs:
       - name: Build Flutter macOS App
         run: flutter build macos --release
 
-
-      # Step 4: Create the DMG file
+      # Step 3: Create the DMG file
       - name: Create DMG
         run: |
           mkdir -p dist
-          hdiutil create -volname "venera" -srcfolder build/macos/Build/Products/Release/venera.app -ov -format UDZO "dist/venera.dmg"
+          mkdir -p dist/dmg_contents
+          cp -R build/macos/Build/Products/Release/venera.app dist/dmg_contents/
+          ln -s /Applications dist/dmg_contents/Applications
+          hdiutil create -volname "venera" -srcfolder dist/dmg_contents -ov -format UDZO "dist/venera.dmg"
 
-
-
-      # Step 8: Attach and upload artifacts (optional)
+      # Step 4: Attach and upload artifacts (optional)
       - name: Upload DMG
         uses: actions/upload-artifact@v3
         with:
