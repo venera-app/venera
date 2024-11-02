@@ -7,11 +7,15 @@
 
 A comic reader that support reading local and network comics.
 
-## Current Status
+## Features
 
-The project is still under development, and the current version is not stable.
-
-Use the project at your own risk.
+- Read local comics
+- Use javascript to create comic sources
+- Read comics from network sources
+- Manage favorite comics
+- Download comics
+- View comments, tags, and other information of comics if the source supports
+- Login to comment, rate, and other operations if the source supports
 
 ## Create a new comic source
 
