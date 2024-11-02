@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/io.dart';
@@ -85,7 +86,7 @@ class _Appdata {
 
 final appdata = _Appdata();
 
-class _Settings {
+class _Settings with ChangeNotifier {
   _Settings();
 
   final _data = <String, dynamic>{
@@ -117,6 +118,7 @@ class _Settings {
 
   operator []=(String key, dynamic value) {
     _data[key] = value;
+    notifyListeners();
   }
 
   @override
