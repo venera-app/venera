@@ -146,7 +146,8 @@
     "Select a cbz file." : "选择一个cbz文件",
     "A cbz file" : "一个cbz文件",
     "Fullscreen": "全屏",
-    "Exit": "退出"
+    "Exit": "退出",
+    "View more": "查看更多"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -295,6 +296,7 @@
     "Select a cbz file." : "選擇一個cbz文件",
     "A cbz file" : "一個cbz文件",
     "Fullscreen": "全螢幕",
-    "Exit": "退出"
+    "Exit": "退出",
+    "View more": "查看更多"
   }
 }

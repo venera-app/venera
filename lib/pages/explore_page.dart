@@ -5,8 +5,11 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
+
+import 'category_comics_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -32,7 +35,7 @@ class _ExplorePageState extends State<ExplorePage>
         .expand((e) => e.map((e) => e.title))
         .toList();
     explorePages = explorePages.where((e) => all.contains(e)).toList();
-    if(!pages.isEqualsTo(explorePages)){
+    if (!pages.isEqualsTo(explorePages)) {
       setState(() {
         pages = explorePages;
         controller = TabController(
@@ -423,13 +426,12 @@ Iterable<Widget> _buildExplorePagePart(
               if (part.viewMore != null)
                 TextButton(
                   onPressed: () {
-                    // TODO: view more
-                    /*
                     var context = App.mainNavigatorKey!.currentContext!;
                     if (part.viewMore!.startsWith("search:")) {
                       context.to(
-                            () => SearchResultPage(
-                          keyword: part.viewMore!.replaceFirst("search:", ""),
+                        () => SearchResultPage(
+                          text: part.viewMore!.replaceFirst("search:", ""),
+                          options: const [],
                           sourceKey: sourceKey,
                         ),
                       );
@@ -441,16 +443,16 @@ Iterable<Widget> _buildExplorePagePart(
                         p = null;
                       }
                       context.to(
-                            () => CategoryComicsPage(
+                        () => CategoryComicsPage(
                           category: c,
                           categoryKey:
-                          ComicSource.find(sourceKey)!.categoryData!.key,
+                              ComicSource.find(sourceKey)!.categoryData!.key,
                           param: p,
                         ),
                       );
-                    }*/
+                    }
                   },
-                  child: Text("查看更多".tl),
+                  child: Text("View more".tl),
                 )
             ],
           ),
