@@ -268,7 +268,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   icon: const Icon(Icons.favorite_border),
                   activeIcon: const Icon(Icons.favorite),
                   isActive: isLiked,
-                  text: (data!.likesCount ?? (isLiked ? 'Liked'.tl : 'Like'.tl))
+                  text: ((data!.likesCount!=null) ?(data!.likesCount!+(isLiked?1:0)) :(isLiked ? 'Liked'.tl : 'Like'.tl))
                       .toString(),
                   isLoading: isLiking,
                   onPressed: likeOrUnlike,
