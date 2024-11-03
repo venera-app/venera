@@ -45,7 +45,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   void updateHistory() async {
     var newHistory = await HistoryManager()
         .find(widget.id, ComicType(widget.sourceKey.hashCode));
-    if(newHistory?.ep != history?.ep || newHistory?.page != history?.page) {
+    if (newHistory?.ep != history?.ep || newHistory?.page != history?.page) {
       history = newHistory;
       update();
     }
@@ -249,7 +249,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   onPressed: continueRead,
                   iconColor: context.useTextColor(Colors.yellow),
                 ),
-              if(!isMobile || hasHistory)
+              if (!isMobile || hasHistory)
                 _ActionButton(
                   icon: const Icon(Icons.play_circle_outline),
                   text: 'Start'.tl,
@@ -268,7 +268,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   icon: const Icon(Icons.favorite_border),
                   activeIcon: const Icon(Icons.favorite),
                   isActive: isLiked,
-                  text: ((data!.likesCount!=null) ?(data!.likesCount!+(isLiked?1:0)) :(isLiked ? 'Liked'.tl : 'Like'.tl))
+                  text: ((data!.likesCount != null)
+                          ? (data!.likesCount! + (isLiked ? 1 : 0))
+                          : (isLiked ? 'Liked'.tl : 'Like'.tl))
                       .toString(),
                   isLoading: isLiking,
                   onPressed: likeOrUnlike,

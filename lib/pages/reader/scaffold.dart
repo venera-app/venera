@@ -107,7 +107,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void openOrClose() {
-    if(!_isOpen) {
+    if (!_isOpen) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
@@ -147,7 +147,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
-          bottom: _isOpen ? 0 : -(kBottomBarHeight + MediaQuery.of(context).padding.bottom),
+          bottom: _isOpen
+              ? 0
+              : -(kBottomBarHeight + MediaQuery.of(context).padding.bottom),
           left: 0,
           right: 0,
           child: buildBottom(),
@@ -218,7 +220,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                   if (!context.reader.toPrevChapter()) {
                     context.reader.toPage(1);
                   } else {
-                    if(showFloatingButtonValue != 0) {
+                    if (showFloatingButtonValue != 0) {
                       setState(() {
                         showFloatingButtonValue = 0;
                       });
@@ -235,7 +237,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                     if (!context.reader.toNextChapter()) {
                       context.reader.toPage(context.reader.maxPage);
                     } else {
-                      if(showFloatingButtonValue != 0) {
+                      if (showFloatingButtonValue != 0) {
                         setState(() {
                           showFloatingButtonValue = 0;
                         });
@@ -541,7 +543,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    height: value.clamp(0, 58*3) / 3,
+                    height: value.clamp(0, 58 * 3) / 3,
                     child: ColoredBox(
                       color: Theme.of(context)
                           .colorScheme
