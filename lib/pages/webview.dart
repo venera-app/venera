@@ -98,14 +98,14 @@ class _AppWebviewState extends State<AppWebview> {
                     0),
                 items: [
                   PopupMenuItem(
-                    child: Text("Open in browser".tl),
-                    onTap: () async =>
-                        launchUrlString((await controller?.getUrl())!.path),
+                  child: Text("Open in browser".tl),
+                  onTap: () async =>
+                    launchUrlString((await controller?.getUrl())!.toString()),
                   ),
                   PopupMenuItem(
-                    child: Text("Copy link".tl),
-                    onTap: () async => Clipboard.setData(ClipboardData(
-                        text: (await controller?.getUrl())!.path)),
+                  child: Text("Copy link".tl),
+                  onTap: () async => Clipboard.setData(ClipboardData(
+                    text: (await controller?.getUrl())!.toString())),
                   ),
                   PopupMenuItem(
                     child: Text("Reload".tl),

@@ -173,84 +173,88 @@ class _LoginPageState extends State<_LoginPage> {
         child: Container(
           padding: const EdgeInsets.all(16),
           constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Login".tl, style: const TextStyle(fontSize: 24)),
-              const SizedBox(height: 32),
-              if (widget.config.cookieFields == null)
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Username".tl,
-                    border: const OutlineInputBorder(),
-                  ),
-                  enabled: widget.config.login != null,
-                  onChanged: (s) {
-                    username = s;
-                  },
-                ).paddingBottom(16),
-              if (widget.config.cookieFields == null)
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Password".tl,
-                    border: const OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  enabled: widget.config.login != null,
-                  onChanged: (s) {
-                    password = s;
-                  },
-                  onSubmitted: (s) => login(),
-                ).paddingBottom(16),
-              for (var field in widget.config.cookieFields ?? <String>[])
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: field,
-                    border: const OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  enabled: widget.config.validateCookies != null,
-                  onChanged: (s) {
-                    _cookies[field] = s;
-                  },
-                ).paddingBottom(16),
-              if (widget.config.login == null &&
-                  widget.config.cookieFields == null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline),
-                    const SizedBox(width: 8),
-                    Text("Login with password is disabled".tl),
-                  ],
-                )
-              else
-                Button.filled(
-                  isLoading: loading,
-                  onPressed: login,
-                  child: Text("Continue".tl),
-                ),
-              const SizedBox(height: 24),
-              if (widget.config.loginWebsite != null)
-                TextButton(
-                  onPressed: loginWithWebview,
-                  child: Text("Login with webview".tl),
-                ),
-              const SizedBox(height: 8),
-              if (widget.config.registerWebsite != null)
-                TextButton(
-                  onPressed: () =>
-                      launchUrlString(widget.config.registerWebsite!),
-                  child: Row(
+          child: AutofillGroup(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Login".tl, style: const TextStyle(fontSize: 24)),
+                const SizedBox(height: 32),
+                if (widget.config.cookieFields == null)
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Username".tl,
+                      border: const OutlineInputBorder(),
+                    ),
+                    enabled: widget.config.login != null,
+                    onChanged: (s) {
+                      username = s;
+                    },
+                    autofillHints: const [AutofillHints.username],
+                  ).paddingBottom(16),
+                if (widget.config.cookieFields == null)
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Password".tl,
+                      border: const OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    enabled: widget.config.login != null,
+                    onChanged: (s) {
+                      password = s;
+                    },
+                    onSubmitted: (s) => login(),
+                    autofillHints: const [AutofillHints.password],
+                  ).paddingBottom(16),
+                for (var field in widget.config.cookieFields ?? <String>[])
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: field,
+                      border: const OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    enabled: widget.config.validateCookies != null,
+                    onChanged: (s) {
+                      _cookies[field] = s;
+                    },
+                  ).paddingBottom(16),
+                if (widget.config.login == null &&
+                    widget.config.cookieFields == null)
+                  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.link),
+                      const Icon(Icons.error_outline),
                       const SizedBox(width: 8),
-                      Text("Create Account".tl),
+                      Text("Login with password is disabled".tl),
                     ],
+                  )
+                else
+                  Button.filled(
+                    isLoading: loading,
+                    onPressed: login,
+                    child: Text("Continue".tl),
                   ),
-                ),
-            ],
+                const SizedBox(height: 24),
+                if (widget.config.loginWebsite != null)
+                  TextButton(
+                    onPressed: loginWithWebview,
+                    child: Text("Login with webview".tl),
+                  ),
+                const SizedBox(height: 8),
+                if (widget.config.registerWebsite != null)
+                  TextButton(
+                    onPressed: () =>
+                        launchUrlString(widget.config.registerWebsite!),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.link),
+                        const SizedBox(width: 8),
+                        Text("Create Account".tl),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
