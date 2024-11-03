@@ -145,20 +145,20 @@ class _ExplorePageState extends State<ExplorePage>
                     }
 
                     var current = notifications.metrics.pixels;
-                    var overflow=notifications.metrics.outOfRange;
-                    // print("current: $current, prev: $location");
+                    var overflow = notifications.metrics.outOfRange;
                     if (current > location && current != 0 && showFB) {
                       setState(() {
                         showFB = false;
                       });
-                    } else if ((current < location-50 || current == 0) &&
+                    } else if ((current < location - 50 || current == 0) &&
                         !showFB) {
                       setState(() {
                         showFB = true;
                       });
                     }
-                    if((current>location||current<location-50)&&!overflow){
-                      location=current;
+                    if ((current > location || current < location - 50) &&
+                        !overflow) {
+                      location = current;
                     }
                     return false;
                   },
