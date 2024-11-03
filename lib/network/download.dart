@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/local.dart';
@@ -155,7 +156,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
 
   var tasks = <int, _ImageDownloadWrapper>{};
 
-  int get _maxConcurrentTasks => 5;
+  int get _maxConcurrentTasks => (appdata.settings["downloadThreads"] as num).toInt();
 
   void _scheduleTasks() {
     var images = _images![_images!.keys.elementAt(_chapter)]!;
