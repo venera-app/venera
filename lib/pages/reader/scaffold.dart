@@ -260,7 +260,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                   color: Theme.of(context).colorScheme.tertiaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(text),
+                child: Center(
+                  child: Text(text),
+                ),
               ),
               const Spacer(),
               if (App.isWindows)
