@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html;
@@ -238,7 +237,7 @@ mixin class _JSEngineApi {
           Log.warning(
             "JS Engine",
             "Too many documents, deleting the oldest: $shouldDelete\n"
-            "Current documents: ${_documents.keys}",
+                "Current documents: ${_documents.keys}",
           );
           _documents.remove(shouldDelete);
         }
@@ -350,9 +349,6 @@ mixin class _JSEngineApi {
         case "utf8":
           return isEncode ? utf8.encode(value) : utf8.decode(value);
         case "base64":
-          if (value is String) {
-            value = utf8.encode(value);
-          }
           return isEncode ? base64Encode(value) : base64Decode(value);
         case "md5":
           return Uint8List.fromList(md5.convert(value).bytes);
@@ -383,8 +379,21 @@ mixin class _JSEngineApi {
           if (!isEncode) {
             var key = data["key"];
             var cipher = ECBBlockCipher(AESEngine());
-            cipher.init(false, KeyParameter(key));
-            return cipher.process(value);
+            cipher.init(
+              false,
+              KeyParameter(key),
+            );
+            var offset = 0;
+            var result = Uint8List(value.length);
+            while (offset < value.length) {
+              offset += cipher.processBlock(
+                value,
+                offset,
+                result,
+                offset,
+              );
+            }
+            return result;
           }
           return null;
         case "aes-cbc":
@@ -393,7 +402,17 @@ mixin class _JSEngineApi {
             var iv = data["iv"];
             var cipher = CBCBlockCipher(AESEngine());
             cipher.init(false, ParametersWithIV(KeyParameter(key), iv));
-            return cipher.process(value);
+            var offset = 0;
+            var result = Uint8List(value.length);
+            while (offset < value.length) {
+              offset += cipher.processBlock(
+                value,
+                offset,
+                result,
+                offset,
+              );
+            }
+            return result;
           }
           return null;
         case "aes-cfb":
@@ -402,7 +421,17 @@ mixin class _JSEngineApi {
             var blockSize = data["blockSize"];
             var cipher = CFBBlockCipher(AESEngine(), blockSize);
             cipher.init(false, KeyParameter(key));
-            return cipher.process(value);
+            var offset = 0;
+            var result = Uint8List(value.length);
+            while (offset < value.length) {
+              offset += cipher.processBlock(
+                value,
+                offset,
+                result,
+                offset,
+              );
+            }
+            return result;
           }
           return null;
         case "aes-ofb":
@@ -411,7 +440,17 @@ mixin class _JSEngineApi {
             var blockSize = data["blockSize"];
             var cipher = OFBBlockCipher(AESEngine(), blockSize);
             cipher.init(false, KeyParameter(key));
-            return cipher.process(value);
+            var offset = 0;
+            var result = Uint8List(value.length);
+            while (offset < value.length) {
+              offset += cipher.processBlock(
+                value,
+                offset,
+                result,
+                offset,
+              );
+            }
+            return result;
           }
           return null;
         case "rsa":
@@ -426,8 +465,8 @@ mixin class _JSEngineApi {
         default:
           return value;
       }
-    } catch (e) {
-      Log.error("JS Engine", "Failed to convert $type: $e");
+    } catch (e, s) {
+      Log.error("JS Engine", "Failed to convert $type: $e", s);
       return null;
     }
   }
