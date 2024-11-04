@@ -1000,3 +1000,115 @@ class ComicSource {
 
     static sources = {}
 }
+
+/// A reference to dart object.
+/// The api can only be used in the comic.onImageLoad.modifyImage function
+class Image {
+    key = 0;
+
+    constructor(key) {
+        this.key = key;
+    }
+
+    /**
+     * Copy the specified range of the image
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @returns {Image|null}
+     */
+    copyRange(x, y, width, height) {
+        let key = sendMessage({
+            method: "image",
+            function: "copyRange",
+            key: this.key,
+            x: x,
+            y: y,
+            width: width,
+            height: height
+        })
+        if(key == null) return null;
+        return new Image(key);
+    }
+
+    /**
+     * Copy the image and rotate 90 degrees
+     * @returns {Image|null}
+     */
+    copyAndRotate90() {
+        let key = sendMessage({
+            method: "image",
+            function: "copyAndRotate90",
+            key: this.key
+        })
+        if(key == null) return null;
+        return new Image(key);
+    }
+
+    /**
+     * fill [image] to this image at (x, y)
+     * @param x
+     * @param y
+     * @param image
+     */
+    fillImageAt(x, y, image) {
+        sendMessage({
+            method: "image",
+            function: "fillImageAt",
+            key: this.key,
+            x: x,
+            y: y,
+            image: image.key
+        })
+    }
+
+    /**
+     * Create a new image based on the current image without copying the data.
+     * Modifying the new image will affect the current image.
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @returns {Image|null}
+     */
+    subImage(x, y, width, height) {
+        let key = sendMessage({
+            method: "image",
+            function: "subImage",
+            key: this.key,
+            x: x,
+            y: y,
+            width: width,
+            height: height
+        })
+        if(key == null) return null;
+        return new Image(key);
+    }
+
+    get width() {
+        return sendMessage({
+            method: "image",
+            function: "getWidth",
+            key: this.key
+        })
+    }
+
+    get height() {
+        return sendMessage({
+            method: "image",
+            function: "getHeight",
+            key: this.key
+        })
+    }
+
+    static empty(width, height) {
+        let key = sendMessage({
+            method: "image",
+            function: "emptyImage",
+            width: width,
+            height: height
+        })
+        return new Image(key);
+    }
+}

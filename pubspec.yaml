@@ -54,6 +54,9 @@ dependencies:
   zip_flutter:
     git:
       url: https://github.com/wgh136/zip_flutter
+  lodepng_flutter:
+    git:
+      url: https://github.com/venera-app/lodepng_flutter
 
 dev_dependencies:
   flutter_test:

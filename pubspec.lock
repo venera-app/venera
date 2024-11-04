@@ -456,6 +456,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  lodepng_flutter:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "115b896a04c270a8d6d5d7bea09dcd04047bfad3"
+      url: "https://github.com/venera-app/lodepng_flutter"
+    source: git
+    version: "0.0.1"
   matcher:
     dependency: transitive
     description:
@@ -849,5 +858,5 @@ packages:
     source: git
     version: "0.0.1"
 sdks:
-  dart: ">=3.5.0 <4.0.0"
+  dart: ">=3.5.4 <4.0.0"
   flutter: ">=3.24.4"
