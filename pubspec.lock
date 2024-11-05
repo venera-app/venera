@@ -461,7 +461,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "115b896a04c270a8d6d5d7bea09dcd04047bfad3"
+      resolved-ref: "5223cf4ce8aad1c2315db0093db3cc5c6c7191a8"
       url: "https://github.com/venera-app/lodepng_flutter"
     source: git
     version: "0.0.1"

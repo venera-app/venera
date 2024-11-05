@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/utils/image.dart';
 
 import 'app_dio.dart';
 
@@ -27,8 +28,8 @@ class ImageDownloader {
       configs = comicSource?.getThumbnailLoadingConfig?.call(url) ?? {};
     }
     configs['headers'] ??= {};
-    if(configs['headers']['user-agent'] == null
-        && configs['headers']['User-Agent'] == null) {
+    if (configs['headers']['user-agent'] == null &&
+        configs['headers']['User-Agent'] == null) {
       configs['headers']['user-agent'] = webUA;
     }
 
@@ -120,11 +121,22 @@ class ImageDownloader {
       buffer = configs['onResponse'](buffer);
     }
 
-    await CacheManager().writeCache(cacheKey, buffer);
+    var data = Uint8List.fromList(buffer);
+    buffer.clear();
+
+    if (configs['modifyImage'] != null) {
+      var newData = await modifyImageWithScript(
+        data,
+        configs['modifyImage'],
+      );
+      data = newData;
+    }
+
+    await CacheManager().writeCache(cacheKey, data);
     yield ImageDownloadProgress(
-      currentBytes: buffer.length,
-      totalBytes: buffer.length,
-      imageBytes: Uint8List.fromList(buffer),
+      currentBytes: data.length,
+      totalBytes: data.length,
+      imageBytes: data,
     );
   }
 }

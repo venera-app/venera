@@ -161,71 +161,76 @@ class _BodyState extends State<_Body> {
     for (var item in source.settings!.entries) {
       var key = item.key;
       String type = item.value['type'];
-      if (type == "select") {
-        var current = source.data['settings'][key];
-        if (current == null) {
-          var d = item.value['default'];
-          for (var option in item.value['options']) {
-            if (option['value'] == d) {
-              current = option['text'] ?? option['value'];
-              break;
+      try {
+        if (type == "select") {
+          var current = source.data['settings'][key];
+          if (current == null) {
+            var d = item.value['default'];
+            for (var option in item.value['options']) {
+              if (option['value'] == d) {
+                current = option['text'] ?? option['value'];
+                break;
+              }
             }
           }
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Select(
+              current: (current as String).ts(source.key),
+              values: (item.value['options'] as List)
+                  .map<String>(
+                      (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
+                  .toList(),
+              onTap: (i) {
+                source.data['settings'][key] = item.value['options'][i]['value'];
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "switch") {
+          var current = source.data['settings'][key] ?? item.value['default'];
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Switch(
+              value: current,
+              onChanged: (v) {
+                source.data['settings'][key] = v;
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "input") {
+          var current =
+              source.data['settings'][key] ?? item.value['default'] ?? '';
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showInputDialog(
+                  context: context,
+                  title: (item.value['title'] as String).ts(source.key),
+                  initialValue: current,
+                  inputValidator: item.value['validator'] == null
+                      ? null
+                      : RegExp(item.value['validator']),
+                  onConfirm: (value) {
+                    source.data['settings'][key] = value;
+                    source.saveData();
+                    setState(() {});
+                    return null;
+                  },
+                );
+              },
+            ),
+          );
         }
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          trailing: Select(
-            current: (current as String).ts(source.key),
-            values: (item.value['options'] as List)
-                .map<String>(
-                    (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
-                .toList(),
-            onTap: (i) {
-              source.data['settings'][key] = item.value['options'][i]['value'];
-              source.saveData();
-              setState(() {});
-            },
-          ),
-        );
-      } else if (type == "switch") {
-        var current = source.data['settings'][key] ?? item.value['default'];
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          trailing: Switch(
-            value: current,
-            onChanged: (v) {
-              source.data['settings'][key] = v;
-              source.saveData();
-              setState(() {});
-            },
-          ),
-        );
-      } else if (type == "input") {
-        var current =
-            source.data['settings'][key] ?? item.value['default'] ?? '';
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
-          trailing: IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              showInputDialog(
-                context: context,
-                title: (item.value['title'] as String).ts(source.key),
-                initialValue: current,
-                inputValidator: item.value['validator'] == null
-                    ? null
-                    : RegExp(item.value['validator']),
-                onConfirm: (value) {
-                  source.data['settings'][key] = value;
-                  source.saveData();
-                  setState(() {});
-                  return null;
-                },
-              );
-            },
-          ),
-        );
+      }
+      catch(e, s) {
+        Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
       }
     }
   }

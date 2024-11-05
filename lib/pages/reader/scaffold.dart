@@ -389,7 +389,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   Widget buildPageInfoText() {
     var epName = context.reader.widget.chapters?.values
-            .elementAt(context.reader.chapter - 1) ??
+            .elementAtOrNull(context.reader.chapter - 1) ??
         "E${context.reader.chapter}";
     if (epName.length > 8) {
       epName = "${epName.substring(0, 8)}...";

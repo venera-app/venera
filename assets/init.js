@@ -224,7 +224,25 @@ let Convert = {
             key: key,
             isEncode: false
         });
-    }
+    },
+    /** Encode bytes to hex string
+     * @param bytes {ArrayBuffer}
+     * @return {string}
+     */
+    hexEncode: (bytes) => {
+        const hexDigits = '0123456789abcdef';
+        const view = new Uint8Array(bytes);
+        let charCodes = new Uint8Array(view.length * 2);
+        let j = 0;
+
+        for (let i = 0; i < view.length; i++) {
+            let byte = view[i];
+            charCodes[j++] = hexDigits.charCodeAt((byte >> 4) & 0xF);
+            charCodes[j++] = hexDigits.charCodeAt(byte & 0xF);
+        }
+
+        return String.fromCharCode(...charCodes);
+    },
 }
 
 /**
@@ -1064,26 +1082,28 @@ class Image {
     }
 
     /**
-     * Create a new image based on the current image without copying the data.
-     * Modifying the new image will affect the current image.
+     * fill [image] with range(srcX, srcY, width, height) to this image at (x, y)
      * @param x
      * @param y
+     * @param image
+     * @param srcX
+     * @param srcY
      * @param width
      * @param height
-     * @returns {Image|null}
      */
-    subImage(x, y, width, height) {
-        let key = sendMessage({
+    fillImageRangeAt(x, y, image, srcX, srcY, width, height) {
+        sendMessage({
             method: "image",
-            function: "subImage",
+            function: "fillImageRangeAt",
             key: this.key,
             x: x,
             y: y,
+            image: image.key,
+            srcX: srcX,
+            srcY: srcY,
             width: width,
             height: height
         })
-        if(key == null) return null;
-        return new Image(key);
     }
 
     get width() {
