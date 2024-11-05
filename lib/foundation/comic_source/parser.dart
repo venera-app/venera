@@ -106,7 +106,9 @@ class ComicSourceParser {
     if (minAppVersion != null) {
       if (compareSemVer(minAppVersion, App.version.split('-').first)) {
         throw ComicSourceParseException(
-            "minAppVersion $minAppVersion is required");
+          "minAppVersion @version is required"
+              .tlParams({"version": minAppVersion}),
+        );
       }
     }
     for (var source in ComicSource.all()) {
@@ -728,7 +730,7 @@ class ComicSourceParser {
 
         return retryZone(func);
       };
-      if(_checkExists("favorites.addFolder")) {
+      if (_checkExists("favorites.addFolder")) {
         addFolder = (name) async {
           try {
             await JsEngine().runCode("""
@@ -741,7 +743,7 @@ class ComicSourceParser {
           }
         };
       }
-      if(_checkExists("favorites.deleteFolder")) {
+      if (_checkExists("favorites.deleteFolder")) {
         deleteFolder = (key) async {
           try {
             await JsEngine().runCode("""

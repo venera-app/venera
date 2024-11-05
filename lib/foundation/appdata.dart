@@ -110,6 +110,9 @@ class _Settings with ChangeNotifier {
     'enablePageAnimation': true,
     'language': 'system', // system, zh-CN, zh-TW, en-US
     'cacheSize': 2048, // in MB
+    'downloadThreads': 5,
+    'enableLongPressToZoom': true,
+    'checkUpdateOnStart': true,
   };
 
   operator [](String key) {

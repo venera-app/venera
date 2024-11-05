@@ -454,7 +454,9 @@ class _ComicDescription extends StatelessWidget {
                 ),
               ).toAlign(Alignment.topCenter);
             }),
-          ),
+          )
+        else
+          const Spacer(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

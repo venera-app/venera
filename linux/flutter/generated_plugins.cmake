@@ -14,6 +14,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  lodepng_flutter
+  rhttp
   zip_flutter
 )
 

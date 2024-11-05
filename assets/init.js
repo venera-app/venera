@@ -224,7 +224,25 @@ let Convert = {
             key: key,
             isEncode: false
         });
-    }
+    },
+    /** Encode bytes to hex string
+     * @param bytes {ArrayBuffer}
+     * @return {string}
+     */
+    hexEncode: (bytes) => {
+        const hexDigits = '0123456789abcdef';
+        const view = new Uint8Array(bytes);
+        let charCodes = new Uint8Array(view.length * 2);
+        let j = 0;
+
+        for (let i = 0; i < view.length; i++) {
+            let byte = view[i];
+            charCodes[j++] = hexDigits.charCodeAt((byte >> 4) & 0xF);
+            charCodes[j++] = hexDigits.charCodeAt(byte & 0xF);
+        }
+
+        return String.fromCharCode(...charCodes);
+    },
 }
 
 /**
@@ -999,4 +1017,118 @@ class ComicSource {
     init() { }
 
     static sources = {}
+}
+
+/// A reference to dart object.
+/// The api can only be used in the comic.onImageLoad.modifyImage function
+class Image {
+    key = 0;
+
+    constructor(key) {
+        this.key = key;
+    }
+
+    /**
+     * Copy the specified range of the image
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @returns {Image|null}
+     */
+    copyRange(x, y, width, height) {
+        let key = sendMessage({
+            method: "image",
+            function: "copyRange",
+            key: this.key,
+            x: x,
+            y: y,
+            width: width,
+            height: height
+        })
+        if(key == null) return null;
+        return new Image(key);
+    }
+
+    /**
+     * Copy the image and rotate 90 degrees
+     * @returns {Image|null}
+     */
+    copyAndRotate90() {
+        let key = sendMessage({
+            method: "image",
+            function: "copyAndRotate90",
+            key: this.key
+        })
+        if(key == null) return null;
+        return new Image(key);
+    }
+
+    /**
+     * fill [image] to this image at (x, y)
+     * @param x
+     * @param y
+     * @param image
+     */
+    fillImageAt(x, y, image) {
+        sendMessage({
+            method: "image",
+            function: "fillImageAt",
+            key: this.key,
+            x: x,
+            y: y,
+            image: image.key
+        })
+    }
+
+    /**
+     * fill [image] with range(srcX, srcY, width, height) to this image at (x, y)
+     * @param x
+     * @param y
+     * @param image
+     * @param srcX
+     * @param srcY
+     * @param width
+     * @param height
+     */
+    fillImageRangeAt(x, y, image, srcX, srcY, width, height) {
+        sendMessage({
+            method: "image",
+            function: "fillImageRangeAt",
+            key: this.key,
+            x: x,
+            y: y,
+            image: image.key,
+            srcX: srcX,
+            srcY: srcY,
+            width: width,
+            height: height
+        })
+    }
+
+    get width() {
+        return sendMessage({
+            method: "image",
+            function: "getWidth",
+            key: this.key
+        })
+    }
+
+    get height() {
+        return sendMessage({
+            method: "image",
+            function: "getHeight",
+            key: this.key
+        })
+    }
+
+    static empty(width, height) {
+        let key = sendMessage({
+            method: "image",
+            function: "emptyImage",
+            width: width,
+            height: height
+        })
+        return new Image(key);
+    }
 }

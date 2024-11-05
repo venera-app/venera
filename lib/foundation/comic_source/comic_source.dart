@@ -12,6 +12,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/translations.dart';
 
 import '../js_engine.dart';
 import '../log.dart';

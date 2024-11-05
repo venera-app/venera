@@ -14,11 +14,11 @@ import 'package:venera/utils/translations.dart';
 class ComicSourcePage extends StatefulWidget {
   const ComicSourcePage({super.key});
 
-  static void checkComicSourceUpdate([bool showLoading = false]) async {
+  static Future<void> checkComicSourceUpdate([bool implicit = false]) async {
     if (ComicSource.all().isEmpty) {
       return;
     }
-    var controller = showLoading ? showLoadingDialog(App.rootContext) : null;
+    var controller = implicit ? null : showLoadingDialog(App.rootContext);
     var dio = AppDio();
     var res = await dio.get<String>(
         "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
@@ -40,7 +40,9 @@ class ComicSourcePage extends StatefulWidget {
     }
     controller?.close();
     if (shouldUpdate.isEmpty) {
-      App.rootContext.showMessage(message: "No Update Available".tl);
+      if(!implicit) {
+        App.rootContext.showMessage(message: "No Update Available".tl);
+      }
       return;
     }
     var msg = "";
@@ -48,10 +50,11 @@ class ComicSourcePage extends StatefulWidget {
       msg += "${ComicSource.find(key)?.name}: v${versions[key]}\n";
     }
     msg = msg.trim();
-    showConfirmDialog(
+    await showConfirmDialog(
       context: App.rootContext,
       title: "Updates Available".tl,
       content: msg,
+      confirmText: "Update",
       onConfirm: () {
         for (var key in shouldUpdate) {
           var source = ComicSource.find(key);
@@ -104,7 +107,7 @@ class _BodyState extends State<_Body> {
       child: ListTile(
         leading: const Icon(Icons.update_outlined),
         title: Text("Check updates".tl),
-        onTap: () => ComicSourcePage.checkComicSourceUpdate(true),
+        onTap: () => ComicSourcePage.checkComicSourceUpdate(false),
         trailing: const Icon(Icons.arrow_right),
       ),
     );
@@ -161,71 +164,76 @@ class _BodyState extends State<_Body> {
     for (var item in source.settings!.entries) {
       var key = item.key;
       String type = item.value['type'];
-      if (type == "select") {
-        var current = source.data['settings'][key];
-        if (current == null) {
-          var d = item.value['default'];
-          for (var option in item.value['options']) {
-            if (option['value'] == d) {
-              current = option['text'] ?? option['value'];
-              break;
+      try {
+        if (type == "select") {
+          var current = source.data['settings'][key];
+          if (current == null) {
+            var d = item.value['default'];
+            for (var option in item.value['options']) {
+              if (option['value'] == d) {
+                current = option['text'] ?? option['value'];
+                break;
+              }
             }
           }
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Select(
+              current: (current as String).ts(source.key),
+              values: (item.value['options'] as List)
+                  .map<String>(
+                      (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
+                  .toList(),
+              onTap: (i) {
+                source.data['settings'][key] = item.value['options'][i]['value'];
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "switch") {
+          var current = source.data['settings'][key] ?? item.value['default'];
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Switch(
+              value: current,
+              onChanged: (v) {
+                source.data['settings'][key] = v;
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "input") {
+          var current =
+              source.data['settings'][key] ?? item.value['default'] ?? '';
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showInputDialog(
+                  context: context,
+                  title: (item.value['title'] as String).ts(source.key),
+                  initialValue: current,
+                  inputValidator: item.value['validator'] == null
+                      ? null
+                      : RegExp(item.value['validator']),
+                  onConfirm: (value) {
+                    source.data['settings'][key] = value;
+                    source.saveData();
+                    setState(() {});
+                    return null;
+                  },
+                );
+              },
+            ),
+          );
         }
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          trailing: Select(
-            current: (current as String).ts(source.key),
-            values: (item.value['options'] as List)
-                .map<String>(
-                    (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
-                .toList(),
-            onTap: (i) {
-              source.data['settings'][key] = item.value['options'][i]['value'];
-              source.saveData();
-              setState(() {});
-            },
-          ),
-        );
-      } else if (type == "switch") {
-        var current = source.data['settings'][key] ?? item.value['default'];
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          trailing: Switch(
-            value: current,
-            onChanged: (v) {
-              source.data['settings'][key] = v;
-              source.saveData();
-              setState(() {});
-            },
-          ),
-        );
-      } else if (type == "input") {
-        var current =
-            source.data['settings'][key] ?? item.value['default'] ?? '';
-        yield ListTile(
-          title: Text((item.value['title'] as String).ts(source.key)),
-          subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
-          trailing: IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              showInputDialog(
-                context: context,
-                title: (item.value['title'] as String).ts(source.key),
-                initialValue: current,
-                inputValidator: item.value['validator'] == null
-                    ? null
-                    : RegExp(item.value['validator']),
-                onConfirm: (value) {
-                  source.data['settings'][key] = value;
-                  source.saveData();
-                  setState(() {});
-                  return null;
-                },
-              );
-            },
-          ),
-        );
+      }
+      catch(e, s) {
+        Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
       }
     }
   }
@@ -446,10 +454,11 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         itemBuilder: (context, index) {
           var key = json![index]["key"];
           var action = currentKey.contains(key)
-              ? const Icon(Icons.check)
+              ? const Icon(Icons.check, size: 20).paddingRight(8)
               : Tooltip(
                   message: "Add",
-                  child: IconButton(
+                  child: Button.icon(
+                    color: context.colorScheme.primary,
                     icon: const Icon(Icons.add),
                     onPressed: () async {
                       await widget.onAdd(

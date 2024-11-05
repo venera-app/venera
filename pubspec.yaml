@@ -2,7 +2,7 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.0.1+101
+version: 1.0.2+102
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -54,6 +54,11 @@ dependencies:
   zip_flutter:
     git:
       url: https://github.com/wgh136/zip_flutter
+  lodepng_flutter:
+    git:
+      url: https://github.com/venera-app/lodepng_flutter
+      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
+  rhttp: 0.9.1
 
 dev_dependencies:
   flutter_test:

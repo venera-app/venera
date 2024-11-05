@@ -87,17 +87,16 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
         return await decode(buffer);
       } catch (e) {
         await CacheManager().delete(this.key);
-        Object error = e;
         if (data.length < 2 * 1024) {
           // data is too short, it's likely that the data is text, not image
           try {
             var text = const Utf8Codec(allowMalformed: false).decoder.convert(data);
-            error = Exception("Expected image data, but got text: $text");
+            throw Exception("Expected image data, but got text: $text");
           } catch (e) {
             // ignore
           }
         }
-        throw error;
+        rethrow;
       }
     } catch (e) {
       scheduleMicrotask(() {

@@ -17,6 +17,13 @@ class _NetworkSettingsState extends State<NetworkSettings> {
           title: "Proxy".tl,
           builder: () => const _ProxySettingView(),
         ).toSliver(),
+        _SliderSetting(
+          title: "Download Threads".tl,
+          settingsIndex: 'downloadThreads',
+          interval: 1,
+          min: 1,
+          max: 16,
+        ).toSliver(),
       ],
     );
   }
@@ -42,50 +49,50 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
 
   // USERNAME:PASSWORD@HOST:PORT
   String toProxyStr() {
-    if(type == 'direct') {
+    if (type == 'direct') {
       return 'direct';
-    } else if(type == 'system') {
+    } else if (type == 'system') {
       return 'system';
     }
     var res = '';
-    if(username.isNotEmpty) {
+    if (username.isNotEmpty) {
       res += username;
-      if(password.isNotEmpty) {
+      if (password.isNotEmpty) {
         res += ':$password';
       }
       res += '@';
     }
     res += host;
-    if(port.isNotEmpty) {
+    if (port.isNotEmpty) {
       res += ':$port';
     }
     return res;
   }
 
   void parseProxyString(String proxy) {
-    if(proxy == 'direct') {
+    if (proxy == 'direct') {
       type = 'direct';
       return;
-    } else if(proxy == 'system') {
+    } else if (proxy == 'system') {
       type = 'system';
       return;
     }
     type = 'manual';
     var parts = proxy.split('@');
-    if(parts.length == 2) {
+    if (parts.length == 2) {
       var auth = parts[0].split(':');
-      if(auth.length == 2) {
+      if (auth.length == 2) {
         username = auth[0];
         password = auth[1];
       }
       parts = parts[1].split(':');
-      if(parts.length == 2) {
+      if (parts.length == 2) {
         host = parts[0];
         port = parts[1];
       }
     } else {
       parts = proxy.split(':');
-      if(parts.length == 2) {
+      if (parts.length == 2) {
         host = parts[0];
         port = parts[1];
       }
@@ -140,7 +147,7 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
                 });
               },
             ),
-            if(type == 'manual') buildManualProxy(),
+            if (type == 'manual') buildManualProxy(),
           ],
         ),
       ),
@@ -164,7 +171,7 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
               host = v;
             },
             validator: (v) {
-              if(v?.isEmpty ?? false) {
+              if (v?.isEmpty ?? false) {
                 return "Host cannot be empty".tl;
               }
               return null;
@@ -181,10 +188,10 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
               port = v;
             },
             validator: (v) {
-              if(v?.isEmpty ?? true) {
+              if (v?.isEmpty ?? true) {
                 return null;
               }
-              if(int.tryParse(v!) == null) {
+              if (int.tryParse(v!) == null) {
                 return "Port must be a number".tl;
               }
               return null;
@@ -201,7 +208,7 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
               username = v;
             },
             validator: (v) {
-              if((v?.isEmpty ?? false) && password.isNotEmpty) {
+              if ((v?.isEmpty ?? false) && password.isNotEmpty) {
                 return "Username cannot be empty".tl;
               }
               return null;
@@ -221,7 +228,7 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () {
-              if(formKey.currentState?.validate() ?? false) {
+              if (formKey.currentState?.validate() ?? false) {
                 appdata.settings['proxy'] = toProxyStr();
                 appdata.saveData();
                 App.rootContext.pop();

@@ -3,8 +3,12 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/network/app_dio.dart';
+import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/main_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:window_manager/window_manager.dart';
 import 'components/components.dart';
@@ -18,6 +22,7 @@ void main(List<String> args) {
     return;
   }
   runZonedGuarded(() async {
+    await Rhttp.init();
     WidgetsFlutterBinding.ensureInitialized();
     await init();
     if (App.isAndroid) {
@@ -63,6 +68,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   void initState() {
+    checkUpdates();
     App.registerForceRebuild(forceRebuild);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.initState();
@@ -162,6 +168,22 @@ class _MyAppState extends State<MyApp> {
         throw ('widget is null');
       },
     );
+  }
+
+  void checkUpdates() async {
+    if(!appdata.settings['checkUpdateOnStart']) {
+      return;
+    }
+    var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
+    var now = DateTime.now().millisecondsSinceEpoch;
+    if(now - lastCheck < 24 * 60 * 60 * 1000) {
+      return;
+    }
+    appdata.implicitData['lastCheckUpdate'] = now;
+    appdata.writeImplicitData();
+    await Future.delayed(const Duration(milliseconds: 300));
+    await checkUpdateUi(false);
+    await ComicSourcePage.checkComicSourceUpdate(true);
   }
 }
 

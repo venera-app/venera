@@ -223,6 +223,9 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressDown(Offset location) {
+    if(!appdata.settings['enableLongPressToZoom']) {
+      return;
+    }
     var photoViewController = photoViewControllers[reader.page]!;
     double target = photoViewController.getInitialScale!.call()! * 1.75;
     var size = MediaQuery.of(context).size;
@@ -234,6 +237,9 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressUp(Offset location) {
+    if(!appdata.settings['enableLongPressToZoom']) {
+      return;
+    }
     var photoViewController = photoViewControllers[reader.page]!;
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
@@ -509,6 +515,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleLongPressDown(Offset location) {
+    if(!appdata.settings['enableLongPressToZoom']) {
+      return;
+    }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
     var size = MediaQuery.of(context).size;
     photoViewController.animateScale?.call(
@@ -519,6 +528,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleLongPressUp(Offset location) {
+    if(!appdata.settings['enableLongPressToZoom']) {
+      return;
+    }
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
   }

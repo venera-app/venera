@@ -53,30 +53,7 @@ class _AboutSettingsState extends State<AboutSettings> {
               setState(() {
                 isCheckingUpdate = true;
               });
-              checkUpdate().then((value) {
-                if (value) {
-                  showDialog(
-                      context: App.rootContext,
-                      builder: (context) {
-                        return ContentDialog(
-                            title: "New version available".tl,
-                            content: Text(
-                                "A new version is available. Do you want to update now?"
-                                    .tl),
-                            actions: [
-                              Button.text(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  launchUrlString(
-                                      "https://github.com/venera-app/venera/releases");
-                                },
-                                child: Text("Update".tl),
-                              ),
-                            ]);
-                      });
-                } else {
-                  context.showMessage(message: "No new version available".tl);
-                }
+              checkUpdateUi().then((value) {
                 setState(() {
                   isCheckingUpdate = false;
                 });
@@ -106,6 +83,33 @@ Future<bool> checkUpdate() async {
     }
   }
   return false;
+}
+
+Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true]) async {
+  var value = await checkUpdate();
+  if (value) {
+    showDialog(
+        context: App.rootContext,
+        builder: (context) {
+          return ContentDialog(
+            title: "New version available".tl,
+            content: Text(
+                "A new version is available. Do you want to update now?".tl),
+            actions: [
+              Button.text(
+                onPressed: () {
+                  Navigator.pop(context);
+                  launchUrlString(
+                      "https://github.com/venera-app/venera/releases");
+                },
+                child: Text("Update".tl),
+              ),
+            ],
+          );
+        });
+  } else if (showMessageIfNoUpdate) {
+    App.rootContext.showMessage(message: "No new version available".tl);
+  }
 }
 
 /// return true if version1 > version2

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/services.dart';
+import 'package:rhttp/rhttp.dart' as rhttp;
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cache.dart';
@@ -109,7 +109,7 @@ class AppDio with DioMixin {
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
     interceptors.add(MyLogInterceptor());
-    httpClientAdapter = IOHttpClientAdapter(createHttpClient: createHttpClient);
+    httpClientAdapter = RHttpAdapter(const rhttp.ClientSettings());
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
     interceptors.add(CloudflareInterceptor());
@@ -136,8 +136,9 @@ class AppDio with DioMixin {
   static String? proxy;
 
   static Future<String?> getProxy() async {
-    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct")
+    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct") {
       return null;
+    }
     if (appdata.settings['proxy'] != "system") return appdata.settings['proxy'];
 
     String res;
@@ -187,10 +188,13 @@ class AppDio with DioMixin {
   }) async {
     proxy = await getProxy();
     if (_proxy != proxy) {
+      Log.info("Network", "Proxy changed to $proxy");
       _proxy = proxy;
-      (httpClientAdapter as IOHttpClientAdapter).close();
-      httpClientAdapter =
-          IOHttpClientAdapter(createHttpClient: createHttpClient);
+      httpClientAdapter = RHttpAdapter(rhttp.ClientSettings(
+        proxySettings: proxy == null
+            ? const rhttp.ProxySettings.noProxy()
+            : rhttp.ProxySettings.proxy(proxy!),
+      ));
     }
     Log.info(
       "Network",
@@ -206,6 +210,84 @@ class AppDio with DioMixin {
       options: options,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,
+    );
+  }
+}
+
+class RHttpAdapter implements HttpClientAdapter {
+  rhttp.ClientSettings settings;
+
+  RHttpAdapter(this.settings) {
+    settings.copyWith(
+      redirectSettings: const rhttp.RedirectSettings.limited(5),
+      timeoutSettings: const rhttp.TimeoutSettings(
+        connectTimeout: Duration(seconds: 15),
+        keepAliveTimeout: Duration(seconds: 60),
+        keepAlivePing: Duration(seconds: 30),
+      ),
+      httpVersionPref: rhttp.HttpVersionPref.http1_1,
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    var res = await rhttp.Rhttp.request(
+      method: switch (options.method) {
+        'GET' => rhttp.HttpMethod.get,
+        'POST' => rhttp.HttpMethod.post,
+        'PUT' => rhttp.HttpMethod.put,
+        'PATCH' => rhttp.HttpMethod.patch,
+        'DELETE' => rhttp.HttpMethod.delete,
+        'HEAD' => rhttp.HttpMethod.head,
+        'OPTIONS' => rhttp.HttpMethod.options,
+        'TRACE' => rhttp.HttpMethod.trace,
+        'CONNECT' => rhttp.HttpMethod.connect,
+        _ => throw ArgumentError('Unsupported method: ${options.method}'),
+      },
+      url: options.uri.toString(),
+      settings: settings,
+      expectBody: rhttp.HttpExpectBody.stream,
+      body: requestStream == null ? null : rhttp.HttpBody.stream(requestStream),
+      headers: rhttp.HttpHeaders.rawMap(
+        Map.fromEntries(
+          options.headers.entries.map(
+            (e) => MapEntry(e.key, e.value.toString().trim()),
+          ),
+        ),
+      ),
+    );
+    if (res is! rhttp.HttpStreamResponse) {
+      throw Exception("Invalid response type: ${res.runtimeType}");
+    }
+    var headers = <String, List<String>>{};
+    for (var entry in res.headers) {
+      var key = entry.$1.toLowerCase();
+      headers[key] ??= [];
+      headers[key]!.add(entry.$2);
+    }
+    var data = res.body;
+    if(headers['content-encoding']?.contains('gzip') ?? false) {
+      // rhttp does not support gzip decoding
+      var buffer = <int>[];
+      await for (var chunk in data) {
+        buffer.addAll(chunk);
+      }
+      data = Stream.value(Uint8List.fromList(gzip.decode(buffer)));
+      buffer.clear();
+    }
+    return ResponseBody(
+      data,
+      res.statusCode,
+      statusMessage: null,
+      isRedirect: false,
+      headers: headers,
     );
   }
 }
