@@ -57,6 +57,8 @@ dependencies:
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
+  rhttp: 0.9.1
+  dio_compatibility_layer: ^0.1.0
 
 dev_dependencies:
   flutter_test:

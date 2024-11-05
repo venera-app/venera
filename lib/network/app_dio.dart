@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
+import 'package:dio_compatibility_layer/dio_compatibility_layer.dart';
 import 'package:flutter/services.dart';
+import 'package:rhttp/rhttp.dart' as rhttp;
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cache.dart';
@@ -106,10 +107,16 @@ class MyLogInterceptor implements Interceptor {
 class AppDio with DioMixin {
   String? _proxy = proxy;
 
+  static rhttp.RhttpCompatibleClient? _compatibleClient;
+
+  static void init() {
+    _compatibleClient = rhttp.RhttpCompatibleClient.createSync();
+  }
+
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
     interceptors.add(MyLogInterceptor());
-    httpClientAdapter = IOHttpClientAdapter(createHttpClient: createHttpClient);
+    httpClientAdapter = ConversionLayerAdapter(_compatibleClient!);
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
     interceptors.add(CloudflareInterceptor());
@@ -136,8 +143,9 @@ class AppDio with DioMixin {
   static String? proxy;
 
   static Future<String?> getProxy() async {
-    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct")
+    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct") {
       return null;
+    }
     if (appdata.settings['proxy'] != "system") return appdata.settings['proxy'];
 
     String res;
@@ -187,10 +195,22 @@ class AppDio with DioMixin {
   }) async {
     proxy = await getProxy();
     if (_proxy != proxy) {
+      Log.info("Network", "Proxy changed to $proxy");
       _proxy = proxy;
-      (httpClientAdapter as IOHttpClientAdapter).close();
-      httpClientAdapter =
-          IOHttpClientAdapter(createHttpClient: createHttpClient);
+      (httpClientAdapter as ConversionLayerAdapter).close();
+      _compatibleClient = await rhttp.RhttpCompatibleClient.create(
+        settings: rhttp.ClientSettings(
+          proxySettings: proxy == null
+              ? const rhttp.ProxySettings.noProxy()
+              : rhttp.ProxySettings.proxy(proxy!),
+          timeoutSettings: const rhttp.TimeoutSettings(
+            connectTimeout: Duration(seconds: 15),
+            keepAliveTimeout: Duration(seconds: 60),
+            keepAlivePing: Duration(seconds: 30),
+          ),
+        ),
+      );
+      httpClientAdapter = ConversionLayerAdapter(_compatibleClient!);
     }
     Log.info(
       "Network",

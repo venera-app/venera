@@ -3,7 +3,9 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/network/app_dio.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/main_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
@@ -20,6 +22,8 @@ void main(List<String> args) {
     return;
   }
   runZonedGuarded(() async {
+    await Rhttp.init();
+    AppDio.init();
     WidgetsFlutterBinding.ensureInitialized();
     await init();
     if (App.isAndroid) {
