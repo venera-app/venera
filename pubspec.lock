@@ -138,14 +138,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.7.0"
-  dio_compatibility_layer:
-    dependency: "direct main"
-    description:
-      name: dio_compatibility_layer
-      sha256: bb7ea1dd6fe98b8f5e3d90da408802fc3abf14d4485416e882cf1b2c8fb4b209
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   dio_web_adapter:
     dependency: transitive
     description:
@@ -500,8 +492,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: c9584f890f54c26b98ca4f465a2346024a528b31
+      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
+      resolved-ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
       url: "https://github.com/venera-app/lodepng_flutter"
     source: git
     version: "0.0.1"

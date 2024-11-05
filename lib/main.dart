@@ -23,7 +23,6 @@ void main(List<String> args) {
   }
   runZonedGuarded(() async {
     await Rhttp.init();
-    AppDio.init();
     WidgetsFlutterBinding.ensureInitialized();
     await init();
     if (App.isAndroid) {
