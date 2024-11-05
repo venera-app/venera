@@ -499,9 +499,11 @@ packages:
   lodepng_flutter:
     dependency: "direct main"
     description:
-      path: "C:\\Users\\wgh19\\IdeaProjects\\lodepng_flutter"
-      relative: false
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: c9584f890f54c26b98ca4f465a2346024a528b31
+      url: "https://github.com/venera-app/lodepng_flutter"
+    source: git
     version: "0.0.1"
   matcher:
     dependency: transitive

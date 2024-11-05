@@ -178,7 +178,7 @@ class _MyAppState extends State<MyApp> {
     var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
     var now = DateTime.now().millisecondsSinceEpoch;
     if(now - lastCheck < 24 * 60 * 60 * 1000) {
-      // return;
+      return;
     }
     appdata.implicitData['lastCheckUpdate'] = now;
     appdata.writeImplicitData();

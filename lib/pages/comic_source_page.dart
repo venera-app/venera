@@ -454,10 +454,10 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         itemBuilder: (context, index) {
           var key = json![index]["key"];
           var action = currentKey.contains(key)
-              ? const Icon(Icons.check, size: 22).paddingRight(8)
+              ? const Icon(Icons.check, size: 20).paddingRight(8)
               : Tooltip(
                   message: "Add",
-                  child: IconButton(
+                  child: Button.icon(
                     color: context.colorScheme.primary,
                     icon: const Icon(Icons.add),
                     onPressed: () async {
