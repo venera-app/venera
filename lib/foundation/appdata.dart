@@ -112,6 +112,7 @@ class _Settings with ChangeNotifier {
     'cacheSize': 2048, // in MB
     'downloadThreads': 5,
     'enableLongPressToZoom': true,
+    'checkUpdateOnStart': true,
   };
 
   operator [](String key) {

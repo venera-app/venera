@@ -14,11 +14,11 @@ import 'package:venera/utils/translations.dart';
 class ComicSourcePage extends StatefulWidget {
   const ComicSourcePage({super.key});
 
-  static void checkComicSourceUpdate([bool showLoading = false]) async {
+  static Future<void> checkComicSourceUpdate([bool implicit = false]) async {
     if (ComicSource.all().isEmpty) {
       return;
     }
-    var controller = showLoading ? showLoadingDialog(App.rootContext) : null;
+    var controller = implicit ? null : showLoadingDialog(App.rootContext);
     var dio = AppDio();
     var res = await dio.get<String>(
         "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
@@ -40,7 +40,9 @@ class ComicSourcePage extends StatefulWidget {
     }
     controller?.close();
     if (shouldUpdate.isEmpty) {
-      App.rootContext.showMessage(message: "No Update Available".tl);
+      if(!implicit) {
+        App.rootContext.showMessage(message: "No Update Available".tl);
+      }
       return;
     }
     var msg = "";
@@ -48,10 +50,11 @@ class ComicSourcePage extends StatefulWidget {
       msg += "${ComicSource.find(key)?.name}: v${versions[key]}\n";
     }
     msg = msg.trim();
-    showConfirmDialog(
+    await showConfirmDialog(
       context: App.rootContext,
       title: "Updates Available".tl,
       content: msg,
+      confirmText: "Update",
       onConfirm: () {
         for (var key in shouldUpdate) {
           var source = ComicSource.find(key);
@@ -104,7 +107,7 @@ class _BodyState extends State<_Body> {
       child: ListTile(
         leading: const Icon(Icons.update_outlined),
         title: Text("Check updates".tl),
-        onTap: () => ComicSourcePage.checkComicSourceUpdate(true),
+        onTap: () => ComicSourcePage.checkComicSourceUpdate(false),
         trailing: const Icon(Icons.arrow_right),
       ),
     );

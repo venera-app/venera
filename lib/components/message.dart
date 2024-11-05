@@ -129,13 +129,14 @@ void showDialogMessage(BuildContext context, String title, String message) {
   );
 }
 
-void showConfirmDialog({
+Future<void> showConfirmDialog({
   required BuildContext context,
   required String title,
   required String content,
   required void Function() onConfirm,
+  String confirmText = "Confirm",
 }) {
-  showDialog(
+  return showDialog(
     context: context,
     builder: (context) => ContentDialog(
       title: title,
@@ -146,7 +147,7 @@ void showConfirmDialog({
             context.pop();
             onConfirm();
           },
-          child: Text("Confirm".tl),
+          child: Text(confirmText.tl),
         ),
       ],
     ),

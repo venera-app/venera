@@ -168,7 +168,8 @@
     "Order": "顺序",
     "minAppVersion @version is required": "需要最低App版本 @version",
     "Remove": "移除",
-    "Long press to zoom": "长按缩放"
+    "Long press to zoom": "长按缩放",
+    "Updates Available": "更新可用"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -339,6 +340,7 @@
     "Order": "順序",
     "minAppVersion @version is required": "需要最低App版本 @version",
     "Remove": "移除",
-    "Long press to zoom": "長按縮放"
+    "Long press to zoom": "長按縮放",
+    "Updates Available": "更新可用"
   }
 }
