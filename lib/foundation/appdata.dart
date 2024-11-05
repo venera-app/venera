@@ -111,6 +111,7 @@ class _Settings with ChangeNotifier {
     'language': 'system', // system, zh-CN, zh-TW, en-US
     'cacheSize': 2048, // in MB
     'downloadThreads': 5,
+    'enableLongPressToZoom': true,
   };
 
   operator [](String key) {

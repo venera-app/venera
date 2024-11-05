@@ -167,7 +167,8 @@
     "Download All": "下载全部",
     "Order": "顺序",
     "minAppVersion @version is required": "需要最低App版本 @version",
-    "Remove": "移除"
+    "Remove": "移除",
+    "Long press to zoom": "长按缩放"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -337,6 +338,7 @@
     "Download All": "下載全部",
     "Order": "順序",
     "minAppVersion @version is required": "需要最低App版本 @version",
-    "Remove": "移除"
+    "Remove": "移除",
+    "Long press to zoom": "長按縮放"
   }
 }

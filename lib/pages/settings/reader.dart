@@ -54,6 +54,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("autoPageTurningInterval");
           },
         ).toSliver(),
+        _SwitchSetting(
+          title: 'Long press to zoom'.tl,
+          settingKey: 'enableLongPressToZoom',
+          onChanged: () {
+            widget.onChanged?.call('enableLongPressToZoom');
+          },
+        ).toSliver(),
       ],
     );
   }
