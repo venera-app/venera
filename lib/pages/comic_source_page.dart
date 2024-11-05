@@ -451,10 +451,11 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         itemBuilder: (context, index) {
           var key = json![index]["key"];
           var action = currentKey.contains(key)
-              ? const Icon(Icons.check)
+              ? const Icon(Icons.check, size: 22).paddingRight(8)
               : Tooltip(
                   message: "Add",
                   child: IconButton(
+                    color: context.colorScheme.primary,
                     icon: const Icon(Icons.add),
                     onPressed: () async {
                       await widget.onAdd(

@@ -19,7 +19,7 @@
     "Select": "选择",
     "Imported @a comics": "已导入 @a 部漫画",
     "Downloading": "下载中",
-    "Back": "返回",
+    "Back": "后退",
     "Delete": "删除",
     "Full Screen": "全屏",
     "Auto Page Turning": "自动翻页",
@@ -156,7 +156,18 @@
     "Export App Data": "导出应用数据",
     "Import App Data": "导入应用数据",
     "Export": "导出",
-    "Download Threads": "下载线程数"
+    "Download Threads": "下载线程数",
+    "Update Time": "更新时间",
+    "Copy ID": "复制ID",
+    "Copy URL": "复制URL",
+    "Create": "创建",
+    "Folder Name": "文件夹名称",
+    "Ranking": "排行",
+    "Download Selected": "下载选中",
+    "Download All": "下载全部",
+    "Order": "顺序",
+    "minAppVersion @version is required": "需要最低App版本 @version",
+    "Remove": "移除"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -179,7 +190,7 @@
     "Select": "選擇",
     "Imported @a comics": "已匯入 @a 部漫畫",
     "Downloading": "下載中",
-    "Back": "返回",
+    "Back": "後退",
     "Delete": "刪除",
     "Full Screen": "全螢幕",
     "Auto Page Turning": "自動翻頁",
@@ -315,6 +326,17 @@
     "Export App Data": "匯出應用數據",
     "Import App Data": "匯入應用數據",
     "Export": "匯出",
-    "Download Threads": "下載線程數"
+    "Download Threads": "下載線程數",
+    "Update Time": "更新時間",
+    "Copy ID": "複製ID",
+    "Copy URL": "複製URL",
+    "Create": "創建",
+    "Folder Name": "文件夾名稱",
+    "Ranking": "排行",
+    "Download Selected": "下載選中",
+    "Download All": "下載全部",
+    "Order": "順序",
+    "minAppVersion @version is required": "需要最低App版本 @version",
+    "Remove": "移除"
   }
 }

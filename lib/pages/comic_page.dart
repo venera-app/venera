@@ -1574,7 +1574,7 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: FilledButton(
-                    onPressed: () {
+                    onPressed: selected.isEmpty ? null : () {
                       widget.finishSelect(selected);
                       context.pop();
                     },
@@ -1585,7 +1585,7 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
               ],
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 4),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
