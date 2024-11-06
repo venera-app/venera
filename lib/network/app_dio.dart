@@ -196,12 +196,6 @@ class AppDio with DioMixin {
             : rhttp.ProxySettings.proxy(proxy!),
       ));
     }
-    Log.info(
-      "Network",
-      "${options?.method ?? 'GET'} $path\n"
-          "Headers: ${options?.headers}\n"
-          "Data: $data\n",
-    );
     return super.request(
       path,
       data: data,
@@ -238,6 +232,12 @@ class RHttpAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    Log.info(
+      "Network",
+      "${options.method} ${options.uri}\n"
+          "Headers: ${options.headers}\n"
+          "Data: ${options.data}\n",
+    );
     var res = await rhttp.Rhttp.request(
       method: switch (options.method) {
         'GET' => rhttp.HttpMethod.get,
