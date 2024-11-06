@@ -52,6 +52,7 @@ Source: "{#RootPath}\build\windows\x64\runner\Release\WebView2Loader.dll"; DestD
 Source: "{#RootPath}\build\windows\x64\runner\Release\share_plus_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\screen_retriever_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RootPath}\build\windows\x64\runner\Release\screen_retriever_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\zip_flutter.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\rhttp.dll"; DestDir: "{app}"; Flags: ignoreversion
