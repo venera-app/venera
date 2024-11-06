@@ -15,7 +15,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-  window_manager: ^0.4.2
+  window_manager: ^0.4.3
   sqlite3: any
   sqlite3_flutter_libs: any
   flutter_qjs:

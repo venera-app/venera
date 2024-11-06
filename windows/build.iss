@@ -55,6 +55,7 @@ Source: "{#RootPath}\build\windows\x64\runner\Release\screen_retriever_plugin.dl
 Source: "{#RootPath}\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\zip_flutter.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\rhttp.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RootPath}\build\windows\x64\runner\Release\lodepng_flutter.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootPath}\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
