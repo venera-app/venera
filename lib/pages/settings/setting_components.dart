@@ -5,6 +5,7 @@ class _SwitchSetting extends StatefulWidget {
     required this.title,
     required this.settingKey,
     this.onChanged,
+    this.subtitle,
   });
 
   final String title;
@@ -12,6 +13,8 @@ class _SwitchSetting extends StatefulWidget {
   final String settingKey;
 
   final VoidCallback? onChanged;
+
+  final String? subtitle;
 
   @override
   State<_SwitchSetting> createState() => _SwitchSettingState();
@@ -24,6 +27,7 @@ class _SwitchSettingState extends State<_SwitchSetting> {
 
     return ListTile(
       title: Text(widget.title),
+      subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
       trailing: Switch(
         value: appdata.settings[widget.settingKey],
         onChanged: (value) {

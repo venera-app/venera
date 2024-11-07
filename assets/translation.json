@@ -171,7 +171,9 @@
     "Long press to zoom": "长按缩放",
     "Updates Available": "更新可用",
     "Unselected": "未选择",
-    "Long press and drag to reorder.": "长按并拖动以重新排序。"
+    "Long press and drag to reorder.": "长按并拖动以重新排序。",
+    "Limit image width": "限制图片宽度",
+    "When using Continuous(Top to Bottom) mode": "当使用连续（从上到下）模式"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -345,6 +347,8 @@
     "Long press to zoom": "長按縮放",
     "Updates Available": "更新可用",
     "Unselected": "未選擇",
-    "Long press and drag to reorder.": "長按並拖動以重新排序。"
+    "Long press and drag to reorder.": "長按並拖動以重新排序。",
+    "Limit image width": "限制圖片寬度",
+    "When using Continuous(Top to Bottom) mode": "當使用連續（從上到下）模式"
   }
 }

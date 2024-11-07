@@ -471,18 +471,24 @@ class _ContinuousModeState extends State<_ContinuousMode>
       },
       child: widget,
     );
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
+    if(appdata.settings['limitImageWidth'] && width / height > 0.7) {
+      width = height * 0.7;
+    }
 
     return PhotoView.customChild(
       backgroundDecoration: BoxDecoration(
         color: context.colorScheme.surface,
       ),
+      childSize: Size(width, height),
       minScale: 1.0,
       maxScale: 2.5,
       strictScale: true,
       controller: photoViewController,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
+        width: width,
+        height: height,
         child: widget,
       ),
     );
