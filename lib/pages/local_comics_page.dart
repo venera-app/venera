@@ -24,8 +24,12 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
   bool searchMode = false;
 
+  bool multiSelectMode = false;
+
+  Map<LocalComic, bool> selectedComics = {};
+
   void update() {
-    if(keyword.isEmpty) {
+    if (keyword.isEmpty) {
       setState(() {
         comics = LocalManager().getComics(sortType);
       });
@@ -95,8 +99,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             actions: [
               FilledButton(
                 onPressed: () {
-                  appdata.implicitData["local_sort"] =
-                      sortType.value;
+                  appdata.implicitData["local_sort"] =sortType.value;
                   appdata.writeImplicitData();
                   Navigator.pop(context);
                   update();
@@ -115,7 +118,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     return Scaffold(
       body: SmoothCustomScrollView(
         slivers: [
-          if(!searchMode)
+          if (!searchMode && !multiSelectMode)
             SliverAppbar(
               title: Text("Local".tl),
               actions: [
@@ -145,10 +148,38 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                       showPopUpWidget(context, const DownloadingPage());
                     },
                   ),
-                )
+                ),
+                Tooltip(
+                  message: multiSelectMode
+                      ? "Exit Multi-Select".tl
+                      : "Multi-Select".tl,
+                  child: IconButton(
+                    icon: const Icon(Icons.checklist),
+                    onPressed: () {
+                      setState(() {
+                        multiSelectMode = !multiSelectMode;
+                      });
+                    },
+                  ),
+                ),
               ],
             )
-          else
+          else if (multiSelectMode)
+            SliverAppbar(
+              title: Text("Selected ${selectedComics.length} comics"),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      multiSelectMode = false;
+                      selectedComics.clear();
+                    });
+                  },
+                ),
+              ],
+            )
+          else if (searchMode)
             SliverAppbar(
               title: TextField(
                 autofocus: true,
@@ -176,16 +207,42 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             ),
           SliverGridComics(
             comics: comics,
-            onTap: (c) {
-              (c as LocalComic).read();
-            },
+            onTap: multiSelectMode
+                ? (c) {
+                    setState(() {
+                      if (selectedComics.containsKey(c as LocalComic)) {
+                        selectedComics.remove(c as LocalComic);
+                      } else {
+                        selectedComics[c as LocalComic] = true;
+                      }
+                    });
+                  }
+                : (c) {
+                    (c as LocalComic).read();
+                  },
             menuBuilder: (c) {
               return [
                 MenuEntry(
                     icon: Icons.delete,
                     text: "Delete".tl,
                     onClick: () {
-                      LocalManager().deleteComic(c as LocalComic);
+                      if (multiSelectMode) {
+                        showConfirmDialog(
+                          context: context,
+                          title: "Delete".tl,
+                          content: "Delete selected comics?".tl,
+                          onConfirm: () {
+                            for (var comic in selectedComics.keys) {
+                              LocalManager().deleteComic(comic);
+                            }
+                            setState(() {
+                              selectedComics.clear();
+                            });
+                          },
+                        );
+                      } else {
+                        LocalManager().deleteComic(c as LocalComic);
+                      }
                     }),
                 MenuEntry(
                     icon: Icons.outbox_outlined,
@@ -196,9 +253,20 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                         allowCancel: false,
                       );
                       try {
-                        var file = await CBZ.export(c as LocalComic);
-                        await saveFile(filename: file.name, file: file);
-                        await file.delete();
+                        if (multiSelectMode) {
+                          for (var comic in selectedComics.keys) {
+                            var file = await CBZ.export(comic);
+                            await saveFile(filename: file.name, file: file);
+                            await file.delete();
+                          }
+                          setState(() {
+                            selectedComics.clear();
+                          });
+                        } else {
+                          var file = await CBZ.export(c as LocalComic);
+                          await saveFile(filename: file.name, file: file);
+                          await file.delete();
+                        }
                       } catch (e) {
                         context.showMessage(message: e.toString());
                       }
