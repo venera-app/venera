@@ -42,7 +42,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   void search([String? text]) {
     if (text != null) {
-      if(suggestionsController.entry != null) {
+      if (suggestionsController.entry != null) {
         suggestionsController.remove();
       }
       setState(() {
@@ -135,20 +135,24 @@ class _SearchResultPageState extends State<SearchResultPage> {
         onChanged: onChanged,
         action: buildAction(),
       ),
-      loadPage: source!.searchPageData!.loadPage == null ? null : (i) {
-        return source.searchPageData!.loadPage!(
-          text,
-          i,
-          options,
-        );
-      },
-      loadNext: source.searchPageData!.loadNext == null ? null : (i) {
-        return source.searchPageData!.loadNext!(
-          text,
-          i,
-          options,
-        );
-      },
+      loadPage: source!.searchPageData!.loadPage == null
+          ? null
+          : (i) {
+              return source.searchPageData!.loadPage!(
+                text,
+                i,
+                options,
+              );
+            },
+      loadNext: source.searchPageData!.loadNext == null
+          ? null
+          : (i) {
+              return source.searchPageData!.loadNext!(
+                text,
+                i,
+                options,
+              );
+            },
     );
   }
 
@@ -424,6 +428,11 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
                   setState(() {
                     searchTarget = e.key;
                     options.clear();
+                    final searchOptions = ComicSource.find(searchTarget)!
+                            .searchPageData!
+                            .searchOptions ??
+                        <SearchOptions>[];
+                    options = searchOptions.map((e) => e.defaultValue).toList();
                     onChanged();
                   });
                 },

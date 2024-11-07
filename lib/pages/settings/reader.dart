@@ -61,6 +61,14 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call('enableLongPressToZoom');
           },
         ).toSliver(),
+        _SwitchSetting(
+          title: 'Limit image width'.tl,
+          subtitle: 'When using Continuous(Top to Bottom) mode'.tl,
+          settingKey: 'limitImageWidth',
+          onChanged: () {
+            widget.onChanged?.call('limitImageWidth');
+          },
+        ).toSliver(),
       ],
     );
   }

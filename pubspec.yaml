@@ -2,7 +2,7 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.0.2+102
+version: 1.0.3+103
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -39,7 +39,7 @@ dependencies:
       url: https://github.com/venera-app/flutter.widgets
       ref: 09e756b1f1b04e6298318d99ec20a787fb360f59
       path: packages/scrollable_positioned_list
-  flutter_reorderable_grid_view: 5.0.1
+  flutter_reorderable_grid_view: 5.3.2
   yaml: any
   uuid: ^4.5.1
   desktop_webview_window:

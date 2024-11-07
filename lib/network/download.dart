@@ -90,7 +90,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     var local = LocalManager().find(id, comicType);
     if (path != null) {
       if (local == null) {
-        Directory(path!).deleteIgnoreError();
+        Directory(path!).deleteIgnoreError(recursive: true);
       } else if (chapters != null) {
         for (var c in chapters!) {
           var dir = Directory(FilePath.join(path!, c));

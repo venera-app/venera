@@ -22,6 +22,8 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   _DragListener? dragListener;
 
+  int fingers = 0;
+
   @override
   void initState() {
     _tapGestureRecognizer = TapGestureRecognizer()
@@ -38,6 +40,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
+        fingers++;
         _lastTapPointer = event.pointer;
         _lastTapMoveDistance = Offset.zero;
         _tapGestureRecognizer.addPointer(event);
@@ -46,7 +49,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           _dragInProgress = false;
         }
         Future.delayed(_kLongPressMinTime, () {
-          if (_lastTapPointer == event.pointer) {
+          if (_lastTapPointer == event.pointer && fingers == 1) {
             if(_lastTapMoveDistance!.distanceSquared < 20.0 * 20.0) {
               onLongPressedDown(event.position);
               _longPressInProgress = true;
@@ -67,6 +70,19 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
         }
       },
       onPointerUp: (event) {
+        fingers--;
+        if (_longPressInProgress) {
+          onLongPressedUp(event.position);
+        }
+        if(_dragInProgress) {
+          dragListener?.onEnd?.call();
+          _dragInProgress = false;
+        }
+        _lastTapPointer = null;
+        _lastTapMoveDistance = null;
+      },
+      onPointerCancel: (event) {
+        fingers--;
         if (_longPressInProgress) {
           onLongPressedUp(event.position);
         }

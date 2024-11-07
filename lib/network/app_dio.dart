@@ -196,12 +196,6 @@ class AppDio with DioMixin {
             : rhttp.ProxySettings.proxy(proxy!),
       ));
     }
-    Log.info(
-      "Network",
-      "${options?.method ?? 'GET'} $path\n"
-          "Headers: ${options?.headers}\n"
-          "Data: $data\n",
-    );
     return super.request(
       path,
       data: data,
@@ -218,14 +212,14 @@ class RHttpAdapter implements HttpClientAdapter {
   rhttp.ClientSettings settings;
 
   RHttpAdapter(this.settings) {
-    settings.copyWith(
+    settings = settings.copyWith(
       redirectSettings: const rhttp.RedirectSettings.limited(5),
       timeoutSettings: const rhttp.TimeoutSettings(
         connectTimeout: Duration(seconds: 15),
         keepAliveTimeout: Duration(seconds: 60),
         keepAlivePing: Duration(seconds: 30),
       ),
-      httpVersionPref: rhttp.HttpVersionPref.http1_1,
+      throwOnStatusCode: false,
     );
   }
 
@@ -238,6 +232,12 @@ class RHttpAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    Log.info(
+      "Network",
+      "${options.method} ${options.uri}\n"
+          "Headers: ${options.headers}\n"
+          "Data: ${options.data}\n",
+    );
     var res = await rhttp.Rhttp.request(
       method: switch (options.method) {
         'GET' => rhttp.HttpMethod.get,
@@ -275,12 +275,7 @@ class RHttpAdapter implements HttpClientAdapter {
     var data = res.body;
     if(headers['content-encoding']?.contains('gzip') ?? false) {
       // rhttp does not support gzip decoding
-      var buffer = <int>[];
-      await for (var chunk in data) {
-        buffer.addAll(chunk);
-      }
-      data = Stream.value(Uint8List.fromList(gzip.decode(buffer)));
-      buffer.clear();
+      data = gzip.decoder.bind(data).map((data) => Uint8List.fromList(data));
     }
     return ResponseBody(
       data,

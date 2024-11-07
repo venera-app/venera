@@ -113,6 +113,7 @@ class _Settings with ChangeNotifier {
     'downloadThreads': 5,
     'enableLongPressToZoom': true,
     'checkUpdateOnStart': true,
+    'limitImageWidth': true,
   };
 
   operator [](String key) {

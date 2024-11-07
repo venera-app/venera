@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
 jobs:
   Build_MacOS:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -12,7 +12,7 @@ jobs:
           channel: "stable"
           flutter-version-file: pubspec.yaml
           architecture: x64
-      - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+      - run: sudo xcode-select --switch /Applications/Xcode_16.0.app
       - run: flutter pub get
         # Step 1: Decode and install the certificate
       - name: Decode and install certificate
@@ -38,12 +38,12 @@ jobs:
 
       # Step 4: Attach and upload artifacts (optional)
       - name: Upload DMG
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: venera.dmg
           path: dist/venera.dmg
   Build_IOS:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -51,7 +51,7 @@ jobs:
           channel: "stable"
           flutter-version-file: pubspec.yaml
           architecture: x64
-      - run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+      - run: sudo xcode-select --switch /Applications/Xcode_16.0.app
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
       - run: |

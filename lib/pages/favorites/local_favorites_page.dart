@@ -15,10 +15,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   late List<FavoriteItem> comics;
 
   void updateComics() {
-    print(comics.length);
     setState(() {
       comics = LocalFavoritesManager().getAllComics(widget.folder);
-      print(comics.length);
     });
   }
 
@@ -107,7 +105,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         },
                       ).then(
                         (value) {
-                          setState(() {});
+                          if(mounted) {
+                            setState(() {});
+                          }
                         },
                       );
                     }),
@@ -199,6 +199,7 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
         var comicSource = e.type.comicSource;
         return ComicTile(
           key: Key(e.hashCode.toString()),
+          enableLongPressed: false,
           comic: Comic(
             e.name,
             e.coverPath,
