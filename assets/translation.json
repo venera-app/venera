@@ -173,7 +173,13 @@
     "Unselected": "未选择",
     "Long press and drag to reorder.": "长按并拖动以重新排序。",
     "Limit image width": "限制图片宽度",
-    "When using Continuous(Top to Bottom) mode": "当使用连续（从上到下）模式"
+    "When using Continuous(Top to Bottom) mode": "当使用连续（从上到下）模式",
+    "Open link": "打开链接",
+    "Open comic": "打开漫画",
+    "Move To First": "移动到最前",
+    "Cancel": "取消",
+    "Paused": "已暂停",
+    "Pause": "暂停"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -349,6 +355,12 @@
     "Unselected": "未選擇",
     "Long press and drag to reorder.": "長按並拖動以重新排序。",
     "Limit image width": "限制圖片寬度",
-    "When using Continuous(Top to Bottom) mode": "當使用連續（從上到下）模式"
+    "When using Continuous(Top to Bottom) mode": "當使用連續（從上到下）模式",
+    "Open link": "打開鏈接",
+    "Open comic": "打開漫畫",
+    "Move To First": "移動到最前",
+    "Cancel": "取消",
+    "Paused": "已暫停",
+    "Pause": "暫停"
   }
 }

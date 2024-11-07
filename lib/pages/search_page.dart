@@ -369,6 +369,9 @@ class _SearchPageState extends State<SearchPage> {
           ),
           trailing: const Icon(Icons.arrow_right),
           onTap: () {
+            setState(() {
+              suggestions.clear();
+            });
             handleAppLink(Uri.parse(controller.text));
           },
         );
