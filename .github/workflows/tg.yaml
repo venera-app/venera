@@ -1,0 +1,27 @@
+name: Telegram Notification
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send Telegram notification
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ${{ github.event_name == 'issues' && '新 Issue 已创建' || '新 Pull Request 已提交' }}
+          
+          ${{ github.event.issue.title || github.event.pull_request.title }}
+          
+          作者: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+          
+          链接: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          
+          仓库: ${{ github.repository }}
