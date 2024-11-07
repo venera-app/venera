@@ -152,7 +152,8 @@ class _FavoritesPageState extends State<FavoritesPage>  {
     } else {
       var favoriteData = getFavoriteDataOrNull(folder!);
       if (favoriteData == null) {
-        return const Center(child: Text("Unknown source"));
+        folder = null;
+        return buildBody();
       } else {
         return NetworkFavoritePage(favoriteData, key: Key(folder!));
       }

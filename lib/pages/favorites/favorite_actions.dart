@@ -6,7 +6,6 @@ Future<void> newFolder() async {
       context: App.rootContext,
       builder: (context) {
         var controller = TextEditingController();
-        var folders = LocalFavoritesManager().folderNames;
         String? error;
 
         return StatefulBuilder(builder: (context, setState) {

@@ -169,7 +169,9 @@
     "minAppVersion @version is required": "需要最低App版本 @version",
     "Remove": "移除",
     "Long press to zoom": "长按缩放",
-    "Updates Available": "更新可用"
+    "Updates Available": "更新可用",
+    "Unselected": "未选择",
+    "Long press and drag to reorder.": "长按并拖动以重新排序。"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -341,6 +343,8 @@
     "minAppVersion @version is required": "需要最低App版本 @version",
     "Remove": "移除",
     "Long press to zoom": "長按縮放",
-    "Updates Available": "更新可用"
+    "Updates Available": "更新可用",
+    "Unselected": "未選擇",
+    "Long press and drag to reorder.": "長按並拖動以重新排序。"
   }
 }
