@@ -20,6 +20,13 @@ class _AppSettingsState extends State<AppSettings> {
         ListTile(
           title: Text("Storage Path for local comics".tl),
           subtitle: Text(LocalManager().path, softWrap: false),
+          trailing: IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: LocalManager().path));
+              context.showMessage(message: "Path copied to clipboard".tl);
+            },
+          ),
         ).toSliver(),
         _CallbackSetting(
           title: "Set New Storage Path".tl,
