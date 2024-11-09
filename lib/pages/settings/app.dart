@@ -20,16 +20,28 @@ class _AppSettingsState extends State<AppSettings> {
         ListTile(
           title: Text("Storage Path for local comics".tl),
           subtitle: Text(LocalManager().path, softWrap: false),
+          trailing: IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: LocalManager().path));
+              context.showMessage(message: "Path copied to clipboard".tl);
+            },
+          ),
         ).toSliver(),
         _CallbackSetting(
           title: "Set New Storage Path".tl,
           actionTitle: "Set".tl,
           callback: () async {
-            if (App.isMobile) {
+            var result;
+            if (App.isAndroid) {
               context.showMessage(message: "Not supported".tl);
               return;
             }
-            var result = await selectDirectory();
+            else if (App.isIOS) {
+              result = await selectDirectoryIOS();
+            } else {
+              result = await selectDirectory();
+            }
             if (result == null) return;
             var loadingDialog = showLoadingDialog(
               App.rootContext,

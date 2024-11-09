@@ -160,6 +160,22 @@ class DirectoryPicker {
   }
 }
 
+class IOSDirectoryPicker {
+  static const MethodChannel _channel = MethodChannel("venera/method_channel");
+
+  // 调用 iOS 目录选择方法
+  static Future<String?> selectDirectory() async {
+    try {
+      final String? path = await _channel.invokeMethod('selectDirectory');
+      return path;
+    } catch (e) {
+      print("Error selecting directory: $e");
+      // 返回报错信息
+      return e.toString();
+    }
+  }
+}
+
 Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
   file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
     label: 'files',
@@ -179,6 +195,11 @@ Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
 Future<String?> selectDirectory() async {
   var path = await file_selector.getDirectoryPath();
   return path;
+}
+
+// selectDirectoryIOS
+Future<String?> selectDirectoryIOS() async {
+  return IOSDirectoryPicker.selectDirectory();
 }
 
 Future<void> saveFile(
