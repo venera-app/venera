@@ -1,11 +1,15 @@
 import Flutter
 import UIKit
 import UniformTypeIdentifiers
+import Foundation // 添加此行
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, UIDocumentPickerDelegate {
   var flutterResult: FlutterResult?
   var directoryPath: URL!
+
+  // 定义插件通道名称
+  private var directoryPicker: DirectoryPicker?
 
   override func application(
     _ application: UIApplication,
@@ -42,6 +46,9 @@ import UniformTypeIdentifiers
         self.directoryPath?.stopAccessingSecurityScopedResource()
         self.directoryPath = nil
         result(nil)
+      } else if call.method == "selectDirectory" {
+        self.directoryPicker = DirectoryPicker()
+        self.directoryPicker?.selectDirectory(result: result)
       } else {
         result(FlutterMethodNotImplemented)
       }

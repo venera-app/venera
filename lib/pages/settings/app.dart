@@ -32,11 +32,16 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Set New Storage Path".tl,
           actionTitle: "Set".tl,
           callback: () async {
-            if (App.isMobile) {
+            var result;
+            if (App.isAndroid) {
               context.showMessage(message: "Not supported".tl);
               return;
             }
-            var result = await selectDirectory();
+            else if (App.isIOS) {
+              result = await selectDirectoryIOS();
+            } else {
+              result = await selectDirectory();
+            }
             if (result == null) return;
             var loadingDialog = showLoadingDialog(
               App.rootContext,
