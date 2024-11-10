@@ -99,7 +99,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             actions: [
               FilledButton(
                 onPressed: () {
-                  appdata.implicitData["local_sort"] =sortType.value;
+                  appdata.implicitData["local_sort"] = sortType.value;
                   appdata.writeImplicitData();
                   Navigator.pop(context);
                   update();
@@ -166,7 +166,9 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             )
           else if (multiSelectMode)
             SliverAppbar(
-              title: Text("Selected ${selectedComics.length} comics"),
+              title: Text("Selected @a comics".tlParams({
+                'a': selectedComics.length,
+              })),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -230,7 +232,9 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                         showConfirmDialog(
                           context: context,
                           title: "Delete".tl,
-                          content: "Delete selected comics?".tl,
+                          content:
+                              "Are you sure you want to delete @a selected comics?"
+                                  .tlParams({'a': selectedComics.length}),
                           onConfirm: () {
                             for (var comic in selectedComics.keys) {
                               LocalManager().deleteComic(comic);
