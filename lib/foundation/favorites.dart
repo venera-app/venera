@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/image_provider/local_favorite_image.dart';
@@ -148,7 +149,7 @@ class FavoriteItemWithFolderInfo extends FavoriteItem {
         );
 }
 
-class LocalFavoritesManager {
+class LocalFavoritesManager with ChangeNotifier {
   factory LocalFavoritesManager() =>
       cache ?? (cache = LocalFavoritesManager._create());
 
@@ -233,6 +234,7 @@ class LocalFavoritesManager {
         values (?, ?);
       """, [folder, order[folder]]);
     }
+    notifyListeners();
   }
 
   int count(String folderName) {
@@ -272,6 +274,7 @@ class LocalFavoritesManager {
       set tags = '$tag,' || tags
       where id == ?
     """, [id]);
+    notifyListeners();
   }
 
   List<FavoriteItemWithFolderInfo> allComics() {
@@ -324,6 +327,7 @@ class LocalFavoritesManager {
         primary key (id, type)
       );
     """);
+    notifyListeners();
     return name;
   }
 
@@ -386,6 +390,7 @@ class LocalFavoritesManager {
         values (?, ?, ?, ?, ?, ?, ?, ?);
       """, [...params, minValue(folder) - 1]);
     }
+    notifyListeners();
   }
 
   /// delete a folder
@@ -394,6 +399,7 @@ class LocalFavoritesManager {
     _db.execute("""
       drop table "$name";
     """);
+    notifyListeners();
   }
 
   void deleteComic(String folder, FavoriteItem comic) {
@@ -408,6 +414,7 @@ class LocalFavoritesManager {
       delete from "$folder"
       where id == ? and type == ?;
     """, [id, type.value]);
+    notifyListeners();
   }
 
   Future<void> clearAll() async {
@@ -425,6 +432,7 @@ class LocalFavoritesManager {
     for (int i = 0; i < newFolder.length; i++) {
       addComic(folder, newFolder[i], i);
     }
+    notifyListeners();
   }
 
   void rename(String before, String after) {
@@ -438,6 +446,7 @@ class LocalFavoritesManager {
       ALTER TABLE "$before"
       RENAME TO "$after";
     """);
+    notifyListeners();
   }
 
   void onReadEnd(String id, ComicType type) async {
@@ -475,6 +484,7 @@ class LocalFavoritesManager {
           """, [newTime, id]);
       }
     }
+    notifyListeners();
   }
 
   List<FavoriteItemWithFolderInfo> search(String keyword) {
@@ -521,6 +531,7 @@ class LocalFavoritesManager {
         set tags = ?
         where id == ?;
       """, [tags.join(","), id]);
+    notifyListeners();
   }
 
   final _cachedFavoritedIds = <String, bool>{};
@@ -560,6 +571,7 @@ class LocalFavoritesManager {
       comic.id,
       comic.type.value
     ]);
+    notifyListeners();
   }
 
   String folderToJson(String folder) {

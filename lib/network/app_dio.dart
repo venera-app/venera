@@ -108,11 +108,11 @@ class AppDio with DioMixin {
 
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
-    interceptors.add(MyLogInterceptor());
     httpClientAdapter = RHttpAdapter(const rhttp.ClientSettings());
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
     interceptors.add(CloudflareInterceptor());
+    interceptors.add(MyLogInterceptor());
   }
 
   static HttpClient createHttpClient() {
@@ -211,7 +211,7 @@ class AppDio with DioMixin {
 class RHttpAdapter implements HttpClientAdapter {
   rhttp.ClientSettings settings;
 
-  RHttpAdapter(this.settings) {
+  RHttpAdapter([this.settings = const rhttp.ClientSettings()]) {
     settings = settings.copyWith(
       redirectSettings: const rhttp.RedirectSettings.limited(5),
       timeoutSettings: const rhttp.TimeoutSettings(
@@ -232,12 +232,6 @@ class RHttpAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
-    Log.info(
-      "Network",
-      "${options.method} ${options.uri}\n"
-          "Headers: ${options.headers}\n"
-          "Data: ${options.data}\n",
-    );
     var res = await rhttp.Rhttp.request(
       method: switch (options.method) {
         'GET' => rhttp.HttpMethod.get,

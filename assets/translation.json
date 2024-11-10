@@ -179,7 +179,13 @@
     "Move To First": "移动到最前",
     "Cancel": "取消",
     "Paused": "已暂停",
-    "Pause": "暂停"
+    "Pause": "暂停",
+    "Operation": "操作",
+    "Upload": "上传",
+    "Saved": "已保存",
+    "Sync Data": "同步数据",
+    "Syncing Data": "正在同步数据",
+    "Data Sync": "数据同步"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -361,6 +367,12 @@
     "Move To First": "移動到最前",
     "Cancel": "取消",
     "Paused": "已暫停",
-    "Pause": "暫停"
+    "Pause": "暫停",
+    "Operation": "操作",
+    "Upload": "上傳",
+    "Saved": "已保存",
+    "Sync Data": "同步數據",
+    "Syncing Data": "正在同步數據",
+    "Data Sync": "數據同步"
   }
 }
