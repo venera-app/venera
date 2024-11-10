@@ -179,7 +179,17 @@
     "Move To First": "移动到最前",
     "Cancel": "取消",
     "Paused": "已暂停",
-    "Pause": "暂停"
+    "Pause": "暂停",
+    "Operation": "操作",
+    "Upload": "上传",
+    "Saved": "已保存",
+    "Sync Data": "同步数据",
+    "Syncing Data": "正在同步数据",
+    "Data Sync": "数据同步",
+    "Quick Favorite": "快速收藏",
+    "Long press on the favorite button to quickly add to this folder": "长按收藏按钮快速添加到这个文件夹",
+    "Added": "已添加",
+    "Turn page by volume keys": "使用音量键翻页"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -361,6 +371,16 @@
     "Move To First": "移動到最前",
     "Cancel": "取消",
     "Paused": "已暫停",
-    "Pause": "暫停"
+    "Pause": "暫停",
+    "Operation": "操作",
+    "Upload": "上傳",
+    "Saved": "已保存",
+    "Sync Data": "同步數據",
+    "Syncing Data": "正在同步數據",
+    "Data Sync": "數據同步",
+    "Quick Favorite": "快速收藏",
+    "Long press on the favorite button to quickly add to this folder": "長按收藏按鈕快速添加到這個文件夾",
+    "Added": "已添加",
+    "Turn page by volume keys": "使用音量鍵翻頁"
   }
 }

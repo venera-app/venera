@@ -82,11 +82,12 @@ class Log {
     addLog(LogLevel.warning, title, content);
   }
 
-  static error(String title, String content, [Object? stackTrace]) {
+  static error(String title, Object content, [Object? stackTrace]) {
+    var info = content.toString();
     if(stackTrace != null) {
-      content += "\n${stackTrace.toString()}";
+      info += "\n${stackTrace.toString()}";
     }
-    addLog(LogLevel.error, title, content);
+    addLog(LogLevel.error, title, info);
   }
 
   static void clear() => _logs.clear();

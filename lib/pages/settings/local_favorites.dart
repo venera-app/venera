@@ -24,10 +24,18 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
         SelectSetting(
           title: "Move favorite after reading".tl,
           settingKey: "moveFavoriteAfterRead",
-          optionTranslation: {
+          optionTranslation: const {
             "none": "None",
             "end": "End",
             "start": "Start",
+          },
+        ).toSliver(),
+        SelectSetting(
+          title: "Quick Favorite".tl,
+          settingKey: "quickFavorite",
+          help: "Long press on the favorite button to quickly add to this folder".tl,
+          optionTranslation: {
+            for (var e in LocalFavoritesManager().folderNames) e: e
           },
         ).toSliver(),
       ],

@@ -49,6 +49,7 @@ class SelectSetting extends StatelessWidget {
     required this.settingKey,
     required this.optionTranslation,
     this.onChanged,
+    this.help,
   });
 
   final String title;
@@ -58,6 +59,8 @@ class SelectSetting extends StatelessWidget {
   final Map<String, String> optionTranslation;
 
   final VoidCallback? onChanged;
+
+  final String? help;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +74,7 @@ class SelectSetting extends StatelessWidget {
               settingKey: settingKey,
               optionTranslation: optionTranslation,
               onChanged: onChanged,
+              help: help,
             );
           } else {
             return _EndSelectorSelectSetting(
@@ -78,6 +82,7 @@ class SelectSetting extends StatelessWidget {
               settingKey: settingKey,
               optionTranslation: optionTranslation,
               onChanged: onChanged,
+              help: help,
             );
           }
         },
@@ -92,6 +97,7 @@ class _DoubleLineSelectSettings extends StatefulWidget {
     required this.settingKey,
     required this.optionTranslation,
     this.onChanged,
+    this.help,
   });
 
   final String title;
@@ -102,6 +108,8 @@ class _DoubleLineSelectSettings extends StatefulWidget {
 
   final VoidCallback? onChanged;
 
+  final String? help;
+
   @override
   State<_DoubleLineSelectSettings> createState() =>
       _DoubleLineSelectSettingsState();
@@ -111,9 +119,37 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(widget.title),
-      subtitle:
-          Text(widget.optionTranslation[appdata.settings[widget.settingKey]]!),
+      title: Row(
+        children: [
+          Text(widget.title),
+          const SizedBox(width: 4),
+          if (widget.help != null)
+            Button.icon(
+              size: 18,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return ContentDialog(
+                      title: "Help".tl,
+                      content: Text(widget.help!).paddingHorizontal(16).fixWidth(double.infinity),
+                      actions: [
+                        Button.filled(
+                          onPressed: context.pop,
+                          child: Text("OK".tl),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+        ],
+      ),
+      subtitle: Text(
+          widget.optionTranslation[appdata.settings[widget.settingKey]] ??
+              "None"),
       trailing: const Icon(Icons.arrow_drop_down),
       onTap: () {
         var renderBox = context.findRenderObject() as RenderBox;
@@ -156,6 +192,7 @@ class _EndSelectorSelectSetting extends StatefulWidget {
     required this.settingKey,
     required this.optionTranslation,
     this.onChanged,
+    this.help,
   });
 
   final String title;
@@ -165,6 +202,8 @@ class _EndSelectorSelectSetting extends StatefulWidget {
   final Map<String, String> optionTranslation;
 
   final VoidCallback? onChanged;
+
+  final String? help;
 
   @override
   State<_EndSelectorSelectSetting> createState() =>
@@ -176,10 +215,38 @@ class _EndSelectorSelectSettingState extends State<_EndSelectorSelectSetting> {
   Widget build(BuildContext context) {
     var options = widget.optionTranslation;
     return ListTile(
-      title: Text(widget.title),
+      title: Row(
+        children: [
+          Text(widget.title),
+          const SizedBox(width: 4),
+          if (widget.help != null)
+            Button.icon(
+              size: 18,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return ContentDialog(
+                      title: "Help".tl,
+                      content: Text(widget.help!).paddingHorizontal(16).fixWidth(double.infinity),
+                      actions: [
+                        Button.filled(
+                          onPressed: context.pop,
+                          child: Text("OK".tl),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+        ],
+      ),
       trailing: Select(
-        current: options[appdata.settings[widget.settingKey]]!,
+        current: options[appdata.settings[widget.settingKey]],
         values: options.values.toList(),
+        minWidth: 64,
         onTap: (index) {
           setState(() {
             appdata.settings[widget.settingKey] = options.keys.elementAt(index);

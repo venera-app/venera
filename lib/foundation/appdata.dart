@@ -114,6 +114,10 @@ class _Settings with ChangeNotifier {
     'enableLongPressToZoom': true,
     'checkUpdateOnStart': true,
     'limitImageWidth': true,
+    'webdav': [], // empty means not configured
+    'dataVersion': 0,
+    'quickFavorite': null,
+    'enableTurnPageByVolumeKey': true,
   };
 
   operator [](String key) {

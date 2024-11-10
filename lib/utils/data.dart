@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:venera/foundation/app.dart';
@@ -35,7 +36,7 @@ Future<File> exportAppData() async {
   return cacheFile;
 }
 
-Future<void> importAppData(File file) async {
+Future<void> importAppData(File file, [bool checkVersion = false]) async {
   var cacheDirPath = FilePath.join(App.cachePath, 'temp_data');
   var cacheDir = Directory(cacheDirPath);
   await Isolate.run(() {
@@ -44,14 +45,21 @@ Future<void> importAppData(File file) async {
   var historyFile = cacheDir.joinFile("history.db");
   var localFavoriteFile = cacheDir.joinFile("local_favorite.db");
   var appdataFile = cacheDir.joinFile("appdata.json");
+  if(checkVersion && appdataFile.existsSync()) {
+    var data = jsonDecode(await appdataFile.readAsString());
+    var version = data["settings"]["dataVersion"];
+    if(version is int && version <= appdata.settings["dataVersion"]) {
+      return;
+    }
+  }
   if(await historyFile.exists()) {
     HistoryManager().close();
-    await historyFile.copy(FilePath.join(App.dataPath, "history.db"));
+    historyFile.copySync(FilePath.join(App.dataPath, "history.db"));
     HistoryManager().init();
   }
   if(await localFavoriteFile.exists()) {
     LocalFavoritesManager().close();
-    await localFavoriteFile.copy(FilePath.join(App.dataPath, "local_favorite.db"));
+    localFavoriteFile.copySync(FilePath.join(App.dataPath, "local_favorite.db"));
     LocalFavoritesManager().init();
   }
   if(await appdataFile.exists()) {

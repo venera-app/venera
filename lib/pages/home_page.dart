@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -17,6 +18,7 @@ import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/cbz.dart';
+import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
@@ -32,6 +34,7 @@ class HomePage extends StatelessWidget {
       slivers: [
         SliverPadding(padding: EdgeInsets.only(top: context.padding.top)),
         const _SearchBar(),
+        const _SyncDataWidget(),
         const _History(),
         const _Local(),
         const _ComicSourceWidget(),
@@ -73,6 +76,97 @@ class _SearchBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SyncDataWidget extends StatefulWidget {
+  const _SyncDataWidget();
+
+  @override
+  State<_SyncDataWidget> createState() => _SyncDataWidgetState();
+}
+
+class _SyncDataWidgetState extends State<_SyncDataWidget> {
+  @override
+  void initState() {
+    super.initState();
+    DataSync().addListener(update);
+  }
+
+  void update() {
+    if(mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    DataSync().removeListener(update);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    if(!DataSync().isEnabled) {
+      child = const SliverPadding(padding: EdgeInsets.zero);
+    } else if (DataSync().isUploading || DataSync().isDownloading) {
+      child = SliverToBoxAdapter(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ListTile(
+            leading: const Icon(Icons.sync),
+            title: Text('Syncing Data'.tl),
+            trailing: const CircularProgressIndicator(strokeWidth: 2)
+                .fixWidth(18)
+                .fixHeight(18),
+          ),
+        ),
+      );
+    } else {
+      child = SliverToBoxAdapter(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ListTile(
+            leading: const Icon(Icons.sync),
+            title: Text('Sync Data'.tl),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                  onPressed: () async {
+                    DataSync().uploadData();
+                  }
+                ),
+                IconButton(
+                  icon: const Icon(Icons.cloud_download_outlined),
+                  onPressed: () async {
+                    DataSync().downloadData();
+                  }
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return SliverAnimatedPaintExtent(
+      duration: const Duration(milliseconds: 200),
+      child: child,
     );
   }
 }
@@ -529,14 +623,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
         await xFile!.saveTo(cache);
         var comic = await CBZ.import(File(cache));
         if (selectedFolder != null) {
-          LocalFavoritesManager().addComic(selectedFolder!, FavoriteItem(
-            id: comic.id,
-            name: comic.title,
-            coverPath: comic.cover,
-            author: comic.subtitle,
-            type: comic.comicType,
-            tags: comic.tags,
-          ));
+          LocalFavoritesManager().addComic(
+              selectedFolder!,
+              FavoriteItem(
+                id: comic.id,
+                name: comic.title,
+                coverPath: comic.cover,
+                author: comic.subtitle,
+                type: comic.comicType,
+                tags: comic.tags,
+              ));
         }
         await File(cache).deleteIgnoreError();
       } catch (e, s) {
@@ -610,14 +706,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     for (var comic in comics.values) {
       LocalManager().add(comic, LocalManager().findValidId(ComicType.local));
       if (selectedFolder != null) {
-        LocalFavoritesManager().addComic(selectedFolder!, FavoriteItem(
-          id: comic.id,
-          name: comic.title,
-          coverPath: comic.cover,
-          author: comic.subtitle,
-          type: comic.comicType,
-          tags: comic.tags,
-        ));
+        LocalFavoritesManager().addComic(
+            selectedFolder!,
+            FavoriteItem(
+              id: comic.id,
+              name: comic.title,
+              coverPath: comic.cover,
+              author: comic.subtitle,
+              type: comic.comicType,
+              tags: comic.tags,
+            ));
       }
     }
     context.pop();

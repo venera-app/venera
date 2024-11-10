@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/ext.dart';
@@ -158,12 +159,13 @@ class LocalManager with ChangeNotifier {
       return "Directory is not empty";
     }
     try {
-      await copyDirectory(
+      await copyDirectoryIsolate(
         Directory(path),
         newDir,
       );
-      await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(path);
-    } catch (e) {
+      await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(newPath);
+    } catch (e, s) {
+      Log.error("IO", e, s);
       return e.toString();
     }
     await Directory(path).deleteIgnoreError(recursive:true);

@@ -32,12 +32,28 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Set New Storage Path".tl,
           actionTitle: "Set".tl,
           callback: () async {
-            var result;
+            String? result;
             if (App.isAndroid) {
-              context.showMessage(message: "Not supported".tl);
-              return;
-            }
-            else if (App.isIOS) {
+              var channel = const MethodChannel("venera/storage");
+              var permission = await channel.invokeMethod('');
+              if(permission != true) {
+                context.showMessage(message: "Permission denied".tl);
+                return;
+              }
+              var path = await selectDirectory();
+              if(path != null) {
+                // check if the path is writable
+                var testFile = File(FilePath.join(path, "test"));
+                try {
+                  await testFile.writeAsBytes([1]);
+                  await testFile.delete();
+                } catch (e) {
+                  context.showMessage(message: "Permission denied".tl);
+                  return;
+                }
+                result = path;
+              }
+            } else if (App.isIOS) {
               result = await selectDirectoryIOS();
             } else {
               result = await selectDirectory();
@@ -90,8 +106,7 @@ class _AppSettingsState extends State<AppSettings> {
                 appdata.settings['cacheSize'] = int.parse(value);
                 appdata.saveData();
                 setState(() {});
-                CacheManager()
-                    .setLimitSize(appdata.settings['cacheSize']);
+                CacheManager().setLimitSize(appdata.settings['cacheSize']);
                 return null;
               },
             );
@@ -113,13 +128,12 @@ class _AppSettingsState extends State<AppSettings> {
           callback: () async {
             var controller = showLoadingDialog(context);
             var file = await selectFile(ext: ['venera']);
-            if(file != null) {
+            if (file != null) {
               var cacheFile = File(FilePath.join(App.cachePath, "temp.venera"));
               await file.saveTo(cacheFile.path);
               try {
                 await importAppData(cacheFile);
-              }
-              catch(e, s) {
+              } catch (e, s) {
                 Log.error("Import data", e.toString(), s);
                 context.showMessage(message: "Failed to import data".tl);
               }
@@ -127,6 +141,13 @@ class _AppSettingsState extends State<AppSettings> {
             controller.close();
           },
           actionTitle: 'Import'.tl,
+        ).toSliver(),
+        _CallbackSetting(
+          title: "Data Sync".tl,
+          callback: () async {
+            showPopUpWidget(context, const _WebdavSetting());
+          },
+          actionTitle: 'Set'.tl,
         ).toSliver(),
         _SettingPartTitle(
           title: "Log".tl,
@@ -281,5 +302,131 @@ class _LogsPageState extends State<LogsPage> {
 
   void saveLog(String log) async {
     saveFile(data: utf8.encode(log), filename: 'log.txt');
+  }
+}
+
+class _WebdavSetting extends StatefulWidget {
+  const _WebdavSetting();
+
+  @override
+  State<_WebdavSetting> createState() => _WebdavSettingState();
+}
+
+class _WebdavSettingState extends State<_WebdavSetting> {
+  String url = "";
+  String user = "";
+  String pass = "";
+
+  bool isTesting = false;
+
+  bool upload = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (appdata.settings['webdav'] is! List) {
+      appdata.settings['webdav'] = [];
+    }
+    var configs = appdata.settings['webdav'] as List;
+    if (configs.whereType<String>().length != 3) {
+      return;
+    }
+    url = configs[0];
+    user = configs[1];
+    pass = configs[2];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopUpWidgetScaffold(
+      title: "Webdav",
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: "URL",
+                border: OutlineInputBorder(),
+              ),
+              controller: TextEditingController(text: url),
+              onChanged: (value) => url = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: InputDecoration(
+                labelText: "Username".tl,
+                border: const OutlineInputBorder(),
+              ),
+              controller: TextEditingController(text: user),
+              onChanged: (value) => user = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: InputDecoration(
+                labelText: "Password".tl,
+                border: const OutlineInputBorder(),
+              ),
+              controller: TextEditingController(text: pass),
+              onChanged: (value) => pass = value,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text("Operation".tl),
+                Radio<bool>(
+                  groupValue: upload,
+                  value: true,
+                  onChanged: (value) {
+                    setState(() {
+                      upload = value!;
+                    });
+                  },
+                ),
+                Text("Upload".tl),
+                Radio<bool>(
+                  groupValue: upload,
+                  value: false,
+                  onChanged: (value) {
+                    setState(() {
+                      upload = value!;
+                    });
+                  },
+                ),
+                Text("Download".tl),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Button.filled(
+                isLoading: isTesting,
+                onPressed: () async {
+                  var oldConfig = appdata.settings['webdav'];
+                  appdata.settings['webdav'] = [url, user, pass];
+                  setState(() {
+                    isTesting = true;
+                  });
+                  var testResult = upload
+                      ? await DataSync().uploadData()
+                      : await DataSync().downloadData();
+                  if (testResult.error) {
+                    setState(() {
+                      isTesting = false;
+                    });
+                    appdata.settings['webdav'] = oldConfig;
+                    context.showMessage(message: testResult.errorMessage!);
+                    return;
+                  }
+                  appdata.saveData();
+                  context.showMessage(message: "Saved".tl);
+                  App.rootPop();
+                },
+                child: Text("Continue".tl),
+              ),
+            )
+          ],
+        ).paddingHorizontal(16),
+      ),
+    );
   }
 }
