@@ -163,7 +163,7 @@ class LocalManager with ChangeNotifier {
         Directory(path),
         newDir,
       );
-      await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(path);
+      await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(newPath);
     } catch (e, s) {
       Log.error("IO", e, s);
       return e.toString();
