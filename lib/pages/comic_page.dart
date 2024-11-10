@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
@@ -282,6 +283,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 isActive: isFavorite || isAddToLocalFav,
                 text: 'Favorite'.tl,
                 onPressed: openFavPanel,
+                onLongPressed: quickFavorite,
                 iconColor: context.useTextColor(Colors.purple),
               ),
               if (comicSource.commentsLoader != null)
@@ -538,12 +540,22 @@ abstract mixin class _ComicPageActions {
 
   bool isFavorite = false;
 
-  void openFavPanel() {
+  FavoriteItem _toFavoriteItem() {
     var tags = <String>[];
     for (var e in comic.tags.entries) {
       tags.addAll(e.value.map((tag) => '${e.key}:$tag'));
     }
+    return FavoriteItem(
+      id: comic.id,
+      name: comic.title,
+      coverPath: comic.cover,
+      author: comic.subTitle ?? comic.uploader ?? '',
+      type: comic.comicType,
+      tags: tags,
+    );
+  }
 
+  void openFavPanel() {
     showSideBar(
       App.rootContext,
       _FavoritePanel(
@@ -555,16 +567,23 @@ abstract mixin class _ComicPageActions {
           isAddToLocalFav = local ?? isAddToLocalFav;
           update();
         },
-        favoriteItem: FavoriteItem(
-          id: comic.id,
-          name: comic.title,
-          coverPath: comic.cover,
-          author: comic.subTitle ?? comic.uploader ?? '',
-          type: comic.comicType,
-          tags: tags,
-        ),
+        favoriteItem: _toFavoriteItem(),
       ),
     );
+  }
+
+  void quickFavorite() {
+    var folder = appdata.settings['quickFavorite'];
+    if(folder is! String) {
+      return;
+    }
+    LocalFavoritesManager().addComic(
+      folder,
+      _toFavoriteItem(),
+    );
+    isAddToLocalFav = true;
+    update();
+    App.rootContext.showMessage(message: "Added".tl);
   }
 
   void share() {
@@ -800,6 +819,7 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.text,
     required this.onPressed,
+    this.onLongPressed,
     this.activeIcon,
     this.isActive,
     this.isLoading,
@@ -820,6 +840,8 @@ class _ActionButton extends StatelessWidget {
 
   final Color? iconColor;
 
+  final void Function()? onLongPressed;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -837,6 +859,7 @@ class _ActionButton extends StatelessWidget {
             onPressed();
           }
         },
+        onLongPress: onLongPressed,
         borderRadius: BorderRadius.circular(18),
         child: IconTheme.merge(
           data: IconThemeData(size: 20, color: iconColor),

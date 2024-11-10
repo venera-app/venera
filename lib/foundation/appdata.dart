@@ -116,6 +116,7 @@ class _Settings with ChangeNotifier {
     'limitImageWidth': true,
     'webdav': [], // empty means not configured
     'dataVersion': 0,
+    'quickFavorite': null,
   };
 
   operator [](String key) {
