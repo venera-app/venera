@@ -3,8 +3,16 @@ package com.github.wgh136.venera
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.view.KeyEvent
+import android.Manifest
+import android.os.Environment
+import android.provider.Settings
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -22,6 +30,9 @@ class MainActivity : FlutterActivity() {
     private val pickDirectoryCode = 1
 
     private lateinit var result: MethodChannel.Result
+
+    private val storageRequestCode = 0x10
+    private var storagePermissionRequest: ((Boolean) -> Unit)? = null
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -43,6 +54,11 @@ class MainActivity : FlutterActivity() {
                     result.error("Failed to Copy Files", e.toString(), null)
                 }
             }.start()
+        } else if (requestCode == storageRequestCode) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                storagePermissionRequest?.invoke(Environment.isExternalStorageManager())
+            }
+            storagePermissionRequest = null
         }
     }
 
@@ -89,6 +105,13 @@ class MainActivity : FlutterActivity() {
                     listening = false
                 }
             })
+
+        val storageChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/storage")
+        storageChannel.setMethodCallHandler { _, res ->
+            requestStoragePermission {result ->
+                res.success(result)
+            }
+        }
     }
 
     private fun getProxy(): String {
@@ -143,6 +166,61 @@ class MainActivity : FlutterActivity() {
                 inputStream.close()
                 outputStream.close()
             }
+        }
+    }
+
+    private fun requestStoragePermission(result: (Boolean) -> Unit) {
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            val readPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+
+            val writePermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!readPermission || !writePermission) {
+                storagePermissionRequest = result
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ),
+                    storageRequestCode
+                )
+            } else {
+                result(true)
+            }
+        } else {
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.addCategory("android.intent.category.DEFAULT")
+                    intent.data = Uri.parse("package:" + context.packageName)
+                    startActivityForResult(intent, storageRequestCode)
+                } catch (e: Exception) {
+                    result(false)
+                }
+            } else {
+                result(true)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode == storageRequestCode) {
+            storagePermissionRequest?.invoke(grantResults.all {
+                it == PackageManager.PERMISSION_GRANTED
+            })
+            storagePermissionRequest = null
         }
     }
 }

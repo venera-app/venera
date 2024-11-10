@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
@@ -111,6 +112,12 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
       copyDirectory(content.absolute, newDirectory.absolute);
     }
   }
+}
+
+Future<void> copyDirectoryIsolate(Directory source, Directory destination) async {
+  await Isolate.run(() {
+    copyDirectory(source, destination);
+  });
 }
 
 String findValidDirectoryName(String path, String directory) {
