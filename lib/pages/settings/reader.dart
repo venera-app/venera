@@ -69,6 +69,14 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call('limitImageWidth');
           },
         ).toSliver(),
+        if(App.isAndroid)
+          _SwitchSetting(
+            title: 'Turn page by volume key'.tl,
+            settingKey: 'enableTurnPageByVolumeKey',
+            onChanged: () {
+              widget.onChanged?.call('enableTurnPageByVolumeKey');
+            },
+          ).toSliver(),
       ],
     );
   }

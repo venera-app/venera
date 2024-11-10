@@ -470,6 +470,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
             App.rootContext.pop();
           }
+          if (key == "enableTurnPageByVolumeKey") {
+            if(appdata.settings[key]) {
+              context.reader.handleVolumeEvent();
+            } else {
+              context.reader.stopVolumeEvent();
+            }
+          }
           context.reader.update();
         },
       ),

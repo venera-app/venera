@@ -23,6 +23,7 @@ import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
+import 'package:venera/utils/volume.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'scaffold.dart';
@@ -97,6 +98,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   var focusNode = FocusNode();
 
+  VolumeListener? volumeListener;
+
   @override
   void initState() {
     page = widget.initialPage ?? 1;
@@ -107,6 +110,9 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       updateHistory();
     });
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    if(appdata.settings['enableTurnPageByVolumeKey']) {
+      handleVolumeEvent();
+    }
     super.initState();
   }
 
@@ -115,6 +121,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     autoPageTurningTimer?.cancel();
     focusNode.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    stopVolumeEvent();
     super.dispose();
   }
 
@@ -150,6 +157,31 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       history!.ep = chapter;
       history!.readEpisode.add(chapter);
       HistoryManager().addHistory(history!);
+    }
+  }
+
+  void handleVolumeEvent() {
+    if(!App.isAndroid) {
+      // Currently only support Android
+      return;
+    }
+    if(volumeListener != null) {
+      volumeListener?.cancel();
+    }
+    volumeListener = VolumeListener(
+      onDown: () {
+        toNextPage();
+      },
+      onUp: () {
+        toPrevPage();
+      },
+    )..listen();
+  }
+
+  void stopVolumeEvent() {
+    if(volumeListener != null) {
+      volumeListener?.cancel();
+      volumeListener = null;
     }
   }
 }
