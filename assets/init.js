@@ -940,6 +940,33 @@ function Comment({userName, avatar, content, time, replyCount, id, isLiked, scor
     this.voteStatus = voteStatus;
 }
 
+/**
+ * Create image loading config
+ * @param url {string?}
+ * @param method {string?} - http method, uppercase
+ * @param data {any} - request data, may be null
+ * @param headers {Object?} - request headers
+ * @param onResponse {((ArrayBuffer) => ArrayBuffer)?} - modify response data
+ * @param modifyImage {string?}
+ *  A js script string.
+ *  The script will be executed in a new Isolate.
+ *  A function named `modifyImage` should be defined in the script, which receives an [Image] as the only argument, and returns an [Image]..
+ * @param onLoadFailed {(() => ImageLoadingConfig)?} - called when the image loading failed
+ * @constructor
+ * @since 1.0.5
+ *
+ * To keep the compatibility with the old version, do not use the constructor. Consider creating a new object with the properties directly.
+ */
+function ImageLoadingConfig({url, method, data, headers, onResponse, modifyImage, onLoadFailed}) {
+    this.url = url;
+    this.method = method;
+    this.data = data;
+    this.headers = headers;
+    this.onResponse = onResponse;
+    this.modifyImage = modifyImage;
+    this.onLoadFailed = onLoadFailed;
+}
+
 class ComicSource {
     name = ""
 
