@@ -158,7 +158,10 @@ class ComicTile extends StatelessWidget {
       image = FileImage(File(comic.cover.substring(7)));
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
-      image = FileImage(localComic!.coverFile);
+      if(localComic == null) {
+        return const SizedBox();
+      }
+      image = FileImage(localComic.coverFile);
     } else {
       image = CachedImageProvider(comic.cover, sourceKey: comic.sourceKey);
     }
