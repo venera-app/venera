@@ -118,6 +118,7 @@ class _Settings with ChangeNotifier {
     'dataVersion': 0,
     'quickFavorite': null,
     'enableTurnPageByVolumeKey': true,
+    'enableClockAndBatteryInfoInReader': true,
   };
 
   operator [](String key) {

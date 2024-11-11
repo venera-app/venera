@@ -77,6 +77,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
               widget.onChanged?.call('enableTurnPageByVolumeKey');
             },
           ).toSliver(),
+        _SwitchSetting(
+          title: "Display time & battery info in reader".tl,
+          settingKey: "enableClockAndBatteryInfoInReader",
+          onChanged: () {
+            widget.onChanged?.call("enableClockAndBatteryInfoInReader");
+          },
+        ).toSliver(),
       ],
     );
   }
