@@ -591,7 +591,7 @@ class _BatteryWidget extends StatefulWidget {
 
 class _BatteryWidgetState extends State<_BatteryWidget> {
   late Battery _battery;
-  late int _batteryLevel;
+  late int _batteryLevel = 100;
   Timer? _timer;
   bool _hasBattery = false;
 
@@ -635,18 +635,7 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
     if (!_hasBattery) {
       return const SizedBox.shrink(); //Empty Widget
     }
-
-    return FutureBuilder<int>(
-      future: _battery.batteryLevel, 
-      builder: (context, snapshot) {
-        if(snapshot.connectionState != ConnectionState.waiting
-          && !snapshot.hasError
-          && snapshot.data != -1) {
-          int batteryLevel = snapshot.data!;
-          return _batteryInfo(batteryLevel);
-        }
-        return const SizedBox.shrink();
-    });
+    return _batteryInfo(_batteryLevel);
   }
 
   @override
