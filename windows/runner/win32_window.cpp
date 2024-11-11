@@ -123,6 +123,26 @@ Win32Window::~Win32Window() {
 bool Win32Window::Create(const std::wstring& title,
                          const Point& origin,
                          const Size& size) {
+  HWND hwnd = ::FindWindow(kWindowClassName, title.c_str());
+  if (hwnd) {
+    WINDOWPLACEMENT place = { sizeof(WINDOWPLACEMENT) };
+    GetWindowPlacement(hwnd, &place);
+    SetForegroundWindow(hwnd);
+    switch (place.showCmd) {
+    case SW_SHOWMAXIMIZED:
+        ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+        break;
+    case SW_SHOWMINIMIZED:
+        ShowWindow(hwnd, SW_RESTORE);
+        break;
+    default:
+        ShowWindow(hwnd, SW_NORMAL);
+        break;
+    }
+
+    SetWindowPos(0, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);
+    return false;
+  }
   Destroy();
 
   const wchar_t* window_class =
