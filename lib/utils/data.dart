@@ -54,16 +54,19 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
   }
   if(await historyFile.exists()) {
     HistoryManager().close();
-    historyFile.copySync(FilePath.join(App.dataPath, "history.db"));
+    File(FilePath.join(App.dataPath, "history.db")).deleteIfExistsSync();
+    historyFile.renameSync(FilePath.join(App.dataPath, "history.db"));
     HistoryManager().init();
   }
   if(await localFavoriteFile.exists()) {
     LocalFavoritesManager().close();
-    localFavoriteFile.copySync(FilePath.join(App.dataPath, "local_favorite.db"));
+    File(FilePath.join(App.dataPath, "local_favorite.db")).deleteIfExistsSync();
+    localFavoriteFile.renameSync(FilePath.join(App.dataPath, "local_favorite.db"));
     LocalFavoritesManager().init();
   }
   if(await appdataFile.exists()) {
-    await appdataFile.copy(FilePath.join(App.dataPath, "appdata.json"));
+    File(FilePath.join(App.dataPath, "appdata.json")).deleteIfExistsSync();
+    appdataFile.renameSync(FilePath.join(App.dataPath, "appdata.json"));
     appdata.init();
   }
   var comicSourceDir = FilePath.join(cacheDirPath, "comic_source");
@@ -71,6 +74,7 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     for(var file in Directory(comicSourceDir).listSync()) {
       if(file is File) {
         var targetFile = FilePath.join(App.dataPath, "comic_source", file.name);
+        File(targetFile).deleteIfExistsSync();
         await file.copy(targetFile);
       }
     }

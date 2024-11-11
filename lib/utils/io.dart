@@ -45,6 +45,18 @@ extension FileSystemEntityExt on FileSystemEntity {
       // ignore
     }
   }
+
+  Future<void> deleteIfExists({bool recursive = false}) async {
+    if (existsSync()) {
+      await delete(recursive: recursive);
+    }
+  }
+
+  void deleteIfExistsSync({bool recursive = false}) {
+    if (existsSync()) {
+      deleteSync(recursive: recursive);
+    }
+  }
 }
 
 extension FileExtension on File {
