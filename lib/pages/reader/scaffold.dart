@@ -426,17 +426,21 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildStatusInfo() {
-    return Positioned(
-      bottom: 13,
-      right: 25,
-      child: Row(
-        children: [
-          _ClockWidget(),
-          const SizedBox(width: 10),
-          _BatteryWidget(),
-        ],
-      ),
-    );
+    if(appdata.settings['enableClockAndBatteryInfoInReader']) {
+      return Positioned(
+        bottom: 13,
+        right: 25,
+        child: Row(
+          children: [
+            _ClockWidget(),
+            const SizedBox(width: 10),
+            _BatteryWidget(),
+          ],
+        ),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
   }
 
   void openChapterDrawer() {
