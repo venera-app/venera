@@ -20,6 +20,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/settings/settings_page.dart';
+import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
@@ -122,6 +123,9 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     focusNode.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     stopVolumeEvent();
+    Future.microtask(() {
+      DataSync().onDataChanged();
+    });
     super.dispose();
   }
 
