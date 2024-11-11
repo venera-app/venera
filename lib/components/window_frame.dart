@@ -485,8 +485,15 @@ class WindowPlacement {
     }
   }
 
+  static Rect? lastValidRect;
+
   static Future<WindowPlacement> get current async {
     var rect = await windowManager.getBounds();
+    if(validate(rect)) {
+      lastValidRect = rect;
+    } else {
+      rect = lastValidRect ?? defaultPlacement.rect;
+    }
     var isMaximized = await windowManager.isMaximized();
     return WindowPlacement(rect, isMaximized);
   }
@@ -501,9 +508,6 @@ class WindowPlacement {
   static void loop() async {
     timer ??= Timer.periodic(const Duration(milliseconds: 100), (timer) async {
       var placement = await WindowPlacement.current;
-      if (!validate(placement.rect)) {
-        return;
-      }
       if (placement.rect != cache.rect ||
           placement.isMaximized != cache.isMaximized) {
         cache = placement;
