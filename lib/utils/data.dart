@@ -65,9 +65,13 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     LocalFavoritesManager().init();
   }
   if(await appdataFile.exists()) {
+    // proxy settings should be kept
+    var proxySettings = appdata.settings["proxy"];
     File(FilePath.join(App.dataPath, "appdata.json")).deleteIfExistsSync();
     appdataFile.renameSync(FilePath.join(App.dataPath, "appdata.json"));
-    appdata.init();
+    await appdata.init();
+    appdata.settings["proxy"] = proxySettings;
+    appdata.saveData();
   }
   var comicSourceDir = FilePath.join(cacheDirPath, "comic_source");
   if(Directory(comicSourceDir).existsSync()) {
