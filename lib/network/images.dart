@@ -58,8 +58,9 @@ class ImageDownloader {
       }
     }
 
-    if (configs['onResponse'] != null) {
-      buffer = configs['onResponse'](buffer);
+    if (configs['onResponse'] is JSInvokable) {
+      buffer = (configs['onResponse'] as JSInvokable)([buffer]);
+      (configs['onResponse'] as JSInvokable).free();
     }
 
     await CacheManager().writeCache(cacheKey, buffer);
@@ -102,7 +103,7 @@ class ImageDownloader {
 
         if (configs['onLoadFailed'] is JSInvokable) {
           onLoadFailed = () async {
-            dynamic result = configs['onLoadFailed']();
+            dynamic result = (configs['onLoadFailed'] as JSInvokable)([]);
             if (result is Future) {
               result = await result;
             }
@@ -135,8 +136,9 @@ class ImageDownloader {
           }
         }
 
-        if (configs['onResponse'] != null) {
-          buffer = configs['onResponse'](buffer);
+        if (configs['onResponse'] is JSInvokable) {
+          buffer = (configs['onResponse'] as JSInvokable)([buffer]);
+          (configs['onResponse'] as JSInvokable).free();
         }
 
         var data = Uint8List.fromList(buffer);
@@ -158,16 +160,22 @@ class ImageDownloader {
         );
         return;
       } catch (e) {
-        if(retryLimit < 0 || onLoadFailed == null) {
+        if (retryLimit < 0 || onLoadFailed == null) {
           rethrow;
         }
         var newConfig = await onLoadFailed();
+        (configs['onLoadFailed'] as JSInvokable).free();
         onLoadFailed = null;
-        if(newConfig == null) {
+        if (newConfig == null) {
           rethrow;
         }
         configs = newConfig;
         retryLimit--;
+      }
+      finally {
+        if(onLoadFailed != null) {
+          (configs['onLoadFailed'] as JSInvokable).free();
+        }
       }
     }
   }

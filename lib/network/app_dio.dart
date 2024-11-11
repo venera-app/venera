@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -176,6 +177,8 @@ class AppDio with DioMixin {
     return res;
   }
 
+  static final Map<String, bool> _requests = {};
+
   @override
   Future<Response<T>> request<T>(
     String path, {
@@ -186,6 +189,13 @@ class AppDio with DioMixin {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
+    if(options?.headers?['prevent-parallel'] == 'true') {
+      while(_requests.containsKey(path)) {
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
+      _requests[path] = true;
+      options!.headers!.remove('prevent-parallel');
+    }
     proxy = await getProxy();
     if (_proxy != proxy) {
       Log.info("Network", "Proxy changed to $proxy");
@@ -196,7 +206,7 @@ class AppDio with DioMixin {
             : rhttp.ProxySettings.proxy(proxy!),
       ));
     }
-    return super.request(
+    var res = super.request<T>(
       path,
       data: data,
       queryParameters: queryParameters,
@@ -205,6 +215,10 @@ class AppDio with DioMixin {
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,
     );
+    if(_requests.containsKey(path)) {
+      _requests.remove(path);
+    }
+    return res;
   }
 }
 
