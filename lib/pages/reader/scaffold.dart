@@ -600,18 +600,6 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
     super.initState();
     _battery = Battery();
     _checkBatteryAvailability();
-    if(_hasBattery) {
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-        final batteryLevel = await _battery.batteryLevel;
-        if(_batteryLevel != batteryLevel) {
-            setState(() {
-              _batteryLevel = batteryLevel;
-          });
-        }
-      });
-    } else {
-      _timer = null;
-    }
   }
 
   void _checkBatteryAvailability() async {
@@ -620,6 +608,15 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
       if (_batteryLevel != -1) {
         setState(() {
           _hasBattery = true;
+          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            _battery.batteryLevel.then((level) =>{
+              if(_batteryLevel != level) {
+                  setState(() {
+                    _batteryLevel = level;
+                })
+              }
+            });
+          });
         });
       } else {
         setState(() {
@@ -639,7 +636,17 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
       return const SizedBox.shrink(); //Empty Widget
     }
 
-    return _batteryInfo(_batteryLevel);
+    return FutureBuilder<int>(
+      future: _battery.batteryLevel, 
+      builder: (context, snapshot) {
+        if(snapshot.connectionState != ConnectionState.waiting
+          && !snapshot.hasError
+          && snapshot.data != -1) {
+          int batteryLevel = snapshot.data!;
+          return _batteryInfo(batteryLevel);
+        }
+        return const SizedBox.shrink();
+    });
   }
 
   @override
