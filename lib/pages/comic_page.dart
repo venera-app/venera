@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
@@ -1021,6 +1022,8 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
 
   String? error;
 
+  bool isLoading = false;
+
   @override
   void didChangeDependencies() {
     state = context.findAncestorStateOfType<_ComicPageState>()!;
@@ -1034,6 +1037,11 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     if (!isInitialLoading && next == null) {
       return;
     }
+    Future.microtask(() {
+      setState(() {
+        isLoading = true;
+      });
+    });
     var res = await state.comicSource.loadComicThumbnail!(state.comic.id, next);
     if (res.success) {
       thumbnails.addAll(res.data);
@@ -1042,13 +1050,15 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     } else {
       error = res.errorMessage;
     }
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return SliverMainAxisGroup(
-      slivers: [
+    return MultiSliver(
+      children: [
         SliverToBoxAdapter(
           child: ListTile(
             title: Text("Preview".tl),
@@ -1148,7 +1158,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
               ],
             ),
           )
-        else if (next != null || isInitialLoading)
+        else if (isLoading)
           const SliverToBoxAdapter(
             child: ListLoadingIndicator(),
           ),
