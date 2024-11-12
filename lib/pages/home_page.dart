@@ -640,7 +640,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       if (dbFile == null || comicSrc == null) {
         return;
       }
-      var controller = showLoadingDialog(context, allowCancel: false);
+
+      bool cancelled = false;
+      var controller = showLoadingDialog(context, onCancel: () { cancelled = true; });
 
       try {
         var cache = FilePath.join(App.cachePath, dbFile.name);
@@ -649,6 +651,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
         Future<void> addTagComics(String destFolder, List<sql.Row> comics) async {
           for(var comic in comics) {
+            if(cancelled) {
+              return;
+            }
             var comicDir = Directory(FilePath.join(comicSrc.path, comic['DIRNAME'] as String));
             if(!(await comicDir.exists())) {
               continue;
@@ -731,6 +736,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
           """);
 
         for (var folder in folders) {
+          if(cancelled) {
+            break;
+          }
           var label = folder["LABEL"] as String;
           var folderName = '(EhViewer)$label';
           if(!LocalFavoritesManager().existsFolder(folderName)) {
