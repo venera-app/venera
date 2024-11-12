@@ -167,6 +167,13 @@ class LocalFavoritesManager with ChangeNotifier {
         order_value int
       );
     """);
+    _db.execute("""
+      create table if not exists folder_sync (
+        folder_name text primary key,
+        source_key text,
+        source_folder text
+      );
+    """);
   }
 
   List<String> find(String id, ComicType type) {

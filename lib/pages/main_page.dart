@@ -89,14 +89,14 @@ class _MainPageState extends State<MainPage> {
             icon: Icons.search,
             label: "Search".tl,
             onTap: () {
-              to(() => const SearchPage());
+              to(() => const SearchPage(), preventDuplicate: true);
             },
           ),
         PaneActionEntry(
           icon: Icons.settings,
           label: "Settings".tl,
           onTap: () {
-            to(() => const SettingsPage());
+            to(() => const SettingsPage(), preventDuplicate: true);
           },
         )
       ],
