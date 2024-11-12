@@ -850,6 +850,7 @@ let console = {
  * @param id {string}
  * @param title {string}
  * @param subtitle {string}
+ * @param subTitle {string} - equal to subtitle
  * @param cover {string}
  * @param tags {string[]}
  * @param description {string}
@@ -859,10 +860,11 @@ let console = {
  * @param stars {number?} - 0-5, double
  * @constructor
  */
-function Comic({id, title, subtitle, cover, tags, description, maxPage, language, favoriteId, stars}) {
+function Comic({id, title, subtitle, subTitle, cover, tags, description, maxPage, language, favoriteId, stars}) {
     this.id = id;
     this.title = title;
     this.subtitle = subtitle;
+    this.subTitle = subTitle;
     this.cover = cover;
     this.tags = tags;
     this.description = description;

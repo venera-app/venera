@@ -92,7 +92,7 @@ class Comic {
 
   Comic.fromJson(Map<String, dynamic> json, this.sourceKey)
       : title = json["title"],
-        subtitle = json["subtitle"] ?? "",
+        subtitle = json["subtitle"] ?? json["subTitle"] ?? "",
         cover = json["cover"],
         id = json["id"],
         tags = List<String>.from(json["tags"] ?? []),
