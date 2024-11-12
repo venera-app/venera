@@ -116,6 +116,106 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isScreenSmall = screenWidth < 500.0;
+
+    void selectAll(){
+      setState(() {
+        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      });
+    }
+    void deSelect() {
+      setState(() {
+        selectedComics.clear();
+      });
+    }
+    void invertSelection() {
+      setState(() {
+        comics.asMap().forEach((k, v) {
+          selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+        });
+        selectedComics.removeWhere((k, v) => !v);
+      });
+    }
+    void selectRange() {
+      setState(() {
+        List<int> l = [];
+        selectedComics.forEach((k, v) {
+          l.add(comics.indexOf(k as LocalComic));
+        });
+        if(l.isEmpty) {
+          return;
+        }
+        l.sort();
+        int start = l.first;
+        int end = l.last;
+        selectedComics.clear();
+        selectedComics.addEntries(
+          List.generate(end - start + 1, (i) {
+            return MapEntry(comics[start + i], true);
+          })
+        );
+      });
+    }
+
+    List<Widget> selectActions = [];
+    if(isScreenSmall) {
+      selectActions.add(
+        IconButton(
+          onPressed: () {
+            showMenu(
+              context: context, 
+              position: RelativeRect.fromLTRB(screenWidth, App.isMobile ? 64 : 96, 0, 0),
+              items: <PopupMenuEntry>[
+                PopupMenuItem(
+                  onTap: selectAll,
+                  child: Text("Select All".tl),
+                ),
+                PopupMenuItem(
+                  onTap: deSelect,
+                  child: Text("Deselect".tl),
+                ),
+                PopupMenuItem(
+                  onTap: invertSelection,
+                  child: Text("Invert Selection".tl),
+                ),
+                PopupMenuItem(
+                  onTap: selectRange,
+                  child: Text("Select in range".tl),
+                )
+              ]
+            );
+          }, 
+          icon: const Icon(
+          Icons.list
+        ))
+      );
+    }else {
+      selectActions = [
+        IconButton(
+          icon: const Icon(Icons.check_box_rounded),
+          tooltip: "Select All".tl,
+          onPressed: selectAll
+        ),
+        IconButton(
+          icon: const Icon(Icons.check_box_outline_blank_outlined),
+          tooltip: "Deselect".tl,
+          onPressed: deSelect
+        ),
+        IconButton(
+          icon: const Icon(Icons.check_box_outlined),
+          tooltip: "Invert Selection".tl,
+          onPressed: invertSelection
+        ),
+        
+        IconButton(
+          icon: const Icon(Icons.indeterminate_check_box_rounded),
+          tooltip: "Select in range".tl,
+          onPressed: selectRange
+        ),
+      ];
+    }
+
     return Scaffold(
       body: SmoothCustomScrollView(
         slivers: [
@@ -169,71 +269,17 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             SliverAppbar(
               title: Text("Selected @c comics".tlParams({"c": selectedComics.length})),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.check_box_rounded),
-                  tooltip: "Select All".tl,
-                  onPressed: () {
-                    setState(() {
-                      selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check_box_outline_blank_outlined),
-                  tooltip: "Deselect".tl,
-                  onPressed: () {
-                    setState(() {
-                      selectedComics.clear();
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.check_box_outlined),
-                  tooltip: "Invert Selection".tl,
-                  onPressed: () {
-                    setState(() {
-                      comics.asMap().forEach((k, v) {
-                        selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+                  ...selectActions,
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: "Exit Multi-Select".tl,
+                    onPressed: () {
+                      setState(() {
+                        multiSelectMode = false;
+                        selectedComics.clear();
                       });
-                      selectedComics.removeWhere((k, v) => !v);
-                    });
-                  },
-                ),
-                
-                IconButton(
-                  icon: const Icon(Icons.indeterminate_check_box_rounded),
-                  tooltip: "Select in range".tl,
-                  onPressed: () {
-                    setState(() {
-                      List<int> l = [];
-                      selectedComics.forEach((k, v) {
-                        l.add(comics.indexOf(k as LocalComic));
-                      });
-                      if(l.isEmpty) {
-                        return;
-                      }
-                      l.sort();
-                      int start = l.first;
-                      int end = l.last;
-                      selectedComics.clear();
-                      selectedComics.addEntries(
-                        List.generate(end - start + 1, (i) {
-                          return MapEntry(comics[start + i], true);
-                        })
-                      );
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: "Exit Multi-Select".tl,
-                  onPressed: () {
-                    setState(() {
-                      multiSelectMode = false;
-                      selectedComics.clear();
-                    });
-                  },
-                ),
+                    },
+                  ),
                 
               ],
             )
