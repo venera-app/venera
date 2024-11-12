@@ -78,6 +78,11 @@ class _MainPageState extends State<MainPage> {
           activeIcon: Icons.category,
         ),
       ],
+      onPageChanged: (i) {
+        setState(() {
+          index = i;
+        });
+      },
       paneActions: [
         if(index != 0)
           PaneActionEntry(
