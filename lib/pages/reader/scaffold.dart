@@ -650,7 +650,7 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
 
   Widget _batteryInfo(int batteryLevel) {
     IconData batteryIcon;
-    Color batteryColor = Colors.black;
+    Color batteryColor = context.colorScheme.onSurface;
 
     if (batteryLevel >= 96) {
       batteryIcon = Icons.battery_full_sharp;
