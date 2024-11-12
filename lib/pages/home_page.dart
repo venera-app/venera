@@ -22,6 +22,8 @@ import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
+import 'package:sqlite3/sqlite3.dart' as sql;
+import 'dart:math';
 
 import 'local_comics_page.dart';
 
@@ -495,7 +497,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
       "Select a cbz file.".tl,
+      "Select an EhViewer database and a download folder.".tl
     ][type];
+    List<String> importMethods = [
+      "Single Comic".tl,
+      "Multiple Comics".tl,
+      "A cbz file".tl,
+      "EhViewer downloads".tl
+    ];
 
     return ContentDialog(
       dismissible: !loading,
@@ -513,36 +522,18 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(width: 600),
-                RadioListTile(
-                  title: Text("Single Comic".tl),
-                  value: 0,
-                  groupValue: type,
-                  onChanged: (value) {
-                    setState(() {
-                      type = value as int;
-                    });
-                  },
-                ),
-                RadioListTile(
-                  title: Text("Multiple Comics".tl),
-                  value: 1,
-                  groupValue: type,
-                  onChanged: (value) {
-                    setState(() {
-                      type = value as int;
-                    });
-                  },
-                ),
-                RadioListTile(
-                  title: Text("A cbz file".tl),
-                  value: 2,
-                  groupValue: type,
-                  onChanged: (value) {
-                    setState(() {
-                      type = value as int;
-                    });
-                  },
-                ),
+                ...List.generate(importMethods.length, (index) {
+                  return RadioListTile(
+                    title: Text(importMethods[index]),
+                    value: index,
+                    groupValue: type,
+                    onChanged: (value) {
+                      setState(() {
+                        type = value as int;
+                      });
+                    },
+                  );
+                }),
                 ListTile(
                   title: Text("Add to favorites".tl),
                   trailing: Select(
@@ -587,8 +578,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 help +=
                     '${"If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used.".tl}\n\n';
                 help +=
-                    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles."
+                    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n"
                         .tl;
+                help +="If you import an EhViewer's database, program will automatically create folders according to the download label in that database.".tl;
                 return ContentDialog(
                   title: "Help".tl,
                   content: Text(help).paddingHorizontal(16),
@@ -634,6 +626,127 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 tags: comic.tags,
               ));
         }
+        await File(cache).deleteIgnoreError();
+      } catch (e, s) {
+        Log.error("Import Comic", e.toString(), s);
+        context.showMessage(message: e.toString());
+      }
+      controller.close();
+      return;
+    } else if (type == 3) {
+      var dbFile = await selectFile(ext: ['db']);
+      final picker = DirectoryPicker();
+      final comicSrc = await picker.pickDirectory();
+      if (dbFile == null || comicSrc == null) {
+        return;
+      }
+      var controller = showLoadingDialog(context, allowCancel: false);
+
+      try {
+        var cache = FilePath.join(App.cachePath, dbFile.name);
+        await dbFile.saveTo(cache);
+        var db = sql.sqlite3.open(cache);
+
+        Future<void> addTagComics(String destFolder, List<sql.Row> comics) async {
+          for(var comic in comics) {
+            var comicDir = Directory(FilePath.join(comicSrc.path, comic['DIRNAME'] as String));
+            if(!(await comicDir.exists())) {
+              continue;
+            }
+            String titleJP = comic['TITLE_JPN'] == null ? "" : comic['TITLE_JPN'] as String;
+            String title = titleJP == "" ? comic['TITLE'] as String : titleJP;
+            if (LocalManager().findByName(title) != null) {
+              Log.info("Import Comic", "Comic already exists: $title");
+              continue;
+            }
+            
+            String coverURL = await comicDir.joinFile(".thumb").exists() ? 
+              comicDir.joinFile(".thumb").path : 
+              (comic['THUMB'] as String).replaceAll('s.exhentai.org', 'ehgt.org');
+            int downloadedTimeStamp = comic['TIME'] as int;
+            DateTime downloadedTime = 
+              downloadedTimeStamp != 0 ? 
+              DateTime.fromMillisecondsSinceEpoch(downloadedTimeStamp) : DateTime.now();
+            var comicObj = LocalComic(
+              id: LocalManager().findValidId(ComicType.local),
+              title: title,
+              subtitle: '',
+              tags: [
+                //1 >> x
+                [
+                  "MISC",
+                  "DOUJINSHI",
+                  "MANGA",
+                  "ARTISTCG",
+                  "GAMECG",
+                  "IMAGE SET",
+                  "COSPLAY",
+                  "ASIAN PORN",
+                  "NON-H",
+                  "WESTERN",
+                ][(log(comic['CATEGORY'] as int) / ln2).floor()]
+              ],
+              directory: comicDir.path,
+              chapters: null,
+              cover: coverURL,
+              comicType: ComicType.local,
+              downloadedChapters: [],
+              createdAt: downloadedTime,
+            );
+            LocalManager().add(comicObj, comicObj.id);
+            LocalFavoritesManager().addComic(
+              destFolder,
+              FavoriteItem(
+                id: comicObj.id,
+                name: comicObj.title,
+                coverPath: comicObj.cover,
+                author: comicObj.subtitle,
+                type: comicObj.comicType,
+                tags: comicObj.tags,
+                favoriteTime: downloadedTime
+              ),
+            );
+          }
+        }
+
+        //default folder
+        {
+          var defaultFolderName = '(EhViewer)Default'.tl;
+          if(!LocalFavoritesManager().existsFolder(defaultFolderName)) {
+            LocalFavoritesManager().createFolder(defaultFolderName);
+          }
+          var comicList = db.select("""
+              SELECT * 
+              FROM DOWNLOAD_DIRNAME DN
+              LEFT JOIN DOWNLOADS DL
+              ON DL.GID = DN.GID
+              WHERE DL.LABEL IS NULL AND DL.STATE = 3
+              ORDER BY DL.TIME DESC
+            """).toList();
+          await addTagComics(defaultFolderName, comicList);
+        }
+
+        var folders = db.select("""
+            SELECT * FROM DOWNLOAD_LABELS;
+          """);
+
+        for (var folder in folders) {
+          var label = folder["LABEL"] as String;
+          var folderName = '(EhViewer)$label';
+          if(!LocalFavoritesManager().existsFolder(folderName)) {
+            LocalFavoritesManager().createFolder(folderName);
+          }
+          var comicList = db.select("""
+              SELECT * 
+              FROM DOWNLOAD_DIRNAME DN
+              LEFT JOIN DOWNLOADS DL
+              ON DL.GID = DN.GID
+              WHERE DL.LABEL = ? AND DL.STATE = 3
+              ORDER BY DL.TIME DESC
+            """, [label]).toList();
+          await addTagComics(folderName, comicList);
+        }
+        db.dispose();
         await File(cache).deleteIgnoreError();
       } catch (e, s) {
         Log.error("Import Comic", e.toString(), s);
