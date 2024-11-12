@@ -581,9 +581,12 @@ class SliverGridComics extends StatefulWidget {
     this.badgeBuilder,
     this.menuBuilder,
     this.onTap,
+    this.selections
   });
 
   final List<Comic> comics;
+
+  final Map<Comic, bool>? selections;
 
   final void Function()? onLastItemBuild;
 
@@ -638,6 +641,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
   Widget build(BuildContext context) {
     return _SliverGridComics(
       comics: comics,
+      selection: widget.selections,
       onLastItemBuild: widget.onLastItemBuild,
       badgeBuilder: widget.badgeBuilder,
       menuBuilder: widget.menuBuilder,
@@ -653,9 +657,12 @@ class _SliverGridComics extends StatelessWidget {
     this.badgeBuilder,
     this.menuBuilder,
     this.onTap,
+    this.selection,
   });
 
   final List<Comic> comics;
+
+  final Map<Comic, bool>? selection;
 
   final void Function()? onLastItemBuild;
 
@@ -674,11 +681,37 @@ class _SliverGridComics extends StatelessWidget {
             onLastItemBuild?.call();
           }
           var badge = badgeBuilder?.call(comics[index]);
-          return ComicTile(
-            comic: comics[index],
-            badge: badge,
-            menuOptions: menuBuilder?.call(comics[index]),
-            onTap: onTap != null ? () => onTap!(comics[index]) : null,
+          return Stack(
+            children: [
+              ComicTile(
+                comic: comics[index],
+                badge: badge,
+                menuOptions: menuBuilder?.call(comics[index]),
+                onTap: onTap != null ? () => onTap!(comics[index]) : null,
+              ),
+              Positioned(
+                bottom: 10,
+                right: 8,
+                child: Visibility(
+                  visible: selection == null ? false : selection![comics[index]] ?? false,
+                  child: Stack(
+                    children: [
+                      Transform.scale(
+                        scale: 0.9,
+                        child: const Icon(
+                          Icons.circle_rounded,
+                          color: Colors.white,
+                        )
+                      ),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.green,
+                      )
+                    ],
+                  )
+                )
+              )
+            ],
           );
         },
         childCount: comics.length,
