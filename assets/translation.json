@@ -141,7 +141,7 @@
     "1. The directory only contains image files." : "1. 目录只包含图片文件。",
     "2. The directory contains directories which contain image files. Each directory is considered as a chapter." : "2. 目录包含多个包含图片文件的目录。每个目录被视为一个章节。",
     "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目录包含一个名为'cover.*'的文件，它将被用作封面图片。否则将使用第一张图片。",
-    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles." : "目录名称将被用作漫画标题。章节目录的名称将被用作章节标题。",
+    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目录名称将被用作漫画标题。章节目录的名称将被用作章节标题。\n",
     "Export as cbz": "导出为cbz",
     "Select a cbz file." : "选择一个cbz文件",
     "A cbz file" : "一个cbz文件",
@@ -190,7 +190,18 @@
     "Long press on the favorite button to quickly add to this folder": "长按收藏按钮快速添加到这个文件夹",
     "Added": "已添加",
     "Turn page by volume keys": "使用音量键翻页",
-    "Display time & battery info in reader":"在阅读器中显示时间和电量信息"
+    "Display time & battery info in reader":"在阅读器中显示时间和电量信息",
+    "EhViewer downloads":"EhViewer下载",
+    "Select an EhViewer database and a download folder.":"选择EhViewer的下载数据（导出的db文件）与存放下载内容的目录",
+    "(EhViewer)Default": "(EhViewer)默认",
+    "If you import an EhViewer's database, program will automatically create folders according to the download label in that database.": "若通过EhViewer数据库导入漫画，程序将会按其中的下载标签自动创建收藏文件夹。",
+    "Multi-Select": "进入多选模式",
+    "Exit Multi-Select": "退出多选模式",
+    "Selected @c comics": "已选择 @c 本漫画",
+    "Select All": "全选",
+    "Deselect": "取消选择",
+    "Invert Selection": "反选",
+    "Select in range": "区间选择"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -334,7 +345,7 @@
     "1. The directory only contains image files." : "1. 目錄只包含圖片文件。",
     "2. The directory contains directories which contain image files. Each directory is considered as a chapter." : "2. 目錄包含多個包含圖片文件的目錄。每個目錄被視為一個章節。",
     "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目錄包含一個名為'cover.*'的文件，它將被用作封面圖片。否則將使用第一張圖片。",
-    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles." : "目錄名稱將被用作漫畫標題。章節目錄的名稱將被用作章節標題。",
+    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目錄名稱將被用作漫畫標題。章節目錄的名稱將被用作章節標題。\n",
     "Export as cbz": "匯出為cbz",
     "Select a cbz file." : "選擇一個cbz文件",
     "A cbz file" : "一個cbz文件",
@@ -383,6 +394,17 @@
     "Long press on the favorite button to quickly add to this folder": "長按收藏按鈕快速添加到這個文件夾",
     "Added": "已添加",
     "Turn page by volume keys": "使用音量鍵翻頁",
-    "Display time & battery info in reader":"在閱讀器中顯示時間和電量信息"
+    "Display time & battery info in reader": "在閱讀器中顯示時間和電量信息",
+    "EhViewer downloads": "EhViewer下載",
+    "Select an EhViewer database and a download folder.": "選擇EhViewer的下載資料（匯出的db檔案）與存放下載內容的目錄",
+    "(EhViewer)Default": "(EhViewer)預設",
+    "If you import an EhViewer's database, program will automatically create folders according to the download label in that database.": "若透過EhViewer資料庫匯入漫畫，程式將會按其中的下載標籤自動建立收藏資料夾。",
+    "Multi-Select": "進入多選模式",
+    "Exit Multi-Select": "退出多選模式",
+    "Selected @c comics": "已選擇 @c 本漫畫",
+    "Select All": "全選",
+    "Deselect": "取消選擇",
+    "Invert Selection": "反選",
+    "Select in range": "區間選擇"
   }
 }
