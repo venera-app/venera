@@ -210,7 +210,9 @@
     "Create Folder": "新建文件夹",
     "Select an image on screen": "选择屏幕上的图片",
     "Added @count comics to download queue.": "已添加 @count 本漫画到下载队列",
-    "Copy to app local path": "将漫画复制到本地存储目录中"
+    "Copy to app local path": "将漫画复制到本地存储目录中",
+    "Delete all unavailable local favorite items": "删除所有无效的本地收藏",
+    "Deleted @a favorite items.": "已删除 @a 条无效收藏"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -423,6 +425,8 @@
     "Create Folder": "新建文件夾",
     "Select an image on screen": "選擇屏幕上的圖片",
     "Added @count comics to download queue.": "已添加 @count 本漫畫到下載隊列",
-    "Copy to app local path": "將漫畫複製到本地儲存目錄中"
+    "Copy to app local path": "將漫畫複製到本地儲存目錄中",
+    "Delete all unavailable local favorite items": "刪除所有無效的本地收藏",
+    "Deleted @a favorite items.": "已刪除 @a 條無效收藏"
   }
 }
