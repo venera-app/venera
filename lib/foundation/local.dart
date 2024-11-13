@@ -365,10 +365,10 @@ class LocalManager with ChangeNotifier {
     return files.map((e) => "file://${e.path}").toList();
   }
 
-  Future<bool> isDownloaded(String id, ComicType type, int ep) async {
+  Future<bool> isDownloaded(String id, ComicType type, [int? ep]) async {
     var comic = find(id, type);
     if (comic == null) return false;
-    if (comic.chapters == null) return true;
+    if (comic.chapters == null || ep == null) return true;
     return comic.downloadedChapters
         .contains(comic.chapters!.keys.elementAt(ep-1));
   }

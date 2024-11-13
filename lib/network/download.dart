@@ -76,11 +76,14 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   @override
   ComicType get comicType => ComicType(source.key.hashCode);
 
+  String? comicTitle;
+
   ImagesDownloadTask({
     required this.source,
     required this.comicId,
     this.comic,
     this.chapters,
+    this.comicTitle,
   });
 
   @override
@@ -379,7 +382,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   int get speed => currentSpeed;
 
   @override
-  String get title => comic?.title ?? "Loading...";
+  String get title => comic?.title ?? comicTitle ??  "Loading...";
 
   @override
   Map<String, dynamic> toJson() {

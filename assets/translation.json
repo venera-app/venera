@@ -206,7 +206,8 @@
     "Updating": "更新中",
     "Update Comics Info": "更新漫画信息",
     "Create Folder": "新建文件夹",
-    "Select an image on screen": "选择屏幕上的图片"
+    "Select an image on screen": "选择屏幕上的图片",
+    "Added @count comics to download queue.": "已添加 @count 本漫画到下载队列"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -415,6 +416,7 @@
     "Updating": "更新中",
     "Update Comics Info": "更新漫畫信息",
     "Create Folder": "新建文件夾",
-    "Select an image on screen": "選擇屏幕上的圖片"
+    "Select an image on screen": "選擇屏幕上的圖片",
+    "Added @count comics to download queue.": "已添加 @count 本漫畫到下載隊列"
   }
 }

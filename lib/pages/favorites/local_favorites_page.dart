@@ -105,7 +105,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         },
                       ).then(
                         (value) {
-                          if(mounted) {
+                          if (mounted) {
                             setState(() {});
                           }
                         },
@@ -128,12 +128,39 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     text: "Update Comics Info".tl,
                     onClick: () {
                       updateComicsInfo(widget.folder).then((newComics) {
-                        if(mounted) {
+                        if (mounted) {
                           setState(() {
                             comics = newComics;
                           });
                         }
                       });
+                    }),
+                MenuEntry(
+                    icon: Icons.update,
+                    text: "Download All".tl,
+                    onClick: () async {
+                      int count = 0;
+                      for (var c in comics) {
+                        if (await LocalManager().isDownloaded(c.id, c.type)) {
+                          continue;
+                        }
+                        var comicSource = c.type.comicSource;
+                        if (comicSource == null) {
+                          continue;
+                        }
+                        LocalManager().addTask(ImagesDownloadTask(
+                          source: comicSource,
+                          comicId: c.id,
+                          comic: null,
+                          comicTitle: c.name,
+                        ));
+                        count++;
+                      }
+                      context.showMessage(
+                          message: "Added @count comics to download queue."
+                              .tlParams({
+                        "count": count.toString(),
+                      }));
                     }),
               ],
             ),
@@ -219,7 +246,8 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
             e.author,
             e.tags,
             "${e.time} | ${comicSource?.name ?? "Unknown"}",
-            comicSource?.key ?? (e.type == ComicType.local ?  "local" : "Unknown"),
+            comicSource?.key ??
+                (e.type == ComicType.local ? "local" : "Unknown"),
             null,
             null,
           ),
