@@ -795,6 +795,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       }
     }
 
+    fileList.sort();
     coverPath = fileList.firstWhereOrNull((l) => l.startsWith('cover')) ?? fileList.first;
         
     chapters.sort();
