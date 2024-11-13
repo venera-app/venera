@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -809,29 +808,33 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   Future<Map<String?, List<LocalComic>>> _importLocalComic([bool single = true]) async {
     Map<String?, List<LocalComic>> imported = {selectedFolder : []};
-    final selectedPath = await FilePicker.platform.getDirectoryPath();
-    if(selectedPath == null) {
+    final picker = DirectoryPicker();
+    final path = await picker.pickDirectory();
+    if(path == null) {
       return imported;
     }
-    final path = Directory(selectedPath);
-
-    if (single) {
-      var result = await _tryCreateLocalComicFromPath(path);
-      if (result != null) {
-        imported[selectedFolder]!.add(result);
+    try {
+      if (single) {
+        var result = await _tryCreateLocalComicFromPath(path);
+        if (result != null) {
+          imported[selectedFolder]!.add(result);
+        } else {
+          context.showMessage(message: "Invalid Comic".tl);
+          return imported;
+        }
       } else {
-        context.showMessage(message: "Invalid Comic".tl);
-        return imported;
-      }
-    } else {
-      await for (var entry in path.list()) {
-        if (entry is Directory) {
-          var result = await _tryCreateLocalComicFromPath(entry);
-          if (result != null) {
-            imported[selectedFolder]!.add(result);
+        await for (var entry in path.list()) {
+          if (entry is Directory) {
+            var result = await _tryCreateLocalComicFromPath(entry);
+            if (result != null) {
+              imported[selectedFolder]!.add(result);
+            }
           }
         }
       }
+    } catch (e, s) {
+      Log.error("Import Comic", e.toString(), s);
+      context.showMessage(message: e.toString());
     }
     return imported;
   }
@@ -856,15 +859,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   Future<Map<String?, List<LocalComic>>> _importEhViewerComic() async {
     final dbFile = await selectFile(ext: ['db', 'bin']);
-    final path = await FilePicker.platform.getDirectoryPath(
-        dialogTitle: "Select an EhViewer download folder");
+    final picker = DirectoryPicker();
+    final comicRoot = await picker.pickDirectory();
 
     Map<String?, List<LocalComic>> imported = {};
-    if (dbFile == null || path == null) {
+    if (dbFile == null || comicRoot == null) {
       return imported;
     }
 
-    final comicRoot = Directory(path);
     bool cancelled = false;
     var controller = showLoadingDialog(context, onCancel: () { cancelled = true; });
 
