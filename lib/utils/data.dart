@@ -13,7 +13,7 @@ import 'io.dart';
 
 Future<File> exportAppData() async {
   var time = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-  var cacheFilePath = FilePath.join(App.cachePath, '$time.venera');
+  var cacheFilePath = FilePath.join(App.cachePath, '$time.venera.zip');
   var cacheFile = File(cacheFilePath);
   var dataPath = App.dataPath;
   if (await cacheFile.exists()) {
