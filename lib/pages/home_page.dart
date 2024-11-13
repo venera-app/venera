@@ -537,19 +537,20 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                   },
                 );
               }),
-              ListTile(
-                title: Text("Add to favorites".tl),
-                trailing: Select(
-                  current: selectedFolder,
-                  values: folders,
-                  minWidth: 112,
-                  onTap: (v) {
-                    setState(() {
-                      selectedFolder = folders[v];
-                    });
-                  },
-                ),
-              ).paddingHorizontal(8),
+              if(type != 3)
+                ListTile(
+                  title: Text("Add to favorites".tl),
+                  trailing: Select(
+                    current: selectedFolder,
+                    values: folders,
+                    minWidth: 112,
+                    onTap: (v) {
+                      setState(() {
+                        selectedFolder = folders[v];
+                      });
+                    },
+                  ),
+                ).paddingHorizontal(8),
               CheckboxListTile(
                 title: Text("Copy to app local path".tl),
                 value: copyToLocalFolder,
@@ -689,19 +690,18 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     return result;
   }
 
-  Future<Map<String?, List<LocalComic>>>
-  _copyComicsToLocalDir(Map<String?, List<LocalComic>> comics) async {
+  Future<Map<String?, List<LocalComic>>> _copyComicsToLocalDir(
+      Map<String?, List<LocalComic>> comics) async {
     var destPath = LocalManager().path;
     Map<String?, List<LocalComic>> result = {};
     for (var favoriteFolder in comics.keys) {
-      result[favoriteFolder] =
-          comics[favoriteFolder]!
-              .where((c) => c.directory.startsWith(destPath))
-              .toList();
-      comics[favoriteFolder]!.removeWhere((c) =>
-          c.directory.startsWith(destPath));
+      result[favoriteFolder] = comics[favoriteFolder]!
+          .where((c) => c.directory.startsWith(destPath))
+          .toList();
+      comics[favoriteFolder]!
+          .removeWhere((c) => c.directory.startsWith(destPath));
 
-      if(comics[favoriteFolder]!.isEmpty) {
+      if (comics[favoriteFolder]!.isEmpty) {
         continue;
       }
 
@@ -806,11 +806,12 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     );
   }
 
-  Future<Map<String?, List<LocalComic>>> _importLocalComic([bool single = true]) async {
-    Map<String?, List<LocalComic>> imported = {selectedFolder : []};
+  Future<Map<String?, List<LocalComic>>> _importLocalComic(
+      [bool single = true]) async {
+    Map<String?, List<LocalComic>> imported = {selectedFolder: []};
     final picker = DirectoryPicker();
     final path = await picker.pickDirectory();
-    if(path == null) {
+    if (path == null) {
       return imported;
     }
     try {
@@ -868,51 +869,50 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     }
 
     bool cancelled = false;
-    var controller = showLoadingDialog(context, onCancel: () { cancelled = true; });
+    var controller = showLoadingDialog(context, onCancel: () {
+      cancelled = true;
+    });
 
     try {
-      var cache = FilePath.join(App.cachePath, dbFile.name);
-      await dbFile.saveTo(cache);
-      var db = sql.sqlite3.open(cache);
+      var db = sql.sqlite3.open(dbFile.path);
 
       Future<List<LocalComic>> validateComics(List<sql.Row> comics) async {
         List<LocalComic> imported = [];
-        for(var comic in comics) {
-          if(cancelled) {
+        for (var comic in comics) {
+          if (cancelled) {
             return imported;
           }
           var comicDir = Directory(
               FilePath.join(comicRoot.path, comic['DIRNAME'] as String));
-          if(!(await comicDir.exists())) {
+          if (!(await comicDir.exists())) {
             continue;
           }
           String titleJP =
-            comic['TITLE_JPN'] == null ? "" : comic['TITLE_JPN'] as String;
+              comic['TITLE_JPN'] == null ? "" : comic['TITLE_JPN'] as String;
           String title = titleJP == "" ? comic['TITLE'] as String : titleJP;
           int timeStamp = comic['TIME'] as int;
-          DateTime downloadTime =
-          timeStamp != 0 ?
-            DateTime.fromMillisecondsSinceEpoch(timeStamp) : DateTime.now();
+          DateTime downloadTime = timeStamp != 0
+              ? DateTime.fromMillisecondsSinceEpoch(timeStamp)
+              : DateTime.now();
           var comicObj = await _tryCreateLocalComicFromPath(comicDir,
-            title: title,
-            tags: [
-              //1 >> x
-              [
-                "MISC",
-                "DOUJINSHI",
-                "MANGA",
-                "ARTISTCG",
-                "GAMECG",
-                "IMAGE SET",
-                "COSPLAY",
-                "ASIAN PORN",
-                "NON-H",
-                "WESTERN",
-              ][(log(comic['CATEGORY'] as int) / ln2).floor()]
-            ],
-            createTime: downloadTime
-          );
-          if(comicObj == null) {
+              title: title,
+              tags: [
+                //1 >> x
+                [
+                  "MISC",
+                  "DOUJINSHI",
+                  "MANGA",
+                  "ARTISTCG",
+                  "GAMECG",
+                  "IMAGE SET",
+                  "COSPLAY",
+                  "ASIAN PORN",
+                  "NON-H",
+                  "WESTERN",
+                ][(log(comic['CATEGORY'] as int) / ln2).floor()]
+              ],
+              createTime: downloadTime);
+          if (comicObj == null) {
             continue;
           }
           imported.add(comicObj);
@@ -920,47 +920,39 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
         return imported;
       }
 
-      //default folder
-      {
-        var defaultFolderName = '(EhViewer)Default'.tl;
-        if(!LocalFavoritesManager().existsFolder(defaultFolderName)) {
-          LocalFavoritesManager().createFolder(defaultFolderName);
-        }
-        var comicList = db.select("""
-              SELECT * 
-              FROM DOWNLOAD_DIRNAME DN
-              LEFT JOIN DOWNLOADS DL
-              ON DL.GID = DN.GID
-              WHERE DL.LABEL IS NULL AND DL.STATE = 3
-              ORDER BY DL.TIME DESC
-            """).toList();
-        imported[defaultFolderName] = await validateComics(comicList);
-      }
+      var tags = <String>["IS NULL"];
+      tags.addAll(db.select("""
+            SELECT * FROM DOWNLOAD_LABELS LB
+            ORDER BY  LB.TIME DESC;
+          """).map((r) => '= ${r['LABEL'] as String}').toList());
 
-      var folders = db.select("""
-            SELECT * FROM DOWNLOAD_LABELS;
-          """);
-
-      for (var folder in folders) {
-        if(cancelled) {
+      for (var tag in tags) {
+        if (cancelled) {
           break;
         }
-        var label = folder["LABEL"] as String;
-        var folderName = '(EhViewer)$label';
-        if(!LocalFavoritesManager().existsFolder(folderName)) {
-          LocalFavoritesManager().createFolder(folderName);
-        }
+        var folderName =
+            tag == "IS NULL" ? '(EhViewer)Default'.tl : '(EhViewer)$tag';
         var comicList = db.select("""
               SELECT * 
               FROM DOWNLOAD_DIRNAME DN
               LEFT JOIN DOWNLOADS DL
               ON DL.GID = DN.GID
-              WHERE DL.LABEL = ? AND DL.STATE = 3
+              WHERE DL.LABEL ? AND DL.STATE = 3
               ORDER BY DL.TIME DESC
-            """, [label]).toList();
-        imported[folderName] = await validateComics(comicList);
+            """, [tag]).toList();
+
+        var validComics = await validateComics(comicList);
+        imported[folderName] = validComics;
+        if (validComics.isNotEmpty &&
+            !LocalFavoritesManager().existsFolder(folderName)) {
+          LocalFavoritesManager().createFolder(folderName);
+        }
       }
+
       db.dispose();
+
+      //Android specific
+      var cache = FilePath.join(App.cachePath, dbFile.name);
       await File(cache).deleteIgnoreError();
     } catch (e, s) {
       Log.error("Import Comic", e.toString(), s);
