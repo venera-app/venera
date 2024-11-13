@@ -27,7 +27,9 @@ class _DownloadingPageState extends State<DownloadingPage> {
   }
 
   void update() {
-    setState(() {});
+    if(mounted) {
+      setState(() {});
+    }
   }
 
   @override

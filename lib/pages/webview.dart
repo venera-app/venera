@@ -18,11 +18,11 @@ export 'package:flutter_inappwebview/flutter_inappwebview.dart'
 
 extension WebviewExtension on InAppWebViewController {
   Future<List<io.Cookie>?> getCookies(String url) async {
-    if(url.contains("https://")){
+    if (url.contains("https://")) {
       url.replaceAll("https://", "");
     }
-    if(url[url.length-1] == '/'){
-      url = url.substring(0, url.length-1);
+    if (url[url.length - 1] == '/') {
+      url = url.substring(0, url.length - 1);
     }
     CookieManager cookieManager = CookieManager.instance();
     final cookies = await cookieManager.getCookies(url: WebUri(url));
@@ -89,29 +89,29 @@ class _AppWebviewState extends State<AppWebview> {
         child: IconButton(
           icon: const Icon(Icons.more_horiz),
           onPressed: () {
-            showMenu(
-                context: context,
-                position: RelativeRect.fromLTRB(
-                    MediaQuery.of(context).size.width,
-                    0,
-                    MediaQuery.of(context).size.width,
-                    0),
-                items: [
-                  PopupMenuItem(
-                  child: Text("Open in browser".tl),
-                  onTap: () async =>
-                    launchUrlString((await controller?.getUrl())!.toString()),
-                  ),
-                  PopupMenuItem(
-                  child: Text("Copy link".tl),
-                  onTap: () async => Clipboard.setData(ClipboardData(
-                    text: (await controller?.getUrl())!.toString())),
-                  ),
-                  PopupMenuItem(
-                    child: Text("Reload".tl),
-                    onTap: () => controller?.reload(),
-                  ),
-                ]);
+            showMenuX(
+              context,
+              Offset(context.width, context.padding.top),
+              [
+                MenuEntry(
+                  icon: Icons.open_in_browser,
+                  text: "Open in browser".tl,
+                  onClick: () async =>
+                      launchUrlString((await controller?.getUrl())!.toString()),
+                ),
+                MenuEntry(
+                  icon: Icons.copy,
+                  text: "Copy link".tl,
+                  onClick: () async => Clipboard.setData(ClipboardData(
+                      text: (await controller?.getUrl())!.toString())),
+                ),
+                MenuEntry(
+                  icon: Icons.refresh,
+                  text: "Reload".tl,
+                  onClick: () => controller?.reload(),
+                ),
+              ],
+            );
           },
         ),
       )

@@ -158,12 +158,16 @@ class ComicTile extends StatelessWidget {
       image = FileImage(File(comic.cover.substring(7)));
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
-      if(localComic == null) {
+      if (localComic == null) {
         return const SizedBox();
       }
       image = FileImage(localComic.coverFile);
     } else {
-      image = CachedImageProvider(comic.cover, sourceKey: comic.sourceKey);
+      image = CachedImageProvider(
+        comic.cover,
+        sourceKey: comic.sourceKey,
+        cid: comic.id,
+      );
     }
     return AnimatedImage(
       image: image,
@@ -479,18 +483,17 @@ class _ComicDescription extends StatelessWidget {
             ),
             if (badge != null)
               Container(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                ),
-                child: Center(
-                  child:Text(
-                    "${badge![0].toUpperCase()}${badge!.substring(1).toLowerCase()}",
-                    style: const TextStyle(fontSize: 12),
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                )
-              ),
+                  child: Center(
+                    child: Text(
+                      "${badge![0].toUpperCase()}${badge!.substring(1).toLowerCase()}",
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  )),
           ],
         )
       ],
@@ -574,15 +577,14 @@ class _ReadingHistoryPainter extends CustomPainter {
 }
 
 class SliverGridComics extends StatefulWidget {
-  const SliverGridComics({
-    super.key,
-    required this.comics,
-    this.onLastItemBuild,
-    this.badgeBuilder,
-    this.menuBuilder,
-    this.onTap,
-    this.selections
-  });
+  const SliverGridComics(
+      {super.key,
+      required this.comics,
+      this.onLastItemBuild,
+      this.badgeBuilder,
+      this.menuBuilder,
+      this.onTap,
+      this.selections});
 
   final List<Comic> comics;
 
@@ -681,37 +683,23 @@ class _SliverGridComics extends StatelessWidget {
             onLastItemBuild?.call();
           }
           var badge = badgeBuilder?.call(comics[index]);
-          return Stack(
-            children: [
-              ComicTile(
-                comic: comics[index],
-                badge: badge,
-                menuOptions: menuBuilder?.call(comics[index]),
-                onTap: onTap != null ? () => onTap!(comics[index]) : null,
-              ),
-              Positioned(
-                bottom: 10,
-                right: 8,
-                child: Visibility(
-                  visible: selection == null ? false : selection![comics[index]] ?? false,
-                  child: Stack(
-                    children: [
-                      Transform.scale(
-                        scale: 0.9,
-                        child: const Icon(
-                          Icons.circle_rounded,
-                          color: Colors.white,
-                        )
-                      ),
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.green,
-                      )
-                    ],
-                  )
-                )
-              )
-            ],
+          var isSelected =
+              selection == null ? false : selection![comics[index]] ?? false;
+          var comic = ComicTile(
+            comic: comics[index],
+            badge: badge,
+            menuOptions: menuBuilder?.call(comics[index]),
+            onTap: onTap != null ? () => onTap!(comics[index]) : null,
+          );
+          return Container(
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.surfaceContainer
+                  : null,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(4),
+            child: comic,
           );
         },
         childCount: comics.length,
@@ -910,7 +898,7 @@ class ComicListState extends State<ComicList> {
     try {
       if (widget.loadPage != null) {
         var res = await widget.loadPage!(page);
-        if(!mounted) return;
+        if (!mounted) return;
         if (res.success) {
           if (res.data.isEmpty) {
             _data[page] = const [];

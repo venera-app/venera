@@ -10,8 +10,9 @@ import 'app_dio.dart';
 
 class ImageDownloader {
   static Stream<ImageDownloadProgress> loadThumbnail(
-      String url, String? sourceKey) async* {
-    final cacheKey = "$url@$sourceKey";
+      String url, String? sourceKey,
+      [String? cid]) async* {
+    final cacheKey = "$url@$sourceKey${cid != null ? '@$cid' : ''}";
     final cache = await CacheManager().findCache(cacheKey);
 
     if (cache != null) {
@@ -32,6 +33,16 @@ class ImageDownloader {
     if (configs['headers']['user-agent'] == null &&
         configs['headers']['User-Agent'] == null) {
       configs['headers']['user-agent'] = webUA;
+    }
+
+    if (((configs['url'] as String?) ?? url).startsWith('cover.') &&
+        sourceKey != null) {
+      var comicSource = ComicSource.find(sourceKey);
+      if(comicSource != null) {
+        var comicInfo = await comicSource.loadComicInfo!(cid!);
+        yield* loadThumbnail(comicInfo.data.cover, sourceKey);
+        return;
+      }
     }
 
     var dio = AppDio(BaseOptions(
@@ -171,9 +182,8 @@ class ImageDownloader {
         }
         configs = newConfig;
         retryLimit--;
-      }
-      finally {
-        if(onLoadFailed != null) {
+      } finally {
+        if (onLoadFailed != null) {
           (configs['onLoadFailed'] as JSInvokable).free();
         }
       }

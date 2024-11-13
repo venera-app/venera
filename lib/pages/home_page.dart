@@ -258,6 +258,7 @@ class _HistoryState extends State<_History> {
                       ImageProvider imageProvider = CachedImageProvider(
                         cover,
                         sourceKey: history[index].type.comicSource?.key,
+                        cid: history[index].id,
                       );
                       if (!cover.isURL) {
                         var localComic = LocalManager().find(
@@ -567,7 +568,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
           onPressed: () {
             showDialog(
               context: context,
-              barrierColor: Colors.transparent,
+              barrierColor: Colors.black.withOpacity(0.2),
               builder: (context) {
                 var help = '';
                 help +=

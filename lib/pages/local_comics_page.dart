@@ -100,7 +100,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             actions: [
               FilledButton(
                 onPressed: () {
-                  appdata.implicitData["local_sort"] =sortType.value;
+                  appdata.implicitData["local_sort"] = sortType.value;
                   appdata.writeImplicitData();
                   Navigator.pop(context);
                   update();
@@ -116,19 +116,18 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isScreenSmall = screenWidth < 500.0;
-
-    void selectAll(){
+    void selectAll() {
       setState(() {
         selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
       });
     }
+
     void deSelect() {
       setState(() {
         selectedComics.clear();
       });
     }
+
     void invertSelection() {
       setState(() {
         comics.asMap().forEach((k, v) {
@@ -137,86 +136,46 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
         selectedComics.removeWhere((k, v) => !v);
       });
     }
+
     void selectRange() {
       setState(() {
         List<int> l = [];
         selectedComics.forEach((k, v) {
           l.add(comics.indexOf(k as LocalComic));
         });
-        if(l.isEmpty) {
+        if (l.isEmpty) {
           return;
         }
         l.sort();
         int start = l.first;
         int end = l.last;
         selectedComics.clear();
-        selectedComics.addEntries(
-          List.generate(end - start + 1, (i) {
-            return MapEntry(comics[start + i], true);
-          })
-        );
+        selectedComics.addEntries(List.generate(end - start + 1, (i) {
+          return MapEntry(comics[start + i], true);
+        }));
       });
     }
 
-    List<Widget> selectActions = [];
-    if(isScreenSmall) {
-      selectActions.add(
-        IconButton(
-          onPressed: () {
-            showMenu(
-              context: context, 
-              position: RelativeRect.fromLTRB(screenWidth, App.isMobile ? 64 : 96, 0, 0),
-              items: <PopupMenuEntry>[
-                PopupMenuItem(
-                  onTap: selectAll,
-                  child: Text("Select All".tl),
-                ),
-                PopupMenuItem(
-                  onTap: deSelect,
-                  child: Text("Deselect".tl),
-                ),
-                PopupMenuItem(
-                  onTap: invertSelection,
-                  child: Text("Invert Selection".tl),
-                ),
-                PopupMenuItem(
-                  onTap: selectRange,
-                  child: Text("Select in range".tl),
-                )
-              ]
-            );
-          }, 
-          icon: const Icon(
-          Icons.list
-        ))
-      );
-    }else {
-      selectActions = [
-        IconButton(
-          icon: const Icon(Icons.check_box_rounded),
+    List<Widget> selectActions = [
+      IconButton(
+          icon: const Icon(Icons.select_all),
           tooltip: "Select All".tl,
-          onPressed: selectAll
-        ),
-        IconButton(
-          icon: const Icon(Icons.check_box_outline_blank_outlined),
+          onPressed: selectAll),
+      IconButton(
+          icon: const Icon(Icons.deselect),
           tooltip: "Deselect".tl,
-          onPressed: deSelect
-        ),
-        IconButton(
-          icon: const Icon(Icons.check_box_outlined),
+          onPressed: deSelect),
+      IconButton(
+          icon: const Icon(Icons.flip),
           tooltip: "Invert Selection".tl,
-          onPressed: invertSelection
-        ),
-        
-        IconButton(
-          icon: const Icon(Icons.indeterminate_check_box_rounded),
+          onPressed: invertSelection),
+      IconButton(
+          icon: const Icon(Icons.border_horizontal_outlined),
           tooltip: "Select in range".tl,
-          onPressed: selectRange
-        ),
-      ];
-    }
+          onPressed: selectRange),
+    ];
 
-    return Scaffold(
+    var body = Scaffold(
       body: SmoothCustomScrollView(
         slivers: [
           if (!searchMode && !multiSelectMode)
@@ -267,24 +226,37 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             )
           else if (multiSelectMode)
             SliverAppbar(
-              title: Text("Selected @c comics".tlParams({"c": selectedComics.length})),
-              actions: [
-                  ...selectActions,
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    tooltip: "Exit Multi-Select".tl,
-                    onPressed: () {
-                      setState(() {
-                        multiSelectMode = false;
-                        selectedComics.clear();
-                      });
-                    },
-                  ),
-                
-              ],
+              leading: Tooltip(
+                message: "Cancel".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      multiSelectMode = false;
+                      selectedComics.clear();
+                    });
+                  },
+                ),
+              ),
+              title: Text(
+                  "Selected @c comics".tlParams({"c": selectedComics.length})),
+              actions: selectActions,
             )
           else if (searchMode)
             SliverAppbar(
+              leading: Tooltip(
+                message: "Cancel".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      searchMode = false;
+                      keyword = "";
+                      update();
+                    });
+                  },
+                ),
+              ),
               title: TextField(
                 autofocus: true,
                 decoration: InputDecoration(
@@ -296,18 +268,6 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                   update();
                 },
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      searchMode = false;
-                      keyword = "";
-                      update();
-                    });
-                  },
-                ),
-              ],
             ),
           SliverGridComics(
             comics: comics,
@@ -332,53 +292,54 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                     text: "Delete".tl,
                     onClick: () {
                       showDialog(
-                        context: context,
-                        builder: (context) {
-                          bool removeComicFile = true;
-                          return StatefulBuilder(
-                            builder: (context, state) {
+                          context: context,
+                          builder: (context) {
+                            bool removeComicFile = true;
+                            return StatefulBuilder(builder: (context, state) {
                               return ContentDialog(
                                 title: "Delete".tl,
                                 content: Column(
                                   children: [
-                                    Text("Delete selected comics?".tl).paddingVertical(8),
+                                    Text("Delete selected comics?".tl)
+                                        .paddingVertical(8),
                                     Transform.scale(
-                                      scale: 0.9, 
-                                      child: CheckboxListTile(
-                                        title: Text("Also remove files on disk".tl),
-                                        value: removeComicFile,
-                                        onChanged: (v) { 
-                                          state(() {
-                                            removeComicFile = !removeComicFile; 
-                                          });
-                                        }
-                                      )
-                                    ),
+                                        scale: 0.9,
+                                        child: CheckboxListTile(
+                                            title: Text(
+                                                "Also remove files on disk".tl),
+                                            value: removeComicFile,
+                                            onChanged: (v) {
+                                              state(() {
+                                                removeComicFile =
+                                                    !removeComicFile;
+                                              });
+                                            })),
                                   ],
                                 ).paddingHorizontal(16).paddingVertical(8),
                                 actions: [
                                   FilledButton(
                                     onPressed: () {
                                       context.pop();
-                                      if(multiSelectMode) {
+                                      if (multiSelectMode) {
                                         for (var comic in selectedComics.keys) {
-                                          LocalManager().deleteComic(comic as LocalComic, removeComicFile);
+                                          LocalManager().deleteComic(
+                                              comic as LocalComic,
+                                              removeComicFile);
                                         }
                                         setState(() {
                                           selectedComics.clear();
                                         });
                                       } else {
-                                        LocalManager().deleteComic(c as LocalComic, removeComicFile);
+                                        LocalManager().deleteComic(
+                                            c as LocalComic, removeComicFile);
                                       }
                                     },
                                     child: Text("Confirm".tl),
                                   ),
                                 ],
                               );
-                            }
-                          );
-                        }
-                      );
+                            });
+                          });
                     }),
                 MenuEntry(
                     icon: Icons.outbox_outlined,
@@ -413,6 +374,25 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           ),
         ],
       ),
+    );
+
+    return PopScope(
+      canPop: !multiSelectMode && !searchMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if(multiSelectMode) {
+          setState(() {
+            multiSelectMode = false;
+            selectedComics.clear();
+          });
+        } else if(searchMode) {
+          setState(() {
+            searchMode = false;
+            keyword = "";
+            update();
+          });
+        }
+      },
+      child: body,
     );
   }
 }

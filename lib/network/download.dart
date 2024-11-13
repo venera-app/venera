@@ -357,6 +357,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     }
 
     LocalManager().completeTask(this);
+    stopRecorder();
   }
 
   @override
@@ -534,6 +535,9 @@ class _ImageDownloadWrapper {
         }
       }
     } catch (e, s) {
+      if (isCancelled) {
+        return;
+      }
       Log.error("Download", e.toString(), s);
       retry--;
       if (retry > 0) {
