@@ -71,7 +71,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         ).toSliver(),
         if(App.isAndroid)
           _SwitchSetting(
-            title: 'Turn page by volume key'.tl,
+            title: 'Turn page by volume keys'.tl,
             settingKey: 'enableTurnPageByVolumeKey',
             onChanged: () {
               widget.onChanged?.call('enableTurnPageByVolumeKey');
