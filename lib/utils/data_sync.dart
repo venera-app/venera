@@ -4,7 +4,6 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/favorites.dart';
-import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/app_dio.dart';
@@ -19,7 +18,6 @@ class DataSync with ChangeNotifier {
     if (isEnabled) {
       downloadData();
     }
-    HistoryManager().addListener(onDataChanged);
     LocalFavoritesManager().addListener(onDataChanged);
     ComicSource.addListener(onDataChanged);
   }
@@ -57,8 +55,9 @@ class DataSync with ChangeNotifier {
   }
 
   Future<Res<bool>> uploadData() async {
+    if(isDownloading) return const Res(true);
     if (haveWaitingTask) return const Res(true);
-    while (isDownloading || isUploading) {
+    while (isUploading) {
       haveWaitingTask = true;
       await Future.delayed(const Duration(milliseconds: 100));
     }

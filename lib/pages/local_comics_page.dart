@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/utils/cbz.dart';
@@ -26,7 +27,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
   bool multiSelectMode = false;
 
-  Map<LocalComic, bool> selectedComics = {};
+  Map<Comic, bool> selectedComics = {};
 
   void update() {
     if (keyword.isEmpty) {
@@ -115,7 +116,66 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    void selectAll() {
+      setState(() {
+        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      });
+    }
+
+    void deSelect() {
+      setState(() {
+        selectedComics.clear();
+      });
+    }
+
+    void invertSelection() {
+      setState(() {
+        comics.asMap().forEach((k, v) {
+          selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+        });
+        selectedComics.removeWhere((k, v) => !v);
+      });
+    }
+
+    void selectRange() {
+      setState(() {
+        List<int> l = [];
+        selectedComics.forEach((k, v) {
+          l.add(comics.indexOf(k as LocalComic));
+        });
+        if (l.isEmpty) {
+          return;
+        }
+        l.sort();
+        int start = l.first;
+        int end = l.last;
+        selectedComics.clear();
+        selectedComics.addEntries(List.generate(end - start + 1, (i) {
+          return MapEntry(comics[start + i], true);
+        }));
+      });
+    }
+
+    List<Widget> selectActions = [
+      IconButton(
+          icon: const Icon(Icons.select_all),
+          tooltip: "Select All".tl,
+          onPressed: selectAll),
+      IconButton(
+          icon: const Icon(Icons.deselect),
+          tooltip: "Deselect".tl,
+          onPressed: deSelect),
+      IconButton(
+          icon: const Icon(Icons.flip),
+          tooltip: "Invert Selection".tl,
+          onPressed: invertSelection),
+      IconButton(
+          icon: const Icon(Icons.border_horizontal_outlined),
+          tooltip: "Select in range".tl,
+          onPressed: selectRange),
+    ];
+
+    var body = Scaffold(
       body: SmoothCustomScrollView(
         slivers: [
           if (!searchMode && !multiSelectMode)
@@ -166,11 +226,9 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             )
           else if (multiSelectMode)
             SliverAppbar(
-              title: Text("Selected @a comics".tlParams({
-                'a': selectedComics.length,
-              })),
-              actions: [
-                IconButton(
+              leading: Tooltip(
+                message: "Cancel".tl,
+                child: IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     setState(() {
@@ -179,10 +237,26 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                     });
                   },
                 ),
-              ],
+              ),
+              title: Text(
+                  "Selected @c comics".tlParams({"c": selectedComics.length})),
+              actions: selectActions,
             )
           else if (searchMode)
             SliverAppbar(
+              leading: Tooltip(
+                message: "Cancel".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      searchMode = false;
+                      keyword = "";
+                      update();
+                    });
+                  },
+                ),
+              ),
               title: TextField(
                 autofocus: true,
                 decoration: InputDecoration(
@@ -194,28 +268,17 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                   update();
                 },
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      searchMode = false;
-                      keyword = "";
-                      update();
-                    });
-                  },
-                ),
-              ],
             ),
           SliverGridComics(
             comics: comics,
+            selections: selectedComics,
             onTap: multiSelectMode
                 ? (c) {
                     setState(() {
                       if (selectedComics.containsKey(c as LocalComic)) {
-                        selectedComics.remove(c as LocalComic);
+                        selectedComics.remove(c);
                       } else {
-                        selectedComics[c as LocalComic] = true;
+                        selectedComics[c] = true;
                       }
                     });
                   }
@@ -228,25 +291,55 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                     icon: Icons.delete,
                     text: "Delete".tl,
                     onClick: () {
-                      if (multiSelectMode) {
-                        showConfirmDialog(
+                      showDialog(
                           context: context,
-                          title: "Delete".tl,
-                          content:
-                              "Are you sure you want to delete @a selected comics?"
-                                  .tlParams({'a': selectedComics.length}),
-                          onConfirm: () {
-                            for (var comic in selectedComics.keys) {
-                              LocalManager().deleteComic(comic);
-                            }
-                            setState(() {
-                              selectedComics.clear();
+                          builder: (context) {
+                            bool removeComicFile = true;
+                            return StatefulBuilder(builder: (context, state) {
+                              return ContentDialog(
+                                title: "Delete".tl,
+                                content: Column(
+                                  children: [
+                                    Text("Delete selected comics?".tl)
+                                        .paddingVertical(8),
+                                    Transform.scale(
+                                        scale: 0.9,
+                                        child: CheckboxListTile(
+                                            title: Text(
+                                                "Also remove files on disk".tl),
+                                            value: removeComicFile,
+                                            onChanged: (v) {
+                                              state(() {
+                                                removeComicFile =
+                                                    !removeComicFile;
+                                              });
+                                            })),
+                                  ],
+                                ).paddingHorizontal(16).paddingVertical(8),
+                                actions: [
+                                  FilledButton(
+                                    onPressed: () {
+                                      context.pop();
+                                      if (multiSelectMode) {
+                                        for (var comic in selectedComics.keys) {
+                                          LocalManager().deleteComic(
+                                              comic as LocalComic,
+                                              removeComicFile);
+                                        }
+                                        setState(() {
+                                          selectedComics.clear();
+                                        });
+                                      } else {
+                                        LocalManager().deleteComic(
+                                            c as LocalComic, removeComicFile);
+                                      }
+                                    },
+                                    child: Text("Confirm".tl),
+                                  ),
+                                ],
+                              );
                             });
-                          },
-                        );
-                      } else {
-                        LocalManager().deleteComic(c as LocalComic);
-                      }
+                          });
                     }),
                 MenuEntry(
                     icon: Icons.outbox_outlined,
@@ -259,7 +352,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                       try {
                         if (multiSelectMode) {
                           for (var comic in selectedComics.keys) {
-                            var file = await CBZ.export(comic);
+                            var file = await CBZ.export(comic as LocalComic);
                             await saveFile(filename: file.name, file: file);
                             await file.delete();
                           }
@@ -281,6 +374,25 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           ),
         ],
       ),
+    );
+
+    return PopScope(
+      canPop: !multiSelectMode && !searchMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if(multiSelectMode) {
+          setState(() {
+            multiSelectMode = false;
+            selectedComics.clear();
+          });
+        } else if(searchMode) {
+          setState(() {
+            searchMode = false;
+            keyword = "";
+            update();
+          });
+        }
+      },
+      child: body,
     );
   }
 }

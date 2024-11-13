@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 class NetworkCache {
@@ -43,7 +42,7 @@ class NetworkCacheManager implements Interceptor {
   static const _maxCacheSize = 10 * 1024 * 1024;
 
   void setCache(NetworkCache cache) {
-    while(size > _maxCacheSize){
+    while (size > _maxCacheSize) {
       size -= _cache.values.first.size;
       _cache.remove(_cache.keys.first);
     }
@@ -53,7 +52,7 @@ class NetworkCacheManager implements Interceptor {
 
   void removeCache(Uri uri) {
     var cache = _cache[uri];
-    if(cache != null){
+    if (cache != null) {
       size -= cache.size;
     }
     _cache.remove(uri);
@@ -64,16 +63,10 @@ class NetworkCacheManager implements Interceptor {
     size = 0;
   }
 
-  var preventParallel = <Uri, Completer>{};
-
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if(err.requestOptions.method != "GET"){
+    if (err.requestOptions.method != "GET") {
       return handler.next(err);
-    }
-    if(preventParallel[err.requestOptions.uri] != null){
-      preventParallel[err.requestOptions.uri]!.complete();
-      preventParallel.remove(err.requestOptions.uri);
     }
     return handler.next(err);
   }
@@ -81,24 +74,18 @@ class NetworkCacheManager implements Interceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    if(options.method != "GET"){
+    if (options.method != "GET") {
       return handler.next(options);
     }
-    if(preventParallel[options.uri] != null){
-      await preventParallel[options.uri]!.future;
-    }
     var cache = getCache(options.uri);
-    if (cache == null || !compareHeaders(options.headers, cache.requestHeaders)) {
-      if(options.headers['cache-time'] != null){
+    if (cache == null ||
+        !compareHeaders(options.headers, cache.requestHeaders)) {
+      if (options.headers['cache-time'] != null) {
         options.headers.remove('cache-time');
-      }
-      if(options.headers['prevent-parallel'] != null){
-        options.headers.remove('prevent-parallel');
-        preventParallel[options.uri] = Completer();
       }
       return handler.next(options);
     } else {
-      if(options.headers['cache-time'] == 'no'){
+      if (options.headers['cache-time'] == 'no') {
         options.headers.remove('cache-time');
         removeCache(options.uri);
         return handler.next(options);
@@ -106,20 +93,21 @@ class NetworkCacheManager implements Interceptor {
     }
     var time = DateTime.now();
     var diff = time.difference(cache.time);
-    if (options.headers['cache-time'] == 'long'
-        && diff < const Duration(hours: 2)) {
+    if (options.headers['cache-time'] == 'long' &&
+        diff < const Duration(hours: 2)) {
       return handler.resolve(Response(
         requestOptions: options,
         data: cache.data,
-        headers: Headers.fromMap(cache.responseHeaders),
+        headers: Headers.fromMap(cache.responseHeaders)
+          ..set('venera-cache', 'true'),
         statusCode: 200,
       ));
-    }
-    else if (diff < const Duration(seconds: 5)) {
+    } else if (diff < const Duration(seconds: 5)) {
       return handler.resolve(Response(
         requestOptions: options,
         data: cache.data,
-        headers: Headers.fromMap(cache.responseHeaders),
+        headers: Headers.fromMap(cache.responseHeaders)
+          ..set('venera-cache', 'true'),
         statusCode: 200,
       ));
     } else if (diff < const Duration(hours: 1)) {
@@ -133,7 +121,8 @@ class NetworkCacheManager implements Interceptor {
         return handler.resolve(Response(
           requestOptions: options,
           data: cache.data,
-          headers: Headers.fromMap(cache.responseHeaders),
+          headers: Headers.fromMap(cache.responseHeaders)
+            ..set('venera-cache', 'true'),
           statusCode: 200,
         ));
       }
@@ -143,6 +132,10 @@ class NetworkCacheManager implements Interceptor {
   }
 
   static bool compareHeaders(Map<String, dynamic> a, Map<String, dynamic> b) {
+    a.remove('cache-time');
+    a.remove('prevent-parallel');
+    b.remove('cache-time');
+    b.remove('prevent-parallel');
     if (a.length != b.length) {
       return false;
     }
@@ -160,11 +153,11 @@ class NetworkCacheManager implements Interceptor {
     if (response.requestOptions.method != "GET") {
       return handler.next(response);
     }
-    if(response.statusCode != null && response.statusCode! >= 400){
+    if (response.statusCode != null && response.statusCode! >= 400) {
       return handler.next(response);
     }
     var size = _calculateSize(response.data);
-    if(size != null && size < 1024 * 1024 && size > 0) {
+    if (size != null && size < 1024 * 1024 && size > 0) {
       var cache = NetworkCache(
         uri: response.requestOptions.uri,
         requestHeaders: response.requestOptions.headers,
@@ -175,30 +168,29 @@ class NetworkCacheManager implements Interceptor {
       );
       setCache(cache);
     }
-    if(preventParallel[response.requestOptions.uri] != null){
-      preventParallel[response.requestOptions.uri]!.complete();
-      preventParallel.remove(response.requestOptions.uri);
-    }
     handler.next(response);
   }
 
-  static int? _calculateSize(Object? data){
-    if(data == null){
+  static int? _calculateSize(Object? data) {
+    if (data == null) {
       return 0;
     }
-    if(data is List<int>) {
+    if (data is List<int>) {
       return data.length;
     }
-    if(data is String) {
-      if(data.trim().isEmpty){
+    if (data is Uint8List) {
+      return data.length;
+    }
+    if (data is String) {
+      if (data.trim().isEmpty) {
         return 0;
       }
-      if(data.length < 512 && data.contains("IP address")){
+      if (data.length < 512 && data.contains("IP address")) {
         return 0;
       }
       return data.length * 4;
     }
-    if(data is Map) {
+    if (data is Map) {
       return data.toString().length * 4;
     }
     return null;

@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/release
 
 add_translation.py
+
+*/*/generated_*
+*/*/Generated*

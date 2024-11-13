@@ -80,7 +80,6 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
-                        const SizedBox(width: 16),
                         Icon(
                           Icons.local_activity,
                           color: context.colorScheme.secondary,
@@ -88,27 +87,41 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                         const SizedBox(width: 12),
                         Text("Local".tl),
                         const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.search),
-                          color: context.colorScheme.primary,
-                          onPressed: () {
-                            context.to(() => const LocalSearchPage());
-                          },
+                        MenuButton(
+                          entries: [
+                            MenuEntry(
+                              icon: Icons.search,
+                              text: 'Search'.tl,
+                              onClick: () {
+                                context.to(() => const LocalSearchPage());
+                              },
+                            ),
+                            MenuEntry(
+                              icon: Icons.add,
+                              text: 'Create Folder'.tl,
+                              onClick: () {
+                                newFolder().then((value) {
+                                  setState(() {
+                                    folders = LocalFavoritesManager().folderNames;
+                                  });
+                                });
+                              },
+                            ),
+                            MenuEntry(
+                              icon: Icons.reorder,
+                              text: 'Sort'.tl,
+                              onClick: () {
+                                sortFolders().then((value) {
+                                  setState(() {
+                                    folders = LocalFavoritesManager().folderNames;
+                                  });
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          color: context.colorScheme.primary,
-                          onPressed: () {
-                            newFolder().then((value) {
-                              setState(() {
-                                folders = LocalFavoritesManager().folderNames;
-                              });
-                            });
-                          },
-                        ),
-                        const SizedBox(width: 16),
                       ],
-                    ),
+                    ).paddingHorizontal(16),
                   );
                 }
                 index--;
@@ -219,13 +232,13 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
 
   @override
   void update() {
-    if(!mounted) return;
+    if (!mounted) return;
     setState(() {});
   }
 
   @override
   void updateFolders() {
-    if(!mounted) return;
+    if (!mounted) return;
     setState(() {
       folders = LocalFavoritesManager().folderNames;
       networkFolders = ComicSource.all()

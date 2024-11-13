@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/reader/reader.dart';
@@ -346,6 +347,10 @@ class LocalManager with ChangeNotifier {
             comic.cover) {
           continue;
         }
+        //Hidden file in some file system
+        if(entity.name.startsWith('.')) {
+          continue;
+        }
         files.add(entity);
       }
     }
@@ -360,10 +365,10 @@ class LocalManager with ChangeNotifier {
     return files.map((e) => "file://${e.path}").toList();
   }
 
-  Future<bool> isDownloaded(String id, ComicType type, int ep) async {
+  Future<bool> isDownloaded(String id, ComicType type, [int? ep]) async {
     var comic = find(id, type);
     if (comic == null) return false;
-    if (comic.chapters == null) return true;
+    if (comic.chapters == null || ep == null) return true;
     return comic.downloadedChapters
         .contains(comic.chapters!.keys.elementAt(ep-1));
   }
@@ -439,9 +444,20 @@ class LocalManager with ChangeNotifier {
     downloadingTasks.first.resume();
   }
 
-  void deleteComic(LocalComic c) {
-    var dir = Directory(FilePath.join(path, c.directory));
-    dir.deleteIgnoreError(recursive: true);
+  void deleteComic(LocalComic c, [bool removeFileOnDisk = true]) {
+    if(removeFileOnDisk) {
+      var dir = Directory(FilePath.join(path, c.directory));
+      dir.deleteIgnoreError(recursive: true);
+    }
+    //Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
+    if(HistoryManager().findSync(c.id, c.comicType) != null) {
+      HistoryManager().remove(c.id, c.comicType);
+    }
+    assert(c.comicType == ComicType.local);
+    var folders = LocalFavoritesManager().find(c.id, c.comicType);
+    for (var f in folders) {
+      LocalFavoritesManager().deleteComicWithId(f, c.id, c.comicType);
+    }
     remove(c.id, c.comicType);
     notifyListeners();
   }

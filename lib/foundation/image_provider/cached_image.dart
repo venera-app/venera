@@ -8,7 +8,7 @@ import 'cached_image.dart' as image_provider;
 class CachedImageProvider
     extends BaseImageProvider<image_provider.CachedImageProvider> {
   /// Image provider for normal image.
-  const CachedImageProvider(this.url, {this.headers, this.sourceKey});
+  const CachedImageProvider(this.url, {this.headers, this.sourceKey, this.cid});
 
   final String url;
 
@@ -16,9 +16,11 @@ class CachedImageProvider
 
   final String? sourceKey;
 
+  final String? cid;
+
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
-    await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey)) {
+    await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {
       chunkEvents.add(ImageChunkEvent(
         cumulativeBytesLoaded: progress.currentBytes,
         expectedTotalBytes: progress.totalBytes,
@@ -36,5 +38,5 @@ class CachedImageProvider
   }
 
   @override
-  String get key => url;
+  String get key => url + (sourceKey ?? "") + (cid ?? "");
 }

@@ -11,8 +11,8 @@ import 'app.dart';
 import 'comic_source/comic_source.dart';
 import 'comic_type.dart';
 
-String _getCurTime() {
-  return DateTime.now()
+String _getTimeString(DateTime time) {
+  return time
       .toIso8601String()
       .replaceFirst("T", " ")
       .substring(0, 19);
@@ -27,7 +27,7 @@ class FavoriteItem implements Comic {
   @override
   String id;
   String coverPath;
-  String time = _getCurTime();
+  late String time;
 
   FavoriteItem({
     required this.id,
@@ -36,7 +36,11 @@ class FavoriteItem implements Comic {
     required this.author,
     required this.type,
     required this.tags,
-  });
+    DateTime? favoriteTime
+  }) {
+    var t = favoriteTime ?? DateTime.now();
+    time = _getTimeString(t);
+  }
 
   FavoriteItem.fromRow(Row row)
       : name = row["name"],
@@ -167,6 +171,13 @@ class LocalFavoritesManager with ChangeNotifier {
         order_value int
       );
     """);
+    _db.execute("""
+      create table if not exists folder_sync (
+        folder_name text primary key,
+        source_key text,
+        source_folder text
+      );
+    """);
   }
 
   List<String> find(String id, ComicType type) {
@@ -227,12 +238,12 @@ class LocalFavoritesManager with ChangeNotifier {
     return folders;
   }
 
-  void updateOrder(Map<String, int> order) {
-    for (var folder in order.keys) {
+  void updateOrder(List<String> folders) {
+    for (int i = 0; i < folders.length; i++) {
       _db.execute("""
         insert or replace into folder_order (folder_name, order_value)
         values (?, ?);
-      """, [folder, order[folder]]);
+      """, [folders[i], i]);
     }
     notifyListeners();
   }
@@ -289,12 +300,16 @@ class LocalFavoritesManager with ChangeNotifier {
     return res;
   }
 
+  bool existsFolder(String name) {
+    return folderNames.contains(name);
+  }
+
   /// create a folder
   String createFolder(String name, [bool renameWhenInvalidName = false]) {
     if (name.isEmpty) {
       if (renameWhenInvalidName) {
         int i = 0;
-        while (folderNames.contains(i.toString())) {
+        while (existsFolder(i.toString())) {
           i++;
         }
         name = i.toString();
@@ -302,11 +317,11 @@ class LocalFavoritesManager with ChangeNotifier {
         throw "name is empty!";
       }
     }
-    if (folderNames.contains(name)) {
+    if (existsFolder(name)) {
       if (renameWhenInvalidName) {
         var prevName = name;
         int i = 0;
-        while (folderNames.contains(i.toString())) {
+        while (existsFolder(i.toString())) {
           i++;
         }
         name = prevName + i.toString();
@@ -355,7 +370,7 @@ class LocalFavoritesManager with ChangeNotifier {
   /// This method will download cover to local, to avoid problems like changing url
   void addComic(String folder, FavoriteItem comic, [int? order]) async {
     _modifiedAfterLastCache = true;
-    if (!folderNames.contains(folder)) {
+    if (!existsFolder(folder)) {
       throw Exception("Folder does not exists");
     }
     var res = _db.select("""
@@ -424,7 +439,7 @@ class LocalFavoritesManager with ChangeNotifier {
   }
 
   void reorder(List<FavoriteItem> newFolder, String folder) async {
-    if (!folderNames.contains(folder)) {
+    if (!existsFolder(folder)) {
       throw Exception("Failed to reorder: folder not found");
     }
     deleteFolder(folder);
@@ -436,7 +451,7 @@ class LocalFavoritesManager with ChangeNotifier {
   }
 
   void rename(String before, String after) {
-    if (folderNames.contains(after)) {
+    if (existsFolder(after)) {
       throw "Name already exists!";
     }
     if (after.contains('"')) {
@@ -591,9 +606,9 @@ class LocalFavoritesManager with ChangeNotifier {
     if (folder == null || folder is! String) {
       throw "Invalid data";
     }
-    if (folderNames.contains(folder)) {
+    if (existsFolder(folder)) {
       int i = 0;
-      while (folderNames.contains("$folder($i)")) {
+      while (existsFolder("$folder($i)")) {
         i++;
       }
       folder = "$folder($i)";

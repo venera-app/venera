@@ -156,7 +156,7 @@ class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     var padding = widget.padding ??
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 4);
+        const EdgeInsets.symmetric(horizontal: 16);
     var width = widget.width;
     if (width != null) {
       width = width - padding.horizontal;
@@ -206,6 +206,7 @@ class _ButtonState extends State<Button> {
           padding: padding,
           constraints: const BoxConstraints(
             minWidth: 76,
+            minHeight: 32,
           ),
           decoration: BoxDecoration(
             color: buttonColor,

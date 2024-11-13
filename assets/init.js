@@ -699,7 +699,7 @@ class HtmlElement {
             doc: this.doc,
         })
         if(k == null) return null;
-        return new HtmlElement(k);
+        return new HtmlElement(k, this.doc);
     }
 
     /**
@@ -850,6 +850,7 @@ let console = {
  * @param id {string}
  * @param title {string}
  * @param subtitle {string}
+ * @param subTitle {string} - equal to subtitle
  * @param cover {string}
  * @param tags {string[]}
  * @param description {string}
@@ -859,10 +860,11 @@ let console = {
  * @param stars {number?} - 0-5, double
  * @constructor
  */
-function Comic({id, title, subtitle, cover, tags, description, maxPage, language, favoriteId, stars}) {
+function Comic({id, title, subtitle, subTitle, cover, tags, description, maxPage, language, favoriteId, stars}) {
     this.id = id;
     this.title = title;
     this.subtitle = subtitle;
+    this.subTitle = subTitle;
     this.cover = cover;
     this.tags = tags;
     this.description = description;
@@ -938,6 +940,33 @@ function Comment({userName, avatar, content, time, replyCount, id, isLiked, scor
     this.isLiked = isLiked;
     this.score = score;
     this.voteStatus = voteStatus;
+}
+
+/**
+ * Create image loading config
+ * @param url {string?}
+ * @param method {string?} - http method, uppercase
+ * @param data {any} - request data, may be null
+ * @param headers {Object?} - request headers
+ * @param onResponse {((ArrayBuffer) => ArrayBuffer)?} - modify response data
+ * @param modifyImage {string?}
+ *  A js script string.
+ *  The script will be executed in a new Isolate.
+ *  A function named `modifyImage` should be defined in the script, which receives an [Image] as the only argument, and returns an [Image]..
+ * @param onLoadFailed {(() => ImageLoadingConfig)?} - called when the image loading failed
+ * @constructor
+ * @since 1.0.5
+ *
+ * To keep the compatibility with the old version, do not use the constructor. Consider creating a new object with the properties directly.
+ */
+function ImageLoadingConfig({url, method, data, headers, onResponse, modifyImage, onLoadFailed}) {
+    this.url = url;
+    this.method = method;
+    this.data = data;
+    this.headers = headers;
+    this.onResponse = onResponse;
+    this.modifyImage = modifyImage;
+    this.onLoadFailed = onLoadFailed;
 }
 
 class ComicSource {

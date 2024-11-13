@@ -16,12 +16,12 @@ class _AboutSettingsState extends State<AboutSettings> {
       slivers: [
         SliverAppbar(title: Text("About".tl)),
         SizedBox(
-          height: 136,
+          height: 112,
           width: double.infinity,
           child: Center(
             child: Container(
-              width: 136,
-              height: 136,
+              width: 112,
+              height: 112,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(136),
               ),

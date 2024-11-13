@@ -27,7 +27,7 @@ class NaviPane extends StatefulWidget {
     required this.paneActions,
     required this.pageBuilder,
     this.initialPage = 0,
-    this.onPageChange,
+    this.onPageChanged,
     required this.observer,
     required this.navigatorKey,
     super.key});
@@ -38,7 +38,7 @@ class NaviPane extends StatefulWidget {
 
   final Widget Function(int page) pageBuilder;
 
-  final void Function(int index)? onPageChange;
+  final void Function(int index)? onPageChanged;
 
   final int initialPage;
 
@@ -59,7 +59,7 @@ class _NaviPaneState extends State<NaviPane>
   set currentPage(int value) {
     if (value == _currentPage) return;
     _currentPage = value;
-    widget.onPageChange?.call(value);
+    widget.onPageChanged?.call(value);
   }
 
   void Function()? mainViewUpdateHandler;
