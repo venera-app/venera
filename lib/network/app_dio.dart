@@ -206,19 +206,22 @@ class AppDio with DioMixin {
             : rhttp.ProxySettings.proxy(proxy!),
       ));
     }
-    var res = super.request<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      cancelToken: cancelToken,
-      options: options,
-      onSendProgress: onSendProgress,
-      onReceiveProgress: onReceiveProgress,
-    );
-    if(_requests.containsKey(path)) {
-      _requests.remove(path);
+    try {
+      return super.request<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+        options: options,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
+      );
     }
-    return res;
+    finally {
+      if(_requests.containsKey(path)) {
+        _requests.remove(path);
+      }
+    }
   }
 }
 
