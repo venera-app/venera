@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:mime/mime.dart';
 
 class FileType {
@@ -7,6 +5,14 @@ class FileType {
   final String mime;
 
   const FileType(this.ext, this.mime);
+
+  static FileType fromExtension(String ext) {
+    if(ext.startsWith('.')) {
+      ext = ext.substring(1);
+    }
+    var mime = lookupMimeType('no-file.$ext');
+    return FileType(".$ext", mime ?? 'application/octet-stream');
+  }
 }
 
 FileType detectFileType(List<int> data) {
