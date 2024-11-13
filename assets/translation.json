@@ -205,7 +205,8 @@
     "Finished": "已完成",
     "Updating": "更新中",
     "Update Comics Info": "更新漫画信息",
-    "Create Folder": "新建文件夹"
+    "Create Folder": "新建文件夹",
+    "Select an image on screen": "选择屏幕上的图片"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -413,6 +414,7 @@
     "Finished": "已完成",
     "Updating": "更新中",
     "Update Comics Info": "更新漫畫信息",
-    "Create Folder": "新建文件夾"
+    "Create Folder": "新建文件夾",
+    "Select an image on screen": "選擇屏幕上的圖片"
   }
 }

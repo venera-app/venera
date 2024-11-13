@@ -426,7 +426,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildStatusInfo() {
-    if(appdata.settings['enableClockAndBatteryInfoInReader']) {
+    if (appdata.settings['enableClockAndBatteryInfoInReader']) {
       return Positioned(
         bottom: 13,
         right: 25,
@@ -451,8 +451,73 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
-  Future<Uint8List> _getCurrentImageData() async {
+  Future<Uint8List?> _getCurrentImageData() async {
     var imageKey = context.reader.images![context.reader.page - 1];
+    var reader = context.reader;
+    if (context.reader.mode.isContinuous) {
+      var continuesState =
+          context.reader._imageViewController as _ContinuousModeState;
+      var imagesOnScreen =
+          continuesState.itemPositionsListener.itemPositions.value;
+      var images = imagesOnScreen
+          .map((e) => context.reader.images![e.index - 1])
+          .toList();
+      String? selected;
+      await showPopUpWidget(
+        context,
+        PopUpWidgetScaffold(
+          title: "Select an image on screen".tl,
+          body: GridView.builder(
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              ImageProvider image;
+              var imageKey = images[index];
+              if (imageKey.startsWith('file://')) {
+                image = FileImage(File(imageKey.replaceFirst("file://", '')));
+              } else {
+                image = ReaderImageProvider(
+                  imageKey,
+                  reader.type.comicSource!.key,
+                  reader.cid,
+                  reader.eid,
+                );
+              }
+              return InkWell(
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                onTap: () {
+                  selected = images[index];
+                  App.rootContext.pop();
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image(
+                    width: double.infinity,
+                    height: double.infinity,
+                    image: image,
+                  ),
+                ),
+              ).padding(const EdgeInsets.all(8));
+            },
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 0.7,
+            ),
+          ),
+        ),
+      );
+      if (selected == null) {
+        return null;
+      } else {
+        imageKey = selected!;
+      }
+    }
     if (imageKey.startsWith("file://")) {
       return await File(imageKey.substring(7)).readAsBytes();
     } else {
@@ -464,6 +529,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   void saveCurrentImage() async {
     var data = await _getCurrentImageData();
+    if (data == null) {
+      return;
+    }
     var fileType = detectFileType(data);
     var filename = "${context.reader.page}${fileType.ext}";
     saveFile(data: data, filename: filename);
@@ -471,6 +539,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   void share() async {
     var data = await _getCurrentImageData();
+    if (data == null) {
+      return;
+    }
     var fileType = detectFileType(data);
     var filename = "${context.reader.page}${fileType.ext}";
     Share.shareFile(
@@ -490,7 +561,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             App.rootContext.pop();
           }
           if (key == "enableTurnPageByVolumeKey") {
-            if(appdata.settings[key]) {
+            if (appdata.settings[key]) {
               context.reader.handleVolumeEvent();
             } else {
               context.reader.stopVolumeEvent();
@@ -613,13 +684,14 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
         setState(() {
           _hasBattery = true;
           _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-            _battery.batteryLevel.then((level) =>{
-              if(_batteryLevel != level) {
-                  setState(() {
-                    _batteryLevel = level;
-                })
-              }
-            });
+            _battery.batteryLevel.then((level) => {
+                  if (_batteryLevel != level)
+                    {
+                      setState(() {
+                        _batteryLevel = level;
+                      })
+                    }
+                });
           });
         });
       } else {
@@ -680,9 +752,10 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
           size: 16,
           color: batteryColor,
           // Stroke
-          shadows: List.generate(9,
+          shadows: List.generate(
+            9,
             (index) {
-              if(index == 4) {
+              if (index == 4) {
                 return null;
               }
               double offsetX = (index % 3 - 1) * 0.8;
@@ -729,7 +802,7 @@ class _ClockWidgetState extends State<_ClockWidget> {
     _currentTime = _getCurrentTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final time = _getCurrentTime();
-      if(_currentTime != time) {
+      if (_currentTime != time) {
         setState(() {
           _currentTime = time;
         });
@@ -751,19 +824,19 @@ class _ClockWidgetState extends State<_ClockWidget> {
   @override
   Widget build(BuildContext context) {
     return Stack(
-        children: [
-          Text(
-            _currentTime,
-            style: TextStyle(
-              fontSize: 14,
-              foreground: Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 1.4
-                ..color = context.colorScheme.onInverseSurface,
-            ),
+      children: [
+        Text(
+          _currentTime,
+          style: TextStyle(
+            fontSize: 14,
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.4
+              ..color = context.colorScheme.onInverseSurface,
           ),
-          Text(_currentTime),
-        ],
+        ),
+        Text(_currentTime),
+      ],
     );
   }
 }

@@ -324,6 +324,8 @@ enum ReaderMode {
 
   bool get isGallery => key.startsWith('gallery');
 
+  bool get isContinuous => key.startsWith('continuous');
+
   const ReaderMode(this.key);
 
   static ReaderMode fromKey(String key) {
