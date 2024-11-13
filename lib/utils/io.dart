@@ -9,6 +9,7 @@ import 'package:venera/utils/ext.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart' as s;
 import 'package:file_selector/file_selector.dart' as file_selector;
+import 'package:venera/utils/file_type.dart';
 
 export 'dart:io';
 export 'dart:typed_data';
@@ -86,7 +87,7 @@ extension DirectoryExtension on Directory {
 }
 
 String sanitizeFileName(String fileName) {
-  if(fileName.endsWith('.')) {
+  if (fileName.endsWith('.')) {
     fileName = fileName.substring(0, fileName.length - 1);
   }
   const maxLength = 255;
@@ -126,7 +127,8 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
   }
 }
 
-Future<void> copyDirectoryIsolate(Directory source, Directory destination) async {
+Future<void> copyDirectoryIsolate(
+    Directory source, Directory destination) async {
   await Isolate.run(() {
     copyDirectory(source, destination);
   });
@@ -196,14 +198,32 @@ class IOSDirectoryPicker {
 }
 
 Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
+  var extensions = App.isMacOS || App.isIOS ? null : ext;
+  if (App.isAndroid) {
+    for (var e in ext) {
+      var fileType = FileType.fromExtension(e);
+      if (fileType.mime == "application/octet-stream") {
+        extensions = null;
+        break;
+      }
+    }
+  }
   file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
     label: 'files',
-    extensions: App.isMacOS || App.isIOS ? null : ext,
+    extensions: extensions,
   );
-  final file_selector.XFile? file = await file_selector.openFile(
-    acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
-  );
-  if (file == null) return null;
+  file_selector.XFile? file;
+  if (extensions == null && App.isAndroid) {
+    const selectFileChannel = MethodChannel("venera/select_file");
+    var filePath = await selectFileChannel.invokeMethod("selectFile");
+    if (filePath == null) return null;
+    file = file_selector.XFile(filePath);
+  } else {
+    file = await file_selector.openFile(
+      acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
+    );
+    if (file == null) return null;
+  }
   if (!ext.contains(file.path.split(".").last)) {
     App.rootContext.showMessage(message: "Invalid file type");
     return null;

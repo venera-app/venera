@@ -10,7 +10,6 @@ import android.view.KeyEvent
 import android.Manifest
 import android.os.Environment
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
@@ -33,6 +32,8 @@ class MainActivity : FlutterActivity() {
 
     private val storageRequestCode = 0x10
     private var storagePermissionRequest: ((Boolean) -> Unit)? = null
+
+    private val selectFileCode = 0x11
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -59,6 +60,41 @@ class MainActivity : FlutterActivity() {
                 storagePermissionRequest?.invoke(Environment.isExternalStorageManager())
             }
             storagePermissionRequest = null
+        } else if (requestCode == selectFileCode) {
+            if (resultCode != Activity.RESULT_OK) {
+                result.success(null)
+                return
+            }
+            val uri = data?.data
+            if (uri == null) {
+                result.success(null)
+                return
+            }
+            val contentResolver = context.contentResolver
+            val file = DocumentFile.fromSingleUri(context, uri)
+            if (file == null) {
+                result.success(null)
+                return
+            }
+            val fileName = file.name
+            if (fileName == null) {
+                result.success(null)
+                return
+            }
+            // copy file to cache directory
+            val cacheDir = context.cacheDir
+            val newFile = File(cacheDir, fileName)
+            val inputStream = contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                result.success(null)
+                return
+            }
+            val outputStream = FileOutputStream(newFile)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            // send file path to flutter
+            result.success(newFile.absolutePath)
         }
     }
 
@@ -111,6 +147,12 @@ class MainActivity : FlutterActivity() {
             requestStoragePermission {result ->
                 res.success(result)
             }
+        }
+
+        val selectFileChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/select_file")
+        selectFileChannel.setMethodCallHandler { _, res ->
+            openFile()
+            result = res
         }
     }
 
@@ -222,6 +264,13 @@ class MainActivity : FlutterActivity() {
             })
             storagePermissionRequest = null
         }
+    }
+
+    fun openFile() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "*/*"
+        startActivityForResult(intent, selectFileCode)
     }
 }
 
