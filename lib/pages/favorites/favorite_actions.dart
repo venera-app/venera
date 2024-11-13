@@ -159,7 +159,7 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
         return;
       } catch (e) {
         retry--;
-        if(retry == 0) {
+        if (retry == 0) {
           rethrow;
         }
         continue;
@@ -205,7 +205,7 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
                   isCanceled = true;
                   context.pop();
                 },
-                child: isFinished ?Text("OK".tl) : Text("Cancel".tl),
+                child: isFinished ? Text("OK".tl) : Text("Cancel".tl),
               ),
             ],
           );
@@ -216,16 +216,16 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
     isCanceled = true;
   });
 
-  while(index < comics.length) {
+  while (index < comics.length) {
     var futures = <Future>[];
     const maxConcurrency = 4;
 
-    if(isCanceled) {
+    if (isCanceled) {
       return comics;
     }
 
     for (var i = 0; i < maxConcurrency; i++) {
-      if (index+i >= comics.length) break;
+      if (index + i >= comics.length) break;
       futures.add(updateSingleComic(index + i).then((v) {
         finished.value++;
       }, onError: (_) {
@@ -239,4 +239,52 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
   }
 
   return comics;
+}
+
+Future<void> sortFolders() async {
+  var folders = LocalFavoritesManager().folderNames;
+
+  await showPopUpWidget(
+    App.rootContext,
+    StatefulBuilder(builder: (context, setState) {
+      return PopUpWidgetScaffold(
+        title: "Sort".tl,
+        tailing: [
+          Tooltip(
+            message: "Help".tl,
+            child: IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                showInfoDialog(
+                  context: context,
+                  title: "Reorder".tl,
+                  content: "Long press and drag to reorder.".tl,
+                );
+              },
+            ),
+          )
+        ],
+        body: ReorderableListView.builder(
+          onReorder: (oldIndex, newIndex) {
+            if (oldIndex < newIndex) {
+              newIndex--;
+            }
+            setState(() {
+              var item = folders.removeAt(oldIndex);
+              folders.insert(newIndex, item);
+            });
+          },
+          itemCount: folders.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              key: ValueKey(folders[index]),
+              title: Text(folders[index]),
+            );
+          },
+        ),
+      );
+    }),
+  );
+
+  LocalFavoritesManager().updateOrder(folders);
 }

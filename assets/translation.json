@@ -204,7 +204,8 @@
     "Select in range": "区间选择",
     "Finished": "已完成",
     "Updating": "更新中",
-    "Update Comics Info": "更新漫画信息"
+    "Update Comics Info": "更新漫画信息",
+    "Create Folder": "新建文件夹"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -411,6 +412,7 @@
     "Select in range": "區間選擇",
     "Finished": "已完成",
     "Updating": "更新中",
-    "Update Comics Info": "更新漫畫信息"
+    "Update Comics Info": "更新漫畫信息",
+    "Create Folder": "新建文件夾"
   }
 }

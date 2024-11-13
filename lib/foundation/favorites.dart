@@ -238,12 +238,12 @@ class LocalFavoritesManager with ChangeNotifier {
     return folders;
   }
 
-  void updateOrder(Map<String, int> order) {
-    for (var folder in order.keys) {
+  void updateOrder(List<String> folders) {
+    for (int i = 0; i < folders.length; i++) {
       _db.execute("""
         insert or replace into folder_order (folder_name, order_value)
         values (?, ?);
-      """, [folder, order[folder]]);
+      """, [folders[i], i]);
     }
     notifyListeners();
   }
