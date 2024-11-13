@@ -123,6 +123,18 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         filename: "${widget.folder}.json",
                       );
                     }),
+                MenuEntry(
+                    icon: Icons.update,
+                    text: "Update Comics Info".tl,
+                    onClick: () {
+                      updateComicsInfo(widget.folder).then((newComics) {
+                        if(mounted) {
+                          setState(() {
+                            comics = newComics;
+                          });
+                        }
+                      });
+                    }),
               ],
             ),
           ],

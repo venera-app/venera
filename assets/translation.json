@@ -201,7 +201,10 @@
     "Select All": "全选",
     "Deselect": "取消选择",
     "Invert Selection": "反选",
-    "Select in range": "区间选择"
+    "Select in range": "区间选择",
+    "Finished": "已完成",
+    "Updating": "更新中",
+    "Update Comics Info": "更新漫画信息"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -405,6 +408,9 @@
     "Select All": "全選",
     "Deselect": "取消選擇",
     "Invert Selection": "反選",
-    "Select in range": "區間選擇"
+    "Select in range": "區間選擇",
+    "Finished": "已完成",
+    "Updating": "更新中",
+    "Update Comics Info": "更新漫畫信息"
   }
 }

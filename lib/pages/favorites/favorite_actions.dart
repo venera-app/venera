@@ -34,12 +34,11 @@ Future<void> newFolder() async {
                 child: Text("Import from file".tl),
                 onPressed: () async {
                   var file = await selectFile(ext: ['json']);
-                  if(file == null) return;
+                  if (file == null) return;
                   var data = await file.readAsBytes();
                   try {
                     LocalFavoritesManager().fromJson(utf8.decode(data));
-                  }
-                  catch(e) {
+                  } catch (e) {
                     context.showMessage(message: "Failed to import".tl);
                     return;
                   }
@@ -113,7 +112,9 @@ void addFavorite(Comic comic) {
                       name: comic.title,
                       coverPath: comic.cover,
                       author: comic.subtitle ?? '',
-                      type: ComicType((comic.sourceKey == 'local' ? 0 : comic.sourceKey.hashCode)),
+                      type: ComicType((comic.sourceKey == 'local'
+                          ? 0
+                          : comic.sourceKey.hashCode)),
                       tags: comic.tags ?? [],
                     ),
                   );
@@ -127,4 +128,115 @@ void addFavorite(Comic comic) {
       });
     },
   );
+}
+
+Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
+  var comics = LocalFavoritesManager().getAllComics(folder);
+
+  Future<void> updateSingleComic(int index) async {
+    int retry = 3;
+
+    while (true) {
+      try {
+        var c = comics[index];
+        var comicSource = c.type.comicSource;
+        if (comicSource == null) return;
+
+        var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
+
+        comics[index] = FavoriteItem(
+          id: c.id,
+          name: newInfo.title,
+          coverPath: newInfo.cover,
+          author: newInfo.subTitle ??
+              newInfo.tags['author']?.firstOrNull ??
+              c.author,
+          type: c.type,
+          tags: c.tags,
+        );
+
+        LocalFavoritesManager().updateInfo(folder, comics[index]);
+        return;
+      } catch (e) {
+        retry--;
+        if(retry == 0) {
+          rethrow;
+        }
+        continue;
+      }
+    }
+  }
+
+  var finished = ValueNotifier(0);
+
+  var errors = 0;
+
+  var index = 0;
+
+  bool isCanceled = false;
+
+  showDialog(
+    context: App.rootContext,
+    builder: (context) {
+      return ValueListenableBuilder(
+        valueListenable: finished,
+        builder: (context, value, child) {
+          var isFinished = value == comics.length;
+          return ContentDialog(
+            title: isFinished ? "Finished".tl : "Updating".tl,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: value / comics.length,
+                ),
+                const SizedBox(height: 4),
+                Text("$value/${comics.length}"),
+                const SizedBox(height: 4),
+                if (errors > 0) Text("Errors: $errors"),
+              ],
+            ).paddingHorizontal(16),
+            actions: [
+              Button.filled(
+                color: isFinished ? null : context.colorScheme.error,
+                onPressed: () {
+                  isCanceled = true;
+                  context.pop();
+                },
+                child: isFinished ?Text("OK".tl) : Text("Cancel".tl),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  ).then((_) {
+    isCanceled = true;
+  });
+
+  while(index < comics.length) {
+    var futures = <Future>[];
+    const maxConcurrency = 4;
+
+    if(isCanceled) {
+      return comics;
+    }
+
+    for (var i = 0; i < maxConcurrency; i++) {
+      if (index+i >= comics.length) break;
+      futures.add(updateSingleComic(index + i).then((v) {
+        finished.value++;
+      }, onError: (_) {
+        errors++;
+        finished.value++;
+      }));
+    }
+
+    await Future.wait(futures);
+    index += maxConcurrency;
+  }
+
+  return comics;
 }
