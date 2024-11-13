@@ -699,7 +699,7 @@ class HtmlElement {
             doc: this.doc,
         })
         if(k == null) return null;
-        return new HtmlElement(k);
+        return new HtmlElement(k, this.doc);
     }
 
     /**
