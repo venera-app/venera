@@ -488,6 +488,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   bool copyToLocalFolder = false;
 
+  bool cancelled = false;
+
   @override
   void dispose() {
     loading = false;
@@ -620,9 +622,17 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   void selectAndImport() async {
     height = key.currentContext!.size!.height;
+
     setState(() {
       loading = true;
     });
+    
+    var controller = showLoadingDialog(context, onCancel: () {
+      setState(() {
+        cancelled = true;
+      });
+    },);
+
 
     var importedComics = switch (type) {
       0 => await _importLocalComic(),
@@ -632,6 +642,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       int() => <String?, List<LocalComic>>{},
     };
 
+    setState(() {
+      loading = false;
+    });
+
+    if(cancelled) {
+      return;
+    }
+
     if (copyToLocalFolder) {
       importedComics = await _copyComicsToLocalDir(importedComics);
     }
@@ -639,13 +657,17 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     int importedCount = 0;
     for (var folder in importedComics.keys) {
       for (var comic in importedComics[folder]!) {
-        LocalManager().add(comic, LocalManager().findValidId(ComicType.local));
+        if(cancelled) {
+          return;
+        }
+        var id = LocalManager().findValidId(ComicType.local);
+        LocalManager().add(comic, id);
         importedCount++;
         if (folder != null) {
           LocalFavoritesManager().addComic(
             folder,
             FavoriteItem(
-              id: comic.id,
+              id: id,
               name: comic.title,
               coverPath: comic.cover,
               author: comic.subtitle,
@@ -657,9 +679,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       }
     }
 
-    setState(() {
-      loading = false;
-    });
+    controller.close();
 
     context.pop();
     context.showMessage(
@@ -755,6 +775,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     bool hasChapters = false;
     var chapters = <String>[];
     var coverPath = ''; // relative path to the cover image
+    var fileList = <String>[];
     await for (var entry in directory.list()) {
       if (entry is Directory) {
         hasChapters = true;
@@ -767,16 +788,15 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
           }
         }
       } else if (entry is File) {
-        if (entry.name.startsWith('cover')) {
-          coverPath = entry.name;
-        }
         const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'];
-        if (!coverPath.startsWith('cover') &&
-            imageExtensions.contains(entry.extension)) {
-          coverPath = entry.name;
+        if (imageExtensions.contains(entry.extension)) {
+          fileList.add(entry.name);
         }
       }
     }
+
+    coverPath = fileList.firstWhereOrNull((l) => l.startsWith('cover')) ?? fileList.first;
+        
     chapters.sort();
     if (hasChapters && coverPath == '') {
       // use the first image in the first chapter as the cover
@@ -842,7 +862,6 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   Future<Map<String?, List<LocalComic>>> _importCBZComic() async {
     var xFile = await selectFile(ext: ['cbz']);
-    var controller = showLoadingDialog(context, allowCancel: false);
     Map<String?, List<LocalComic>> imported = {};
     try {
       var cache = FilePath.join(App.cachePath, xFile?.name ?? 'temp.cbz');
@@ -854,7 +873,6 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       Log.error("Import Comic", e.toString(), s);
       context.showMessage(message: e.toString());
     }
-    controller.close();
     return imported;
   }
 
@@ -867,11 +885,6 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     if (dbFile == null || comicRoot == null) {
       return imported;
     }
-
-    bool cancelled = false;
-    var controller = showLoadingDialog(context, onCancel: () {
-      cancelled = true;
-    });
 
     try {
       var db = sql.sqlite3.open(dbFile.path);
@@ -920,26 +933,26 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
         return imported;
       }
 
-      var tags = <String>["IS NULL"];
+      var tags = <String>[""];
       tags.addAll(db.select("""
             SELECT * FROM DOWNLOAD_LABELS LB
             ORDER BY  LB.TIME DESC;
-          """).map((r) => '= ${r['LABEL'] as String}').toList());
+          """).map((r) => r['LABEL'] as String).toList());
 
       for (var tag in tags) {
         if (cancelled) {
           break;
         }
         var folderName =
-            tag == "IS NULL" ? '(EhViewer)Default'.tl : '(EhViewer)$tag';
+            tag == '' ? '(EhViewer)Default'.tl : '(EhViewer)$tag';
         var comicList = db.select("""
               SELECT * 
               FROM DOWNLOAD_DIRNAME DN
               LEFT JOIN DOWNLOADS DL
               ON DL.GID = DN.GID
-              WHERE DL.LABEL ? AND DL.STATE = 3
+              WHERE DL.LABEL ${tag == '' ? 'IS NULL' : '= \'$tag\''} AND DL.STATE = 3
               ORDER BY DL.TIME DESC
-            """, [tag]).toList();
+            """).toList();
 
         var validComics = await validateComics(comicList);
         imported[folderName] = validComics;
@@ -958,7 +971,6 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       Log.error("Import Comic", e.toString(), s);
       context.showMessage(message: e.toString());
     }
-    controller.close();
     return imported;
   }
 }
