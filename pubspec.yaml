@@ -64,7 +64,6 @@ dependencies:
       url: https://github.com/wgh136/webdav_client
       ref: 285f87f15bccd2d5d5ff443761348c6ee47b98d1
   battery_plus: ^6.2.0
-  file_picker: ^8.1.4
 
 dev_dependencies:
   flutter_test:

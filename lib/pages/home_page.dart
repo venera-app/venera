@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -486,7 +487,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   String? selectedFolder;
 
-  bool copyToLocalFolder = false;
+  bool copyToLocalFolder = true;
 
   bool cancelled = false;
 
@@ -554,6 +555,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                   ),
                 ).paddingHorizontal(8),
               CheckboxListTile(
+                enabled: false,
                 title: Text("Copy to app local path".tl),
                 value: copyToLocalFolder,
                 onChanged:(v) {
@@ -633,12 +635,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       });
     },);
 
-
+    final picker = DirectoryPicker();
     var importedComics = switch (type) {
-      0 => await _importLocalComic(),
-      1 => await _importLocalComic(false),
+      0 => await _importLocalComic(await picker.pickDirectory()),
+      1 => await _importLocalComic(await picker.pickDirectory(), false),
       2 => await _importCBZComic(),
-      3 => await _importEhViewerComic(),
+      3 => await _importEhViewerComic(
+          await selectFile(ext: ['db', 'bin']),
+          await picker.pickDirectory()),
       int() => <String?, List<LocalComic>>{},
     };
 
@@ -679,6 +683,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       }
     }
 
+    picker.dispose();
     controller.close();
 
     context.pop();
@@ -827,14 +832,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     );
   }
 
-  Future<Map<String?, List<LocalComic>>> _importLocalComic(
+  Future<Map<String?, List<LocalComic>>> _importLocalComic(Directory? path,
       [bool single = true]) async {
     Map<String?, List<LocalComic>> imported = {selectedFolder: []};
-    final picker = DirectoryPicker();
-    final path = await picker.pickDirectory();
+
     if (path == null) {
       return imported;
     }
+
     try {
       if (single) {
         var result = await _tryCreateLocalComicFromPath(path);
@@ -877,10 +882,10 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     return imported;
   }
 
-  Future<Map<String?, List<LocalComic>>> _importEhViewerComic() async {
-    final dbFile = await selectFile(ext: ['db', 'bin']);
-    final picker = DirectoryPicker();
-    final comicRoot = await picker.pickDirectory();
+  Future<Map<String?, List<LocalComic>>> _importEhViewerComic(
+      XFile? dbFile,
+      Directory? comicRoot)
+  async {
 
     Map<String?, List<LocalComic>> imported = {};
     if (dbFile == null || comicRoot == null) {

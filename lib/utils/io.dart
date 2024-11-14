@@ -8,7 +8,6 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart' as s;
-import 'package:file_picker/file_picker.dart' as file_picker;
 import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:venera/utils/file_type.dart';
 
@@ -153,8 +152,12 @@ class DirectoryPicker {
   final _methodChannel = const MethodChannel("venera/method_channel");
 
   Future<Directory?> pickDirectory() async {
-    if (App.isWindows || App.isLinux || App.isAndroid) {
-      var d = await file_picker.FilePicker.platform.getDirectoryPath();
+    if (App.isWindows || App.isLinux) {
+      var d = await file_selector.getDirectoryPath();
+      return d == null ? null : Directory(d);
+    } else if (App.isAndroid) {
+      var d = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
+      _directory = d;
       return d == null ? null : Directory(d);
     } else {
       // ios, macos
@@ -167,6 +170,9 @@ class DirectoryPicker {
   Future<void> dispose() async {
     if (_directory == null) {
       return;
+    }
+    if (App.isAndroid && _directory != null) {
+      return Directory(_directory!).deleteIgnoreError(recursive: true);
     }
     if (App.isIOS || App.isMacOS) {
       await _methodChannel.invokeMethod("stopAccessingSecurityScopedResource");
