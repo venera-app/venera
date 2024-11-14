@@ -244,7 +244,9 @@ abstract mixin class _ReaderLocation {
   bool toPage(int page) {
     if (_validatePage(page)) {
       if (page == this.page) {
-        return false;
+        if(!(chapter == 1 && page == 1) && !(chapter == maxChapter && page == maxPage)) {
+          return false;
+        }
       }
       this.page = page;
       update();
