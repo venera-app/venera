@@ -274,8 +274,14 @@ class ComicTile extends StatelessWidget {
                     ),
                   ),
                 ),
+<<<<<<< .merge_file_KmeP1q
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+=======
+                const SizedBox(height: 5),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+>>>>>>> .merge_file_2IMZq1
                   child: Text(
                     comic.title.replaceAll("\n", ""),
                     style: const TextStyle(
