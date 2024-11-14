@@ -1037,6 +1037,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     if (!isInitialLoading && next == null) {
       return;
     }
+    if(isLoading) return;
     Future.microtask(() {
       setState(() {
         isLoading = true;
