@@ -2,10 +2,7 @@ part of 'components.dart';
 
 class SliverGridViewWithFixedItemHeight extends StatelessWidget {
   const SliverGridViewWithFixedItemHeight(
-      {required this.delegate,
-      required this.maxCrossAxisExtent,
-      required this.itemHeight,
-      super.key});
+      {required this.delegate, required this.maxCrossAxisExtent, required this.itemHeight, super.key});
 
   final SliverChildDelegate delegate;
 
@@ -65,8 +62,7 @@ class SliverGridDelegateWithFixedHeight extends SliverGridDelegate {
   @override
   bool shouldRelayout(covariant SliverGridDelegate oldDelegate) {
     if (oldDelegate is! SliverGridDelegateWithFixedHeight) return true;
-    if (oldDelegate.maxCrossAxisExtent != maxCrossAxisExtent ||
-        oldDelegate.itemHeight != itemHeight) {
+    if (oldDelegate.maxCrossAxisExtent != maxCrossAxisExtent || oldDelegate.itemHeight != itemHeight) {
       return true;
     }
     return false;
@@ -95,8 +91,7 @@ class SliverGridDelegateWithComics extends SliverGridDelegate {
     }
   }
 
-  SliverGridLayout getDetailedModeLayout(
-      SliverConstraints constraints, double scale) {
+  SliverGridLayout getDetailedModeLayout(SliverConstraints constraints, double scale) {
     const minCrossAxisExtent = 360;
     final itemHeight = 152 * scale;
     final width = constraints.crossAxisExtent;
@@ -111,14 +106,11 @@ class SliverGridDelegateWithComics extends SliverGridDelegate {
         reverseCrossAxis: false);
   }
 
-  SliverGridLayout getBriefModeLayout(
-      SliverConstraints constraints, double scale) {
+  SliverGridLayout getBriefModeLayout(SliverConstraints constraints, double scale) {
     final maxCrossAxisExtent = 192.0 * scale;
-    const childAspectRatio = 0.72;
+    const childAspectRatio = 0.68;
     const crossAxisSpacing = 0.0;
-    int crossAxisCount =
-        (constraints.crossAxisExtent / (maxCrossAxisExtent + crossAxisSpacing))
-            .ceil();
+    int crossAxisCount = (constraints.crossAxisExtent / (maxCrossAxisExtent + crossAxisSpacing)).ceil();
     // Ensure a minimum count of 1, can be zero and result in an infinite extent
     // below when the window size is 0.
     crossAxisCount = math.max(1, crossAxisCount);
