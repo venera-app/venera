@@ -106,6 +106,7 @@ class MyLogInterceptor implements Interceptor {
 
 class AppDio with DioMixin {
   String? _proxy = proxy;
+  static bool get ignoreCertificateErrors => appdata.settings['ignoreCertificateErrors'] == true;
 
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
@@ -123,6 +124,7 @@ class AppDio with DioMixin {
     client.idleTimeout = const Duration(seconds: 100);
     client.badCertificateCallback =
         (X509Certificate cert, String host, int port) {
+      if (ignoreCertificateErrors) return true;
       if (host.contains("cdn")) return true;
       final ipv4RegExp = RegExp(
           r'^((25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3})$');
@@ -189,8 +191,8 @@ class AppDio with DioMixin {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    if(options?.headers?['prevent-parallel'] == 'true') {
-      while(_requests.containsKey(path)) {
+    if (options?.headers?['prevent-parallel'] == 'true') {
+      while (_requests.containsKey(path)) {
         await Future.delayed(const Duration(milliseconds: 20));
       }
       _requests[path] = true;
@@ -204,6 +206,9 @@ class AppDio with DioMixin {
         proxySettings: proxy == null
             ? const rhttp.ProxySettings.noProxy()
             : rhttp.ProxySettings.proxy(proxy!),
+        tlsSettings: rhttp.TlsSettings(
+          verifyCertificates: !ignoreCertificateErrors,
+        ),
       ));
     }
     try {
@@ -216,9 +221,8 @@ class AppDio with DioMixin {
         onSendProgress: onSendProgress,
         onReceiveProgress: onReceiveProgress,
       );
-    }
-    finally {
-      if(_requests.containsKey(path)) {
+    } finally {
+      if (_requests.containsKey(path)) {
         _requests.remove(path);
       }
     }
@@ -237,6 +241,9 @@ class RHttpAdapter implements HttpClientAdapter {
         keepAlivePing: Duration(seconds: 30),
       ),
       throwOnStatusCode: false,
+      tlsSettings: rhttp.TlsSettings(
+        verifyCertificates: !AppDio.ignoreCertificateErrors,
+      ),
     );
   }
 
@@ -284,7 +291,7 @@ class RHttpAdapter implements HttpClientAdapter {
       headers[key]!.add(entry.$2);
     }
     var data = res.body;
-    if(headers['content-encoding']?.contains('gzip') ?? false) {
+    if (headers['content-encoding']?.contains('gzip') ?? false) {
       // rhttp does not support gzip decoding
       data = gzip.decoder.bind(data).map((data) => Uint8List.fromList(data));
     }
