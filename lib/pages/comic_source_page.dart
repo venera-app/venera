@@ -55,10 +55,10 @@ class ComicSourcePage extends StatefulWidget {
       title: "Updates Available".tl,
       content: msg,
       confirmText: "Update",
-      onConfirm: () {
+      onConfirm: () async {
         for (var key in shouldUpdate) {
           var source = ComicSource.find(key);
-          _BodyState.update(source!);
+          await _BodyState.update(source!);
         }
       },
     );
@@ -277,7 +277,7 @@ class _BodyState extends State<_Body> {
     }
   }
 
-  static void update(ComicSource source) async {
+  static Future<void> update(ComicSource source) async {
     if (!source.url.isURL) {
       App.rootContext.showMessage(message: "Invalid url config");
       return;
