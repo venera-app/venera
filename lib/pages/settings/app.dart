@@ -36,12 +36,12 @@ class _AppSettingsState extends State<AppSettings> {
             if (App.isAndroid) {
               var channel = const MethodChannel("venera/storage");
               var permission = await channel.invokeMethod('');
-              if(permission != true) {
+              if (permission != true) {
                 context.showMessage(message: "Permission denied".tl);
                 return;
               }
               var path = await selectDirectory();
-              if(path != null) {
+              if (path != null) {
                 // check if the path is writable
                 var testFile = File(FilePath.join(path, "test"));
                 try {
@@ -177,6 +177,29 @@ class _AppSettingsState extends State<AppSettings> {
             App.forceRebuild();
           },
         ).toSliver(),
+        if (!App.isLinux)
+          _SwitchSetting(
+            title: "Authorization Required".tl,
+            settingKey: "authorizationRequired",
+            onChanged: () async {
+              var current = appdata.settings['authorizationRequired'];
+              if (current) {
+                final auth = LocalAuthentication();
+                final bool canAuthenticateWithBiometrics =
+                    await auth.canCheckBiometrics;
+                final bool canAuthenticate = canAuthenticateWithBiometrics ||
+                    await auth.isDeviceSupported();
+                if (!canAuthenticate) {
+                  context.showMessage(message: "Biometrics not supported".tl);
+                  setState(() {
+                    appdata.settings['authorizationRequired'] = false;
+                  });
+                  appdata.saveData();
+                  return;
+                }
+              }
+            },
+          ).toSliver(),
       ],
     );
   }

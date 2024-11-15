@@ -120,6 +120,7 @@ class _Settings with ChangeNotifier {
     'enableTurnPageByVolumeKey': true,
     'enableClockAndBatteryInfoInReader': true,
     'ignoreCertificateErrors': false,
+    'authorizationRequired': false,
   };
 
   operator [](String key) {
