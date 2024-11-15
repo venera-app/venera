@@ -210,7 +210,9 @@
     "Update Comics Info": "更新漫画信息",
     "Create Folder": "新建文件夹",
     "Select an image on screen": "选择屏幕上的图片",
-    "Added @count comics to download queue.": "已添加 @count 本漫画到下载队列"
+    "Added @count comics to download queue.": "已添加 @count 本漫画到下载队列",
+    "Ignore Certificate Errors": "忽略证书错误",
+    "Authorization Required": "需要身份验证"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -423,6 +425,8 @@
     "Update Comics Info": "更新漫畫信息",
     "Create Folder": "新建文件夾",
     "Select an image on screen": "選擇屏幕上的圖片",
-    "Added @count comics to download queue.": "已添加 @count 本漫畫到下載隊列"
+    "Added @count comics to download queue.": "已添加 @count 本漫畫到下載隊列",
+    "Ignore Certificate Errors": "忽略證書錯誤",
+    "Authorization Required": "需要身份驗證"
   }
 }

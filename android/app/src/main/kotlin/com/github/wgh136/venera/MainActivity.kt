@@ -10,10 +10,11 @@ import android.view.KeyEvent
 import android.Manifest
 import android.os.Environment
 import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
@@ -22,81 +23,14 @@ import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     var volumeListen = VolumeListen()
     var listening = false
-
-    private val pickDirectoryCode = 1
 
     private lateinit var result: MethodChannel.Result
 
     private val storageRequestCode = 0x10
     private var storagePermissionRequest: ((Boolean) -> Unit)? = null
-
-    private val selectFileCode = 0x11
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == pickDirectoryCode) {
-            if(resultCode != Activity.RESULT_OK) {
-                result.success(null)
-                return
-            }
-            val pickedDirectoryUri = data?.data
-            if (pickedDirectoryUri == null) {
-                result.success(null)
-                return
-            }
-            Thread {
-                try {
-                    result.success(onPickedDirectory(pickedDirectoryUri))
-                }
-                catch (e: Exception) {
-                    result.error("Failed to Copy Files", e.toString(), null)
-                }
-            }.start()
-        } else if (requestCode == storageRequestCode) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                storagePermissionRequest?.invoke(Environment.isExternalStorageManager())
-            }
-            storagePermissionRequest = null
-        } else if (requestCode == selectFileCode) {
-            if (resultCode != Activity.RESULT_OK) {
-                result.success(null)
-                return
-            }
-            val uri = data?.data
-            if (uri == null) {
-                result.success(null)
-                return
-            }
-            val contentResolver = context.contentResolver
-            val file = DocumentFile.fromSingleUri(context, uri)
-            if (file == null) {
-                result.success(null)
-                return
-            }
-            val fileName = file.name
-            if (fileName == null) {
-                result.success(null)
-                return
-            }
-            // copy file to cache directory
-            val cacheDir = context.cacheDir
-            val newFile = File(cacheDir, fileName)
-            val inputStream = contentResolver.openInputStream(uri)
-            if (inputStream == null) {
-                result.success(null)
-                return
-            }
-            val outputStream = FileOutputStream(newFile)
-            inputStream.copyTo(outputStream)
-            inputStream.close()
-            outputStream.close()
-            // send file path to flutter
-            result.success(newFile.absolutePath)
-        }
-    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
@@ -115,12 +49,30 @@ class MainActivity : FlutterActivity() {
                     }
                     res.success(null)
                 }
+
                 "getDirectoryPath" -> {
-                    this.result = res
                     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                    startActivityForResult(intent, pickDirectoryCode)
+                    val launcher =
+                        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
+                            if (activityResult.resultCode != Activity.RESULT_OK) {
+                                result.success(null)
+                            }
+                            val pickedDirectoryUri = activityResult.data?.data
+                            if (pickedDirectoryUri == null)
+                                result.success(null)
+                            else
+                                Thread {
+                                    try {
+                                        result.success(onPickedDirectory(pickedDirectoryUri))
+                                    } catch (e: Exception) {
+                                        result.error("Failed to Copy Files", e.toString(), null)
+                                    }
+                                }.start()
+                        }
+                    launcher.launch(intent)
                 }
+
                 else -> res.notImplemented()
             }
         }
@@ -137,6 +89,7 @@ class MainActivity : FlutterActivity() {
                         events.success(2)
                     }
                 }
+
                 override fun onCancel(arguments: Any?) {
                     listening = false
                 }
@@ -144,7 +97,7 @@ class MainActivity : FlutterActivity() {
 
         val storageChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/storage")
         storageChannel.setMethodCallHandler { _, res ->
-            requestStoragePermission {result ->
+            requestStoragePermission { result ->
                 res.success(result)
             }
         }
@@ -167,12 +120,13 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if(listening){
+        if (listening) {
             when (keyCode) {
                 KeyEvent.KEYCODE_VOLUME_DOWN -> {
                     volumeListen.down()
                     return true
                 }
+
                 KeyEvent.KEYCODE_VOLUME_UP -> {
                     volumeListen.up()
                     return true
@@ -184,8 +138,8 @@ class MainActivity : FlutterActivity() {
 
     /// copy the directory to tmp directory, return copied directory
     private fun onPickedDirectory(uri: Uri): String {
-        val contentResolver = context.contentResolver
-        var tmp = context.cacheDir
+        val contentResolver = contentResolver
+        var tmp = cacheDir
         tmp = File(tmp, "getDirectoryPathTemp")
         tmp.mkdir()
         copyDirectory(contentResolver, uri, tmp)
@@ -194,9 +148,9 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun copyDirectory(resolver: ContentResolver, srcUri: Uri, destDir: File) {
-        val src = DocumentFile.fromTreeUri(context, srcUri) ?: return
+        val src = DocumentFile.fromTreeUri(this, srcUri) ?: return
         for (file in src.listFiles()) {
-            if(file.isDirectory) {
+            if (file.isDirectory) {
                 val newDir = File(destDir, file.name!!)
                 newDir.mkdir()
                 copyDirectory(resolver, file.uri, newDir)
@@ -212,7 +166,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun requestStoragePermission(result: (Boolean) -> Unit) {
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             val readPermission = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -241,8 +195,11 @@ class MainActivity : FlutterActivity() {
                 try {
                     val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                     intent.addCategory("android.intent.category.DEFAULT")
-                    intent.data = Uri.parse("package:" + context.packageName)
-                    startActivityForResult(intent, storageRequestCode)
+                    intent.data = Uri.parse("package:$packageName")
+                    val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+                        result(Environment.isExternalStorageManager())
+                    }
+                    launcher.launch(intent)
                 } catch (e: Exception) {
                     result(false)
                 }
@@ -258,7 +215,7 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == storageRequestCode) {
+        if (requestCode == storageRequestCode) {
             storagePermissionRequest?.invoke(grantResults.all {
                 it == PackageManager.PERMISSION_GRANTED
             })
@@ -266,21 +223,57 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    fun openFile() {
+    private fun openFile() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "*/*"
-        startActivityForResult(intent, selectFileCode)
+        val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
+            if (activityResult.resultCode != Activity.RESULT_OK) {
+                result.success(null)
+            }
+            val uri = activityResult.data?.data
+            if (uri == null) {
+                result.success(null)
+                return@registerForActivityResult
+            }
+            val contentResolver = contentResolver
+            val file = DocumentFile.fromSingleUri(this, uri)
+            if (file == null) {
+                result.success(null)
+                return@registerForActivityResult
+            }
+            val fileName = file.name
+            if (fileName == null) {
+                result.success(null)
+                return@registerForActivityResult
+            }
+            // copy file to cache directory
+            val cacheDir = cacheDir
+            val newFile = File(cacheDir, fileName)
+            val inputStream = contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                result.success(null)
+                return@registerForActivityResult
+            }
+            val outputStream = FileOutputStream(newFile)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            // send file path to flutter
+            result.success(newFile.absolutePath)
+        }
+        launcher.launch(intent)
     }
 }
 
-class VolumeListen{
+class VolumeListen {
     var onUp = fun() {}
     var onDown = fun() {}
-    fun up(){
+    fun up() {
         onUp()
     }
-    fun down(){
+
+    fun down() {
         onDown()
     }
 }

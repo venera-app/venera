@@ -51,5 +51,7 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+    <string>Ensure that the operation is being performed by the user themselves.</string>
 </dict>
 </plist>
