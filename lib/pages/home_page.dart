@@ -89,11 +89,13 @@ class _SyncDataWidget extends StatefulWidget {
   State<_SyncDataWidget> createState() => _SyncDataWidgetState();
 }
 
-class _SyncDataWidgetState extends State<_SyncDataWidget> {
+class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     DataSync().addListener(update);
+    WidgetsBinding.instance.addObserver(this);
+    lastCheck = DateTime.now();
   }
 
   void update() {
@@ -106,6 +108,20 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> {
   void dispose() {
     super.dispose();
     DataSync().removeListener(update);
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  late DateTime lastCheck;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if(state == AppLifecycleState.resumed) {
+      if(DateTime.now().difference(lastCheck) > const Duration(minutes: 10)) {
+        lastCheck = DateTime.now();
+        DataSync().downloadData();
+      }
+    }
   }
 
   @override
