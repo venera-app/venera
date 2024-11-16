@@ -212,7 +212,10 @@
     "Select an image on screen": "选择屏幕上的图片",
     "Added @count comics to download queue.": "已添加 @count 本漫画到下载队列",
     "Ignore Certificate Errors": "忽略证书错误",
-    "Authorization Required": "需要身份验证"
+    "Authorization Required": "需要身份验证",
+    "Sync": "同步",
+    "The folder is Linked to @source": "文件夹已关联到 @source",
+    "Source Folder": "源收藏夹"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -427,6 +430,9 @@
     "Select an image on screen": "選擇屏幕上的圖片",
     "Added @count comics to download queue.": "已添加 @count 本漫畫到下載隊列",
     "Ignore Certificate Errors": "忽略證書錯誤",
-    "Authorization Required": "需要身份驗證"
+    "Authorization Required": "需要身份驗證",
+    "Sync": "同步",
+    "The folder is Linked to @source": "文件夾已關聯到 @source",
+    "Source Folder": "源收藏夾"
   }
 }

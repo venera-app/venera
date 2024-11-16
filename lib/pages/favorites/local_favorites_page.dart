@@ -14,6 +14,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   late List<FavoriteItem> comics;
 
+  String? networkSource;
+  String? networkFolder;
+
   void updateComics() {
     setState(() {
       comics = LocalFavoritesManager().getAllComics(widget.folder);
@@ -24,6 +27,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   void initState() {
     favPage = context.findAncestorStateOfType<_FavoritesPageState>()!;
     comics = LocalFavoritesManager().getAllComics(widget.folder);
+    var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
+    networkSource = a;
+    networkFolder = b;
     super.initState();
   }
 
@@ -49,6 +55,51 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             child: Text(favPage.folder ?? "Unselected".tl),
           ),
           actions: [
+            if (networkSource != null)
+              Tooltip(
+                message: "Sync".tl,
+                child: Flyout(
+                  flyoutBuilder: (context) {
+                    var sourceName = ComicSource.find(networkSource!)?.name ??
+                        networkSource!;
+                    var text = "The folder is Linked to @source".tlParams({
+                      "source": sourceName,
+                    });
+                    if(networkFolder != null && networkFolder!.isNotEmpty) {
+                      text += "\n${"Source Folder".tl}: $networkFolder";
+                    }
+                    return FlyoutContent(
+                      title: "Sync".tl,
+                      content: Text(text),
+                      actions: [
+                        Button.filled(
+                          child: Text("Update".tl),
+                          onPressed: () {
+                            context.pop();
+                            importNetworkFolder(
+                              networkSource!,
+                              widget.folder,
+                              networkFolder!,
+                            ).then(
+                              (value) {
+                                updateComics();
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                  child: Builder(builder: (context) {
+                    return IconButton(
+                      icon: const Icon(Icons.sync),
+                      onPressed: () {
+                        Flyout.of(context).show();
+                      },
+                    );
+                  }),
+                ),
+              ),
             MenuButton(
               entries: [
                 MenuEntry(
