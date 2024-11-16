@@ -1,19 +1,27 @@
 package com.github.wgh136.venera
 
+import android.Manifest
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.view.KeyEvent
-import android.Manifest
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.Settings
+import android.view.KeyEvent
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import dev.flutter.packages.file_selector_android.FileUtils
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -21,16 +29,42 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Exception
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : FlutterFragmentActivity() {
     var volumeListen = VolumeListen()
     var listening = false
 
-    private lateinit var result: MethodChannel.Result
-
     private val storageRequestCode = 0x10
     private var storagePermissionRequest: ((Boolean) -> Unit)? = null
+
+    private val nextLocalRequestCode = AtomicInteger()
+
+    private fun <I, O> startContractForResult(
+        contract: ActivityResultContract<I, O>,
+        input: I,
+        callback: ActivityResultCallback<O>
+    ) {
+        val key = "activity_rq_for_result#${nextLocalRequestCode.getAndIncrement()}"
+        val registry = activityResultRegistry
+        var launcher: ActivityResultLauncher<I>? = null
+        val observer = object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                if (Lifecycle.Event.ON_DESTROY == event) {
+                    launcher?.unregister()
+                    lifecycle.removeObserver(this)
+                }
+            }
+        }
+        lifecycle.addObserver(observer)
+        val newCallback = ActivityResultCallback<O> {
+            launcher?.unregister()
+            lifecycle.removeObserver(observer)
+            callback.onActivityResult(it)
+        }
+        launcher = registry.register(key, contract, newCallback)
+        launcher.launch(input)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
@@ -53,24 +87,21 @@ class MainActivity : FlutterFragmentActivity() {
                 "getDirectoryPath" -> {
                     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                    val launcher =
-                        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
-                            if (activityResult.resultCode != Activity.RESULT_OK) {
-                                result.success(null)
-                            }
-                            val pickedDirectoryUri = activityResult.data?.data
-                            if (pickedDirectoryUri == null)
-                                result.success(null)
-                            else
-                                Thread {
-                                    try {
-                                        result.success(onPickedDirectory(pickedDirectoryUri))
-                                    } catch (e: Exception) {
-                                        result.error("Failed to Copy Files", e.toString(), null)
-                                    }
-                                }.start()
+                    startContractForResult(ActivityResultContracts.StartActivityForResult(), intent) { activityResult ->
+                        if (activityResult.resultCode != Activity.RESULT_OK) {
+                            res.success(null)
+                            return@startContractForResult
                         }
-                    launcher.launch(intent)
+                        val pickedDirectoryUri = activityResult.data?.data
+                        if (pickedDirectoryUri == null)
+                            res.success(null)
+                        else
+                            try {
+                                res.success(onPickedDirectory(pickedDirectoryUri))
+                            } catch (e: Exception) {
+                                res.error("Failed to Copy Files", e.toString(), null)
+                            }
+                    }
                 }
 
                 else -> res.notImplemented()
@@ -104,8 +135,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         val selectFileChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/select_file")
         selectFileChannel.setMethodCallHandler { _, res ->
-            openFile()
-            result = res
+            openFile(res)
         }
     }
 
@@ -138,13 +168,24 @@ class MainActivity : FlutterFragmentActivity() {
 
     /// copy the directory to tmp directory, return copied directory
     private fun onPickedDirectory(uri: Uri): String {
-        val contentResolver = contentResolver
-        var tmp = cacheDir
-        tmp = File(tmp, "getDirectoryPathTemp")
-        tmp.mkdir()
-        copyDirectory(contentResolver, uri, tmp)
+        if (!hasStoragePermission()) {
+            // dart:io cannot access the directory without permission.
+            // so we need to copy the directory to cache directory
+            val contentResolver = contentResolver
+            var tmp = cacheDir
+            tmp = File(tmp, "getDirectoryPathTemp")
+            tmp.mkdir()
+            Thread {
+                copyDirectory(contentResolver, uri, tmp)
+            }.start()
 
-        return tmp.absolutePath
+            return tmp.absolutePath
+        } else {
+            val docId = DocumentsContract.getTreeDocumentId(uri)
+            val split: Array<String?> = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            return if ((split.size >= 2) && (split[1] != null)) split[1]!!
+            else File.separator
+        }
     }
 
     private fun copyDirectory(resolver: ContentResolver, srcUri: Uri, destDir: File) {
@@ -162,6 +203,20 @@ class MainActivity : FlutterFragmentActivity() {
                 inputStream.close()
                 outputStream.close()
             }
+        }
+    }
+
+    private fun hasStoragePermission(): Boolean {
+        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            Environment.isExternalStorageManager()
         }
     }
 
@@ -196,10 +251,9 @@ class MainActivity : FlutterFragmentActivity() {
                     val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                     intent.addCategory("android.intent.category.DEFAULT")
                     intent.data = Uri.parse("package:$packageName")
-                    val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+                    startContractForResult(ActivityResultContracts.StartActivityForResult(), intent){ _ ->
                         result(Environment.isExternalStorageManager())
                     }
-                    launcher.launch(intent)
                 } catch (e: Exception) {
                     result(false)
                 }
@@ -223,29 +277,40 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun openFile() {
+    private fun openFile(result: MethodChannel.Result) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "*/*"
-        val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
+        startContractForResult(ActivityResultContracts.StartActivityForResult(), intent){ activityResult ->
             if (activityResult.resultCode != Activity.RESULT_OK) {
                 result.success(null)
+                return@startContractForResult
             }
             val uri = activityResult.data?.data
             if (uri == null) {
                 result.success(null)
-                return@registerForActivityResult
+                return@startContractForResult
             }
             val contentResolver = contentResolver
             val file = DocumentFile.fromSingleUri(this, uri)
             if (file == null) {
                 result.success(null)
-                return@registerForActivityResult
+                return@startContractForResult
             }
             val fileName = file.name
             if (fileName == null) {
                 result.success(null)
-                return@registerForActivityResult
+                return@startContractForResult
+            }
+            if(hasStoragePermission()) {
+                try {
+                    val filePath = FileUtils.getPathFromUri(this, uri)
+                    result.success(filePath)
+                    return@startContractForResult
+                }
+                catch (e: Exception) {
+                    // ignore
+                }
             }
             // copy file to cache directory
             val cacheDir = cacheDir
@@ -253,7 +318,7 @@ class MainActivity : FlutterFragmentActivity() {
             val inputStream = contentResolver.openInputStream(uri)
             if (inputStream == null) {
                 result.success(null)
-                return@registerForActivityResult
+                return@startContractForResult
             }
             val outputStream = FileOutputStream(newFile)
             inputStream.copyTo(outputStream)
@@ -262,7 +327,6 @@ class MainActivity : FlutterFragmentActivity() {
             // send file path to flutter
             result.success(newFile.absolutePath)
         }
-        launcher.launch(intent)
     }
 }
 
