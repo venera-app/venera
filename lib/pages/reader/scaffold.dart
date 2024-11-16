@@ -18,6 +18,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool get isOpen => _isOpen;
 
+  bool get isReversed => context.reader.mode == ReaderMode.galleryRightToLeft ||
+                       context.reader.mode == ReaderMode.continuousRightToLeft;
+
   int showFloatingButtonValue = 0;
 
   var lastValue = 0;
@@ -217,34 +220,26 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             children: [
               const SizedBox(width: 8),
               IconButton.filledTonal(
-                onPressed: () {
-                  if (!context.reader.toPrevChapter()) {
-                    context.reader.toPage(1);
-                  } else {
-                    if (showFloatingButtonValue != 0) {
-                      setState(() {
-                        showFloatingButtonValue = 0;
-                      });
-                    }
-                  }
-                },
+                onPressed: () => !isReversed
+                    ? context.reader.chapter > 1
+                        ? context.reader.toPrevChapter()
+                        : context.reader.toPage(1)
+                    : context.reader.chapter < context.reader.maxChapter
+                        ? context.reader.toNextChapter()
+                        : context.reader.toPage(context.reader.maxPage),
                 icon: const Icon(Icons.first_page),
               ),
               Expanded(
                 child: buildSlider(),
               ),
               IconButton.filledTonal(
-                  onPressed: () {
-                    if (!context.reader.toNextChapter()) {
-                      context.reader.toPage(context.reader.maxPage);
-                    } else {
-                      if (showFloatingButtonValue != 0) {
-                        setState(() {
-                          showFloatingButtonValue = 0;
-                        });
-                      }
-                    }
-                  },
+                onPressed: () => !isReversed
+                    ? context.reader.chapter < context.reader.maxChapter
+                        ? context.reader.toNextChapter()
+                        : context.reader.toPage(context.reader.maxPage)
+                  : context.reader.chapter > 1
+                        ? context.reader.toPrevChapter()
+                        : context.reader.toPage(1),
                   icon: const Icon(Icons.last_page)),
               const SizedBox(
                 width: 8,
@@ -379,12 +374,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   var sliderFocus = FocusNode();
 
   Widget buildSlider() {
-    return Slider(
+    return CustomSlider(
       focusNode: sliderFocus,
       value: context.reader.page.toDouble(),
       min: 1,
       max:
           context.reader.maxPage.clamp(context.reader.page, 1 << 16).toDouble(),
+      reversed: isReversed,
       divisions: (context.reader.maxPage - 1).clamp(2, 1 << 16),
       onChanged: (i) {
         context.reader.toPage(i.toInt());
