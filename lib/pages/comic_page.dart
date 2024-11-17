@@ -327,7 +327,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   Widget buildDescription() {
-    if (comic.description == null) {
+    if (comic.description == null || comic.description!.trim().isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
     return SliverToBoxAdapter(
@@ -392,6 +392,27 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           child: InkWell(
             borderRadius: borderRadius,
             onTap: onTap,
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: text));
+              context.showMessage(message: "Copied".tl);
+            },
+            onSecondaryTapDown: (details) {
+              showMenuX(context, details.globalPosition, [
+                MenuEntry(
+                  icon: Icons.remove_red_eye,
+                  text: "View".tl,
+                  onClick: onTap,
+                ),
+                MenuEntry(
+                  icon: Icons.copy,
+                  text: "Copy".tl,
+                  onClick: () {
+                    Clipboard.setData(ClipboardData(text: text));
+                    context.showMessage(message: "Copied".tl);
+                  },
+                ),
+              ]);
+            },
             child: Text(text).padding(padding),
           ),
         );
@@ -404,6 +425,26 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           child: Text(text).padding(padding),
         );
       }
+    }
+
+    String formatTime(String time) {
+      if (int.tryParse(time) != null) {
+        var t = int.tryParse(time);
+        if (t! > 1000000000000) {
+          return DateTime.fromMillisecondsSinceEpoch(t)
+              .toString()
+              .substring(0, 19);
+        } else {
+          return DateTime.fromMillisecondsSinceEpoch(t * 1000)
+              .toString()
+              .substring(0, 19);
+        }
+      }
+      if (time.contains('T') || time.contains('Z')) {
+        var t = DateTime.parse(time);
+        return t.toString().substring(0, 19);
+      }
+      return time;
     }
 
     Widget buildWrap({required List<Widget> children}) {
@@ -464,14 +505,14 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             buildWrap(
               children: [
                 buildTag(text: 'Upload Time'.tl, isTitle: true),
-                buildTag(text: comic.uploadTime!),
+                buildTag(text: formatTime(comic.uploadTime!)),
               ],
             ),
           if (comic.updateTime != null)
             buildWrap(
               children: [
                 buildTag(text: 'Update Time'.tl, isTitle: true),
-                buildTag(text: comic.updateTime!),
+                buildTag(text: formatTime(comic.updateTime!)),
               ],
             ),
           const SizedBox(height: 12),
@@ -575,7 +616,7 @@ abstract mixin class _ComicPageActions {
 
   void quickFavorite() {
     var folder = appdata.settings['quickFavorite'];
-    if(folder is! String) {
+    if (folder is! String) {
       return;
     }
     LocalFavoritesManager().addComic(
@@ -1037,7 +1078,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     if (!isInitialLoading && next == null) {
       return;
     }
-    if(isLoading) return;
+    if (isLoading) return;
     Future.microtask(() {
       setState(() {
         isLoading = true;
@@ -1610,10 +1651,12 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: FilledButton(
-                    onPressed: selected.isEmpty ? null : () {
-                      widget.finishSelect(selected);
-                      context.pop();
-                    },
+                    onPressed: selected.isEmpty
+                        ? null
+                        : () {
+                            widget.finishSelect(selected);
+                            context.pop();
+                          },
                     child: Text("Download Selected".tl),
                   ),
                 ),

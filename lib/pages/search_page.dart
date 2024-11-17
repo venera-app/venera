@@ -305,13 +305,24 @@ class _SearchPageState extends State<SearchPage> {
               ),
             );
           }
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            title: Text(appdata.searchHistory[index - 2]),
+          return InkWell(
             onTap: () {
               search(appdata.searchHistory[index - 2]);
             },
-          );
+            child: Container(
+              decoration: BoxDecoration(
+                // color: context.colorScheme.surfaceContainer,
+                border: Border(
+                  left: BorderSide(
+                    color: context.colorScheme.outlineVariant,
+                    width: 2,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(appdata.searchHistory[index - 2], style: ts.s14),
+            ),
+          ).paddingBottom(8).paddingHorizontal(4);
         },
         childCount: 2 + appdata.searchHistory.length,
       ),
@@ -490,7 +501,7 @@ class SearchOptionWidget extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           title: Text(option.label.ts(sourceKey)),
         ),
-        if(option.type == 'select')
+        if (option.type == 'select')
           Wrap(
             runSpacing: 8,
             spacing: 8,
@@ -504,7 +515,7 @@ class SearchOptionWidget extends StatelessWidget {
               );
             }).toList(),
           ),
-        if(option.type == 'multi-select')
+        if (option.type == 'multi-select')
           Wrap(
             runSpacing: 8,
             spacing: 8,
@@ -514,7 +525,7 @@ class SearchOptionWidget extends StatelessWidget {
                 isSelected: (jsonDecode(value) as List).contains(e.key),
                 onTap: () {
                   var list = jsonDecode(value) as List;
-                  if(list.contains(e.key)) {
+                  if (list.contains(e.key)) {
                     list.remove(e.key);
                   } else {
                     list.add(e.key);
@@ -524,7 +535,7 @@ class SearchOptionWidget extends StatelessWidget {
               );
             }).toList(),
           ),
-        if(option.type == 'dropdown')
+        if (option.type == 'dropdown')
           Select(
             current: option.options[value],
             values: option.options.values.toList(),
