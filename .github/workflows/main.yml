@@ -79,6 +79,10 @@ jobs:
         run: |
             echo "$STORE_FILE" | base64 --decode > android/keystore.jks
             echo "$PROPERTY_FILE" > android/key.properties
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '17'
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
@@ -90,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: install yq
-        run: winget install --id MikeFarah.yq
+        run: choco install yq -y
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
@@ -98,13 +102,13 @@ jobs:
           architecture: x64
       - name: install inno setup
         run: |
-          winget install -h --id JRSoftware.InnoSetup -e -s winget
-          $inno_path = "C:\Users\$env:UserName\AppData\Local\Programs\Inno Setup 6"
+          choco install innosetup -y
+          $inno_path = "C:\Program Files (x86)\Inno Setup 6"
           wget "https://raw.githubusercontent.com/kira-96/Inno-Setup-Chinese-Simplified-Translation/refs/heads/main/ChineseSimplified.isl" -OutFile "$inno_path\Languages\ChineseSimplified.isl"
       - run: flutter pub get
       - name: build
         run: |
-          $inno_path = "C:\Users\$env:UserName\AppData\Local\Programs\Inno Setup 6"
+          $inno_path = "C:\Program Files (x86)\Inno Setup 6\"
           $env:PATH += ";$inno_path"
           python windows/build.py
       - uses: actions/upload-artifact@v4
