@@ -190,7 +190,6 @@ class IOSDirectoryPicker {
       final String? path = await _channel.invokeMethod('selectDirectory');
       return path;
     } catch (e) {
-      print("Error selecting directory: $e");
       // 返回报错信息
       return e.toString();
     }

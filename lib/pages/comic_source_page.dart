@@ -40,7 +40,7 @@ class ComicSourcePage extends StatefulWidget {
     }
     controller?.close();
     if (shouldUpdate.isEmpty) {
-      if(!implicit) {
+      if (!implicit) {
         App.rootContext.showMessage(message: "No Update Available".tl);
       }
       return;
@@ -95,21 +95,9 @@ class _BodyState extends State<_Body> {
     return SmoothCustomScrollView(
       slivers: [
         buildCard(context),
-        buildSettings(),
         for (var source in ComicSource.all()) buildSource(context, source),
         SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
       ],
-    );
-  }
-
-  Widget buildSettings() {
-    return SliverToBoxAdapter(
-      child: ListTile(
-        leading: const Icon(Icons.update_outlined),
-        title: Text("Check updates".tl),
-        onTap: () => ComicSourcePage.checkComicSourceUpdate(false),
-        trailing: const Icon(Icons.arrow_right),
-      ),
     );
   }
 
@@ -181,11 +169,12 @@ class _BodyState extends State<_Body> {
             trailing: Select(
               current: (current as String).ts(source.key),
               values: (item.value['options'] as List)
-                  .map<String>(
-                      (e) => ((e['text'] ?? e['value']) as String).ts(source.key))
+                  .map<String>((e) =>
+                      ((e['text'] ?? e['value']) as String).ts(source.key))
                   .toList(),
               onTap: (i) {
-                source.data['settings'][key] = item.value['options'][i]['value'];
+                source.data['settings'][key] =
+                    item.value['options'][i]['value'];
                 source.saveData();
                 setState(() {});
               },
@@ -209,7 +198,8 @@ class _BodyState extends State<_Body> {
               source.data['settings'][key] ?? item.value['default'] ?? '';
           yield ListTile(
             title: Text((item.value['title'] as String).ts(source.key)),
-            subtitle: Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle:
+                Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
             trailing: IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
@@ -231,8 +221,7 @@ class _BodyState extends State<_Body> {
             ),
           );
         }
-      }
-      catch(e, s) {
+      } catch (e, s) {
         Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
       }
     }
@@ -305,55 +294,73 @@ class _BodyState extends State<_Body> {
   }
 
   Widget buildCard(BuildContext context) {
+    Widget buildButton({required Widget child, required VoidCallback onPressed}) {
+      return Button.normal(
+        onPressed: onPressed,
+        child: child,
+      ).fixHeight(32);
+    }
     return SliverToBoxAdapter(
-      child: Card.outlined(
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text("Add comic source".tl),
-                leading: const Icon(Icons.dashboard_customize),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text("Add comic source".tl),
+              leading: const Icon(Icons.dashboard_customize),
+            ),
+            TextField(
+              decoration: InputDecoration(
+                  hintText: "URL",
+                  border: const UnderlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  suffix: IconButton(
+                      onPressed: () => handleAddSource(url),
+                      icon: const Icon(Icons.check))),
+              onChanged: (value) {
+                url = value;
+              },
+              onSubmitted: handleAddSource,
+            ).paddingHorizontal(16).paddingBottom(8),
+            ListTile(
+              title: Text("Comic Source list".tl),
+              trailing: buildButton(
+                child: Text("View".tl),
+                onPressed: () {
+                  showPopUpWidget(
+                    App.rootContext,
+                    _ComicSourceList(handleAddSource),
+                  );
+                },
               ),
-              TextField(
-                      decoration: InputDecoration(
-                          hintText: "URL",
-                          border: const UnderlineInputBorder(),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                          suffix: IconButton(
-                              onPressed: () => handleAddSource(url),
-                              icon: const Icon(Icons.check))),
-                      onChanged: (value) {
-                        url = value;
-                      },
-                      onSubmitted: handleAddSource)
-                  .paddingHorizontal(16)
-                  .paddingBottom(32),
-              Row(
-                children: [
-                  TextButton(
-                          onPressed: _selectFile, child: Text("Select file".tl))
-                      .paddingLeft(8),
-                  const Spacer(),
-                  TextButton(
-                      onPressed: () {
-                        showPopUpWidget(
-                            App.rootContext, _ComicSourceList(handleAddSource));
-                      },
-                      child: Text("View list".tl)),
-                  const Spacer(),
-                  TextButton(onPressed: help, child: Text("Open help".tl))
-                      .paddingRight(8),
-                ],
+            ),
+            ListTile(
+              title: Text("Use a config file".tl),
+              trailing: buildButton(
+                onPressed: _selectFile,
+                child: Text("Select".tl),
               ),
-              const SizedBox(height: 8),
-            ],
-          ),
+            ),
+            ListTile(
+              title: Text("Help".tl),
+              trailing: buildButton(
+                onPressed: help,
+                child: Text("Open".tl),
+              ),
+            ),
+            ListTile(
+              title: Text("Check updates".tl),
+              trailing: buildButton(
+                onPressed: () => ComicSourcePage.checkComicSourceUpdate(false),
+                child: Text("Check".tl),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
-      ).paddingHorizontal(12),
+      ),
     );
   }
 
@@ -372,8 +379,7 @@ class _BodyState extends State<_Body> {
   }
 
   void help() {
-    launchUrlString(
-        "https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
+    launchUrlString("https://github.com/venera-app/venera-configs");
   }
 
   Future<void> handleAddSource(String url) async {

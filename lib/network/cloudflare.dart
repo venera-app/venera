@@ -1,7 +1,6 @@
 import 'dart:io' as io;
 
 import 'package:dio/dio.dart';
-import 'package:flutter_qjs/flutter_qjs.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/consts.dart';

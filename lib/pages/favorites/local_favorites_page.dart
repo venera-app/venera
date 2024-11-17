@@ -187,7 +187,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       });
                     }),
                 MenuEntry(
-                    icon: Icons.update,
+                    icon: Icons.download,
                     text: "Download All".tl,
                     onClick: () async {
                       int count = 0;

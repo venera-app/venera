@@ -136,6 +136,8 @@ class ComicSource {
     notifyListeners();
   }
 
+  static bool get isEmpty => _sources.isEmpty;
+
   /// Name of this source.
   final String name;
 

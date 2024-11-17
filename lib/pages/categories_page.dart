@@ -30,8 +30,15 @@ class CategoriesPage extends StatelessWidget {
             .toList();
 
         if(categories.isEmpty) {
+          var msg = "No Category Pages".tl;
+          msg += '\n';
+          if(ComicSource.isEmpty) {
+            msg += "Add a comic source in home page".tl;
+          } else {
+            msg += "Please check your settings".tl;
+          }
           return NetworkError(
-            message: "No Category Pages".tl,
+            message: msg,
             retry: () {
               controller.update();
             },
@@ -248,36 +255,19 @@ class _CategoryPage extends StatelessWidget {
 
   Widget buildTag(String tag, ClickTagCallback onClick,
       [String? namespace, String? param]) {
-    String translateTag(String tag) {
-      /*
-      // TODO: Implement translation
-      if (enableTranslation) {
-        if (namespace != null) {
-          tag = TagsTranslation.translationTagWithNamespace(tag, namespace);
-        } else {
-          tag = tag.translateTagsToCN;
-        }
-      }
-
-       */
-      return tag;
-    }
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       child: Builder(
         builder: (context) {
           return Material(
-            elevation: 0.6,
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-            color: context.colorScheme.surfaceContainerLow,
-            surfaceTintColor: Colors.transparent,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            color: context.colorScheme.primaryContainer.withOpacity(0.72),
             child: InkWell(
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
               onTap: () => onClick(tag, param),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Text(translateTag(tag)),
+                child: Text(tag),
               ),
             ),
           );
