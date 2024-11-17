@@ -93,25 +93,18 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install yq
-        run: choco install yq -y
-      - name: install wget
-        run: choco install wget -y
+      - name: install dependencies
+        run: | 
+          choco install yq -y
+          pip install httpx
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           flutter-version-file: pubspec.yaml
           architecture: x64
-      - name: install inno setup
-        run: |
-          choco install innosetup -y
-          $inno_path = "C:\Program Files (x86)\Inno Setup 6"
-          wget "https://raw.githubusercontent.com/kira-96/Inno-Setup-Chinese-Simplified-Translation/refs/heads/main/ChineseSimplified.isl" -OutFile "$inno_path\Languages\ChineseSimplified.isl"
-      - run: flutter pub get
       - name: build
         run: |
-          $inno_path = "C:\Program Files (x86)\Inno Setup 6\"
-          $env:PATH += ";$inno_path"
+          flutter pub get
           python windows/build.py
       - uses: actions/upload-artifact@v4
         with:
