@@ -19,6 +19,7 @@ import 'package:pointycastle/block/modes/cfb.dart';
 import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:uuid/uuid.dart';
+import 'package:venera/foundation/app.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
 
@@ -70,6 +71,7 @@ class JsEngine with _JSEngineApi {
       var setGlobalFunc =
           _engine!.evaluate("(key, value) => { this[key] = value; }");
       (setGlobalFunc as JSInvokable)(["sendMessage", _messageReceiver]);
+      setGlobalFunc(["appVersion", App.version]);
       setGlobalFunc.free();
       var jsInit = await rootBundle.load("assets/init.js");
       _engine!

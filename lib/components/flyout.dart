@@ -51,6 +51,10 @@ class Flyout extends StatefulWidget {
 
   @override
   State<Flyout> createState() => FlyoutState();
+
+  static FlyoutState of(BuildContext context) {
+    return context.findAncestorStateOfType<FlyoutState>()!;
+  }
 }
 
 class FlyoutState extends State<Flyout> {

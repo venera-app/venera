@@ -288,3 +288,178 @@ Future<void> sortFolders() async {
 
   LocalFavoritesManager().updateOrder(folders);
 }
+
+Future<void> importNetworkFolder(
+  String source,
+  String? folder,
+  String? folderID,
+) async {
+  var comicSource = ComicSource.find(source);
+  if (comicSource == null) {
+    return;
+  }
+  if(folder != null && folder.isEmpty) {
+    folder = null;
+  }
+  var resultName = folder ?? comicSource.name;
+  var exists = LocalFavoritesManager().existsFolder(resultName);
+  if (exists) {
+    if (!LocalFavoritesManager()
+        .isLinkedToNetworkFolder(resultName, source, folderID ?? "")) {
+      App.rootContext.showMessage(message: "Folder already exists".tl);
+      return;
+    }
+  }
+  if(!exists) {
+    LocalFavoritesManager().createFolder(resultName);
+    LocalFavoritesManager().linkFolderToNetwork(
+      resultName,
+      source,
+      folderID ?? "",
+    );
+  }
+
+  var current = 0;
+  var isFinished = false;
+  String? next;
+
+  Future<void> fetchNext() async {
+    var retry = 3;
+
+    while (true) {
+      try {
+        if (comicSource.favoriteData?.loadComic != null) {
+          next ??= '1';
+          var page = int.parse(next!);
+          var res = await comicSource.favoriteData!.loadComic!(page, folderID);
+          var count = 0;
+          for (var c in res.data) {
+            var result = LocalFavoritesManager().addComic(
+              resultName,
+              FavoriteItem(
+                id: c.id,
+                name: c.title,
+                coverPath: c.cover,
+                type: ComicType(source.hashCode),
+                author: c.subtitle ?? '',
+                tags: c.tags ?? [],
+              ),
+            );
+            if (result) {
+              count++;
+            }
+          }
+          current += count;
+          if (res.data.isEmpty || res.subData == page) {
+            isFinished = true;
+            next = null;
+          } else {
+            next = (page + 1).toString();
+          }
+        } else if (comicSource.favoriteData?.loadNext != null) {
+          var res = await comicSource.favoriteData!.loadNext!(next, folderID);
+          var count = 0;
+          for (var c in res.data) {
+            var result = LocalFavoritesManager().addComic(
+              resultName,
+              FavoriteItem(
+                id: c.id,
+                name: c.title,
+                coverPath: c.cover,
+                type: ComicType(source.hashCode),
+                author: c.subtitle ?? '',
+                tags: c.tags ?? [],
+              ),
+            );
+            if (result) {
+              count++;
+            }
+          }
+          current += count;
+          if (res.data.isEmpty || res.subData == null) {
+            isFinished = true;
+            next = null;
+          } else {
+            next = res.subData;
+          }
+        } else {
+          throw "Unsupported source";
+        }
+        return;
+      } catch (e) {
+        retry--;
+        if (retry == 0) {
+          rethrow;
+        }
+        continue;
+      }
+    }
+  }
+
+  bool isCanceled = false;
+  String? errorMsg;
+  bool isErrored() => errorMsg != null;
+
+  void Function()? updateDialog;
+
+  showDialog(
+    context: App.rootContext,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          updateDialog = () => setState(() {});
+          return ContentDialog(
+            title: isFinished
+                ? "Finished".tl
+                : isErrored()
+                    ? "Error".tl
+                    : "Importing".tl,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: isFinished ? 1 : null,
+                ),
+                const SizedBox(height: 4),
+                Text("Imported @c comics".tlParams({
+                  "c": current,
+                })),
+                const SizedBox(height: 4),
+                if (isErrored()) Text("Error: $errorMsg"),
+              ],
+            ).paddingHorizontal(16),
+            actions: [
+              Button.filled(
+                color: (isFinished || isErrored())
+                    ? null
+                    : context.colorScheme.error,
+                onPressed: () {
+                  isCanceled = true;
+                  context.pop();
+                },
+                child: (isFinished || isErrored())
+                    ? Text("OK".tl)
+                    : Text("Cancel".tl),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  ).then((_) {
+    isCanceled = true;
+  });
+
+  while (!isFinished && !isCanceled) {
+    try {
+      await fetchNext();
+      updateDialog?.call();
+    } catch (e) {
+      errorMsg = e.toString();
+      updateDialog?.call();
+      break;
+    }
+  }
+}

@@ -10,7 +10,7 @@ void handleLinks() {
   });
 }
 
-void handleAppLink(Uri uri) async {
+Future<bool> handleAppLink(Uri uri) async {
   for(var source in ComicSource.all()) {
     if(source.linkHandler != null) {
       if(source.linkHandler!.domains.contains(uri.host)) {
@@ -22,9 +22,11 @@ void handleAppLink(Uri uri) async {
           App.mainNavigatorKey!.currentContext?.to(() {
             return ComicPage(id: id, sourceKey: source.key);
           });
+          return true;
         }
-        return;
+        return false;
       }
     }
   }
+  return false;
 }

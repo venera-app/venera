@@ -108,6 +108,17 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
           onTap: context.width < _kTwoPanelChangeWidth ? showFolders : null,
           child: Text(widget.data.title),
         ),
+        actions: [
+          MenuButton(entries: [
+            MenuEntry(
+              icon: Icons.sync,
+              text: "Convert to local".tl,
+              onClick: () {
+                importNetworkFolder(widget.data.key, null, null);
+              },
+            )
+          ]),
+        ],
       ),
       errorLeading: Appbar(
         leading: Tooltip(
@@ -533,6 +544,17 @@ class _FavoriteFolder extends StatelessWidget {
       key: comicListKey,
       leadingSliver: SliverAppbar(
         title: Text(title),
+        actions: [
+          MenuButton(entries: [
+            MenuEntry(
+              icon: Icons.sync,
+              text: "Convert to local".tl,
+              onClick: () {
+                importNetworkFolder(data.key, title, folderID);
+              },
+            )
+          ]),
+        ],
       ),
       errorLeading: Appbar(
         title: Text(title),

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
-import 'package:venera/network/app_dio.dart';
+import 'package:venera/pages/auth_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/main_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
@@ -65,13 +65,57 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     checkUpdates();
     App.registerForceRebuild(forceRebuild);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  bool isAuthPageActive = false;
+
+  OverlayEntry? hideContentOverlay;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(!App.isMobile) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive && hideContentOverlay == null) {
+      hideContentOverlay = OverlayEntry(
+        builder: (context) {
+          return Positioned.fill(
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: App.rootContext.colorScheme.surface,
+            ),
+          );
+        },
+      );
+      Overlay.of(App.rootContext).insert(hideContentOverlay!);
+    } else if (hideContentOverlay != null &&
+        state == AppLifecycleState.resumed) {
+      hideContentOverlay!.remove();
+      hideContentOverlay = null;
+    }
+    if (state == AppLifecycleState.hidden &&
+        appdata.settings['authorizationRequired'] &&
+        !isAuthPageActive) {
+      isAuthPageActive = true;
+      App.rootContext.to(
+        () => AuthPage(
+          onSuccessfulAuth: () {
+            App.rootContext.pop();
+            isAuthPageActive = false;
+          },
+        ),
+      );
+    }
+    super.didChangeAppLifecycleState(state);
   }
 
   void forceRebuild() {
@@ -86,14 +130,25 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    Widget home;
+    if (appdata.settings['authorizationRequired']) {
+      home = AuthPage(
+        onSuccessfulAuth: () {
+          App.rootContext.toReplacement(() => const MainPage());
+        },
+      );
+    } else {
+      home = const MainPage();
+    }
     return MaterialApp(
-      home: const MainPage(),
+      home: home,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: App.mainColor,
           surface: Colors.white,
           primary: App.mainColor.shade600,
+          // ignore: deprecated_member_use
           background: Colors.white,
         ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
@@ -105,6 +160,7 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
           surface: Colors.black,
           primary: App.mainColor.shade400,
+          // ignore: deprecated_member_use
           background: Colors.black,
         ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
@@ -171,12 +227,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   void checkUpdates() async {
-    if(!appdata.settings['checkUpdateOnStart']) {
+    if (!appdata.settings['checkUpdateOnStart']) {
       return;
     }
     var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
     var now = DateTime.now().millisecondsSinceEpoch;
-    if(now - lastCheck < 24 * 60 * 60 * 1000) {
+    if (now - lastCheck < 24 * 60 * 60 * 1000) {
       return;
     }
     appdata.implicitData['lastCheckUpdate'] = now;

@@ -33,9 +33,10 @@ class _SwitchSettingState extends State<_SwitchSetting> {
         onChanged: (value) {
           setState(() {
             appdata.settings[widget.settingKey] = value;
-            appdata.saveData();
           });
-          widget.onChanged?.call();
+          appdata.saveData().then((_) {
+            widget.onChanged?.call();
+          });
         },
       ),
     );
@@ -133,7 +134,9 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
                   builder: (context) {
                     return ContentDialog(
                       title: "Help".tl,
-                      content: Text(widget.help!).paddingHorizontal(16).fixWidth(double.infinity),
+                      content: Text(widget.help!)
+                          .paddingHorizontal(16)
+                          .fixWidth(double.infinity),
                       actions: [
                         Button.filled(
                           onPressed: context.pop,
@@ -158,8 +161,9 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
         var rect = offset & size;
         showMenu(
           elevation: 3,
-          color: context.colorScheme.surface,
-          surfaceTintColor: Colors.transparent,
+          color: context.brightness == Brightness.light
+              ? const Color(0xFFF6F6F6)
+              : const Color(0xFF1E1E1E),
           context: context,
           position: RelativeRect.fromRect(
             rect,
@@ -229,7 +233,9 @@ class _EndSelectorSelectSettingState extends State<_EndSelectorSelectSetting> {
                   builder: (context) {
                     return ContentDialog(
                       title: "Help".tl,
-                      content: Text(widget.help!).paddingHorizontal(16).fixWidth(double.infinity),
+                      content: Text(widget.help!)
+                          .paddingHorizontal(16)
+                          .fixWidth(double.infinity),
                       actions: [
                         Button.filled(
                           onPressed: context.pop,
@@ -458,24 +464,31 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
       }
     });
     showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: const Text("Add"),
+      context: context,
+      builder: (context) {
+        return ContentDialog(
+          title: "Add".tl,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: canAdd.entries
-                .map((e) => InkWell(
-                      child: ListTile(title: Text(e.value), key: Key(e.key)),
-                      onTap: () {
-                        context.pop();
-                        setState(() {
-                          keys.add(e.key);
-                        });
-                        updateSetting();
-                      },
-                    ))
+                .map(
+                  (e) => ListTile(
+                    title: Text(e.value),
+                    key: Key(e.key),
+                    onTap: () {
+                      context.pop();
+                      setState(() {
+                        keys.add(e.key);
+                      });
+                      updateSetting();
+                    },
+                  ),
+                )
                 .toList(),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 
   void updateSetting() {
