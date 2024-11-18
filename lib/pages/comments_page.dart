@@ -630,7 +630,7 @@ class _RichCommentContentState extends State<_RichCommentContent> {
   }
 
   bool isValidUrlChar(String char) {
-    return RegExp(r'[a-zA-Z0-9%:/.@\-_?&=#*!]').hasMatch(char);
+    return RegExp(r'[a-zA-Z0-9%:/.@\-_?&=#*!+;]').hasMatch(char);
   }
 
   void render() {
