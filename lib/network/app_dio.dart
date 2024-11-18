@@ -110,30 +110,18 @@ class AppDio with DioMixin {
 
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
-    httpClientAdapter = RHttpAdapter(const rhttp.ClientSettings());
+    httpClientAdapter = RHttpAdapter(rhttp.ClientSettings(
+      proxySettings: proxy == null
+          ? const rhttp.ProxySettings.noProxy()
+          : rhttp.ProxySettings.proxy(proxy!),
+      tlsSettings: rhttp.TlsSettings(
+        verifyCertificates: !ignoreCertificateErrors,
+      ),
+    ));
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
     interceptors.add(CloudflareInterceptor());
     interceptors.add(MyLogInterceptor());
-  }
-
-  static HttpClient createHttpClient() {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 5);
-    client.findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
-    client.idleTimeout = const Duration(seconds: 100);
-    client.badCertificateCallback =
-        (X509Certificate cert, String host, int port) {
-      if (ignoreCertificateErrors) return true;
-      if (host.contains("cdn")) return true;
-      final ipv4RegExp = RegExp(
-          r'^((25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3})$');
-      if (ipv4RegExp.hasMatch(host)) {
-        return true;
-      }
-      return false;
-    };
-    return client;
   }
 
   static String? proxy;
