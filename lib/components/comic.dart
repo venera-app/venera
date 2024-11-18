@@ -320,13 +320,41 @@ class ComicTile extends StatelessWidget {
         ));
   }
 
+  List<String> _splitText(String text) {
+    // split text by space, comma. text in brackets will be kept together.
+    var words = <String>[];
+    var buffer = StringBuffer();
+    var inBracket = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (c == '[' || c == '(') {
+        inBracket = true;
+      } else if (c == ']' || c == ')') {
+        inBracket = false;
+      } else if (c == ' ' || c == ',') {
+        if (inBracket) {
+          buffer.write(c);
+        } else {
+          words.add(buffer.toString());
+          buffer.clear();
+        }
+      } else {
+        buffer.write(c);
+      }
+    }
+    if (buffer.isNotEmpty) {
+      words.add(buffer.toString());
+    }
+    return words;
+  }
+
   void block(BuildContext comicTileContext) {
     showDialog(
       context: App.rootContext,
       builder: (context) {
         var words = <String>[];
         var all = <String>[];
-        all.addAll(comic.title.split(' ').where((element) => element != ''));
+        all.addAll(_splitText(comic.title));
         if (comic.subtitle != null && comic.subtitle != "") {
           all.add(comic.subtitle!);
         }
