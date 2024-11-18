@@ -70,6 +70,8 @@ class AppWebview extends StatefulWidget {
 
   final bool singlePage;
 
+  static WebViewEnvironment? webViewEnvironment;
+
   @override
   State<AppWebview> createState() => _AppWebviewState();
 }
@@ -117,7 +119,50 @@ class _AppWebviewState extends State<AppWebview> {
       )
     ];
 
-    Widget body = InAppWebView(
+    Widget body = (App.isWindows && AppWebview.webViewEnvironment == null)
+        ? FutureBuilder(
+            future: WebViewEnvironment.create(
+              settings: WebViewEnvironmentSettings(
+                userDataFolder: "${App.dataPath}\\webview",
+              ),
+            ),
+            builder: (context, e) {
+              if(e.error != null) {
+                return Center(child: Text("Error: ${e.error}"));
+              }
+              if(e.data == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              AppWebview.webViewEnvironment = e.data;
+              return createWebviewWithEnvironment(AppWebview.webViewEnvironment);
+            },
+          )
+        : createWebviewWithEnvironment(AppWebview.webViewEnvironment);
+
+    body = Stack(
+      children: [
+        Positioned.fill(child: body),
+        if (_progress < 1.0)
+          const Positioned.fill(
+              child: Center(child: CircularProgressIndicator()))
+      ],
+    );
+
+    return Scaffold(
+        appBar: Appbar(
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          actions: actions,
+        ),
+        body: body);
+  }
+
+  Widget createWebviewWithEnvironment(WebViewEnvironment? e) {
+    return InAppWebView(
+      webViewEnvironment: e,
       initialSettings: InAppWebViewSettings(
         isInspectable: true,
       ),
@@ -155,26 +200,6 @@ class _AppWebviewState extends State<AppWebview> {
         }
       },
     );
-
-    body = Stack(
-      children: [
-        Positioned.fill(child: body),
-        if (_progress < 1.0)
-          const Positioned.fill(
-              child: Center(child: CircularProgressIndicator()))
-      ],
-    );
-
-    return Scaffold(
-        appBar: Appbar(
-          title: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          actions: actions,
-        ),
-        body: body);
   }
 }
 
