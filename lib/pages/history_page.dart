@@ -136,7 +136,7 @@ class _HistoryPageState extends State<HistoryPage> {
   String getDescription(History h) {
     var res = "";
     if (h.ep >= 1) {
-      res += "@ep Chapter".tlParams({
+      res += "Chapter @ep".tlParams({
         "ep": h.ep,
       });
     }
@@ -144,7 +144,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (h.ep >= 1) {
         res += " - ";
       }
-      res += "@page Page".tlParams({
+      res += "Page @page".tlParams({
         "page": h.page,
       });
     }

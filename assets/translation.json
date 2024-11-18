@@ -230,8 +230,8 @@
     "Add a comic source in home page": "在主页添加一个漫画源",
     "Please check your settings": "请检查您的设置",
     "No Category Pages": "没有分类页面",
-    "@ep Chapter": "@ep 章",
-    "@page Page": "@page 页"
+    "Chapter @ep": "第 @ep 章",
+    "Page @page": "第 @page 页"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -464,7 +464,7 @@
     "Add a comic source in home page": "在主頁添加一個漫畫源",
     "Please check your settings": "請檢查您的設定",
     "No Category Pages": "沒有分類頁面",
-    "@ep Chapter": "@ep 章",
-    "@page Page": "@page 頁"
+    "Chapter @ep": "第 @ep 章",
+    "Page @page": "第 @page 頁"
   }
 }
