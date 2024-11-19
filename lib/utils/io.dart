@@ -24,11 +24,6 @@ class IO {
   static bool _isSelectingFiles = false;
 }
 
-/// A finalizer that can be used to dispose resources related to file operations.
-final _finalizer = Finalizer<Function>((e) {
-  e();
-});
-
 class FilePath {
   const FilePath._();
 
@@ -162,51 +157,41 @@ String findValidDirectoryName(String path, String directory) {
 }
 
 class DirectoryPicker {
-  DirectoryPicker() {
-    _finalizer.attach(this, dispose);
-  }
+  /// Pick a directory.
+  ///
+  /// The directory may not be usable after the instance is GCed.
+  DirectoryPicker();
 
-  String? _directory;
+  static final _finalizer = Finalizer<String>((path) {
+    if (path.startsWith(App.cachePath)) {
+      Directory(path).deleteIgnoreError();
+    }
+    if (App.isIOS || App.isMacOS) {
+      _methodChannel.invokeMethod("stopAccessingSecurityScopedResource");
+    }
+  });
 
-  final _methodChannel = const MethodChannel("venera/method_channel");
+  static const _methodChannel = MethodChannel("venera/method_channel");
 
   Future<Directory?> pickDirectory() async {
     IO._isSelectingFiles = true;
     try {
+      String? directory;
       if (App.isWindows || App.isLinux) {
-        var d = await file_selector.getDirectoryPath();
-        _directory = d;
-        return d == null ? null : Directory(d);
+        directory = await file_selector.getDirectoryPath();
       } else if (App.isAndroid) {
-        var d = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
-        _directory = d;
-        return d == null ? null : Directory(d);
+        directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
       } else {
         // ios, macos
-        var d = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
-        _directory = d;
-        return d == null ? null : Directory(d);
+        directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
       }
+      if (directory == null) return null;
+      _finalizer.attach(this, directory);
+      return Directory(directory);
     } finally {
       Future.delayed(const Duration(milliseconds: 100), () {
         IO._isSelectingFiles = false;
       });
-    }
-  }
-
-  Future<void> dispose() async {
-    if (_directory == null) {
-      return;
-    }
-    if (App.isAndroid &&
-        _directory != null &&
-        _directory!.startsWith(App.cachePath)) {
-      await Directory(_directory!).deleteIgnoreError(recursive: true);
-      _directory = null;
-    }
-    if (App.isIOS || App.isMacOS) {
-      await _methodChannel.invokeMethod("stopAccessingSecurityScopedResource");
-      _directory = null;
     }
   }
 }
@@ -231,7 +216,7 @@ class IOSDirectoryPicker {
   }
 }
 
-Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
+Future<FileSelectResult?> selectFile({required List<String> ext}) async {
   IO._isSelectingFiles = true;
   try {
     var extensions = App.isMacOS || App.isIOS ? null : ext;
@@ -239,13 +224,13 @@ Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
       label: 'files',
       extensions: extensions,
     );
-    file_selector.XFile? file;
+    FileSelectResult? file;
     if (App.isAndroid) {
       const selectFileChannel = MethodChannel("venera/select_file");
       String mimeType = "*/*";
-      if(ext.length == 1) {
+      if (ext.length == 1) {
         mimeType = FileType.fromExtension(ext[0]).mime;
-        if(mimeType == "application/octet-stream") {
+        if (mimeType == "application/octet-stream") {
           mimeType = "*/*";
         }
       }
@@ -254,12 +239,13 @@ Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
         mimeType,
       );
       if (filePath == null) return null;
-      file = _AndroidFileSelectResult(filePath);
+      file = FileSelectResult(filePath);
     } else {
-      file = await file_selector.openFile(
+      var xFile = await file_selector.openFile(
         acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
       );
-      if (file == null) return null;
+      if (xFile == null) return null;
+      file = FileSelectResult(xFile.path);
     }
     if (!ext.contains(file.path.split(".").last)) {
       App.rootContext.showMessage(message: "Invalid file type");
@@ -360,15 +346,26 @@ String bytesToReadableString(int bytes) {
   }
 }
 
-class _AndroidFileSelectResult extends s.XFile {
-  _AndroidFileSelectResult(super.path) {
-    _finalizer.attach(this, dispose);
-  }
+class FileSelectResult {
+  final String path;
 
-  void dispose() {
-    print("dispose $path");
+  static final _finalizer = Finalizer<String>((path) {
     if (path.startsWith(App.cachePath)) {
       File(path).deleteIgnoreError();
     }
+  });
+
+  FileSelectResult(this.path) {
+    _finalizer.attach(this, path);
   }
+
+  Future<void> saveTo(String path) async {
+    await File(this.path).copy(path);
+  }
+
+  Future<Uint8List> readAsBytes() {
+    return File(path).readAsBytes();
+  }
+
+  String get name => File(path).name;
 }

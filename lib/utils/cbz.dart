@@ -111,7 +111,7 @@ abstract class CBZ {
         var src = files[i];
         var dst = File(
             FilePath.join(dest.path, '${i + 1}.${src.path.split('.').last}'));
-        src.copy(dst.path);
+        await src.copy(dst.path);
       }
     } else {
       dest.createSync();
@@ -129,7 +129,7 @@ abstract class CBZ {
           var src = chapter.value[i];
           var dst = File(FilePath.join(
               chapterDir.path, '${i + 1}.${src.path.split('.').last}'));
-          src.copy(dst.path);
+          await src.copy(dst.path);
         }
       }
     }

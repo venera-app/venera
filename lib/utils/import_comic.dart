@@ -18,16 +18,14 @@ class ImportComic {
   const ImportComic({this.selectedFolder});
 
   Future<bool> cbz() async {
-    var xFile = await selectFile(ext: ['cbz']);
-    if(xFile == null) {
+    var file = await selectFile(ext: ['cbz']);
+    if(file == null) {
       return false;
     }
     var controller = showLoadingDialog(App.rootContext, allowCancel: false);
     var isSuccessful = false;
     try {
-      var cache = FilePath.join(App.cachePath, xFile.name);
-      await xFile.saveTo(cache);
-      var comic = await CBZ.import(File(cache));
+      var comic = await CBZ.import(File(file.path));
       if (selectedFolder != null) {
         LocalFavoritesManager().addComic(
           selectedFolder!,
@@ -41,7 +39,6 @@ class ImportComic {
           ),
         );
       }
-      await File(cache).deleteIgnoreError();
       isSuccessful = true;
     } catch (e, s) {
       Log.error("Import Comic", e.toString(), s);
