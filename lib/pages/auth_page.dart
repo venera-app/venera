@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:venera/utils/translations.dart';
@@ -13,6 +14,16 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if(SchedulerBinding.instance.lifecycleState != AppLifecycleState.paused) {
+        auth();
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
