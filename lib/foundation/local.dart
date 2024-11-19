@@ -453,7 +453,6 @@ class LocalManager with ChangeNotifier {
     if(HistoryManager().findSync(c.id, c.comicType) != null) {
       HistoryManager().remove(c.id, c.comicType);
     }
-    assert(c.comicType == ComicType.local);
     var folders = LocalFavoritesManager().find(c.id, c.comicType);
     for (var f in folders) {
       LocalFavoritesManager().deleteComicWithId(f, c.id, c.comicType);

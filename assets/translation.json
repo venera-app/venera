@@ -231,7 +231,8 @@
     "Please check your settings": "请检查您的设置",
     "No Category Pages": "没有分类页面",
     "Chapter @ep": "第 @ep 章",
-    "Page @page": "第 @page 页"
+    "Page @page": "第 @page 页",
+    "Also remove files on disk": "同时删除磁盘上的文件"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -465,6 +466,7 @@
     "Please check your settings": "請檢查您的設定",
     "No Category Pages": "沒有分類頁面",
     "Chapter @ep": "第 @ep 章",
-    "Page @page": "第 @page 頁"
+    "Page @page": "第 @page 頁",
+    "Also remove files on disk": "同時刪除磁盤上的文件"
   }
 }

@@ -71,12 +71,14 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     LocalFavoritesManager().init();
   }
   if (await appdataFile.exists()) {
-    // proxy settings should be kept
+    // proxy settings & authorization setting should be kept
     var proxySettings = appdata.settings["proxy"];
+    var authSettings = appdata.settings["authorizationRequired"];
     File(FilePath.join(App.dataPath, "appdata.json")).deleteIfExistsSync();
     appdataFile.renameSync(FilePath.join(App.dataPath, "appdata.json"));
     await appdata.init();
     appdata.settings["proxy"] = proxySettings;
+    appdata.settings["authorizationRequired"] = authSettings;
     appdata.saveData();
   }
   if (await cookieFile.exists()) {

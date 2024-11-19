@@ -10,6 +10,7 @@ import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/main_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
+import 'package:venera/utils/io.dart';
 import 'package:window_manager/window_manager.dart';
 import 'components/components.dart';
 import 'components/window_frame.dart';
@@ -81,7 +82,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if(!App.isMobile) {
+    if (!App.isMobile) {
       return;
     }
     if (state == AppLifecycleState.inactive && hideContentOverlay == null) {
@@ -104,7 +105,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
     if (state == AppLifecycleState.hidden &&
         appdata.settings['authorizationRequired'] &&
-        !isAuthPageActive) {
+        !isAuthPageActive &&
+        !IO.isSelectingFiles) {
       isAuthPageActive = true;
       App.rootContext.to(
         () => AuthPage(
