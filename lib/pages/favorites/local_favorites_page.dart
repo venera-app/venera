@@ -284,6 +284,7 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
 
   @override
   Widget build(BuildContext context) {
+    var type = appdata.settings['comicDisplayMode'];
     var tiles = comics.map(
       (e) {
         var comicSource = e.type.comicSource;
@@ -296,7 +297,9 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
             e.id,
             e.author,
             e.tags,
-            "${e.time} | ${comicSource?.name ?? "Unknown"}",
+            type == 'detailed'
+                ? "${e.time} | ${comicSource?.name ?? "Unknown"}"
+                : "${e.type.comicSource?.name ?? "Unknown"} | ${e.time}",
             comicSource?.key ??
                 (e.type == ComicType.local ? "local" : "Unknown"),
             null,

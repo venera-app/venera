@@ -253,18 +253,34 @@ class ComicTile extends StatelessWidget {
                               child: buildImage(context),
                             ),
                           ),
-                          Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Padding(
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: (() {
+                              final subtitle =
+                                  comic.subtitle?.replaceAll('\n', '').trim();
+                              final text = comic.description.isNotEmpty
+                                  ? comic.description.split('|').join('\n')
+                                  : (subtitle?.isNotEmpty == true
+                                      ? subtitle
+                                      : null);
+                              final scale =
+                                  (appdata.settings['comicTileScale'] as num)
+                                      .toDouble();
+                              final fortSize = scale < 0.85
+                                  ? 8.0 // 小尺寸
+                                  : (scale < 1.0 ? 10.0 : 12.0);
+
+                              if (text == null) {
+                                return const SizedBox
+                                    .shrink(); // 如果没有文本，则不显示任何内容
+                              }
+
+                              return Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 4, vertical: 4),
+                                    horizontal: 2, vertical: 2),
                                 child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(10.0),
-                                    topRight: Radius.circular(10.0),
-                                    bottomRight: Radius.circular(10.0),
-                                    bottomLeft: Radius.circular(10.0),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(10.0),
                                   ),
                                   child: Container(
                                     color: Colors.black.withOpacity(0.5),
@@ -273,19 +289,13 @@ class ComicTile extends StatelessWidget {
                                           const EdgeInsets.fromLTRB(8, 6, 8, 6),
                                       child: ConstrainedBox(
                                         constraints: BoxConstraints(
-                                          maxWidth: constraints.maxWidth * 0.88,
+                                          maxWidth: constraints.maxWidth,
                                         ),
                                         child: Text(
-                                          comic.description.isEmpty
-                                              ? comic.subtitle
-                                                      ?.replaceAll('\n', '') ??
-                                                  ''
-                                              : comic.description
-                                                  .split('|')
-                                                  .join('\n'),
-                                          style: const TextStyle(
+                                          text,
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w500,
-                                            fontSize: 12,
+                                            fontSize: fortSize,
                                             color: Colors.white,
                                           ),
                                           textAlign: TextAlign.right,
@@ -296,7 +306,9 @@ class ComicTile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              )),
+                              );
+                            })(),
+                          ),
                         ],
                       ),
                     ),
@@ -307,7 +319,6 @@ class ComicTile extends StatelessWidget {
                       comic.title.replaceAll('\n', ''),
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
-                        fontSize: 14.0,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
