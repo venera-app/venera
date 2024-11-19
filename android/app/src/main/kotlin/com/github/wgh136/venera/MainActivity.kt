@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.provider.DocumentsContract
 import android.provider.Settings
 import android.view.KeyEvent
 import androidx.activity.result.ActivityResultCallback
@@ -96,11 +95,7 @@ class MainActivity : FlutterFragmentActivity() {
                         if (pickedDirectoryUri == null)
                             res.success(null)
                         else
-                            try {
-                                res.success(onPickedDirectory(pickedDirectoryUri))
-                            } catch (e: Exception) {
-                                res.error("Failed to Copy Files", e.toString(), null)
-                            }
+                            onPickedDirectory(pickedDirectoryUri, res)
                     }
                 }
 
@@ -134,8 +129,9 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         val selectFileChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/select_file")
-        selectFileChannel.setMethodCallHandler { _, res ->
-            openFile(res)
+        selectFileChannel.setMethodCallHandler { req, res ->
+            val mimeType = req.arguments<String>()
+            openFile(res, mimeType!!)
         }
     }
 
@@ -166,26 +162,40 @@ class MainActivity : FlutterFragmentActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    /// copy the directory to tmp directory, return copied directory
-    private fun onPickedDirectory(uri: Uri): String {
-        if (!hasStoragePermission()) {
-            // dart:io cannot access the directory without permission.
-            // so we need to copy the directory to cache directory
-            val contentResolver = contentResolver
-            var tmp = cacheDir
-            tmp = File(tmp, "getDirectoryPathTemp")
-            tmp.mkdir()
-            Thread {
-                copyDirectory(contentResolver, uri, tmp)
-            }.start()
-
-            return tmp.absolutePath
-        } else {
-            val docId = DocumentsContract.getTreeDocumentId(uri)
-            val split: Array<String?> = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            return if ((split.size >= 2) && (split[1] != null)) split[1]!!
-            else File.separator
+    /// Ensure that the directory is accessible by dart:io
+    private fun onPickedDirectory(uri: Uri, result: MethodChannel.Result) {
+        if (hasStoragePermission()) {
+            var plain = uri.toString()
+            if(plain.contains("%3A")) {
+                plain = Uri.decode(plain)
+            }
+            val externalStoragePrefix = "content://com.android.externalstorage.documents/tree/primary:";
+            if(plain.startsWith(externalStoragePrefix)) {
+                val path = plain.substring(externalStoragePrefix.length)
+                result.success(Environment.getExternalStorageDirectory().absolutePath + "/" + path)
+            }
+            // The uri cannot be parsed to plain path, use copy method
         }
+        // dart:io cannot access the directory without permission.
+        // so we need to copy the directory to cache directory
+        val contentResolver = contentResolver
+        var tmp = cacheDir
+        var dirName = DocumentFile.fromTreeUri(this, uri)?.name
+        tmp = File(tmp, dirName!!)
+        if(tmp.exists()) {
+            tmp.deleteRecursively()
+        }
+        tmp.mkdir()
+        Thread {
+            try {
+                copyDirectory(contentResolver, uri, tmp)
+                result.success(tmp.absolutePath)
+            }
+            catch (e: Exception) {
+                result.error("copy error", e.message, null)
+            }
+        }.start()
+
     }
 
     private fun copyDirectory(resolver: ContentResolver, srcUri: Uri, destDir: File) {
@@ -197,11 +207,12 @@ class MainActivity : FlutterFragmentActivity() {
                 copyDirectory(resolver, file.uri, newDir)
             } else {
                 val newFile = File(destDir, file.name!!)
-                val inputStream = resolver.openInputStream(file.uri) ?: return
-                val outputStream = FileOutputStream(newFile)
-                inputStream.copyTo(outputStream)
-                inputStream.close()
-                outputStream.close()
+                resolver.openInputStream(file.uri)?.use { input ->
+                    FileOutputStream(newFile).use { output ->
+                        input.copyTo(output, bufferSize = DEFAULT_BUFFER_SIZE)
+                        output.flush()
+                    }
+                }
             }
         }
     }
@@ -277,10 +288,10 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun openFile(result: MethodChannel.Result) {
+    private fun openFile(result: MethodChannel.Result, mimeType: String) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "*/*"
+        intent.type = mimeType
         startContractForResult(ActivityResultContracts.StartActivityForResult(), intent){ activityResult ->
             if (activityResult.resultCode != Activity.RESULT_OK) {
                 result.success(null)
@@ -312,20 +323,9 @@ class MainActivity : FlutterFragmentActivity() {
                     // ignore
                 }
             }
-            // copy file to cache directory
-            val cacheDir = cacheDir
-            val newFile = File(cacheDir, fileName)
-            val inputStream = contentResolver.openInputStream(uri)
-            if (inputStream == null) {
-                result.success(null)
-                return@startContractForResult
-            }
-            val outputStream = FileOutputStream(newFile)
-            inputStream.copyTo(outputStream)
-            inputStream.close()
-            outputStream.close()
-            // send file path to flutter
-            result.success(newFile.absolutePath)
+            // use copy method
+            val filePath = FileUtils.getPathFromCopyOfFileFromUri(this, uri)
+            result.success(filePath)
         }
     }
 }

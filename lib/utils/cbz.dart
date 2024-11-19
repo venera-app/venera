@@ -86,6 +86,9 @@ abstract class CBZ {
       var ext = e.path.split('.').last;
       return !['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'].contains(ext);
     });
+    if(files.isEmpty) {
+      throw Exception('No images found in the archive');
+    }
     files.sort((a, b) => a.path.compareTo(b.path));
     var coverFile = files.firstWhereOrNull(
       (element) =>

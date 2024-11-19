@@ -298,24 +298,16 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                             return StatefulBuilder(builder: (context, state) {
                               return ContentDialog(
                                 title: "Delete".tl,
-                                content: Column(
-                                  children: [
-                                    Text("Delete selected comics?".tl)
-                                        .paddingVertical(8),
-                                    Transform.scale(
-                                        scale: 0.9,
-                                        child: CheckboxListTile(
-                                            title: Text(
-                                                "Also remove files on disk".tl),
-                                            value: removeComicFile,
-                                            onChanged: (v) {
-                                              state(() {
-                                                removeComicFile =
-                                                    !removeComicFile;
-                                              });
-                                            })),
-                                  ],
-                                ).paddingHorizontal(16).paddingVertical(8),
+                                content: CheckboxListTile(
+                                  title:
+                                  Text("Also remove files on disk".tl),
+                                  value: removeComicFile,
+                                  onChanged: (v) {
+                                    state(() {
+                                      removeComicFile = !removeComicFile;
+                                    });
+                                  },
+                                ),
                                 actions: [
                                   FilledButton(
                                     onPressed: () {
@@ -379,12 +371,12 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     return PopScope(
       canPop: !multiSelectMode && !searchMode,
       onPopInvokedWithResult: (didPop, result) {
-        if(multiSelectMode) {
+        if (multiSelectMode) {
           setState(() {
             multiSelectMode = false;
             selectedComics.clear();
           });
-        } else if(searchMode) {
+        } else if (searchMode) {
           setState(() {
             searchMode = false;
             keyword = "";

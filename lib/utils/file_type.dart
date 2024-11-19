@@ -10,6 +10,9 @@ class FileType {
     if(ext.startsWith('.')) {
       ext = ext.substring(1);
     }
+    if(ext == 'cbz') {
+      return const FileType('.cbz', 'application/octet-stream');
+    }
     var mime = lookupMimeType('no-file.$ext');
     return FileType(".$ext", mime ?? 'application/octet-stream');
   }
