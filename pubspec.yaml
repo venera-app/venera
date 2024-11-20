@@ -32,7 +32,7 @@ dependencies:
     git:
       url: https://github.com/wgh136/photo_view
       ref: 94724a0b
-  mime: ^1.0.5
+  mime: ^2.0.0
   share_plus: ^10.0.2
   scrollable_positioned_list:
     git:
