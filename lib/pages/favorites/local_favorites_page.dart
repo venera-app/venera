@@ -117,151 +117,225 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               ),
             MenuButton(
               entries: [
-                MenuEntry(
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.delete_outline,
+                      text: "Delete Folder".tl,
+                      onClick: () {
+                        showConfirmDialog(
+                          context: App.rootContext,
+                          title: "Delete".tl,
+                          content:
+                              "Are you sure you want to delete this folder?".tl,
+                          onConfirm: () {
+                            favPage.setFolder(false, null);
+                            LocalFavoritesManager().deleteFolder(widget.folder);
+                            favPage.folderList?.updateFolders();
+                          },
+                        );
+                      }),
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.edit_outlined,
+                      text: "Rename".tl,
+                      onClick: () {
+                        showInputDialog(
+                          context: App.rootContext,
+                          title: "Rename".tl,
+                          hintText: "New Name".tl,
+                          onConfirm: (value) {
+                            var err = validateFolderName(value.toString());
+                            if (err != null) {
+                              return err;
+                            }
+                            LocalFavoritesManager().rename(
+                              widget.folder,
+                              value.toString(),
+                            );
+                            favPage.folderList?.updateFolders();
+                            favPage.setFolder(false, value.toString());
+                            return null;
+                          },
+                        );
+                      }),
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.reorder,
+                      text: "Reorder".tl,
+                      onClick: () {
+                        context.to(
+                          () {
+                            return _ReorderComicsPage(
+                              widget.folder,
+                              (comics) {
+                                this.comics = comics;
+                              },
+                            );
+                          },
+                        ).then(
+                          (value) {
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          },
+                        );
+                      }),
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.upload_file,
+                      text: "Export".tl,
+                      onClick: () {
+                        var json = LocalFavoritesManager().folderToJson(
+                          widget.folder,
+                        );
+                        saveFile(
+                          data: utf8.encode(json),
+                          filename: "${widget.folder}.json",
+                        );
+                      }),
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.update,
+                      text: "Update Comics Info".tl,
+                      onClick: () {
+                        updateComicsInfo(widget.folder).then((newComics) {
+                          if (mounted) {
+                            setState(() {
+                              comics = newComics;
+                            });
+                          }
+                        });
+                      }),
+                if (!isSelectMode)
+                  MenuEntry(
+                      icon: Icons.download,
+                      text: "Download All".tl,
+                      onClick: () async {
+                        int count = 0;
+                        for (var c in comics) {
+                          if (await LocalManager().isDownloaded(c.id, c.type)) {
+                            continue;
+                          }
+                          var comicSource = c.type.comicSource;
+                          if (comicSource == null) {
+                            continue;
+                          }
+                          LocalManager().addTask(ImagesDownloadTask(
+                            source: comicSource,
+                            comicId: c.id,
+                            comic: null,
+                            comicTitle: c.name,
+                          ));
+                          count++;
+                        }
+                        context.showMessage(
+                            message: "Added @count comics to download queue."
+                                .tlParams({
+                          "count": count.toString(),
+                        }));
+                      }),
+                if (isSelectMode)
+                  MenuEntry(
+                    icon: Icons.star,
+                    text: 'Add to favorites'.tl,
+                    onClick: () {
+                      _addFavorite();
+                    },
+                  ),
+                if (isSelectMode)
+                  MenuEntry(
+                    icon: Icons.select_all,
+                    text: 'selectAll'.tl,
+                    onClick: () {
+                      _selectAll();
+                    },
+                  ),
+                if (isSelectMode)
+                  MenuEntry(
+                    icon: Icons.deselect,
+                    text: 'cancel'.tl,
+                    onClick: () {
+                      _cancel();
+                    },
+                  ),
+                if (isSelectMode)
+                  MenuEntry(
                     icon: Icons.delete_outline,
-                    text: "Delete Folder".tl,
+                    text: "Delete".tl,
                     onClick: () {
                       showConfirmDialog(
-                        context: App.rootContext,
+                        context: context,
                         title: "Delete".tl,
                         content:
-                            "Are you sure you want to delete this folder?".tl,
+                            "Are you sure you want to delete this comic?".tl,
                         onConfirm: () {
-                          favPage.setFolder(false, null);
-                          LocalFavoritesManager().deleteFolder(widget.folder);
-                          favPage.folderList?.updateFolders();
+                          _deleteComicWithId();
                         },
                       );
-                    }),
-                MenuEntry(
-                    icon: Icons.edit_outlined,
-                    text: "Rename".tl,
-                    onClick: () {
-                      showInputDialog(
-                        context: App.rootContext,
-                        title: "Rename".tl,
-                        hintText: "New Name".tl,
-                        onConfirm: (value) {
-                          var err = validateFolderName(value.toString());
-                          if (err != null) {
-                            return err;
-                          }
-                          LocalFavoritesManager().rename(
-                            widget.folder,
-                            value.toString(),
-                          );
-                          favPage.folderList?.updateFolders();
-                          favPage.setFolder(false, value.toString());
-                          return null;
-                        },
-                      );
-                    }),
-                MenuEntry(
-                    icon: Icons.reorder,
-                    text: "Reorder".tl,
-                    onClick: () {
-                      context.to(
-                        () {
-                          return _ReorderComicsPage(
-                            widget.folder,
-                            (comics) {
-                              this.comics = comics;
-                            },
-                          );
-                        },
-                      ).then(
-                        (value) {
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                      );
-                    }),
-                MenuEntry(
-                    icon: Icons.upload_file,
-                    text: "Export".tl,
-                    onClick: () {
-                      var json = LocalFavoritesManager().folderToJson(
-                        widget.folder,
-                      );
-                      saveFile(
-                        data: utf8.encode(json),
-                        filename: "${widget.folder}.json",
-                      );
-                    }),
-                MenuEntry(
-                    icon: Icons.update,
-                    text: "Update Comics Info".tl,
-                    onClick: () {
-                      updateComicsInfo(widget.folder).then((newComics) {
-                        if (mounted) {
-                          setState(() {
-                            comics = newComics;
-                          });
-                        }
-                      });
-                    }),
-                MenuEntry(
-                    icon: Icons.download,
-                    text: "Download All".tl,
-                    onClick: () async {
-                      int count = 0;
-                      for (var c in comics) {
-                        if (await LocalManager().isDownloaded(c.id, c.type)) {
-                          continue;
-                        }
-                        var comicSource = c.type.comicSource;
-                        if (comicSource == null) {
-                          continue;
-                        }
-                        LocalManager().addTask(ImagesDownloadTask(
-                          source: comicSource,
-                          comicId: c.id,
-                          comic: null,
-                          comicTitle: c.name,
-                        ));
-                        count++;
-                      }
-                      context.showMessage(
-                          message: "Added @count comics to download queue."
-                              .tlParams({
-                        "count": count.toString(),
-                      }));
-                    }),
-                MenuEntry(
-                  icon: Icons.select_all,
-                  text: 'selectAll'.tl,
-                  onClick: () {
-                    _selectAll();
-                  },
-                ),
-                MenuEntry(
-                  icon: Icons.deselect,
-                  text: 'cancel'.tl,
-                  onClick: () {
-                    _cancel();
-                  },
-                ),
-                MenuEntry(
-                  icon: Icons.delete_outline,
-                  text: "Delete".tl,
-                  onClick: () {
-                    showConfirmDialog(
-                      context: context,
-                      title: "Delete".tl,
-                      content: "Are you sure you want to delete this comic?".tl,
-                      onConfirm: () {
-                        _deleteComicWithId();
-                      },
-                    );
-                  },
-                ),
+                    },
+                  ),
               ],
             ),
           ],
         ),
         buildComicGrid(),
       ],
+    );
+  }
+
+  void _addFavorite() {
+    var folders = LocalFavoritesManager().folderNames;
+
+    showDialog(
+      context: App.rootContext,
+      builder: (context) {
+        String? selectedFolder;
+
+        return StatefulBuilder(builder: (context, setState) {
+          return ContentDialog(
+            title: "Select a folder".tl,
+            content: ListTile(
+              title: Text("Folder".tl),
+              trailing: Select(
+                current: selectedFolder,
+                values: folders,
+                minWidth: 112,
+                onTap: (v) {
+                  setState(() {
+                    selectedFolder = folders[v];
+                  });
+                },
+              ),
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () {
+                  if (selectedFolder != null) {
+                    for (var c in selectedComics) {
+                      LocalFavoritesManager().addComic(
+                        selectedFolder!,
+                        FavoriteItem(
+                          id: c.id,
+                          name: c.title,
+                          coverPath: c.cover,
+                          author: c.subtitle ?? '',
+                          type: ComicType((c.sourceKey == 'local'
+                              ? 0
+                              : c.sourceKey.hashCode)),
+                          tags: c.tags ?? [],
+                        ),
+                      );
+                    }
+                    context.pop();
+                    _cancel();
+                  }
+                },
+                child: Text("Confirm".tl),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 
