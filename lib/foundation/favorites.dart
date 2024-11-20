@@ -75,7 +75,9 @@ class FavoriteItem implements Comic {
 
   @override
   String get description {
-    return "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}";
+    return appdata.settings['comicDisplayMode'] == 'detailed'
+        ? "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}"
+        : "${type.comicSource?.name ?? "Unknown"} | $time";
   }
 
   @override
