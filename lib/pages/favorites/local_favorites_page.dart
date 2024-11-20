@@ -17,6 +17,17 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   String? networkSource;
   String? networkFolder;
 
+  final Set<FavoriteItem> selectedComics = {};
+
+  bool isSelectMode = false;
+
+  bool enableLongPressed = false;
+
+  int? lastSelectedIndex;
+  bool isRangeSelecting = false;
+
+  Timer? longPressTimer;
+
   void updateComics() {
     setState(() {
       comics = LocalFavoritesManager().getAllComics(widget.folder);
@@ -52,7 +63,11 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             onTap: context.width < _kTwoPanelChangeWidth
                 ? favPage.showFolderSelector
                 : null,
-            child: Text(favPage.folder ?? "Unselected".tl),
+            child: isSelectMode
+                ? Text('@num items selected'.tlParams({
+                    'num': selectedComics.length,
+                  }))
+                : Text(favPage.folder ?? "Unselected".tl),
           ),
           actions: [
             if (networkSource != null)
@@ -65,7 +80,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     var text = "The folder is Linked to @source".tlParams({
                       "source": sourceName,
                     });
-                    if(networkFolder != null && networkFolder!.isNotEmpty) {
+                    if (networkFolder != null && networkFolder!.isNotEmpty) {
                       text += "\n${"Source Folder".tl}: $networkFolder";
                     }
                     return FlyoutContent(
@@ -213,37 +228,215 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         "count": count.toString(),
                       }));
                     }),
+                MenuEntry(
+                  icon: Icons.select_all,
+                  text: 'selectAll'.tl,
+                  onClick: () {
+                    _selectAll();
+                  },
+                ),
+                MenuEntry(
+                  icon: Icons.deselect,
+                  text: 'cancel'.tl,
+                  onClick: () {
+                    _cancel();
+                  },
+                ),
+                MenuEntry(
+                  icon: Icons.delete_outline,
+                  text: "Delete".tl,
+                  onClick: () {
+                    showConfirmDialog(
+                      context: context,
+                      title: "Delete".tl,
+                      content: "Are you sure you want to delete this comic?".tl,
+                      onConfirm: () {
+                        _deleteComicWithId();
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ],
         ),
-        SliverGridComics(
-          comics: comics,
-          menuBuilder: (c) {
-            return [
-              MenuEntry(
-                icon: Icons.delete_outline,
-                text: "Delete".tl,
-                onClick: () {
-                  showConfirmDialog(
-                    context: context,
-                    title: "Delete".tl,
-                    content: "Are you sure you want to delete this comic?".tl,
-                    onConfirm: () {
-                      LocalFavoritesManager().deleteComicWithId(
-                        widget.folder,
-                        c.id,
-                        (c as FavoriteItem).type,
-                      );
-                      updateComics();
-                    },
-                  );
-                },
-              ),
-            ];
-          },
-        ),
+        buildComicGrid(),
       ],
+    );
+  }
+
+  void _checkExitSelectMode() {
+    if (selectedComics.isEmpty) {
+      setState(() {
+        isSelectMode = false;
+      });
+    }
+  }
+
+  void _selectAll() {
+    setState(() {
+      isSelectMode = true;
+      selectedComics.addAll(comics);
+    });
+  }
+
+  void _cancel() {
+    setState(() {
+      selectedComics.clear();
+      isSelectMode = false;
+    });
+  }
+
+  void _deleteComicWithId() {
+    for (var a in selectedComics) {
+      LocalFavoritesManager().deleteComicWithId(
+        widget.folder,
+        a.id,
+        a.type,
+      );
+    }
+    updateComics();
+    _cancel();
+  }
+
+  Widget buildComicGrid() {
+    return SliverGrid(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          var comic = comics[index];
+          bool isSelected = selectedComics.contains(comic);
+          var type = appdata.settings['comicDisplayMode'];
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                if (isSelectMode) {
+                  if (isSelected) {
+                    selectedComics.remove(comic);
+                  } else {
+                    selectedComics.add(comic);
+                  }
+                  enableLongPressed = false;
+                  lastSelectedIndex = index;
+                  _checkExitSelectMode();
+                }
+              });
+            },
+            onLongPressStart: (_) {
+              setState(() {
+                if (isSelected) {
+                  enableLongPressed = true;
+                }
+              });
+            },
+            onLongPressEnd: (_) {
+              longPressTimer = Timer(const Duration(milliseconds: 1000), () {
+                setState(() {
+                  enableLongPressed = false;
+                });
+              });
+            },
+            onLongPress: () {
+              setState(() {
+                if (!isSelectMode) {
+                  isSelectMode = true;
+                  if (!selectedComics.contains(comic)) {
+                    selectedComics.add(comic);
+                  }
+                  lastSelectedIndex = index;
+                } else {
+                  if (isSelected) {}
+                  if (lastSelectedIndex != null) {
+                    int start = lastSelectedIndex!;
+                    int end = index;
+                    if (start > end) {
+                      int temp = start;
+                      start = end;
+                      end = temp;
+                    }
+                    for (int i = start; i <= end; i++) {
+                      if (i == lastSelectedIndex) continue;
+                      if (selectedComics.contains(comics[i])) {
+                        selectedComics.remove(comics[i]);
+                      } else {
+                        selectedComics.add(comics[i]);
+                      }
+                    }
+                  }
+                  lastSelectedIndex = index;
+                }
+                _checkExitSelectMode();
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                border: isSelected
+                    ? Border.all(color: Color(0xFFB0C6FF), width: 4)
+                    : null,
+                borderRadius: BorderRadius.circular(8),
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).cardColor,
+              ),
+              child: ComicTile(
+                enableLongPressed:
+                    (isSelectMode && isSelected && enableLongPressed)
+                        ? true
+                        : false,
+                enableOnTap: isSelectMode ? false : true,
+                key: Key(comic.hashCode.toString()),
+                comic: Comic(
+                  comic.name,
+                  comic.coverPath,
+                  comic.id,
+                  comic.author,
+                  comic.tags,
+                  type == 'detailed'
+                      ? "${comic.time} | ${comic.type.comicSource?.name ?? "Unknown"}"
+                      : "${comic.type.comicSource?.name ?? "Unknown"} | ${comic.time}",
+                  comic.type.comicSource?.key ?? "Unknown",
+                  null,
+                  null,
+                ),
+                menuOptions: [
+                  MenuEntry(
+                    icon: Icons.select_all,
+                    text: 'selectAll'.tl,
+                    onClick: () {
+                      _selectAll();
+                    },
+                  ),
+                  MenuEntry(
+                    icon: Icons.deselect,
+                    text: 'cancel'.tl,
+                    onClick: () {
+                      _cancel();
+                    },
+                  ),
+                  MenuEntry(
+                    icon: Icons.delete_outline,
+                    text: "Delete".tl,
+                    onClick: () {
+                      showConfirmDialog(
+                        context: context,
+                        title: "Delete".tl,
+                        content:
+                            "Are you sure you want to delete this comic?".tl,
+                        onConfirm: () {
+                          _deleteComicWithId();
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        childCount: comics.length,
+      ),
+      gridDelegate: SliverGridDelegateWithComics(),
     );
   }
 }

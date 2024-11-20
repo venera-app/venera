@@ -232,7 +232,10 @@
     "No Category Pages": "没有分类页面",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 页",
-    "Also remove files on disk": "同时删除磁盘上的文件"
+    "Also remove files on disk": "同时删除磁盘上的文件",
+    "@num items selected": "已选择 @num 本漫画",
+    "selectAll": "全选",
+    "cancel": "取消"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -467,6 +470,9 @@
     "No Category Pages": "沒有分類頁面",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 頁",
-    "Also remove files on disk": "同時刪除磁盤上的文件"
+    "Also remove files on disk": "同時刪除磁盤上的文件",
+    "@num items selected": "已選擇 @num 本漫畫",
+    "selectAll": "全選",
+    "cancel": "取消"
   }
 }

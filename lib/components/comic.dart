@@ -5,6 +5,7 @@ class ComicTile extends StatelessWidget {
     super.key,
     required this.comic,
     this.enableLongPressed = true,
+    this.enableOnTap = true,
     this.badge,
     this.menuOptions,
     this.onTap,
@@ -13,6 +14,8 @@ class ComicTile extends StatelessWidget {
   final Comic comic;
 
   final bool enableLongPressed;
+
+  final bool enableOnTap;
 
   final String? badge;
 
@@ -182,7 +185,7 @@ class ComicTile extends StatelessWidget {
       final height = constrains.maxHeight - 16;
       return InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: _onTap,
+          onTap: enableOnTap ? _onTap : null,
           onLongPress: enableLongPressed ? () => onLongPress(context) : null,
           onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
           child: Padding(
@@ -231,7 +234,7 @@ class ComicTile extends StatelessWidget {
           builder: (context, constraints) {
             return InkWell(
               borderRadius: BorderRadius.circular(8),
-              onTap: _onTap,
+              onTap: enableOnTap ? _onTap : null,
               onLongPress:
                   enableLongPressed ? () => onLongPress(context) : null,
               onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
