@@ -12,6 +12,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:venera/components/components.dart';
+import 'package:venera/components/custom_slider.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/cache_manager.dart';
@@ -244,7 +245,9 @@ abstract mixin class _ReaderLocation {
   bool toPage(int page) {
     if (_validatePage(page)) {
       if (page == this.page) {
-        return false;
+        if(!(chapter == 1 && page == 1) && !(chapter == maxChapter && page == maxPage)) {
+          return false;
+        }
       }
       this.page = page;
       update();

@@ -157,9 +157,11 @@ class ComicSourceParser {
 
     await source.loadData();
 
-    Future.delayed(const Duration(milliseconds: 50), () {
-      JsEngine().runCode("ComicSource.sources.$_key.init()");
-    });
+    if(_checkExists("init")) {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        JsEngine().runCode("ComicSource.sources.$_key.init()");
+      });
+    }
 
     return source;
   }

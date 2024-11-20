@@ -76,7 +76,9 @@ class FavoriteItem implements Comic {
 
   @override
   String get description {
-    return "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}";
+    return appdata.settings['comicDisplayMode'] == 'detailed'
+        ? "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}"
+        : "${type.comicSource?.name ?? "Unknown"} | $time";
   }
 
   @override
@@ -347,6 +349,32 @@ class LocalFavoritesManager with ChangeNotifier {
     return name;
   }
 
+  void linkFolderToNetwork(String folder, String source, String networkFolder) {
+    _db.execute("""
+      insert or replace into folder_sync (folder_name, source_key, source_folder)
+      values (?, ?, ?);
+    """, [folder, source, networkFolder]);
+  }
+
+  bool isLinkedToNetworkFolder(String folder, String source, String networkFolder) {
+    var res = _db.select("""
+      select * from folder_sync
+      where folder_name == ? and source_key == ? and source_folder == ?;
+    """, [folder, source, networkFolder]);
+    return res.isNotEmpty;
+  }
+
+  (String?, String?) findLinked(String folder) {
+    var res = _db.select("""
+      select * from folder_sync
+      where folder_name == ?;
+    """, [folder]);
+    if (res.isEmpty) {
+      return (null, null);
+    }
+    return (res.first["source_key"], res.first["source_folder"]);
+  }
+
   bool comicExists(String folder, String id, ComicType type) {
     var res = _db.select("""
       select * from "$folder"
@@ -366,20 +394,19 @@ class LocalFavoritesManager with ChangeNotifier {
     return FavoriteItem.fromRow(res.first);
   }
 
-  /// add comic to a folder
-  ///
-  /// This method will download cover to local, to avoid problems like changing url
-  void addComic(String folder, FavoriteItem comic, [int? order]) async {
+  /// add comic to a folder.
+  /// return true if success, false if already exists
+  bool addComic(String folder, FavoriteItem comic, [int? order]) {
     _modifiedAfterLastCache = true;
     if (!existsFolder(folder)) {
       throw Exception("Folder does not exists");
     }
     var res = _db.select("""
       select * from "$folder"
-      where id == '${comic.id}';
-    """);
+      where id == ? and type == ?;
+    """, [comic.id, comic.type.value]);
     if (res.isNotEmpty) {
-      return;
+      return false;
     }
     final params = [
       comic.id,
@@ -407,6 +434,7 @@ class LocalFavoritesManager with ChangeNotifier {
       """, [...params, minValue(folder) - 1]);
     }
     notifyListeners();
+    return true;
   }
 
   /// delete a folder
@@ -415,6 +443,10 @@ class LocalFavoritesManager with ChangeNotifier {
     _db.execute("""
       drop table "$name";
     """);
+    _db.execute("""
+      delete from folder_order
+      where folder_name == ?;
+    """, [name]);
     notifyListeners();
   }
 
@@ -478,6 +510,16 @@ class LocalFavoritesManager with ChangeNotifier {
       ALTER TABLE "$before"
       RENAME TO "$after";
     """);
+    _db.execute("""
+      update folder_order
+      set folder_name = ?
+      where folder_name == ?;
+    """, [after, before]);
+    _db.execute("""
+      update folder_sync
+      set folder_name = ?
+      where folder_name == ?;
+    """, [after, before]);
     notifyListeners();
   }
 

@@ -160,6 +160,8 @@ class ComicDetails with HistoryMixin {
   @override
   final int? maxPage;
 
+  final List<Comment>? comments;
+
   static Map<String, List<String>> _generateMap(Map<dynamic, dynamic> map) {
     var res = <String, List<String>>{};
     map.forEach((key, value) {
@@ -193,7 +195,10 @@ class ComicDetails with HistoryMixin {
         updateTime = json["updateTime"],
         url = json["url"],
         stars = (json["stars"] as num?)?.toDouble(),
-        maxPage = json["maxPage"];
+        maxPage = json["maxPage"],
+        comments = (json["comments"] as List?)
+            ?.map((e) => Comment.fromJson(e))
+            .toList();
 
   Map<String, dynamic> toJson() {
     return {

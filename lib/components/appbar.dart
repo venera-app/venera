@@ -369,10 +369,14 @@ class _FilledTabBarState extends State<FilledTabBar> {
     final double tabWidth = tabRight - tabLeft;
     final double tabCenter = tabLeft + tabWidth / 2;
     final double tabBarWidth = tabBarBox.size.width;
-    final double scrollOffset = tabCenter - tabBarWidth / 2;
+    double scrollOffset = tabCenter - tabBarWidth / 2;
     if (scrollOffset == scrollController.offset) {
       return;
     }
+    scrollOffset = scrollOffset.clamp(
+      0.0,
+      scrollController.position.maxScrollExtent,
+    );
     scrollController.animateTo(
       scrollOffset,
       duration: const Duration(milliseconds: 200),

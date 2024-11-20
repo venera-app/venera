@@ -10,8 +10,14 @@ class FileType {
     if(ext.startsWith('.')) {
       ext = ext.substring(1);
     }
-    var mime = lookupMimeType('no-file.$ext');
-    return FileType(".$ext", mime ?? 'application/octet-stream');
+    var mime = lookupMimeType('no-file.$ext') ?? 'application/octet-stream';
+    // Android doesn't support some mime types
+    mime = switch(mime) {
+      'text/javascript' => 'application/javascript',
+      'application/x-cbr' => 'application/octet-stream',
+      _ => mime,
+    };
+    return FileType(".$ext", mime);
   }
 }
 

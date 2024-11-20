@@ -93,8 +93,15 @@ class _ExplorePageState extends State<ExplorePage>
   Widget buildBody(String i) => _SingleExplorePage(i, key: Key(i));
 
   Widget buildEmpty() {
+    var msg = "No Explore Pages".tl;
+    msg += '\n';
+    if(ComicSource.isEmpty) {
+      msg += "Add a comic source in home page".tl;
+    } else {
+      msg += "Please check your settings".tl;
+    }
     return NetworkError(
-      message: "No Explore Pages".tl,
+      message: msg,
       retry: () {
         setState(() {
           pages = ComicSource.all()

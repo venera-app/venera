@@ -31,8 +31,9 @@ class Select extends StatelessWidget {
           var size = renderBox.size;
           showMenu(
             elevation: 3,
-            color: context.colorScheme.surface,
-            surfaceTintColor: Colors.transparent,
+            color: context.brightness == Brightness.light
+                ? const Color(0xFFF6F6F6)
+                : const Color(0xFF1E1E1E),
             context: context,
             useRootNavigator: true,
             constraints: BoxConstraints(
@@ -41,8 +42,8 @@ class Select extends StatelessWidget {
             ),
             position: RelativeRect.fromLTRB(
               offset.dx,
-              offset.dy + size.height,
-              offset.dx + size.height,
+              offset.dy + size.height + 2,
+              offset.dx + size.height + 2,
               offset.dy,
             ),
             items: values

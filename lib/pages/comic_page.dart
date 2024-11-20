@@ -115,6 +115,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         buildDescription(),
         buildInfo(),
         buildChapters(),
+        buildComments(),
         buildThumbnails(),
         buildRecommend(),
         SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
@@ -287,7 +288,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 onLongPressed: quickFavorite,
                 iconColor: context.useTextColor(Colors.purple),
               ),
-              if (comicSource.commentsLoader != null)
+              if (comicSource.commentsLoader != null && comic.comments == null)
                 _ActionButton(
                   icon: const Icon(Icons.comment),
                   text: (comic.commentsCount ?? 'Comments'.tl).toString(),
@@ -327,7 +328,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   Widget buildDescription() {
-    if (comic.description == null) {
+    if (comic.description == null || comic.description!.trim().isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
     return SliverToBoxAdapter(
@@ -392,6 +393,27 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           child: InkWell(
             borderRadius: borderRadius,
             onTap: onTap,
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: text));
+              context.showMessage(message: "Copied".tl);
+            },
+            onSecondaryTapDown: (details) {
+              showMenuX(context, details.globalPosition, [
+                MenuEntry(
+                  icon: Icons.remove_red_eye,
+                  text: "View".tl,
+                  onClick: onTap,
+                ),
+                MenuEntry(
+                  icon: Icons.copy,
+                  text: "Copy".tl,
+                  onClick: () {
+                    Clipboard.setData(ClipboardData(text: text));
+                    context.showMessage(message: "Copied".tl);
+                  },
+                ),
+              ]);
+            },
             child: Text(text).padding(padding),
           ),
         );
@@ -404,6 +426,26 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           child: Text(text).padding(padding),
         );
       }
+    }
+
+    String formatTime(String time) {
+      if (int.tryParse(time) != null) {
+        var t = int.tryParse(time);
+        if (t! > 1000000000000) {
+          return DateTime.fromMillisecondsSinceEpoch(t)
+              .toString()
+              .substring(0, 19);
+        } else {
+          return DateTime.fromMillisecondsSinceEpoch(t * 1000)
+              .toString()
+              .substring(0, 19);
+        }
+      }
+      if (time.contains('T') || time.contains('Z')) {
+        var t = DateTime.parse(time);
+        return t.toString().substring(0, 19);
+      }
+      return time;
     }
 
     Widget buildWrap({required List<Widget> children}) {
@@ -464,14 +506,14 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             buildWrap(
               children: [
                 buildTag(text: 'Upload Time'.tl, isTitle: true),
-                buildTag(text: comic.uploadTime!),
+                buildTag(text: formatTime(comic.uploadTime!)),
               ],
             ),
           if (comic.updateTime != null)
             buildWrap(
               children: [
                 buildTag(text: 'Update Time'.tl, isTitle: true),
-                buildTag(text: comic.updateTime!),
+                buildTag(text: formatTime(comic.updateTime!)),
               ],
             ),
           const SizedBox(height: 12),
@@ -507,6 +549,16 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       ),
       SliverGridComics(comics: comic.recommend!),
     ]);
+  }
+
+  Widget buildComments() {
+    if (comic.comments == null || comic.comments!.isEmpty) {
+      return const SliverPadding(padding: EdgeInsets.zero);
+    }
+    return _CommentsPart(
+      comments: comic.comments!,
+      showMore: showComments,
+    );
   }
 }
 
@@ -575,7 +627,7 @@ abstract mixin class _ComicPageActions {
 
   void quickFavorite() {
     var folder = appdata.settings['quickFavorite'];
-    if(folder is! String) {
+    if (folder is! String) {
       return;
     }
     LocalFavoritesManager().addComic(
@@ -1037,6 +1089,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     if (!isInitialLoading && next == null) {
       return;
     }
+    if (isLoading) return;
     Future.microtask(() {
       setState(() {
         isLoading = true;
@@ -1609,10 +1662,12 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: FilledButton(
-                    onPressed: selected.isEmpty ? null : () {
-                      widget.finishSelect(selected);
-                      context.pop();
-                    },
+                    onPressed: selected.isEmpty
+                        ? null
+                        : () {
+                            widget.finishSelect(selected);
+                            context.pop();
+                          },
                     child: Text("Download Selected".tl),
                   ),
                 ),
@@ -1621,6 +1676,151 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
             ),
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommentsPart extends StatefulWidget {
+  const _CommentsPart({
+    required this.comments,
+    required this.showMore,
+  });
+
+  final List<Comment> comments;
+
+  final void Function() showMore;
+
+  @override
+  State<_CommentsPart> createState() => _CommentsPartState();
+}
+
+class _CommentsPartState extends State<_CommentsPart> {
+  final scrollController = ScrollController();
+
+  late List<Comment> comments;
+
+  @override
+  void initState() {
+    comments = widget.comments;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiSliver(
+      children: [
+        SliverToBoxAdapter(
+          child: ListTile(
+            title: Text("Comments".tl),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () {
+                    scrollController.animateTo(
+                      scrollController.position.pixels - 340,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease,
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () {
+                    scrollController.animateTo(
+                      scrollController.position.pixels + 340,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.ease,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 184,
+                child: ListView.builder(
+                  controller: scrollController,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    return _CommentWidget(comment: comments[index]);
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              _ActionButton(
+                icon: const Icon(Icons.comment),
+                text: "View more".tl,
+                onPressed: widget.showMore,
+                iconColor: context.useTextColor(Colors.green),
+              ).fixHeight(48).paddingRight(8).toAlign(Alignment.centerRight),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: Divider(),
+        ),
+      ],
+    );
+  }
+}
+
+class _CommentWidget extends StatelessWidget {
+  const _CommentWidget({required this.comment});
+
+  final Comment comment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 0, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      width: 324,
+      decoration: BoxDecoration(
+        color: context.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              if (comment.avatar != null)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    color: context.colorScheme.surfaceContainer,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image(
+                    image: CachedImageProvider(comment.avatar!),
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
+                  ),
+                ).paddingRight(8),
+              Text(comment.userName, style: ts.bold),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: RichCommentContent(text: comment.content).fixWidth(324),
+          ),
+          const SizedBox(height: 4),
+          if (comment.time != null)
+            Text(comment.time!, style: ts.s12).toAlign(Alignment.centerLeft),
         ],
       ),
     );

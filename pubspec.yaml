@@ -2,11 +2,11 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.0.5+105
+version: 1.0.6+106
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
-  flutter: 3.24.4
+  flutter: 3.24.5
 
 dependencies:
   flutter:
@@ -32,7 +32,7 @@ dependencies:
     git:
       url: https://github.com/wgh136/photo_view
       ref: 94724a0b
-  mime: ^1.0.5
+  mime: ^2.0.0
   share_plus: ^10.0.2
   scrollable_positioned_list:
     git:
@@ -64,6 +64,7 @@ dependencies:
       url: https://github.com/wgh136/webdav_client
       ref: 285f87f15bccd2d5d5ff443761348c6ee47b98d1
   battery_plus: ^6.2.0
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
