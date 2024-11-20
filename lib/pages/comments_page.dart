@@ -510,7 +510,7 @@ class _CommentContent extends StatelessWidget {
     if (!text.contains('<') && !text.contains('http')) {
       return SelectableText(text);
     } else {
-      return _RichCommentContent(text: text);
+      return RichCommentContent(text: text);
     }
   }
 }
@@ -610,16 +610,16 @@ class _CommentImage {
   const _CommentImage(this.url, this.link);
 }
 
-class _RichCommentContent extends StatefulWidget {
-  const _RichCommentContent({required this.text});
+class RichCommentContent extends StatefulWidget {
+  const RichCommentContent({super.key, required this.text});
 
   final String text;
 
   @override
-  State<_RichCommentContent> createState() => _RichCommentContentState();
+  State<RichCommentContent> createState() => _RichCommentContentState();
 }
 
-class _RichCommentContentState extends State<_RichCommentContent> {
+class _RichCommentContentState extends State<RichCommentContent> {
   var textSpan = <InlineSpan>[];
   var images = <_CommentImage>[];
 
@@ -639,6 +639,8 @@ class _RichCommentContentState extends State<_RichCommentContent> {
     int i = 0;
     var buffer = StringBuffer();
     var text = widget.text;
+    text = text.replaceAll('\r\n', '\n');
+    text = text.replaceAll('&amp;', '&');
 
     void writeBuffer() {
       if (buffer.isEmpty) return;
