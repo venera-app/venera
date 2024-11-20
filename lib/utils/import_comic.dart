@@ -314,7 +314,7 @@ class ImportComic {
     );
   }
 
-  static _copyDirectories(Map<String, dynamic> data) {
+  static Future<void> _copyDirectories(Map<String, dynamic> data) async {
     var toBeCopied = data['toBeCopied'] as List<String>;
     var destination = data['destination'] as String;
     for (var dir in toBeCopied) {
@@ -325,11 +325,11 @@ class ImportComic {
         // Rename the old directory to avoid conflicts.
         Log.info("Import Comic",
             "Directory already exists: ${source.name}\nRenaming the old directory.");
-        dest.rename(
+        await dest.rename(
             findValidDirectoryName(dest.parent.path, "${dest.path}_old"));
       }
       dest.createSync();
-      copyDirectory(source, dest);
+      await copyDirectory(source, dest);
     }
   }
 }
