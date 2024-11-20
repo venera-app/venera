@@ -65,6 +65,8 @@ dependencies:
       ref: 285f87f15bccd2d5d5ff443761348c6ee47b98d1
   battery_plus: ^6.2.0
   local_auth: ^2.3.0
+  flutter_saf:
+    git: https://github.com/pkuislm/flutter_saf.git
 
 dev_dependencies:
   flutter_test:
