@@ -34,7 +34,7 @@ class ImportComic {
       App.rootContext.showMessage(message: e.toString());
     }
     controller.close();
-    return registerComics(imported);
+    return registerComics(imported, true);
   }
 
   Future<bool> ehViewer() async {
@@ -137,7 +137,7 @@ class ImportComic {
     }
     controller.close();
     if(cancelled) return false;
-    return registerComics(imported);
+    return registerComics(imported, copyToLocal);
   }
 
   Future<bool> directory(bool single) async {
@@ -170,7 +170,7 @@ class ImportComic {
       Log.error("Import Comic", e.toString(), s);
       App.rootContext.showMessage(message: e.toString());
     }
-    return registerComics(imported);
+    return registerComics(imported, copyToLocal);
   }
 
   //Automatically search for cover image and chapters
@@ -312,9 +312,9 @@ class ImportComic {
     return result;
   }
 
-  Future<bool> registerComics(Map<String?, List<LocalComic>> importedComics) async {
+  Future<bool> registerComics(Map<String?, List<LocalComic>> importedComics, bool copy) async {
     try {
-      if (copyToLocal) {
+      if (copy) {
         importedComics = await _copyComicsToLocalDir(importedComics);
       }
       int importedCount = 0;
