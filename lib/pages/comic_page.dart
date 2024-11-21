@@ -682,6 +682,122 @@ abstract mixin class _ComicPageActions {
       App.rootContext.showMessage(message: "The comic is downloaded".tl);
       return;
     }
+
+    if (comicSource.archiveDownloader != null) {
+      bool useNormalDownload = false;
+      List<ArchiveInfo>? archives;
+      int selected = -1;
+      bool isLoading = false;
+      bool isGettingLink = false;
+      await showDialog(
+        context: App.rootContext,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return ContentDialog(
+                title: "Download".tl,
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<int>(
+                      value: -1,
+                      groupValue: selected,
+                      title: Text("Normal".tl),
+                      onChanged: (v) {
+                        setState(() {
+                          selected = v!;
+                        });
+                      },
+                    ),
+                    ExpansionTile(
+                      title: Text("Archive".tl),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      collapsedShape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      onExpansionChanged: (b) {
+                        if (!isLoading && b && archives == null) {
+                          isLoading = true;
+                          comicSource.archiveDownloader!
+                              .getArchives(comic.id)
+                              .then((value) {
+                            if (value.success) {
+                              archives = value.data;
+                            } else {
+                              App.rootContext
+                                  .showMessage(message: value.errorMessage!);
+                            }
+                            setState(() {
+                              isLoading = false;
+                            });
+                          });
+                        }
+                      },
+                      children: [
+                        if (archives == null)
+                          const ListLoadingIndicator().toCenter()
+                        else
+                          for (int i = 0; i < archives!.length; i++)
+                            RadioListTile<int>(
+                              value: i,
+                              groupValue: selected,
+                              onChanged: (v) {
+                                setState(() {
+                                  selected = v!;
+                                });
+                              },
+                              title: Text(archives![i].title),
+                              subtitle: Text(archives![i].description),
+                            )
+                      ],
+                    )
+                  ],
+                ),
+                actions: [
+                  Button.filled(
+                    isLoading: isGettingLink,
+                    onPressed: () async {
+                      if (selected == -1) {
+                        useNormalDownload = true;
+                        context.pop();
+                        return;
+                      }
+                      setState(() {
+                        isGettingLink = true;
+                      });
+                      var res =
+                          await comicSource.archiveDownloader!.getDownloadUrl(
+                        comic.id,
+                        archives![selected].id,
+                      );
+                      if (res.error) {
+                        App.rootContext.showMessage(message: res.errorMessage!);
+                        setState(() {
+                          isGettingLink = false;
+                        });
+                      } else if (context.mounted) {
+                        LocalManager()
+                            .addTask(ArchiveDownloadTask(res.data, comic));
+                        App.rootContext
+                            .showMessage(message: "Download started".tl);
+                        context.pop();
+                      }
+                    },
+                    child: Text("Confirm".tl),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      if (!useNormalDownload) {
+        return;
+      }
+    }
+
     if (comic.chapters == null) {
       LocalManager().addTask(ImagesDownloadTask(
         source: comicSource,

@@ -232,3 +232,14 @@ class ComicDetails with HistoryMixin {
 
   ComicType get comicType => ComicType(sourceKey.hashCode);
 }
+
+class ArchiveInfo {
+  final String title;
+  final String description;
+  final String id;
+
+  ArchiveInfo.fromJson(Map<String, dynamic> json)
+      : title = json["title"],
+        description = json["description"],
+        id = json["id"];
+}

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:venera/foundation/appdata.dart';
@@ -11,12 +12,13 @@ import 'package:venera/network/images.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
+import 'package:zip_flutter/zip_flutter.dart';
+
+import 'file_downloader.dart';
 
 abstract class DownloadTask with ChangeNotifier {
   /// 0-1
   double get progress;
-
-  bool get isComplete;
 
   bool get isError;
 
@@ -106,10 +108,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   }
 
   @override
-  String? get cover => _cover;
-
-  @override
-  bool get isComplete => _totalCount == _downloadedCount;
+  String? get cover => _cover ?? comic?.cover;
 
   @override
   String get message => _message;
@@ -159,7 +158,8 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
 
   var tasks = <int, _ImageDownloadWrapper>{};
 
-  int get _maxConcurrentTasks => (appdata.settings["downloadThreads"] as num).toInt();
+  int get _maxConcurrentTasks =>
+      (appdata.settings["downloadThreads"] as num).toInt();
 
   void _scheduleTasks() {
     var images = _images![_images!.keys.elementAt(_chapter)]!;
@@ -268,7 +268,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
         var fileType = detectFileType(data);
         var file = File(FilePath.join(path!, "cover${fileType.ext}"));
         file.writeAsBytesSync(data);
-        return file.path;
+        return "file://${file.path}";
       });
       if (res.error) {
         _setError("Error: ${res.errorMessage}");
@@ -382,7 +382,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   int get speed => currentSpeed;
 
   @override
-  String get title => comic?.title ?? comicTitle ??  "Loading...";
+  String get title => comic?.title ?? comicTitle ?? "Loading...";
 
   @override
   Map<String, dynamic> toJson() {
@@ -448,7 +448,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       }).toList(),
       directory: Directory(path!).name,
       chapters: comic!.chapters,
-      cover: File(_cover!).uri.pathSegments.last,
+      cover: File(_cover!.split("file://").last).uri.pathSegments.last,
       comicType: ComicType(source.key.hashCode),
       downloadedChapters: chapters ?? [],
       createdAt: DateTime.now(),
@@ -577,7 +577,7 @@ abstract mixin class _TransferSpeedMixin {
 
   void onData(int length) {
     if (timer == null) return;
-    if(length < 0) {
+    if (length < 0) {
       return;
     }
     _bytesSinceLastSecond += length;
@@ -601,5 +601,219 @@ abstract mixin class _TransferSpeedMixin {
     timer = null;
     _currentSpeed = 0;
     _bytesSinceLastSecond = 0;
+  }
+}
+
+class ArchiveDownloadTask extends DownloadTask {
+  final String archiveUrl;
+
+  final ComicDetails comic;
+
+  late ComicSource source;
+
+  /// Download comic by archive url
+  ///
+  /// Currently only support zip file and comics without chapters
+  ArchiveDownloadTask(this.archiveUrl, this.comic) {
+    source = ComicSource.find(comic.sourceKey)!;
+  }
+
+  FileDownloader? _downloader;
+
+  String _message = "Fetching comic info...";
+
+  bool _isRunning = false;
+
+  bool _isError = false;
+
+  void _setError(String message) {
+    _isRunning = false;
+    _isError = true;
+    _message = message;
+    notifyListeners();
+    Log.error("Download", message);
+  }
+
+  @override
+  void cancel() async {
+    _isRunning = false;
+    await _downloader?.stop();
+    if (path != null) {
+      Directory(path!).deleteIgnoreError(recursive: true);
+    }
+    path = null;
+    LocalManager().removeTask(this);
+  }
+
+  @override
+  ComicType get comicType => ComicType(source.key.hashCode);
+
+  @override
+  String? get cover => comic.cover;
+
+  @override
+  String get id => comic.id;
+
+  @override
+  bool get isError => _isError;
+
+  @override
+  bool get isPaused => !_isRunning;
+
+  @override
+  String get message => _message;
+
+  int _currentBytes = 0;
+
+  int _expectedBytes = 0;
+
+  int _speed = 0;
+
+  @override
+  void pause() {
+    _isRunning = false;
+    _message = "Paused";
+    _downloader?.stop();
+    notifyListeners();
+  }
+
+  @override
+  double get progress =>
+      _expectedBytes == 0 ? 0 : _currentBytes / _expectedBytes;
+
+  @override
+  void resume() async {
+    if (_isRunning) {
+      return;
+    }
+    _isError = false;
+    _isRunning = true;
+    notifyListeners();
+    _message = "Downloading...";
+
+    if (path == null) {
+      var dir = await LocalManager().findValidDirectory(
+        comic.id,
+        comicType,
+        comic.title,
+      );
+      if (!(await dir.exists())) {
+        try {
+          await dir.create();
+        } catch (e) {
+          _setError("Error: $e");
+          return;
+        }
+      }
+      path = dir.path;
+    }
+
+    var resultFile = File(FilePath.join(path!, "archive.zip"));
+
+    Log.info("Download", "Downloading $archiveUrl");
+
+    _downloader = FileDownloader(archiveUrl, resultFile.path);
+
+    bool isDownloaded = false;
+
+    try {
+      await for (var status in _downloader!.start()) {
+        _currentBytes = status.downloadedBytes;
+        _expectedBytes = status.totalBytes;
+        _message =
+        "${bytesToReadableString(_currentBytes)}/${bytesToReadableString(_expectedBytes)}";
+        _speed = status.bytesPerSecond;
+        isDownloaded = status.isFinished;
+        notifyListeners();
+      }
+    }
+    catch(e) {
+      _setError("Error: $e");
+      return;
+    }
+
+    if (!_isRunning) {
+      return;
+    }
+
+    if (!isDownloaded) {
+      _setError("Error: Download failed");
+      return;
+    }
+
+    try {
+      await extractArchive(path!);
+    } catch (e) {
+      _setError("Failed to extract archive: $e");
+      return;
+    }
+
+    await resultFile.deleteIgnoreError();
+
+    LocalManager().completeTask(this);
+  }
+
+  static Future<void> extractArchive(String path) async {
+    var resultFile = FilePath.join(path, "archive.zip");
+    await Isolate.run(() {
+      ZipFile.openAndExtract(resultFile, path);
+    });
+  }
+
+  @override
+  int get speed => _speed;
+
+  @override
+  String get title => comic.title;
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      "type": "ArchiveDownloadTask",
+      "archiveUrl": archiveUrl,
+      "comic": comic.toJson(),
+      "path": path,
+    };
+  }
+
+  static ArchiveDownloadTask? fromJson(Map<String, dynamic> json) {
+    if (json["type"] != "ArchiveDownloadTask") {
+      return null;
+    }
+    return ArchiveDownloadTask(
+      json["archiveUrl"],
+      ComicDetails.fromJson(json["comic"]),
+    )..path = json["path"];
+  }
+
+  String _findCover() {
+    var files = Directory(path!).listSync();
+    for (var f in files) {
+      if (f.name.startsWith('cover')) {
+        return f.name;
+      }
+    }
+    files.sort((a, b) {
+      return a.name.compareTo(b.name);
+    });
+    return files.first.name;
+  }
+
+  @override
+  LocalComic toLocalComic() {
+    return LocalComic(
+      id: comic.id,
+      title: title,
+      subtitle: comic.subTitle ?? '',
+      tags: comic.tags.entries.expand((e) {
+        return e.value.map((v) => "${e.key}:$v");
+      }).toList(),
+      directory: Directory(path!).name,
+      chapters: null,
+      cover: _findCover(),
+      comicType: ComicType(source.key.hashCode),
+      downloadedChapters: [],
+      createdAt: DateTime.now(),
+    );
   }
 }

@@ -153,11 +153,12 @@ class ComicSourceParser {
       _getValue("search.enableTagsSuggestions") ?? false,
       _getValue("comic.enableTagsTranslate") ?? false,
       _parseStarRatingFunc(),
+      _parseArchiveDownloader(),
     );
 
     await source.loadData();
 
-    if(_checkExists("init")) {
+    if (_checkExists("init")) {
       Future.delayed(const Duration(milliseconds: 50), () {
         JsEngine().runCode("ComicSource.sources.$_key.init()");
       });
@@ -987,5 +988,36 @@ class ComicSourceParser {
         return Res.error(e.toString());
       }
     };
+  }
+
+  ArchiveDownloader? _parseArchiveDownloader() {
+    if (!_checkExists("comic.archive")) {
+      return null;
+    }
+    return ArchiveDownloader(
+      (cid) async {
+        try {
+          var res = await JsEngine().runCode("""
+              ComicSource.sources.$_key.comic.archive.getArchives(${jsonEncode(cid)})
+            """);
+          return Res(
+              (res as List).map((e) => ArchiveInfo.fromJson(e)).toList());
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      },
+      (cid, aid) async {
+        try {
+          var res = await JsEngine().runCode("""
+              ComicSource.sources.$_key.comic.archive.getDownloadUrl(${jsonEncode(cid)}, ${jsonEncode(aid)})
+            """);
+          return Res(res as String);
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      },
+    );
   }
 }
