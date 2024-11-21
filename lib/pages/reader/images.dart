@@ -602,7 +602,7 @@ ImageProvider _createImageProvider(int page, BuildContext context) {
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
   if (imageKey.startsWith('file://')) {
-    return FileImage(File(imageKey.replaceFirst("file://", '')));
+    return FileImage(openFilePlatform(imageKey.replaceFirst("file://", '')));
   } else {
     return ReaderImageProvider(
       imageKey,

@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:path/path.dart' as p;
@@ -80,7 +81,7 @@ extension DirectoryExtension on Directory {
     int total = 0;
     for (var f in listSync(recursive: true)) {
       if (FileSystemEntity.typeSync(f.path) == FileSystemEntityType.file) {
-        total += await File(f.path).length();
+        total += await openFilePlatform(f.path).length();
       }
     }
     return total;
@@ -92,7 +93,7 @@ extension DirectoryExtension on Directory {
   }
 
   File joinFile(String name) {
-    return File(FilePath.join(path, name));
+    return openFilePlatform(FilePath.join(path, name));
   }
 }
 
@@ -130,7 +131,7 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
     if (content is File) {
       content.copySync(newPath);
     } else if (content is Directory) {
-      Directory newDirectory = Directory(newPath);
+      Directory newDirectory = openDirectoryPlatform(newPath);
       newDirectory.createSync();
       copyDirectory(content.absolute, newDirectory.absolute);
     }
@@ -146,11 +147,11 @@ Future<void> copyDirectoryIsolate(
 
 String findValidDirectoryName(String path, String directory) {
   var name = sanitizeFileName(directory);
-  var dir = Directory("$path/$name");
+  var dir = openDirectoryPlatform("$path/$name");
   var i = 1;
   while (dir.existsSync() && dir.listSync().isNotEmpty) {
     name = sanitizeFileName("$directory($i)");
-    dir = Directory("$path/$name");
+    dir = openDirectoryPlatform("$path/$name");
     i++;
   }
   return name;
@@ -180,14 +181,14 @@ class DirectoryPicker {
       if (App.isWindows || App.isLinux) {
         directory = await file_selector.getDirectoryPath();
       } else if (App.isAndroid) {
-        directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
+        directory = (await AndroidDirectory.pickDirectory())?.path;
       } else {
         // ios, macos
         directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
       }
       if (directory == null) return null;
       _finalizer.attach(this, directory);
-      return Directory(directory);
+      return openDirectoryPlatform(directory);
     } finally {
       Future.delayed(const Duration(milliseconds: 100), () {
         IO._isSelectingFiles = false;
@@ -307,6 +308,30 @@ Future<void> saveFile(
     Future.delayed(const Duration(milliseconds: 100), () {
       IO._isSelectingFiles = false;
     });
+  }
+}
+
+Directory openDirectoryPlatform(String path) {
+  if(App.isAndroid) {
+    var dir = AndroidDirectory.fromPathSync(path);
+    if(dir == null) {
+      return Directory(path);
+    }
+    return dir;
+  } else {
+    return Directory(path);
+  }
+}
+
+File openFilePlatform(String path) {
+  if(App.isAndroid) {
+    var f = AndroidFile.fromPathSync(path);
+    if(f == null) {
+      return File(path);
+    }
+    return f;
+  } else {
+    return File(path);
   }
 }
 

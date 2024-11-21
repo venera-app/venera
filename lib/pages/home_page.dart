@@ -566,7 +566,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                   ),
                 ).paddingHorizontal(8),
               CheckboxListTile(
-                enabled: false,
+                enabled: true,
                 title: Text("Copy to app local path".tl),
                 value: copyToLocalFolder,
                 onChanged:(v) {
@@ -639,15 +639,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     setState(() {
       loading = true;
     });
-    var importer = ImportComic(selectedFolder: selectedFolder);
-    var result = false;
-    if (type == 2) {
-      result = await importer.cbz();
-    } else if (type == 3) {
-      result = await importer.ehViewer();
-    } else {
-      result = await importer.directory(type == 0);
-    }
+    var importer = ImportComic(
+        selectedFolder: selectedFolder,
+        copyToLocal: copyToLocalFolder);
+    var result = switch(type) {
+      0 => await importer.directory(true),
+      1 => await importer.directory(false),
+      2 => await importer.cbz(),
+      3 => await importer.ehViewer(),
+      int() => true,
+    };
     if(result) {
       context.pop();
     } else {
