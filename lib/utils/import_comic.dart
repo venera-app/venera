@@ -60,7 +60,7 @@ class ImportComic {
           if (cancelled) {
             return imported;
           }
-          var comicDir = Directory(
+          var comicDir = openDirectoryPlatform(
               FilePath.join(comicSrc.path, comic['DIRNAME'] as String));
           if (!(await comicDir.exists())) {
             continue;
@@ -216,7 +216,7 @@ class ImportComic {
     chapters.sort();
     if (hasChapters && coverPath == '') {
       // use the first image in the first chapter as the cover
-      var firstChapter = Directory('${directory.path}/${chapters.first}');
+      var firstChapter = openDirectoryPlatform('${directory.path}/${chapters.first}');
       await for (var entry in firstChapter.list()) {
         if (entry is File) {
           coverPath = entry.name;
