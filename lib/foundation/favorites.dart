@@ -12,10 +12,7 @@ import 'comic_source/comic_source.dart';
 import 'comic_type.dart';
 
 String _getTimeString(DateTime time) {
-  return time
-      .toIso8601String()
-      .replaceFirst("T", " ")
-      .substring(0, 19);
+  return time.toIso8601String().replaceFirst("T", " ").substring(0, 19);
 }
 
 class FavoriteItem implements Comic {
@@ -29,15 +26,14 @@ class FavoriteItem implements Comic {
   String coverPath;
   late String time;
 
-  FavoriteItem({
-    required this.id,
-    required this.name,
-    required this.coverPath,
-    required this.author,
-    required this.type,
-    required this.tags,
-    DateTime? favoriteTime
-  }) {
+  FavoriteItem(
+      {required this.id,
+      required this.name,
+      required this.coverPath,
+      required this.author,
+      required this.type,
+      required this.tags,
+      DateTime? favoriteTime}) {
     var t = favoriteTime ?? DateTime.now();
     time = _getTimeString(t);
   }
@@ -355,7 +351,8 @@ class LocalFavoritesManager with ChangeNotifier {
     """, [folder, source, networkFolder]);
   }
 
-  bool isLinkedToNetworkFolder(String folder, String source, String networkFolder) {
+  bool isLinkedToNetworkFolder(
+      String folder, String source, String networkFolder) {
     var res = _db.select("""
       select * from folder_sync
       where folder_name == ? and source_key == ? and source_folder == ?;
@@ -434,6 +431,41 @@ class LocalFavoritesManager with ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  void moveFavorite(
+      String sourceFolder, String targetFolder, String id, ComicType type) {
+    _modifiedAfterLastCache = true;
+
+    if (!existsFolder(sourceFolder)) {
+      throw Exception("Source folder does not exist");
+    }
+    if (!existsFolder(targetFolder)) {
+      throw Exception("Target folder does not exist");
+    }
+
+    var res = _db.select("""
+    select * from "$targetFolder"
+    where id == ? and type == ?;
+  """, [id, type.value]);
+
+    if (res.isNotEmpty) {
+      return;
+    }
+
+    _db.execute("""
+      insert into "$targetFolder" (id, name, author, type, tags, cover_path, time, display_order)
+      select id, name, author, type, tags, cover_path, time, ?
+      from "$sourceFolder"
+      where id == ? and type == ?;
+    """, [minValue(targetFolder) - 1, id, type.value]);
+
+    _db.execute("""
+    delete from "$sourceFolder"
+    where id == ? and type == ?;
+  """, [id, type.value]);
+
+    notifyListeners();
   }
 
   /// delete a folder
