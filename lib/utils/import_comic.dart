@@ -62,9 +62,6 @@ class ImportComic {
           }
           var comicDir = openDirectoryPlatform(
               FilePath.join(comicSrc.path, comic['DIRNAME'] as String));
-          if (!(await comicDir.exists())) {
-            continue;
-          }
           String titleJP =
           comic['TITLE_JPN'] == null ? "" : comic['TITLE_JPN'] as String;
           String title = titleJP == "" ? comic['TITLE'] as String : titleJP;
