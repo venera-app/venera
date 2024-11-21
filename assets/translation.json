@@ -232,7 +232,10 @@
     "No Category Pages": "没有分类页面",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 页",
-    "Also remove files on disk": "同时删除磁盘上的文件"
+    "Also remove files on disk": "同时删除磁盘上的文件",
+    "New version available": "有新版本可用",
+    "A new version is available. Do you want to update now?" : "有新版本可用。您要现在更新吗？",
+    "No new version available": "没有新版本可用"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -467,6 +470,9 @@
     "No Category Pages": "沒有分類頁面",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 頁",
-    "Also remove files on disk": "同時刪除磁盤上的文件"
+    "Also remove files on disk": "同時刪除磁盤上的文件",
+    "New version available": "有新版本可用",
+    "A new version is available. Do you want to update now?" : "有新版本可用。您要現在更新嗎？",
+    "No new version available": "沒有新版本可用"
   }
 }

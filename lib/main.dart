@@ -6,9 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/auth_page.dart';
-import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/main_page.dart';
-import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/io.dart';
 import 'package:window_manager/window_manager.dart';
@@ -69,7 +67,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
-    checkUpdates();
     App.registerForceRebuild(forceRebuild);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.addObserver(this);
@@ -226,22 +223,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         throw ('widget is null');
       },
     );
-  }
-
-  void checkUpdates() async {
-    if (!appdata.settings['checkUpdateOnStart']) {
-      return;
-    }
-    var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
-    var now = DateTime.now().millisecondsSinceEpoch;
-    if (now - lastCheck < 24 * 60 * 60 * 1000) {
-      return;
-    }
-    appdata.implicitData['lastCheckUpdate'] = now;
-    appdata.writeImplicitData();
-    await Future.delayed(const Duration(milliseconds: 300));
-    await checkUpdateUi(false);
-    await ComicSourcePage.checkComicSourceUpdate(true);
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/pages/categories_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
@@ -6,6 +7,7 @@ import 'package:venera/utils/translations.dart';
 
 import '../components/components.dart';
 import '../foundation/app.dart';
+import 'comic_source_page.dart';
 import 'explore_page.dart';
 import 'favorites/favorites_page.dart';
 import 'home_page.dart';
@@ -34,8 +36,25 @@ class _MainPageState extends State<MainPage> {
     _navigatorKey!.currentContext!.pop();
   }
 
+  void checkUpdates() async {
+    if (!appdata.settings['checkUpdateOnStart']) {
+      return;
+    }
+    var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
+    var now = DateTime.now().millisecondsSinceEpoch;
+    if (now - lastCheck < 24 * 60 * 60 * 1000) {
+      return;
+    }
+    appdata.implicitData['lastCheckUpdate'] = now;
+    appdata.writeImplicitData();
+    await Future.delayed(const Duration(milliseconds: 300));
+    await checkUpdateUi(false);
+    await ComicSourcePage.checkComicSourceUpdate(true);
+  }
+
   @override
   void initState() {
+    checkUpdates();
     _observer = NaviObserver();
     _navigatorKey = GlobalKey();
     App.mainNavigatorKey = _navigatorKey;
