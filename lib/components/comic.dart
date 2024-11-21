@@ -154,8 +154,6 @@ class ComicTile extends StatelessWidget {
     ImageProvider image;
     if (comic is LocalComic) {
       image = FileImage((comic as LocalComic).coverFile);
-    } else if (comic.cover.startsWith('file://')) {
-      image = FileImage(File(comic.cover.substring(7)));
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
       if (localComic == null) {
