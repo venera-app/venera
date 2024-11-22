@@ -1863,13 +1863,17 @@ class _CommentsPartState extends State<_CommentsPart> {
             children: [
               SizedBox(
                 height: 184,
-                child: ListView.builder(
-                  controller: scrollController,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    return _CommentWidget(comment: comments[index]);
-                  },
+                child: MediaQuery.removePadding(
+                  removeTop: true,
+                  context: context,
+                  child: ListView.builder(
+                    controller: scrollController,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: comments.length,
+                    itemBuilder: (context, index) {
+                      return _CommentWidget(comment: comments[index]);
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

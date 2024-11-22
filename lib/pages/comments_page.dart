@@ -595,7 +595,7 @@ class _Tag {
   static void handleLink(String link) async {
     if (link.isURL) {
       if (await handleAppLink(Uri.parse(link))) {
-        App.rootContext.pop();
+        Navigator.of(App.rootContext).maybePop();
       } else {
         launchUrlString(link);
       }
