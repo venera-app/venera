@@ -17,7 +17,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   String? networkSource;
   String? networkFolder;
 
-  Map<Comic, bool> selectedAnimes = {};
+  Map<Comic, bool> selectedComics = {};
 
   var selectedLocalFolders = <String>{};
 
@@ -57,16 +57,16 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   Widget build(BuildContext context) {
     void selectAll() {
       setState(() {
-        selectedAnimes = comics.asMap().map((k, v) => MapEntry(v, true));
+        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
       });
     }
 
     void invertSelection() {
       setState(() {
         comics.asMap().forEach((k, v) {
-          selectedAnimes[v] = !selectedAnimes.putIfAbsent(v, () => false);
+          selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
         });
-        selectedAnimes.removeWhere((k, v) => !v);
+        selectedComics.removeWhere((k, v) => !v);
       });
     }
 
@@ -100,7 +100,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               title: "Delete".tl,
               content: "Are you sure you want to delete this comic?".tl,
               onConfirm: () {
-                _deleteAnimeWithId();
+                _deleteComicWithId();
               },
             );
           }),
@@ -272,12 +272,12 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       }),
                   MenuEntry(
                       icon: Icons.update,
-                      text: "Update Animes Info".tl,
+                      text: "Update Comics Info".tl,
                       onClick: () {
-                        updateComicsInfo(widget.folder).then((newAnimes) {
+                        updateComicsInfo(widget.folder).then((newComics) {
                           if (mounted) {
                             setState(() {
-                              comics = newAnimes;
+                              comics = newComics;
                             });
                           }
                         });
@@ -295,16 +295,51 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                 onPressed: () {
                   setState(() {
                     multiSelectMode = false;
-                    selectedAnimes.clear();
+                    selectedComics.clear();
                   });
                 },
               ),
             ),
             title: Text(
-              "Selected @c comics".tlParams({"c": selectedAnimes.length}),
-              style: const TextStyle(fontSize: 18),
-            ),
-            actions: selectActions,
+                "Selected @c comics".tlParams({"c": selectedComics.length})),
+            actions: [
+              MenuButton(entries: [
+                MenuEntry(
+                    icon: Icons.star,
+                    text: "Add to favorites".tl,
+                    onClick: () => favoriteOption('move')),
+                MenuEntry(
+                    icon: Icons.drive_file_move,
+                    text: "Move to favorites".tl,
+                    onClick: () => favoriteOption('add')),
+                MenuEntry(
+                    icon: Icons.select_all,
+                    text: "Select All".tl,
+                    onClick: selectAll),
+                MenuEntry(
+                    icon: Icons.deselect,
+                    text: "Deselect".tl,
+                    onClick: _cancel),
+                MenuEntry(
+                    icon: Icons.flip,
+                    text: "Invert Selection".tl,
+                    onClick: invertSelection),
+                MenuEntry(
+                    icon: Icons.delete_outline,
+                    text: "Delete Folder".tl,
+                    onClick: () {
+                      showConfirmDialog(
+                        context: context,
+                        title: "Delete".tl,
+                        content:
+                            "Are you sure you want to delete this comic?".tl,
+                        onConfirm: () {
+                          _deleteComicWithId();
+                        },
+                      );
+                    }),
+              ]),
+            ],
           )
         else if (searchMode)
           SliverAppbar(
@@ -335,15 +370,15 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           ),
         SliverGridComics(
           comics: comics,
-          selections: selectedAnimes,
+          selections: selectedComics,
           onTap: multiSelectMode
               ? (c) {
                   setState(() {
-                    if (selectedAnimes.containsKey(c as FavoriteItem)) {
-                      selectedAnimes.remove(c);
+                    if (selectedComics.containsKey(c as FavoriteItem)) {
+                      selectedComics.remove(c);
                       _checkExitSelectMode();
                     } else {
-                      selectedAnimes[c] = true;
+                      selectedComics[c] = true;
                     }
                     lastSelectedIndex = comics.indexOf(c);
                   });
@@ -356,8 +391,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             setState(() {
               if (!multiSelectMode) {
                 multiSelectMode = true;
-                if (!selectedAnimes.containsKey(c as FavoriteItem)) {
-                  selectedAnimes[c] = true;
+                if (!selectedComics.containsKey(c as FavoriteItem)) {
+                  selectedComics[c] = true;
                 }
                 lastSelectedIndex = comics.indexOf(c);
               } else {
@@ -374,10 +409,10 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     if (i == lastSelectedIndex) continue;
 
                     var comic = comics[i];
-                    if (selectedAnimes.containsKey(comic)) {
-                      selectedAnimes.remove(comic);
+                    if (selectedComics.containsKey(comic)) {
+                      selectedComics.remove(comic);
                     } else {
-                      selectedAnimes[comic] = true;
+                      selectedComics[comic] = true;
                     }
                   }
                 }
@@ -395,7 +430,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         if (multiSelectMode) {
           setState(() {
             multiSelectMode = false;
-            selectedAnimes.clear();
+            selectedComics.clear();
           });
         } else if (searchMode) {
           setState(() {
@@ -525,7 +560,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                 return;
                               }
                               if (option == 'move') {
-                                for (var c in selectedAnimes.keys) {
+                                for (var c in selectedComics.keys) {
                                   for (var s in selectedLocalFolders) {
                                     LocalFavoritesManager().moveFavorite(
                                         favPage.folder as String,
@@ -535,7 +570,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                   }
                                 }
                               } else {
-                                for (var c in selectedAnimes.keys) {
+                                for (var c in selectedComics.keys) {
                                   for (var s in selectedLocalFolders) {
                                     LocalFavoritesManager().addComic(
                                       s,
@@ -572,7 +607,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   }
 
   void _checkExitSelectMode() {
-    if (selectedAnimes.isEmpty) {
+    if (selectedComics.isEmpty) {
       setState(() {
         multiSelectMode = false;
       });
@@ -581,13 +616,13 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   void _cancel() {
     setState(() {
-      selectedAnimes.clear();
+      selectedComics.clear();
       multiSelectMode = false;
     });
   }
 
-  void _deleteAnimeWithId() {
-    for (var c in selectedAnimes.keys) {
+  void _deleteComicWithId() {
+    for (var c in selectedComics.keys) {
       LocalFavoritesManager().deleteComicWithId(
         widget.folder,
         c.id,

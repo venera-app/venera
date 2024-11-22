@@ -777,12 +777,8 @@ class _SliverGridComics extends StatelessWidget {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              border: isSelected
-                  ? Border.all(
-                      color: Theme.of(context).colorScheme.primary, width: 4)
-                  : null,
               color: isSelected
-                  ? Theme.of(context).colorScheme.surfaceContainer
+                  ? Theme.of(context).colorScheme.secondaryContainer
                   : null,
               borderRadius: BorderRadius.circular(12),
             ),
