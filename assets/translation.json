@@ -236,7 +236,8 @@
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要现在更新吗？",
     "No new version available": "没有新版本可用",
-    "Move": "移动"
+    "Move": "移动",
+    "Move to favorites": "移动至收藏"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -475,6 +476,7 @@
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要現在更新嗎？",
     "No new version available": "沒有新版本可用",
-    "Move": "移動"
+    "Move": "移動",
+    "Move to favorites": "移動至收藏"
   }
 }
