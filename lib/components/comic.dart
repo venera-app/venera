@@ -1,14 +1,14 @@
 part of 'components.dart';
 
 class ComicTile extends StatelessWidget {
-  const ComicTile({
-    super.key,
-    required this.comic,
-    this.enableLongPressed = true,
-    this.badge,
-    this.menuOptions,
-    this.onTap,
-  });
+  const ComicTile(
+      {super.key,
+      required this.comic,
+      this.enableLongPressed = true,
+      this.badge,
+      this.menuOptions,
+      this.onTap,
+      this.onLongPressed});
 
   final Comic comic;
 
@@ -20,6 +20,8 @@ class ComicTile extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  final VoidCallback? onLongPressed;
+
   void _onTap() {
     if (onTap != null) {
       onTap!();
@@ -27,6 +29,14 @@ class ComicTile extends StatelessWidget {
     }
     App.mainNavigatorKey?.currentContext
         ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+  }
+
+  void _onLongPressed(context) {
+    if (onLongPressed != null) {
+      onLongPressed!();
+      return;
+    }
+    onLongPress(context);
   }
 
   void onLongPress(BuildContext context) {
@@ -181,7 +191,7 @@ class ComicTile extends StatelessWidget {
       return InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: _onTap,
-          onLongPress: enableLongPressed ? () => onLongPress(context) : null,
+          onLongPress: enableLongPressed ? () => _onLongPressed(context) : null,
           onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
@@ -231,7 +241,7 @@ class ComicTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: _onTap,
               onLongPress:
-                  enableLongPressed ? () => onLongPress(context) : null,
+                  enableLongPressed ? () => _onLongPressed(context) : null,
               onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
               child: Column(
                 children: [
@@ -644,6 +654,7 @@ class SliverGridComics extends StatefulWidget {
       this.badgeBuilder,
       this.menuBuilder,
       this.onTap,
+      this.onLongPressed,
       this.selections});
 
   final List<Comic> comics;
@@ -657,6 +668,8 @@ class SliverGridComics extends StatefulWidget {
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
   final void Function(Comic)? onTap;
+
+  final void Function(Comic)? onLongPressed;
 
   @override
   State<SliverGridComics> createState() => _SliverGridComicsState();
@@ -708,6 +721,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
       badgeBuilder: widget.badgeBuilder,
       menuBuilder: widget.menuBuilder,
       onTap: widget.onTap,
+      onLongPressed: widget.onLongPressed,
     );
   }
 }
@@ -719,6 +733,7 @@ class _SliverGridComics extends StatelessWidget {
     this.badgeBuilder,
     this.menuBuilder,
     this.onTap,
+    this.onLongPressed,
     this.selection,
   });
 
@@ -733,6 +748,8 @@ class _SliverGridComics extends StatelessWidget {
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
   final void Function(Comic)? onTap;
+
+  final void Function(Comic)? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -750,14 +767,18 @@ class _SliverGridComics extends StatelessWidget {
             badge: badge,
             menuOptions: menuBuilder?.call(comics[index]),
             onTap: onTap != null ? () => onTap!(comics[index]) : null,
+            onLongPressed: onLongPressed != null
+                ? () => onLongPressed!(comics[index])
+                : null,
           );
-          if(selection == null) {
+          if (selection == null) {
             return comic;
           }
-          return Container(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.surfaceContainer
+                  ? Theme.of(context).colorScheme.secondaryContainer
                   : null,
               borderRadius: BorderRadius.circular(12),
             ),
