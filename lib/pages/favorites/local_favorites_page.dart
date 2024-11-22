@@ -70,42 +70,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       });
     }
 
-    List<Widget> selectActions = [
-      IconButton(
-          icon: const Icon(Icons.star),
-          tooltip: "Add to favorites".tl,
-          onPressed: () => favoriteOption('add')),
-      IconButton(
-          icon: const Icon(Icons.drive_file_move),
-          tooltip: "Move to favorites".tl,
-          onPressed: () => favoriteOption('move')),
-      IconButton(
-          icon: const Icon(Icons.select_all),
-          tooltip: "Select All".tl,
-          onPressed: selectAll),
-      IconButton(
-          icon: const Icon(Icons.deselect),
-          tooltip: "Deselect".tl,
-          onPressed: _cancel),
-      IconButton(
-          icon: const Icon(Icons.flip),
-          tooltip: "Invert Selection".tl,
-          onPressed: invertSelection),
-      IconButton(
-          icon: const Icon(Icons.delete_outline),
-          tooltip: "Delete Folder".tl,
-          onPressed: () {
-            showConfirmDialog(
-              context: context,
-              title: "Delete".tl,
-              content: "Are you sure you want to delete this comic?".tl,
-              onConfirm: () {
-                _deleteComicWithId();
-              },
-            );
-          }),
-    ];
-
     var body = Scaffold(
       body: SmoothCustomScrollView(slivers: [
         if (!searchMode && !multiSelectMode)
@@ -179,19 +143,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   onPressed: () {
                     setState(() {
                       searchMode = true;
-                    });
-                  },
-                ),
-              ),
-              Tooltip(
-                message: multiSelectMode
-                    ? "Exit Multi-Select".tl
-                    : "Multi-Select".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.checklist),
-                  onPressed: () {
-                    setState(() {
-                      multiSelectMode = !multiSelectMode;
                     });
                   },
                 ),
