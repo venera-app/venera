@@ -72,10 +72,11 @@ class LocalComic with HistoryMixin implements Comic {
         createdAt = DateTime.fromMillisecondsSinceEpoch(row[9] as int);
 
   File get coverFile => openFilePlatform(FilePath.join(
-        LocalManager().path,
-        directory,
+        baseDir,
         cover,
       ));
+
+  String get baseDir => directory.contains("/") ? directory : FilePath.join(LocalManager().path, directory);
 
   @override
   String get description => "";
@@ -333,7 +334,7 @@ class LocalManager with ChangeNotifier {
       throw "Invalid ep";
     }
     var comic = find(id, type) ?? (throw "Comic Not Found");
-    var directory = openDirectoryPlatform(FilePath.join(path, comic.directory));
+    var directory = openDirectoryPlatform(comic.baseDir);
     if (comic.chapters != null) {
       var cid = ep is int
           ? comic.chapters!.keys.elementAt(ep - 1)
