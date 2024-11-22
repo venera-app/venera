@@ -31,7 +31,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   int? lastSelectedIndex;
 
-  void updateAnimes() {
+  void updateComics() {
     if (keyword.isEmpty) {
       setState(() {
         comics = LocalFavoritesManager().getAllComics(widget.folder);
@@ -154,7 +154,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                 networkFolder!,
                               ).then(
                                 (value) {
-                                  updateAnimes();
+                                  updateComics();
                                 },
                               );
                             },
@@ -316,7 +316,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   setState(() {
                     searchMode = false;
                     keyword = "";
-                    updateAnimes();
+                    updateComics();
                   });
                 },
               ),
@@ -329,7 +329,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               ),
               onChanged: (v) {
                 keyword = v;
-                updateAnimes();
+                updateComics();
               },
             ),
           ),
@@ -401,7 +401,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           setState(() {
             searchMode = false;
             keyword = "";
-            updateAnimes();
+            updateComics();
           });
         }
       },
@@ -554,7 +554,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                 }
                               }
                               context.pop();
-                              updateAnimes();
+                              updateComics();
                               _cancel();
                             },
                             child:
@@ -594,7 +594,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         (c as FavoriteItem).type,
       );
     }
-    updateAnimes();
+    updateComics();
     _cancel();
   }
 }
