@@ -19,8 +19,8 @@ Future<bool> _deleteComic(
       bool loading = false;
       return StatefulBuilder(builder: (context, setState) {
         return ContentDialog(
-          title: "Delete".tl,
-          content: Text("Are you sure you want to delete this comic?".tl)
+          title: "Remove".tl,
+          content: Text("Remove comic from favorite?".tl)
               .paddingHorizontal(16),
           actions: [
             Button.filled(
@@ -424,7 +424,7 @@ class _FolderTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Delete".tl,
-            content: Text("Are you sure you want to delete this folder?".tl)
+            content: Text("Delete folder?".tl)
                 .paddingHorizontal(16),
             actions: [
               Button.filled(

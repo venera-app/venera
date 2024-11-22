@@ -231,7 +231,10 @@ class _BodyState extends State<_Body> {
     showConfirmDialog(
       context: App.rootContext,
       title: "Delete".tl,
-      content: "Are you sure you want to delete it?".tl,
+      content: "Delete comic source '@n' ?".tlParams({
+        "n": source.name,
+      }),
+      btnColor: context.colorScheme.error,
       onConfirm: () {
         var file = File(source.filePath);
         file.delete();

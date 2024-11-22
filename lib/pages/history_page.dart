@@ -111,6 +111,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 MenuEntry(
                   icon: Icons.remove,
                   text: 'Remove'.tl,
+                  color: context.colorScheme.error,
                   onClick: () {
                     if (c.sourceKey.startsWith("Invalid")) {
                       HistoryManager().remove(
