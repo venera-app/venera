@@ -92,9 +92,13 @@ class _MenuRoute<T> extends PopupRoute<T> {
                 Icon(
                   entry.icon,
                   size: 18,
+                  color: entry.color
                 ),
               const SizedBox(width: 12),
-              Text(entry.text),
+              Text(
+                  entry.text,
+                  style: TextStyle(color: entry.color)
+              ),
             ],
           ),
         ),
@@ -119,7 +123,8 @@ class _MenuRoute<T> extends PopupRoute<T> {
 class MenuEntry {
   final String text;
   final IconData? icon;
+  final Color? color;
   final void Function() onClick;
 
-  MenuEntry({required this.text, this.icon, required this.onClick});
+  MenuEntry({required this.text, this.icon, this.color, required this.onClick});
 }

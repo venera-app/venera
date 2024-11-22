@@ -135,6 +135,7 @@ Future<void> showConfirmDialog({
   required String content,
   required void Function() onConfirm,
   String confirmText = "Confirm",
+  Color? btnColor,
 }) {
   return showDialog(
     context: context,
@@ -147,6 +148,9 @@ Future<void> showConfirmDialog({
             context.pop();
             onConfirm();
           },
+          style: FilledButton.styleFrom(
+            backgroundColor: btnColor,
+          ),
           child: Text(confirmText.tl),
         ),
       ],

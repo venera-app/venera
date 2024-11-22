@@ -150,22 +150,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               MenuButton(
                 entries: [
                   MenuEntry(
-                      icon: Icons.delete_outline,
-                      text: "Delete Folder".tl,
-                      onClick: () {
-                        showConfirmDialog(
-                          context: App.rootContext,
-                          title: "Delete".tl,
-                          content:
-                              "Are you sure you want to delete this folder?".tl,
-                          onConfirm: () {
-                            favPage.setFolder(false, null);
-                            LocalFavoritesManager().deleteFolder(widget.folder);
-                            favPage.folderList?.updateFolders();
-                          },
-                        );
-                      }),
-                  MenuEntry(
                       icon: Icons.edit_outlined,
                       text: "Rename".tl,
                       onClick: () {
@@ -233,6 +217,26 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                           }
                         });
                       }),
+                  MenuEntry(
+                      icon: Icons.delete_outline,
+                      text: "Delete Folder".tl,
+                      color: context.colorScheme.error,
+                      onClick: () {
+                        showConfirmDialog(
+                          context: App.rootContext,
+                          title: "Delete".tl,
+                          content:
+                          "Delete folder '@f' ?".tlParams({
+                            "f": widget.folder,
+                          }),
+                          btnColor: context.colorScheme.error,
+                          onConfirm: () {
+                            favPage.setFolder(false, null);
+                            LocalFavoritesManager().deleteFolder(widget.folder);
+                            favPage.folderList?.updateFolders();
+                          },
+                        );
+                      }),
                 ],
               ),
             ],
@@ -256,12 +260,12 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             actions: [
               MenuButton(entries: [
                 MenuEntry(
-                    icon: Icons.star,
-                    text: "Add to favorites".tl,
+                    icon: Icons.drive_file_move,
+                    text: "Move to folder".tl,
                     onClick: () => favoriteOption('move')),
                 MenuEntry(
-                    icon: Icons.drive_file_move,
-                    text: "Move to favorites".tl,
+                    icon: Icons.copy,
+                    text: "Copy to folder".tl,
                     onClick: () => favoriteOption('add')),
                 MenuEntry(
                     icon: Icons.select_all,
@@ -277,13 +281,15 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     onClick: invertSelection),
                 MenuEntry(
                     icon: Icons.delete_outline,
-                    text: "Delete Folder".tl,
+                    text: "Delete Comic".tl,
+                    color: context.colorScheme.error,
                     onClick: () {
                       showConfirmDialog(
                         context: context,
                         title: "Delete".tl,
                         content:
-                            "Are you sure you want to delete this comic?".tl,
+                          "Delete @c comics?".tlParams({"c": selectedComics.length}),
+                        btnColor: context.colorScheme.error,
                         onConfirm: () {
                           _deleteComicWithId();
                         },
