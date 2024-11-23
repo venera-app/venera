@@ -71,11 +71,12 @@ class LocalComic with HistoryMixin implements Comic {
         downloadedChapters = List.from(jsonDecode(row[8] as String)),
         createdAt = DateTime.fromMillisecondsSinceEpoch(row[9] as int);
 
-  File get coverFile => File(FilePath.join(
-        LocalManager().path,
-        directory,
+  File get coverFile => openFilePlatform(FilePath.join(
+        baseDir,
         cover,
       ));
+
+  String get baseDir => directory.contains("/") ? directory : FilePath.join(LocalManager().path, directory);
 
   @override
   String get description => "";
@@ -341,12 +342,12 @@ class LocalManager with ChangeNotifier {
       throw "Invalid ep";
     }
     var comic = find(id, type) ?? (throw "Comic Not Found");
-    var directory = Directory(FilePath.join(path, comic.directory));
+    var directory = openDirectoryPlatform(comic.baseDir);
     if (comic.chapters != null) {
       var cid = ep is int
           ? comic.chapters!.keys.elementAt(ep - 1)
           : (ep as String);
-      directory = Directory(FilePath.join(directory.path, cid));
+      directory = openDirectoryPlatform(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
     await for (var entity in directory.list()) {
@@ -392,10 +393,10 @@ class LocalManager with ChangeNotifier {
       String id, ComicType type, String name) async {
     var comic = find(id, type);
     if (comic != null) {
-      return Directory(FilePath.join(path, comic.directory));
+      return openDirectoryPlatform(FilePath.join(path, comic.directory));
     }
     var dir = findValidDirectoryName(path, name);
-    return Directory(FilePath.join(path, dir)).create().then((value) => value);
+    return openDirectoryPlatform(FilePath.join(path, dir)).create().then((value) => value);
   }
 
   void completeTask(DownloadTask task) {
@@ -454,7 +455,7 @@ class LocalManager with ChangeNotifier {
 
   void deleteComic(LocalComic c, [bool removeFileOnDisk = true]) {
     if(removeFileOnDisk) {
-      var dir = Directory(FilePath.join(path, c.directory));
+      var dir = openDirectoryPlatform(FilePath.join(path, c.directory));
       dir.deleteIgnoreError(recursive: true);
     }
     //Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.

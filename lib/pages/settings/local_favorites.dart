@@ -38,6 +38,16 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
             for (var e in LocalFavoritesManager().folderNames) e: e
           },
         ).toSliver(),
+        _CallbackSetting(
+          title: "Delete all unavailable local favorite items".tl,
+          callback: () async {
+            var controller = showLoadingDialog(context);
+            var count = await LocalFavoritesManager().removeInvalid();
+            controller.close();
+            context.showMessage(message: "Deleted @a favorite items".tlParams({'a': count}));
+          },
+          actionTitle: 'Delete'.tl,
+        ).toSliver(),
       ],
     );
   }

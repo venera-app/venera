@@ -389,6 +389,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.1"
+  flutter_saf:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "51a27e2ca0e05becfb8ee3a506294dc4460721a8"
+      url: "https://github.com/pkuislm/flutter_saf.git"
+    source: git
+    version: "0.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter

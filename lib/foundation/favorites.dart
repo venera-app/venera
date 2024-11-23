@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/image_provider/local_favorite_image.dart';
+import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'dart:io';
 
@@ -494,6 +495,22 @@ class LocalFavoritesManager with ChangeNotifier {
       where id == ? and type == ?;
     """, [id, type.value]);
     notifyListeners();
+  }
+
+  Future<int> removeInvalid() async {
+    int count = 0;
+    await Future.microtask(() {
+      var all = allComics();
+      for(var c in all) {
+        var comicSource = c.type.comicSource;
+        if ((c.type == ComicType.local && LocalManager().find(c.id, c.type) == null) 
+          || (c.type != ComicType.local && comicSource == null)) {
+          deleteComicWithId(c.folder, c.id, c.type);
+          count++;
+        }
+      }
+    });
+    return count;
   }
 
   Future<void> clearAll() async {

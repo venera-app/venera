@@ -239,6 +239,9 @@
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 页",
     "Also remove files on disk": "同时删除磁盘上的文件",
+    "Copy to app local path": "将漫画复制到本地存储目录中",
+    "Delete all unavailable local favorite items": "删除所有无效的本地收藏",
+    "Deleted @a favorite items.": "已删除 @a 条无效收藏",
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要现在更新吗？",
     "No new version available": "没有新版本可用"
@@ -483,6 +486,9 @@
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 頁",
     "Also remove files on disk": "同時刪除磁盤上的文件",
+    "Copy to app local path": "將漫畫複製到本地儲存目錄中",
+    "Delete all unavailable local favorite items": "刪除所有無效的本地收藏",
+    "Deleted @a favorite items.": "已刪除 @a 條無效收藏",
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要現在更新嗎？",
     "No new version available": "沒有新版本可用"

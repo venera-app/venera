@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:venera/components/components.dart';
@@ -497,6 +496,10 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   String? selectedFolder;
 
+  bool copyToLocalFolder = true;
+
+  bool cancelled = false;
+
   @override
   void dispose() {
     loading = false;
@@ -530,22 +533,23 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
               ),
             )
           : Column(
-              key: key,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(width: 600),
-                ...List.generate(importMethods.length, (index) {
-                  return RadioListTile(
-                    title: Text(importMethods[index]),
-                    value: index,
-                    groupValue: type,
-                    onChanged: (value) {
-                      setState(() {
-                        type = value as int;
-                      });
-                    },
-                  );
-                }),
+            key: key,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 600),
+              ...List.generate(importMethods.length, (index) {
+                return RadioListTile(
+                  title: Text(importMethods[index]),
+                  value: index,
+                  groupValue: type,
+                  onChanged: (value) {
+                    setState(() {
+                      type = value as int;
+                    });
+                  },
+                );
+              }),
+              if(type != 3)
                 ListTile(
                   title: Text("Add to favorites".tl),
                   trailing: Select(
@@ -559,10 +563,19 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                     },
                   ),
                 ).paddingHorizontal(8),
-                const SizedBox(height: 8),
-                Text(info).paddingHorizontal(24),
-              ],
-            ),
+              CheckboxListTile(
+                enabled: true,
+                title: Text("Copy to app local path".tl),
+                value: copyToLocalFolder,
+                onChanged:(v) {
+                  setState(() {
+                    copyToLocalFolder = !copyToLocalFolder;
+                  });
+                }).paddingHorizontal(8),
+              const SizedBox(height: 8),
+              Text(info).paddingHorizontal(24),
+            ],
+          ),
       actions: [
         Button.text(
           child: Row(
@@ -620,18 +633,20 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
 
   void selectAndImport() async {
     height = key.currentContext!.size!.height;
+
     setState(() {
       loading = true;
     });
-    var importer = ImportComic(selectedFolder: selectedFolder);
-    var result = false;
-    if (type == 2) {
-      result = await importer.cbz();
-    } else if (type == 3) {
-      result = await importer.ehViewer();
-    } else {
-      result = await importer.directory(type == 0);
-    }
+    var importer = ImportComic(
+        selectedFolder: selectedFolder,
+        copyToLocal: copyToLocalFolder);
+    var result = switch(type) {
+      0 => await importer.directory(true),
+      1 => await importer.directory(false),
+      2 => await importer.cbz(),
+      3 => await importer.ehViewer(),
+      int() => true,
+    };
     if(result) {
       context.pop();
     } else {
