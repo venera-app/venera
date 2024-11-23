@@ -115,6 +115,11 @@ class _AppbarState extends State<Appbar> {
   }
 }
 
+enum AppbarStyle {
+  blur,
+  shadow,
+}
+
 class SliverAppbar extends StatelessWidget {
   const SliverAppbar({
     super.key,
@@ -122,6 +127,7 @@ class SliverAppbar extends StatelessWidget {
     this.leading,
     this.actions,
     this.radius = 0,
+    this.style = AppbarStyle.blur,
   });
 
   final Widget? leading;
@@ -131,6 +137,8 @@ class SliverAppbar extends StatelessWidget {
   final List<Widget>? actions;
 
   final double radius;
+
+  final AppbarStyle style;
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +150,7 @@ class SliverAppbar extends StatelessWidget {
         actions: actions,
         topPadding: MediaQuery.of(context).padding.top,
         radius: radius,
+        style: style,
       ),
     );
   }
@@ -160,57 +169,74 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   final double radius;
 
-  _MySliverAppBarDelegate(
-      {this.leading,
-      required this.title,
-      this.actions,
-      required this.topPadding,
-      this.radius = 0});
+  final AppbarStyle style;
+
+  _MySliverAppBarDelegate({
+    this.leading,
+    required this.title,
+    this.actions,
+    required this.topPadding,
+    this.radius = 0,
+    this.style = AppbarStyle.blur,
+  });
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(
-      child: BlurEffect(
-        blur: 15,
-        child: Material(
-          color: context.colorScheme.surface.withOpacity(0.72),
-          elevation: 0,
-          borderRadius: BorderRadius.circular(radius),
-          child: Row(
-            children: [
-              const SizedBox(width: 8),
-              leading ??
-                  (Navigator.of(context).canPop()
-                      ? Tooltip(
-                          message: "Back".tl,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () => Navigator.maybePop(context),
-                          ),
-                        )
-                      : const SizedBox()),
-              const SizedBox(
-                width: 16,
+    var body = Row(
+      children: [
+        const SizedBox(width: 8),
+        leading ??
+            (Navigator.of(context).canPop()
+                ? Tooltip(
+              message: "Back".tl,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.maybePop(context),
               ),
-              Expanded(
-                child: DefaultTextStyle(
-                  style:
-                      DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  child: title,
-                ),
-              ),
-              ...?actions,
-              const SizedBox(
-                width: 8,
-              )
-            ],
-          ).paddingTop(topPadding),
+            )
+                : const SizedBox()),
+        const SizedBox(
+          width: 16,
         ),
-      ),
-    );
+        Expanded(
+          child: DefaultTextStyle(
+            style:
+            DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            child: title,
+          ),
+        ),
+        ...?actions,
+        const SizedBox(
+          width: 8,
+        )
+      ],
+    ).paddingTop(topPadding);
+
+    if(style == AppbarStyle.blur) {
+      return SizedBox.expand(
+        child: BlurEffect(
+          blur: 15,
+          child: Material(
+            color: context.colorScheme.surface.withOpacity(0.72),
+            elevation: 0,
+            borderRadius: BorderRadius.circular(radius),
+            child: body,
+          ),
+        ),
+      );
+    } else {
+      return SizedBox.expand(
+        child: Material(
+          color: context.colorScheme.surface,
+          elevation: shrinkOffset == 0 ? 0 : 2,
+          borderRadius: BorderRadius.circular(radius),
+          child: body,
+        ),
+      );
+    }
   }
 
   @override
@@ -224,7 +250,10 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     return oldDelegate is! _MySliverAppBarDelegate ||
         leading != oldDelegate.leading ||
         title != oldDelegate.title ||
-        actions != oldDelegate.actions;
+        actions != oldDelegate.actions ||
+        topPadding != oldDelegate.topPadding ||
+        radius != oldDelegate.radius ||
+        style != oldDelegate.style;
   }
 }
 

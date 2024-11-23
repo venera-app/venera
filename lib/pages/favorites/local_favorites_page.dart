@@ -74,6 +74,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       body: SmoothCustomScrollView(slivers: [
         if (!searchMode && !multiSelectMode)
           SliverAppbar(
+            style: context.width < changePoint
+                ? AppbarStyle.shadow
+                : AppbarStyle.blur,
             leading: Tooltip(
               message: "Folders".tl,
               child: context.width <= _kTwoPanelChangeWidth
@@ -225,8 +228,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         showConfirmDialog(
                           context: App.rootContext,
                           title: "Delete".tl,
-                          content:
-                          "Delete folder '@f' ?".tlParams({
+                          content: "Delete folder '@f' ?".tlParams({
                             "f": widget.folder,
                           }),
                           btnColor: context.colorScheme.error,
@@ -243,6 +245,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           )
         else if (multiSelectMode)
           SliverAppbar(
+            style: context.width < changePoint
+                ? AppbarStyle.shadow
+                : AppbarStyle.blur,
             leading: Tooltip(
               message: "Cancel".tl,
               child: IconButton(
@@ -287,8 +292,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       showConfirmDialog(
                         context: context,
                         title: "Delete".tl,
-                        content:
-                          "Delete @c comics?".tlParams({"c": selectedComics.length}),
+                        content: "Delete @c comics?"
+                            .tlParams({"c": selectedComics.length}),
                         btnColor: context.colorScheme.error,
                         onConfirm: () {
                           _deleteComicWithId();
@@ -300,6 +305,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           )
         else if (searchMode)
           SliverAppbar(
+            style: context.width < changePoint
+                ? AppbarStyle.shadow
+                : AppbarStyle.blur,
             leading: Tooltip(
               message: "Cancel".tl,
               child: IconButton(
@@ -407,159 +415,134 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         .where((folder) => folder != favPage.folder)
         .toList();
 
-    showDialog(
-      context: App.rootContext,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 50),
-                  child: Container(
-                    constraints:
-                        const BoxConstraints(maxHeight: 700, maxWidth: 500),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(12.0),
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(16.0),
-                          child: Center(
-                            child: Text(
-                              favPage.folder ?? "Unselected".tl,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+    showPopUpWidget(
+      App.rootContext,
+      StatefulBuilder(
+        builder: (context, setState) {
+          return PopUpWidgetScaffold(
+            title: favPage.folder ?? "Unselected".tl,
+            body: Padding(
+              padding: EdgeInsets.only(bottom: context.padding.bottom + 16),
+              child: Container(
+                constraints:
+                const BoxConstraints(maxHeight: 700, maxWidth: 500),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: targetFolders.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == targetFolders.length) {
+                            return SizedBox(
+                              height: 36,
+                              child: Center(
+                                child: TextButton(
+                                  onPressed: () {
+                                    newFolder().then((v) {
+                                      setState(() {
+                                        targetFolders = LocalFavoritesManager()
+                                            .folderNames
+                                            .where((folder) =>
+                                        folder != favPage.folder)
+                                            .toList();
+                                      });
+                                    });
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.add, size: 20),
+                                      const SizedBox(width: 4),
+                                      Text("New Folder".tl),
+                                    ],
+                                  ),
+                                ),
                               ),
+                            );
+                          }
+                          var folder = targetFolders[index];
+                          var disabled = false;
+                          if (selectedLocalFolders.isNotEmpty) {
+                            if (added.contains(folder) &&
+                                !added.contains(selectedLocalFolders.first)) {
+                              disabled = true;
+                            } else if (!added.contains(folder) &&
+                                added.contains(selectedLocalFolders.first)) {
+                              disabled = true;
+                            }
+                          }
+                          return CheckboxListTile(
+                            title: Row(
+                              children: [
+                                Text(folder),
+                                const SizedBox(width: 8),
+                              ],
                             ),
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: targetFolders.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == targetFolders.length) {
-                                return SizedBox(
-                                  height: 36,
-                                  child: Center(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        newFolder().then((v) {
-                                          setState(() {
-                                            targetFolders =
-                                                LocalFavoritesManager()
-                                                    .folderNames
-                                                    .where((folder) =>
-                                                        folder !=
-                                                        favPage.folder)
-                                                    .toList();
-                                          });
-                                        });
-                                      },
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.add, size: 20),
-                                          const SizedBox(width: 4),
-                                          Text("New Folder".tl),
-                                        ],
-                                      ),
-                                    ),
+                            value: selectedLocalFolders.contains(folder),
+                            onChanged: disabled
+                                ? null
+                                : (v) {
+                              setState(() {
+                                if (v!) {
+                                  selectedLocalFolders.add(folder);
+                                } else {
+                                  selectedLocalFolders.remove(folder);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    Center(
+                      child: FilledButton(
+                        onPressed: () {
+                          if (selectedLocalFolders.isEmpty) {
+                            return;
+                          }
+                          if (option == 'move') {
+                            for (var c in selectedComics.keys) {
+                              for (var s in selectedLocalFolders) {
+                                LocalFavoritesManager().moveFavorite(
+                                    favPage.folder as String,
+                                    s,
+                                    c.id,
+                                    (c as FavoriteItem).type);
+                              }
+                            }
+                          } else {
+                            for (var c in selectedComics.keys) {
+                              for (var s in selectedLocalFolders) {
+                                LocalFavoritesManager().addComic(
+                                  s,
+                                  FavoriteItem(
+                                    id: c.id,
+                                    name: c.title,
+                                    coverPath: c.cover,
+                                    author: c.subtitle ?? '',
+                                    type: ComicType((c.sourceKey == 'local'
+                                        ? 0
+                                        : c.sourceKey.hashCode)),
+                                    tags: c.tags ?? [],
                                   ),
                                 );
                               }
-                              var folder = targetFolders[index];
-                              var disabled = false;
-                              if (selectedLocalFolders.isNotEmpty) {
-                                if (added.contains(folder) &&
-                                    !added
-                                        .contains(selectedLocalFolders.first)) {
-                                  disabled = true;
-                                } else if (!added.contains(folder) &&
-                                    added
-                                        .contains(selectedLocalFolders.first)) {
-                                  disabled = true;
-                                }
-                              }
-                              return CheckboxListTile(
-                                title: Row(
-                                  children: [
-                                    Text(folder),
-                                    const SizedBox(width: 8),
-                                  ],
-                                ),
-                                value: selectedLocalFolders.contains(folder),
-                                onChanged: disabled
-                                    ? null
-                                    : (v) {
-                                        setState(() {
-                                          if (v!) {
-                                            selectedLocalFolders.add(folder);
-                                          } else {
-                                            selectedLocalFolders.remove(folder);
-                                          }
-                                        });
-                                      },
-                              );
-                            },
-                          ),
-                        ),
-                        Center(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (selectedLocalFolders.isEmpty) {
-                                return;
-                              }
-                              if (option == 'move') {
-                                for (var c in selectedComics.keys) {
-                                  for (var s in selectedLocalFolders) {
-                                    LocalFavoritesManager().moveFavorite(
-                                        favPage.folder as String,
-                                        s,
-                                        c.id,
-                                        (c as FavoriteItem).type);
-                                  }
-                                }
-                              } else {
-                                for (var c in selectedComics.keys) {
-                                  for (var s in selectedLocalFolders) {
-                                    LocalFavoritesManager().addComic(
-                                      s,
-                                      FavoriteItem(
-                                        id: c.id,
-                                        name: c.title,
-                                        coverPath: c.cover,
-                                        author: c.subtitle ?? '',
-                                        type: ComicType((c.sourceKey == 'local'
-                                            ? 0
-                                            : c.sourceKey.hashCode)),
-                                        tags: c.tags ?? [],
-                                      ),
-                                    );
-                                  }
-                                }
-                              }
-                              context.pop();
-                              updateComics();
-                              _cancel();
-                            },
-                            child:
-                                Text(option == 'move' ? "Move".tl : "Add".tl),
-                          ).paddingVertical(16),
-                        ),
-                      ],
+                            }
+                          }
+                          App.rootContext.pop();
+                          updateComics();
+                          _cancel();
+                        },
+                        child: Text(option == 'move' ? "Move".tl : "Add".tl),
+                      ),
                     ),
-                  ),
-                ));
-          },
-        );
-      },
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

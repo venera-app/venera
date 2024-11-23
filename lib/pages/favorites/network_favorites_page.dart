@@ -94,6 +94,9 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
     return ComicList(
       key: comicListKey,
       leadingSliver: SliverAppbar(
+        style: context.width < changePoint
+            ? AppbarStyle.shadow
+            : AppbarStyle.blur,
         leading: Tooltip(
           message: "Folders".tl,
           child: context.width <= _kTwoPanelChangeWidth
@@ -211,6 +214,9 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
   @override
   Widget build(BuildContext context) {
     var sliverAppBar = SliverAppbar(
+      style: context.width < changePoint
+          ? AppbarStyle.shadow
+          : AppbarStyle.blur,
       leading: Tooltip(
         message: "Folders".tl,
         child: context.width <= _kTwoPanelChangeWidth
