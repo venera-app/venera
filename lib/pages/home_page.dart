@@ -563,15 +563,16 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                     },
                   ),
                 ).paddingHorizontal(8),
-              CheckboxListTile(
-                enabled: true,
-                title: Text("Copy to app local path".tl),
-                value: copyToLocalFolder,
-                onChanged:(v) {
-                  setState(() {
-                    copyToLocalFolder = !copyToLocalFolder;
-                  });
-                }).paddingHorizontal(8),
+              if(!App.isIOS && !App.isMacOS)
+                CheckboxListTile(
+                  enabled: true,
+                  title: Text("Copy to app local path".tl),
+                  value: copyToLocalFolder,
+                  onChanged:(v) {
+                    setState(() {
+                      copyToLocalFolder = !copyToLocalFolder;
+                    });
+                  }).paddingHorizontal(8),
               const SizedBox(height: 8),
               Text(info).paddingHorizontal(24),
             ],
