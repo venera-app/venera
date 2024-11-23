@@ -207,6 +207,10 @@ class ImportComic {
       }
     }
 
+    if(fileList.isEmpty) {
+      return null;
+    }
+
     fileList.sort();
     coverPath = fileList.firstWhereOrNull((l) => l.startsWith('cover')) ?? fileList.first;
 
