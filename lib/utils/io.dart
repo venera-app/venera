@@ -324,6 +324,9 @@ Directory openDirectoryPlatform(String path) {
 }
 
 File openFilePlatform(String path) {
+  if(path.startsWith("file://")) {
+    path = path.substring(7);
+  }
   if(App.isAndroid) {
     var f = AndroidFile.fromPathSync(path);
     if(f == null) {
