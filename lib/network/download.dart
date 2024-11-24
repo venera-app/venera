@@ -95,10 +95,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     var local = LocalManager().find(id, comicType);
     if (path != null) {
       if (local == null) {
-        Directory(path!).deleteIgnoreError(recursive: true);
+        openDirectoryPlatform(path!).deleteIgnoreError(recursive: true);
       } else if (chapters != null) {
         for (var c in chapters!) {
-          var dir = Directory(FilePath.join(path!, c));
+          var dir = openDirectoryPlatform(FilePath.join(path!, c));
           if (dir.existsSync()) {
             dir.deleteSync(recursive: true);
           }
@@ -178,7 +178,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       }
       Directory saveTo;
       if (comic!.chapters != null) {
-        saveTo = Directory(FilePath.join(
+        saveTo = openDirectoryPlatform(FilePath.join(
           path!,
           comic!.chapters!.keys.elementAt(_chapter),
         ));
@@ -186,7 +186,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           saveTo.createSync();
         }
       } else {
-        saveTo = Directory(path!);
+        saveTo = openDirectoryPlatform(path!);
       }
       var task = _ImageDownloadWrapper(
         this,
@@ -235,20 +235,21 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     }
 
     if (path == null) {
-      var dir = await LocalManager().findValidDirectory(
-        comicId,
-        comicType,
-        comic!.title,
-      );
-      if (!(await dir.exists())) {
-        try {
+      try {
+        var dir = await LocalManager().findValidDirectory(
+          comicId,
+          comicType,
+          comic!.title,
+        );
+        if (!(await dir.exists())) {
           await dir.create();
-        } catch (e) {
-          _setError("Error: $e");
-          return;
         }
+        path = dir.path;
+      } catch (e, s) {
+        Log.error("Download", e.toString(), s);
+        _setError("Error: $e");
+        return;
       }
-      path = dir.path;
     }
 
     await LocalManager().saveCurrentDownloadingTasks();
@@ -266,11 +267,13 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           throw "Failed to download cover";
         }
         var fileType = detectFileType(data);
-        var file = File(FilePath.join(path!, "cover${fileType.ext}"));
+        var file =
+            openFilePlatform(FilePath.join(path!, "cover${fileType.ext}"));
         file.writeAsBytesSync(data);
         return "file://${file.path}";
       });
       if (res.error) {
+        Log.error("Download", res.errorMessage!);
         _setError("Error: ${res.errorMessage}");
         return;
       } else {
@@ -294,6 +297,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           return;
         }
         if (res.error) {
+          Log.error("Download", res.errorMessage!);
           _setError("Error: ${res.errorMessage}");
           return;
         } else {
@@ -323,6 +327,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
             return;
           }
           if (res.error) {
+            Log.error("Download", res.errorMessage!);
             _setError("Error: ${res.errorMessage}");
             return;
           } else {
@@ -347,6 +352,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           return;
         }
         if (task.error != null) {
+          Log.error("Download", task.error.toString());
           _setError("Error: ${task.error}");
           return;
         }
@@ -375,7 +381,6 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     _message = message;
     notifyListeners();
     stopRecorder();
-    Log.error("Download", message);
   }
 
   @override
@@ -446,9 +451,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       tags: comic!.tags.entries.expand((e) {
         return e.value.map((v) => "${e.key}:$v");
       }).toList(),
-      directory: Directory(path!).name,
+      directory: openDirectoryPlatform(path!).name,
       chapters: comic!.chapters,
-      cover: File(_cover!.split("file://").last).uri.pathSegments.last,
+      cover:
+          openFilePlatform(_cover!.split("file://").last).uri.pathSegments.last,
       comicType: ComicType(source.key.hashCode),
       downloadedChapters: chapters ?? [],
       createdAt: DateTime.now(),
@@ -639,7 +645,7 @@ class ArchiveDownloadTask extends DownloadTask {
     _isRunning = false;
     await _downloader?.stop();
     if (path != null) {
-      Directory(path!).deleteIgnoreError(recursive: true);
+      openDirectoryPlatform(path!).deleteIgnoreError(recursive: true);
     }
     path = null;
     LocalManager().removeTask(this);
@@ -708,7 +714,7 @@ class ArchiveDownloadTask extends DownloadTask {
       path = dir.path;
     }
 
-    var resultFile = File(FilePath.join(path!, "archive.zip"));
+    var resultFile = openFilePlatform(FilePath.join(path!, "archive.zip"));
 
     Log.info("Download", "Downloading $archiveUrl");
 
@@ -721,13 +727,12 @@ class ArchiveDownloadTask extends DownloadTask {
         _currentBytes = status.downloadedBytes;
         _expectedBytes = status.totalBytes;
         _message =
-        "${bytesToReadableString(_currentBytes)}/${bytesToReadableString(_expectedBytes)}";
+            "${bytesToReadableString(_currentBytes)}/${bytesToReadableString(_expectedBytes)}";
         _speed = status.bytesPerSecond;
         isDownloaded = status.isFinished;
         notifyListeners();
       }
-    }
-    catch(e) {
+    } catch (e) {
       _setError("Error: $e");
       return;
     }
@@ -787,7 +792,7 @@ class ArchiveDownloadTask extends DownloadTask {
   }
 
   String _findCover() {
-    var files = Directory(path!).listSync();
+    var files = openDirectoryPlatform(path!).listSync();
     for (var f in files) {
       if (f.name.startsWith('cover')) {
         return f.name;
@@ -808,7 +813,7 @@ class ArchiveDownloadTask extends DownloadTask {
       tags: comic.tags.entries.expand((e) {
         return e.value.map((v) => "${e.key}:$v");
       }).toList(),
-      directory: Directory(path!).name,
+      directory: openDirectoryPlatform(path!).name,
       chapters: null,
       cover: _findCover(),
       comicType: ComicType(source.key.hashCode),

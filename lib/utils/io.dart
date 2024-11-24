@@ -95,6 +95,20 @@ extension DirectoryExtension on Directory {
   File joinFile(String name) {
     return openFilePlatform(FilePath.join(path, name));
   }
+
+  void deleteContentsSync({recursive = true}) {
+    if (!existsSync()) return;
+    for (var f in listSync()) {
+      f.deleteIfExistsSync(recursive: recursive);
+    }
+  }
+
+  Future<void> deleteContents({recursive = true}) async {
+    if (!existsSync()) return;
+    for (var f in listSync()) {
+      await f.deleteIfExists(recursive: recursive);
+    }
+  }
 }
 
 String sanitizeFileName(String fileName) {
@@ -124,12 +138,13 @@ String sanitizeFileName(String fileName) {
 Future<void> copyDirectory(Directory source, Directory destination) async {
   List<FileSystemEntity> contents = source.listSync();
   for (FileSystemEntity content in contents) {
-    String newPath = destination.path +
-        Platform.pathSeparator +
-        content.path.split(Platform.pathSeparator).last;
+    String newPath = FilePath.join(destination.path, content.name);
 
     if (content is File) {
-      content.copySync(newPath);
+      var resultFile = openFilePlatform(newPath);
+      resultFile.createSync();
+      var data = content.readAsBytesSync();
+      resultFile.writeAsBytesSync(data);
     } else if (content is Directory) {
       Directory newDirectory = openDirectoryPlatform(newPath);
       newDirectory.createSync();
@@ -140,8 +155,8 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
 
 Future<void> copyDirectoryIsolate(
     Directory source, Directory destination) async {
-  await Isolate.run(() {
-    copyDirectory(source, destination);
+  await Isolate.run(() async {
+    await copyDirectory(source, destination);
   });
 }
 

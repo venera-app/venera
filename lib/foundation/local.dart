@@ -151,9 +151,11 @@ class LocalManager with ChangeNotifier {
   /// path to the directory where all the comics are stored
   late String path;
 
+  Directory get directory => openDirectoryPlatform(path);
+
   // return error message if failed
   Future<String?> setNewPath(String newPath) async {
-    var newDir = Directory(newPath);
+    var newDir = openDirectoryPlatform(newPath);
     if (!await newDir.exists()) {
       return "Directory does not exist";
     }
@@ -162,7 +164,7 @@ class LocalManager with ChangeNotifier {
     }
     try {
       await copyDirectoryIsolate(
-        Directory(path),
+        directory,
         newDir,
       );
       await File(FilePath.join(App.dataPath, 'local_path')).writeAsString(newPath);
@@ -170,7 +172,7 @@ class LocalManager with ChangeNotifier {
       Log.error("IO", e, s);
       return e.toString();
     }
-    await Directory(path).deleteIgnoreError(recursive:true);
+    await directory.deleteContents(recursive: true);
     path = newPath;
     return null;
   }
@@ -216,8 +218,8 @@ class LocalManager with ChangeNotifier {
         path = FilePath.join(App.dataPath, 'local');
       }
     }
-    if (!Directory(path).existsSync()) {
-      await Directory(path).create();
+    if (!directory.existsSync()) {
+      await directory.create();
     }
     restoreDownloadingTasks();
   }
@@ -352,8 +354,7 @@ class LocalManager with ChangeNotifier {
     var files = <File>[];
     await for (var entity in directory.list()) {
       if (entity is File) {
-        if (entity.absolute.path.replaceFirst(path, '').substring(1) ==
-            comic.cover) {
+        if (entity.name.startsWith('cover.')) {
           continue;
         }
         //Hidden file in some file system
