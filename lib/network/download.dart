@@ -254,7 +254,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
 
     await LocalManager().saveCurrentDownloadingTasks();
 
-    if (cover == null) {
+    if (_cover == null) {
       var res = await runWithRetry(() async {
         Uint8List? data;
         await for (var progress

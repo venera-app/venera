@@ -177,6 +177,27 @@ class LocalManager with ChangeNotifier {
     return null;
   }
 
+  Future<String> findDefaultPath() async {
+    if (App.isAndroid) {
+      var external = await getExternalStorageDirectories();
+      if (external != null && external.isNotEmpty) {
+        return FilePath.join(external.first.path, 'local');
+      } else {
+        return FilePath.join(App.dataPath, 'local');
+      }
+    } else if (App.isIOS) {
+      var oldPath = FilePath.join(App.dataPath, 'local');
+      if (Directory(oldPath).existsSync() && Directory(oldPath).listSync().isNotEmpty) {
+        return oldPath;
+      } else {
+        var directory = await getApplicationDocumentsDirectory();
+        return FilePath.join(directory.path, 'local');
+      }
+    } else {
+      return FilePath.join(App.dataPath, 'local');
+    }
+  }
+
   Future<void> init() async {
     _db = sqlite3.open(
       '${App.dataPath}/local.db',
@@ -198,28 +219,19 @@ class LocalManager with ChangeNotifier {
     ''');
     if (File(FilePath.join(App.dataPath, 'local_path')).existsSync()) {
       path = File(FilePath.join(App.dataPath, 'local_path')).readAsStringSync();
+      if (!directory.existsSync()) {
+        path = await findDefaultPath();
+      }
     } else {
-      if (App.isAndroid) {
-        var external = await getExternalStorageDirectories();
-        if (external != null && external.isNotEmpty) {
-          path = FilePath.join(external.first.path, 'local');
-        } else {
-          path = FilePath.join(App.dataPath, 'local');
-        }
-      } else if (App.isIOS) {
-        var oldPath = FilePath.join(App.dataPath, 'local');
-        if (Directory(oldPath).existsSync() && Directory(oldPath).listSync().isNotEmpty) {
-          path = oldPath;
-        } else {
-          var directory = await getApplicationDocumentsDirectory();
-          path = FilePath.join(directory.path, 'local');
-        }
-      } else {
-        path = FilePath.join(App.dataPath, 'local');
+      path = await findDefaultPath();
+    }
+    try {
+      if (!directory.existsSync()) {
+        await directory.create();
       }
     }
-    if (!directory.existsSync()) {
-      await directory.create();
+    catch(e, s) {
+      Log.error("IO", "Failed to create local folder: $e", s);
     }
     restoreDownloadingTasks();
   }
