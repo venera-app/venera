@@ -288,7 +288,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 onLongPressed: quickFavorite,
                 iconColor: context.useTextColor(Colors.purple),
               ),
-              if (comicSource.commentsLoader != null && comic.comments == null)
+              if (comicSource.commentsLoader != null &&
+                  (comic.comments == null || comic.comments!.isEmpty))
                 _ActionButton(
                   icon: const Icon(Icons.comment),
                   text: (comic.commentsCount ?? 'Comments'.tl).toString(),
