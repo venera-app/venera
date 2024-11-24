@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!App.isMobile) {
+    if (!App.isMobile || !appdata.settings['authorizationRequired']) {
       return;
     }
     if (state == AppLifecycleState.inactive && hideContentOverlay == null) {
@@ -101,7 +101,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       hideContentOverlay = null;
     }
     if (state == AppLifecycleState.hidden &&
-        appdata.settings['authorizationRequired'] &&
         !isAuthPageActive &&
         !IO.isSelectingFiles) {
       isAuthPageActive = true;
