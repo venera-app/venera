@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html;
 import 'package:html/dom.dart' as dom;
@@ -184,7 +185,23 @@ class JsEngine with _JSEngineApi {
       if (headers["user-agent"] == null && headers["User-Agent"] == null) {
         headers["User-Agent"] = webUA;
       }
-      response = await _dio!.request(req["url"],
+      var dio = _dio;
+      if (headers['http_client'] == "dart:io") {
+        dio = Dio(BaseOptions(
+          responseType: ResponseType.plain,
+          validateStatus: (status) => true,
+        ));
+        var proxy = await AppDio.getProxy();
+        dio.httpClientAdapter = IOHttpClientAdapter(
+          createHttpClient: () {
+            return HttpClient()
+              ..findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
+          },
+        );
+        dio.interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
+        dio.interceptors.add(LogInterceptor());
+      }
+      response = await dio!.request(req["url"],
           data: req["data"],
           options: Options(
               method: req['http_method'],

@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:path/path.dart' as p;
@@ -13,6 +14,16 @@ import 'package:venera/utils/file_type.dart';
 
 export 'dart:io';
 export 'dart:typed_data';
+
+class IO {
+  /// A global flag used to indicate whether the app is selecting files.
+  ///
+  /// Select file and other similar file operations will launch external programs,
+  /// causing the app to lose focus. AppLifecycleState will be set to paused.
+  static bool get isSelectingFiles => _isSelectingFiles;
+
+  static bool _isSelectingFiles = false;
+}
 
 class FilePath {
   const FilePath._();
@@ -70,7 +81,7 @@ extension DirectoryExtension on Directory {
     int total = 0;
     for (var f in listSync(recursive: true)) {
       if (FileSystemEntity.typeSync(f.path) == FileSystemEntityType.file) {
-        total += await File(f.path).length();
+        total += await openFilePlatform(f.path).length();
       }
     }
     return total;
@@ -82,7 +93,7 @@ extension DirectoryExtension on Directory {
   }
 
   File joinFile(String name) {
-    return File(FilePath.join(path, name));
+    return openFilePlatform(FilePath.join(path, name));
   }
 }
 
@@ -120,7 +131,7 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
     if (content is File) {
       content.copySync(newPath);
     } else if (content is Directory) {
-      Directory newDirectory = Directory(newPath);
+      Directory newDirectory = openDirectoryPlatform(newPath);
       newDirectory.createSync();
       copyDirectory(content.absolute, newDirectory.absolute);
     }
@@ -136,47 +147,52 @@ Future<void> copyDirectoryIsolate(
 
 String findValidDirectoryName(String path, String directory) {
   var name = sanitizeFileName(directory);
-  var dir = Directory("$path/$name");
+  var dir = openDirectoryPlatform("$path/$name");
   var i = 1;
   while (dir.existsSync() && dir.listSync().isNotEmpty) {
     name = sanitizeFileName("$directory($i)");
-    dir = Directory("$path/$name");
+    dir = openDirectoryPlatform("$path/$name");
     i++;
   }
   return name;
 }
 
 class DirectoryPicker {
-  String? _directory;
+  /// Pick a directory.
+  ///
+  /// The directory may not be usable after the instance is GCed.
+  DirectoryPicker();
 
-  final _methodChannel = const MethodChannel("venera/method_channel");
-
-  Future<Directory?> pickDirectory() async {
-    if (App.isWindows || App.isLinux) {
-      var d = await file_selector.getDirectoryPath();
-      _directory = d;
-      return d == null ? null : Directory(d);
-    } else if (App.isAndroid) {
-      var d = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
-      _directory = d;
-      return d == null ? null : Directory(d);
-    } else {
-      // ios, macos
-      var d = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
-      _directory = d;
-      return d == null ? null : Directory(d);
-    }
-  }
-
-  Future<void> dispose() async {
-    if (_directory == null) {
-      return;
-    }
-    if (App.isAndroid && _directory != null) {
-      return Directory(_directory!).deleteIgnoreError(recursive: true);
+  static final _finalizer = Finalizer<String>((path) {
+    if (path.startsWith(App.cachePath)) {
+      Directory(path).deleteIgnoreError();
     }
     if (App.isIOS || App.isMacOS) {
-      await _methodChannel.invokeMethod("stopAccessingSecurityScopedResource");
+      _methodChannel.invokeMethod("stopAccessingSecurityScopedResource");
+    }
+  });
+
+  static const _methodChannel = MethodChannel("venera/method_channel");
+
+  Future<Directory?> pickDirectory() async {
+    IO._isSelectingFiles = true;
+    try {
+      String? directory;
+      if (App.isWindows || App.isLinux) {
+        directory = await file_selector.getDirectoryPath();
+      } else if (App.isAndroid) {
+        directory = (await AndroidDirectory.pickDirectory())?.path;
+      } else {
+        // ios, macos
+        directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
+      }
+      if (directory == null) return null;
+      _finalizer.attach(this, directory);
+      return openDirectoryPlatform(directory);
+    } finally {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        IO._isSelectingFiles = false;
+      });
     }
   }
 }
@@ -186,53 +202,74 @@ class IOSDirectoryPicker {
 
   // 调用 iOS 目录选择方法
   static Future<String?> selectDirectory() async {
+    IO._isSelectingFiles = true;
     try {
       final String? path = await _channel.invokeMethod('selectDirectory');
       return path;
     } catch (e) {
       // 返回报错信息
       return e.toString();
+    } finally {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        IO._isSelectingFiles = false;
+      });
     }
   }
 }
 
-Future<file_selector.XFile?> selectFile({required List<String> ext}) async {
-  var extensions = App.isMacOS || App.isIOS ? null : ext;
-  if (App.isAndroid) {
-    for (var e in ext) {
-      var fileType = FileType.fromExtension(e);
-      if (fileType.mime == "application/octet-stream") {
-        extensions = null;
-        break;
-      }
-    }
-  }
-  file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
-    label: 'files',
-    extensions: extensions,
-  );
-  file_selector.XFile? file;
-  if (extensions == null && App.isAndroid) {
-    const selectFileChannel = MethodChannel("venera/select_file");
-    var filePath = await selectFileChannel.invokeMethod("selectFile");
-    if (filePath == null) return null;
-    file = file_selector.XFile(filePath);
-  } else {
-    file = await file_selector.openFile(
-      acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
+Future<FileSelectResult?> selectFile({required List<String> ext}) async {
+  IO._isSelectingFiles = true;
+  try {
+    var extensions = App.isMacOS || App.isIOS ? null : ext;
+    file_selector.XTypeGroup typeGroup = file_selector.XTypeGroup(
+      label: 'files',
+      extensions: extensions,
     );
-    if (file == null) return null;
+    FileSelectResult? file;
+    if (App.isAndroid) {
+      const selectFileChannel = MethodChannel("venera/select_file");
+      String mimeType = "*/*";
+      if (ext.length == 1) {
+        mimeType = FileType.fromExtension(ext[0]).mime;
+        if (mimeType == "application/octet-stream") {
+          mimeType = "*/*";
+        }
+      }
+      var filePath = await selectFileChannel.invokeMethod(
+        "selectFile",
+        mimeType,
+      );
+      if (filePath == null) return null;
+      file = FileSelectResult(filePath);
+    } else {
+      var xFile = await file_selector.openFile(
+        acceptedTypeGroups: <file_selector.XTypeGroup>[typeGroup],
+      );
+      if (xFile == null) return null;
+      file = FileSelectResult(xFile.path);
+    }
+    if (!ext.contains(file.path.split(".").last)) {
+      App.rootContext.showMessage(message: "Invalid file type");
+      return null;
+    }
+    return file;
+  } finally {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      IO._isSelectingFiles = false;
+    });
   }
-  if (!ext.contains(file.path.split(".").last)) {
-    App.rootContext.showMessage(message: "Invalid file type");
-    return null;
-  }
-  return file;
 }
 
 Future<String?> selectDirectory() async {
-  var path = await file_selector.getDirectoryPath();
-  return path;
+  IO._isSelectingFiles = true;
+  try {
+    var path = await file_selector.getDirectoryPath();
+    return path;
+  } finally {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      IO._isSelectingFiles = false;
+    });
+  }
 }
 
 // selectDirectoryIOS
@@ -245,25 +282,59 @@ Future<void> saveFile(
   if (data == null && file == null) {
     throw Exception("data and file cannot be null at the same time");
   }
-  if (data != null) {
-    var cache = FilePath.join(App.cachePath, filename);
-    if (File(cache).existsSync()) {
-      File(cache).deleteSync();
+  IO._isSelectingFiles = true;
+  try {
+    if (data != null) {
+      var cache = FilePath.join(App.cachePath, filename);
+      if (File(cache).existsSync()) {
+        File(cache).deleteSync();
+      }
+      await File(cache).writeAsBytes(data);
+      file = File(cache);
     }
-    await File(cache).writeAsBytes(data);
-    file = File(cache);
+    if (App.isMobile) {
+      final params = SaveFileDialogParams(sourceFilePath: file!.path);
+      await FlutterFileDialog.saveFile(params: params);
+    } else {
+      final result = await file_selector.getSaveLocation(
+        suggestedName: filename,
+      );
+      if (result != null) {
+        var xFile = file_selector.XFile(file!.path);
+        await xFile.saveTo(result.path);
+      }
+    }
+  } finally {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      IO._isSelectingFiles = false;
+    });
   }
-  if (App.isMobile) {
-    final params = SaveFileDialogParams(sourceFilePath: file!.path);
-    await FlutterFileDialog.saveFile(params: params);
-  } else {
-    final result = await file_selector.getSaveLocation(
-      suggestedName: filename,
-    );
-    if (result != null) {
-      var xFile = file_selector.XFile(file!.path);
-      await xFile.saveTo(result.path);
+}
+
+Directory openDirectoryPlatform(String path) {
+  if(App.isAndroid) {
+    var dir = AndroidDirectory.fromPathSync(path);
+    if(dir == null) {
+      return Directory(path);
     }
+    return dir;
+  } else {
+    return Directory(path);
+  }
+}
+
+File openFilePlatform(String path) {
+  if(path.startsWith("file://")) {
+    path = path.substring(7);
+  }
+  if(App.isAndroid) {
+    var f = AndroidFile.fromPathSync(path);
+    if(f == null) {
+      return File(path);
+    }
+    return f;
+  } else {
+    return File(path);
   }
 }
 
@@ -301,4 +372,28 @@ String bytesToReadableString(int bytes) {
   } else {
     return "${(bytes / 1024 / 1024 / 1024).toStringAsFixed(2)} GB";
   }
+}
+
+class FileSelectResult {
+  final String path;
+
+  static final _finalizer = Finalizer<String>((path) {
+    if (path.startsWith(App.cachePath)) {
+      File(path).deleteIgnoreError();
+    }
+  });
+
+  FileSelectResult(this.path) {
+    _finalizer.attach(this, path);
+  }
+
+  Future<void> saveTo(String path) async {
+    await File(this.path).copy(path);
+  }
+
+  Future<Uint8List> readAsBytes() {
+    return File(path).readAsBytes();
+  }
+
+  String get name => File(path).name;
 }

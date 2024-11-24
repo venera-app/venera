@@ -1,3 +1,4 @@
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -12,6 +13,7 @@ import 'package:venera/utils/translations.dart';
 import 'foundation/appdata.dart';
 
 Future<void> init() async {
+  await SAFTaskWorker().init();
   await AppTranslation.init();
   await appdata.init();
   await App.init();

@@ -86,6 +86,9 @@ abstract class CBZ {
       var ext = e.path.split('.').last;
       return !['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'].contains(ext);
     });
+    if(files.isEmpty) {
+      throw Exception('No images found in the archive');
+    }
     files.sort((a, b) => a.path.compareTo(b.path));
     var coverFile = files.firstWhereOrNull(
       (element) =>
@@ -108,7 +111,7 @@ abstract class CBZ {
         var src = files[i];
         var dst = File(
             FilePath.join(dest.path, '${i + 1}.${src.path.split('.').last}'));
-        src.copy(dst.path);
+        await src.copy(dst.path);
       }
     } else {
       dest.createSync();
@@ -126,7 +129,7 @@ abstract class CBZ {
           var src = chapter.value[i];
           var dst = File(FilePath.join(
               chapterDir.path, '${i + 1}.${src.path.split('.').last}'));
-          src.copy(dst.path);
+          await src.copy(dst.path);
         }
       }
     }
@@ -184,7 +187,7 @@ abstract class CBZ {
       }
       int i = 1;
       for (var image in allImages) {
-        var src = File(image.replaceFirst('file://', ''));
+        var src = openFilePlatform(image);
         var width = allImages.length.toString().length;
         var dstName =
             '${i.toString().padLeft(width, '0')}.${image.split('.').last}';

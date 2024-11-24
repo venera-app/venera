@@ -1,14 +1,14 @@
 part of 'components.dart';
 
 class ComicTile extends StatelessWidget {
-  const ComicTile({
-    super.key,
-    required this.comic,
-    this.enableLongPressed = true,
-    this.badge,
-    this.menuOptions,
-    this.onTap,
-  });
+  const ComicTile(
+      {super.key,
+      required this.comic,
+      this.enableLongPressed = true,
+      this.badge,
+      this.menuOptions,
+      this.onTap,
+      this.onLongPressed});
 
   final Comic comic;
 
@@ -20,6 +20,8 @@ class ComicTile extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  final VoidCallback? onLongPressed;
+
   void _onTap() {
     if (onTap != null) {
       onTap!();
@@ -27,6 +29,14 @@ class ComicTile extends StatelessWidget {
     }
     App.mainNavigatorKey?.currentContext
         ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+  }
+
+  void _onLongPressed(context) {
+    if (onLongPressed != null) {
+      onLongPressed!();
+      return;
+    }
+    onLongPress(context);
   }
 
   void onLongPress(BuildContext context) {
@@ -154,8 +164,6 @@ class ComicTile extends StatelessWidget {
     ImageProvider image;
     if (comic is LocalComic) {
       image = FileImage((comic as LocalComic).coverFile);
-    } else if (comic.cover.startsWith('file://')) {
-      image = FileImage(File(comic.cover.substring(7)));
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
       if (localComic == null) {
@@ -183,7 +191,7 @@ class ComicTile extends StatelessWidget {
       return InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: _onTap,
-          onLongPress: enableLongPressed ? () => onLongPress(context) : null,
+          onLongPress: enableLongPressed ? () => _onLongPressed(context) : null,
           onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
@@ -233,7 +241,7 @@ class ComicTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: _onTap,
               onLongPress:
-                  enableLongPressed ? () => onLongPress(context) : null,
+                  enableLongPressed ? () => _onLongPressed(context) : null,
               onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
               child: Column(
                 children: [
@@ -253,18 +261,34 @@ class ComicTile extends StatelessWidget {
                               child: buildImage(context),
                             ),
                           ),
-                          Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Padding(
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: (() {
+                              final subtitle =
+                                  comic.subtitle?.replaceAll('\n', '').trim();
+                              final text = comic.description.isNotEmpty
+                                  ? comic.description.split('|').join('\n')
+                                  : (subtitle?.isNotEmpty == true
+                                      ? subtitle
+                                      : null);
+                              final scale =
+                                  (appdata.settings['comicTileScale'] as num)
+                                      .toDouble();
+                              final fortSize = scale < 0.85
+                                  ? 8.0 // 小尺寸
+                                  : (scale < 1.0 ? 10.0 : 12.0);
+
+                              if (text == null) {
+                                return const SizedBox
+                                    .shrink(); // 如果没有文本，则不显示任何内容
+                              }
+
+                              return Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 4, vertical: 4),
+                                    horizontal: 2, vertical: 2),
                                 child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(10.0),
-                                    topRight: Radius.circular(10.0),
-                                    bottomRight: Radius.circular(10.0),
-                                    bottomLeft: Radius.circular(10.0),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(10.0),
                                   ),
                                   child: Container(
                                     color: Colors.black.withOpacity(0.5),
@@ -273,19 +297,13 @@ class ComicTile extends StatelessWidget {
                                           const EdgeInsets.fromLTRB(8, 6, 8, 6),
                                       child: ConstrainedBox(
                                         constraints: BoxConstraints(
-                                          maxWidth: constraints.maxWidth * 0.88,
+                                          maxWidth: constraints.maxWidth,
                                         ),
                                         child: Text(
-                                          comic.description.isEmpty
-                                              ? comic.subtitle
-                                                      ?.replaceAll('\n', '') ??
-                                                  ''
-                                              : comic.description
-                                                  .split('|')
-                                                  .join('\n'),
-                                          style: const TextStyle(
+                                          text,
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w500,
-                                            fontSize: 12,
+                                            fontSize: fortSize,
                                             color: Colors.white,
                                           ),
                                           textAlign: TextAlign.right,
@@ -296,7 +314,9 @@ class ComicTile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              )),
+                              );
+                            })(),
+                          ),
                         ],
                       ),
                     ),
@@ -307,7 +327,6 @@ class ComicTile extends StatelessWidget {
                       comic.title.replaceAll('\n', ''),
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
-                        fontSize: 14.0,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -635,6 +654,7 @@ class SliverGridComics extends StatefulWidget {
       this.badgeBuilder,
       this.menuBuilder,
       this.onTap,
+      this.onLongPressed,
       this.selections});
 
   final List<Comic> comics;
@@ -648,6 +668,8 @@ class SliverGridComics extends StatefulWidget {
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
   final void Function(Comic)? onTap;
+
+  final void Function(Comic)? onLongPressed;
 
   @override
   State<SliverGridComics> createState() => _SliverGridComicsState();
@@ -699,6 +721,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
       badgeBuilder: widget.badgeBuilder,
       menuBuilder: widget.menuBuilder,
       onTap: widget.onTap,
+      onLongPressed: widget.onLongPressed,
     );
   }
 }
@@ -710,6 +733,7 @@ class _SliverGridComics extends StatelessWidget {
     this.badgeBuilder,
     this.menuBuilder,
     this.onTap,
+    this.onLongPressed,
     this.selection,
   });
 
@@ -724,6 +748,8 @@ class _SliverGridComics extends StatelessWidget {
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
   final void Function(Comic)? onTap;
+
+  final void Function(Comic)? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -741,14 +767,18 @@ class _SliverGridComics extends StatelessWidget {
             badge: badge,
             menuOptions: menuBuilder?.call(comics[index]),
             onTap: onTap != null ? () => onTap!(comics[index]) : null,
+            onLongPressed: onLongPressed != null
+                ? () => onLongPressed!(comics[index])
+                : null,
           );
-          if(selection == null) {
+          if (selection == null) {
             return comic;
           }
-          return Container(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.surfaceContainer
+                  ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.72)
                   : null,
               borderRadius: BorderRadius.circular(12),
             ),

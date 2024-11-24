@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/utils/io.dart';
@@ -161,8 +162,8 @@ class _DownloadTaskTileState extends State<_DownloadTaskTile> {
             clipBehavior: Clip.antiAlias,
             child: widget.task.cover == null
                 ? null
-                : Image.file(
-                    File(widget.task.cover!),
+                : Image(
+                    image: CachedImageProvider(widget.task.cover!),
                     filterQuality: FilterQuality.medium,
                     fit: BoxFit.cover,
                   ),
@@ -206,6 +207,7 @@ class _DownloadTaskTileState extends State<_DownloadTaskTile> {
                   Text(
                     widget.task.message,
                     style: ts.s12,
+                    maxLines: 3,
                   ),
                 const SizedBox(height: 4),
                 LinearProgressIndicator(

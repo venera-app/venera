@@ -19,8 +19,8 @@ Future<bool> _deleteComic(
       bool loading = false;
       return StatefulBuilder(builder: (context, setState) {
         return ContentDialog(
-          title: "Delete".tl,
-          content: Text("Are you sure you want to delete this comic?".tl)
+          title: "Remove".tl,
+          content: Text("Remove comic from favorite?".tl)
               .paddingHorizontal(16),
           actions: [
             Button.filled(
@@ -94,6 +94,9 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
     return ComicList(
       key: comicListKey,
       leadingSliver: SliverAppbar(
+        style: context.width < changePoint
+            ? AppbarStyle.shadow
+            : AppbarStyle.blur,
         leading: Tooltip(
           message: "Folders".tl,
           child: context.width <= _kTwoPanelChangeWidth
@@ -211,6 +214,9 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
   @override
   Widget build(BuildContext context) {
     var sliverAppBar = SliverAppbar(
+      style: context.width < changePoint
+          ? AppbarStyle.shadow
+          : AppbarStyle.blur,
       leading: Tooltip(
         message: "Folders".tl,
         child: context.width <= _kTwoPanelChangeWidth
@@ -424,7 +430,7 @@ class _FolderTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Delete".tl,
-            content: Text("Are you sure you want to delete this folder?".tl)
+            content: Text("Delete folder?".tl)
                 .paddingHorizontal(16),
             actions: [
               Button.filled(

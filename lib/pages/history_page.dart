@@ -97,7 +97,9 @@ class _HistoryPageState extends State<HistoryPage> {
                   e.subtitle,
                   null,
                   getDescription(e),
-                  e.type.comicSource?.key ?? "Invalid:${e.type.value}",
+                  e.type == ComicType.local
+                      ? 'local'
+                      : e.type.comicSource?.key ?? "Unknown:${e.type.value}",
                   null,
                   null,
                 );
@@ -111,11 +113,17 @@ class _HistoryPageState extends State<HistoryPage> {
                 MenuEntry(
                   icon: Icons.remove,
                   text: 'Remove'.tl,
+                  color: context.colorScheme.error,
                   onClick: () {
-                    if (c.sourceKey.startsWith("Invalid")) {
+                    if (c.sourceKey.startsWith("Unknown")) {
                       HistoryManager().remove(
                         c.id,
                         ComicType(int.parse(c.sourceKey.split(':')[1])),
+                      );
+                    } else if (c.sourceKey == 'local') {
+                      HistoryManager().remove(
+                        c.id,
+                        ComicType.local,
                       );
                     } else {
                       HistoryManager().remove(

@@ -97,6 +97,9 @@ class MyLogInterceptor implements Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    Log.info("Network", "${options.method} ${options.uri}\n"
+        "headers:\n${options.headers}\n"
+        "data:\n${options.data}");
     options.connectTimeout = const Duration(seconds: 15);
     options.receiveTimeout = const Duration(seconds: 15);
     options.sendTimeout = const Duration(seconds: 15);

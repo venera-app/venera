@@ -223,7 +223,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressDown(Offset location) {
-    if(!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom']) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
@@ -237,7 +237,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressUp(Offset location) {
-    if(!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom']) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
@@ -473,7 +473,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
     );
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-    if(appdata.settings['limitImageWidth'] && width / height > 0.7) {
+    if (appdata.settings['limitImageWidth'] &&
+        width / height > 0.7 &&
+        reader.mode == ReaderMode.continuousTopToBottom) {
       width = height * 0.7;
     }
 
@@ -521,7 +523,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleLongPressDown(Offset location) {
-    if(!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom']) {
       return;
     }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
@@ -534,7 +536,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleLongPressUp(Offset location) {
-    if(!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom']) {
       return;
     }
     double target = photoViewController.getInitialScale!.call()!;
@@ -602,7 +604,7 @@ ImageProvider _createImageProvider(int page, BuildContext context) {
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
   if (imageKey.startsWith('file://')) {
-    return FileImage(File(imageKey.replaceFirst("file://", '')));
+    return FileImage(openFilePlatform(imageKey.replaceFirst("file://", '')));
   } else {
     return ReaderImageProvider(
       imageKey,

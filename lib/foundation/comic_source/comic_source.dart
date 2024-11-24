@@ -215,6 +215,8 @@ class ComicSource {
 
   final StarRatingFunc? starRatingFunc;
 
+  final ArchiveDownloader? archiveDownloader;
+
   Future<void> loadData() async {
     var file = File("${App.dataPath}/comic_source/$key.data");
     if (await file.exists()) {
@@ -284,6 +286,7 @@ class ComicSource {
     this.enableTagsSuggestions,
     this.enableTagsTranslate,
     this.starRatingFunc,
+    this.archiveDownloader,
   );
 }
 
@@ -464,4 +467,12 @@ class LinkHandler {
   final String? Function(String url) linkToId;
 
   const LinkHandler(this.domains, this.linkToId);
+}
+
+class ArchiveDownloader {
+  final Future<Res<List<ArchiveInfo>>> Function(String cid) getArchives;
+
+  final Future<Res<String>> Function(String cid, String aid) getDownloadUrl;
+
+  const ArchiveDownloader(this.getArchives, this.getDownloadUrl);
 }

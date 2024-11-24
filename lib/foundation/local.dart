@@ -71,11 +71,12 @@ class LocalComic with HistoryMixin implements Comic {
         downloadedChapters = List.from(jsonDecode(row[8] as String)),
         createdAt = DateTime.fromMillisecondsSinceEpoch(row[9] as int);
 
-  File get coverFile => File(FilePath.join(
-        LocalManager().path,
-        directory,
+  File get coverFile => openFilePlatform(FilePath.join(
+        baseDir,
         cover,
       ));
+
+  String get baseDir => directory.contains("/") ? directory : FilePath.join(LocalManager().path, directory);
 
   @override
   String get description => "";
@@ -174,6 +175,27 @@ class LocalManager with ChangeNotifier {
     return null;
   }
 
+  Future<String> findDefaultPath() async {
+    if (App.isAndroid) {
+      var external = await getExternalStorageDirectories();
+      if (external != null && external.isNotEmpty) {
+        return FilePath.join(external.first.path, 'local');
+      } else {
+        return FilePath.join(App.dataPath, 'local');
+      }
+    } else if (App.isIOS) {
+      var oldPath = FilePath.join(App.dataPath, 'local');
+      if (Directory(oldPath).existsSync() && Directory(oldPath).listSync().isNotEmpty) {
+        return oldPath;
+      } else {
+        var directory = await getApplicationDocumentsDirectory();
+        return FilePath.join(directory.path, 'local');
+      }
+    } else {
+      return FilePath.join(App.dataPath, 'local');
+    }
+  }
+
   Future<void> init() async {
     _db = sqlite3.open(
       '${App.dataPath}/local.db',
@@ -195,20 +217,19 @@ class LocalManager with ChangeNotifier {
     ''');
     if (File(FilePath.join(App.dataPath, 'local_path')).existsSync()) {
       path = File(FilePath.join(App.dataPath, 'local_path')).readAsStringSync();
+      if (!Directory(path).existsSync()) {
+        path = await findDefaultPath();
+      }
     } else {
-      if (App.isAndroid) {
-        var external = await getExternalStorageDirectories();
-        if (external != null && external.isNotEmpty) {
-          path = FilePath.join(external.first.path, 'local');
-        } else {
-          path = FilePath.join(App.dataPath, 'local');
-        }
-      } else {
-        path = FilePath.join(App.dataPath, 'local');
+      path = await findDefaultPath();
+    }
+    try {
+      if (!Directory(path).existsSync()) {
+        await Directory(path).create();
       }
     }
-    if (!Directory(path).existsSync()) {
-      await Directory(path).create();
+    catch(e, s) {
+      Log.error("IO", "Failed to create local folder: $e", s);
     }
     restoreDownloadingTasks();
   }
@@ -333,18 +354,19 @@ class LocalManager with ChangeNotifier {
       throw "Invalid ep";
     }
     var comic = find(id, type) ?? (throw "Comic Not Found");
-    var directory = Directory(FilePath.join(path, comic.directory));
+    var directory = openDirectoryPlatform(comic.baseDir);
     if (comic.chapters != null) {
       var cid = ep is int
           ? comic.chapters!.keys.elementAt(ep - 1)
           : (ep as String);
-      directory = Directory(FilePath.join(directory.path, cid));
+      directory = openDirectoryPlatform(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
     await for (var entity in directory.list()) {
       if (entity is File) {
-        if (entity.absolute.path.replaceFirst(path, '').substring(1) ==
-            comic.cover) {
+        // Do not exclude comic.cover, since it may be the first page of the chapter.
+        // A file with name starting with 'cover.' is not a comic page.
+        if (entity.name.startsWith('cover.')) {
           continue;
         }
         //Hidden file in some file system
@@ -384,10 +406,10 @@ class LocalManager with ChangeNotifier {
       String id, ComicType type, String name) async {
     var comic = find(id, type);
     if (comic != null) {
-      return Directory(FilePath.join(path, comic.directory));
+      return openDirectoryPlatform(FilePath.join(path, comic.directory));
     }
     var dir = findValidDirectoryName(path, name);
-    return Directory(FilePath.join(path, dir)).create().then((value) => value);
+    return openDirectoryPlatform(FilePath.join(path, dir)).create().then((value) => value);
   }
 
   void completeTask(DownloadTask task) {
@@ -446,14 +468,13 @@ class LocalManager with ChangeNotifier {
 
   void deleteComic(LocalComic c, [bool removeFileOnDisk = true]) {
     if(removeFileOnDisk) {
-      var dir = Directory(FilePath.join(path, c.directory));
+      var dir = openDirectoryPlatform(FilePath.join(path, c.directory));
       dir.deleteIgnoreError(recursive: true);
     }
     //Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
     if(HistoryManager().findSync(c.id, c.comicType) != null) {
       HistoryManager().remove(c.id, c.comicType);
     }
-    assert(c.comicType == ComicType.local);
     var folders = LocalFavoritesManager().find(c.id, c.comicType);
     for (var f in folders) {
       LocalFavoritesManager().deleteComicWithId(f, c.id, c.comicType);

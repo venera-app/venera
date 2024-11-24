@@ -1,13 +1,17 @@
 import 'dart:async' show Future, StreamController;
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/network/images.dart';
+import 'package:venera/utils/io.dart';
 import 'base_image_provider.dart';
 import 'cached_image.dart' as image_provider;
 
 class CachedImageProvider
     extends BaseImageProvider<image_provider.CachedImageProvider> {
   /// Image provider for normal image.
+  ///
+  /// [url] is the url of the image. Local file path is also supported.
   const CachedImageProvider(this.url, {this.headers, this.sourceKey, this.cid});
 
   final String url;
@@ -20,6 +24,10 @@ class CachedImageProvider
 
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+    if(url.startsWith("file://")) {
+      var file = openFilePlatform(url.substring(7));
+      return file.readAsBytes();
+    }
     await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {
       chunkEvents.add(ImageChunkEvent(
         cumulativeBytesLoaded: progress.currentBytes,

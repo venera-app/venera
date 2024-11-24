@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/image_provider/local_favorite_image.dart';
+import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'dart:io';
 
@@ -12,10 +13,7 @@ import 'comic_source/comic_source.dart';
 import 'comic_type.dart';
 
 String _getTimeString(DateTime time) {
-  return time
-      .toIso8601String()
-      .replaceFirst("T", " ")
-      .substring(0, 19);
+  return time.toIso8601String().replaceFirst("T", " ").substring(0, 19);
 }
 
 class FavoriteItem implements Comic {
@@ -29,15 +27,14 @@ class FavoriteItem implements Comic {
   String coverPath;
   late String time;
 
-  FavoriteItem({
-    required this.id,
-    required this.name,
-    required this.coverPath,
-    required this.author,
-    required this.type,
-    required this.tags,
-    DateTime? favoriteTime
-  }) {
+  FavoriteItem(
+      {required this.id,
+      required this.name,
+      required this.coverPath,
+      required this.author,
+      required this.type,
+      required this.tags,
+      DateTime? favoriteTime}) {
     var t = favoriteTime ?? DateTime.now();
     time = _getTimeString(t);
   }
@@ -75,7 +72,9 @@ class FavoriteItem implements Comic {
 
   @override
   String get description {
-    return "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}";
+    return appdata.settings['comicDisplayMode'] == 'detailed'
+        ? "$time | ${type == ComicType.local ? 'local' : type.comicSource?.name ?? "Unknown"}"
+        : "${type.comicSource?.name ?? "Unknown"} | $time";
   }
 
   @override
@@ -353,7 +352,8 @@ class LocalFavoritesManager with ChangeNotifier {
     """, [folder, source, networkFolder]);
   }
 
-  bool isLinkedToNetworkFolder(String folder, String source, String networkFolder) {
+  bool isLinkedToNetworkFolder(
+      String folder, String source, String networkFolder) {
     var res = _db.select("""
       select * from folder_sync
       where folder_name == ? and source_key == ? and source_folder == ?;
@@ -434,6 +434,41 @@ class LocalFavoritesManager with ChangeNotifier {
     return true;
   }
 
+  void moveFavorite(
+      String sourceFolder, String targetFolder, String id, ComicType type) {
+    _modifiedAfterLastCache = true;
+
+    if (!existsFolder(sourceFolder)) {
+      throw Exception("Source folder does not exist");
+    }
+    if (!existsFolder(targetFolder)) {
+      throw Exception("Target folder does not exist");
+    }
+
+    var res = _db.select("""
+    select * from "$targetFolder"
+    where id == ? and type == ?;
+  """, [id, type.value]);
+
+    if (res.isNotEmpty) {
+      return;
+    }
+
+    _db.execute("""
+      insert into "$targetFolder" (id, name, author, type, tags, cover_path, time, display_order)
+      select id, name, author, type, tags, cover_path, time, ?
+      from "$sourceFolder"
+      where id == ? and type == ?;
+    """, [minValue(targetFolder) - 1, id, type.value]);
+
+    _db.execute("""
+    delete from "$sourceFolder"
+    where id == ? and type == ?;
+  """, [id, type.value]);
+
+    notifyListeners();
+  }
+
   /// delete a folder
   void deleteFolder(String name) {
     _modifiedAfterLastCache = true;
@@ -460,6 +495,22 @@ class LocalFavoritesManager with ChangeNotifier {
       where id == ? and type == ?;
     """, [id, type.value]);
     notifyListeners();
+  }
+
+  Future<int> removeInvalid() async {
+    int count = 0;
+    await Future.microtask(() {
+      var all = allComics();
+      for(var c in all) {
+        var comicSource = c.type.comicSource;
+        if ((c.type == ComicType.local && LocalManager().find(c.id, c.type) == null) 
+          || (c.type != ComicType.local && comicSource == null)) {
+          deleteComicWithId(c.folder, c.id, c.type);
+          count++;
+        }
+      }
+    });
+    return count;
   }
 
   Future<void> clearAll() async {

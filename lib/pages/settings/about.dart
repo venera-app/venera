@@ -86,29 +86,33 @@ Future<bool> checkUpdate() async {
 }
 
 Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true]) async {
-  var value = await checkUpdate();
-  if (value) {
-    showDialog(
-        context: App.rootContext,
-        builder: (context) {
-          return ContentDialog(
-            title: "New version available".tl,
-            content: Text(
-                "A new version is available. Do you want to update now?".tl),
-            actions: [
-              Button.text(
-                onPressed: () {
-                  Navigator.pop(context);
-                  launchUrlString(
-                      "https://github.com/venera-app/venera/releases");
-                },
-                child: Text("Update".tl),
-              ),
-            ],
-          );
-        });
-  } else if (showMessageIfNoUpdate) {
-    App.rootContext.showMessage(message: "No new version available".tl);
+  try {
+    var value = await checkUpdate();
+    if (value) {
+      showDialog(
+          context: App.rootContext,
+          builder: (context) {
+            return ContentDialog(
+              title: "New version available".tl,
+              content: Text(
+                  "A new version is available. Do you want to update now?".tl),
+              actions: [
+                Button.text(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    launchUrlString(
+                        "https://github.com/venera-app/venera/releases");
+                  },
+                  child: Text("Update".tl),
+                ),
+              ],
+            );
+          });
+    } else if (showMessageIfNoUpdate) {
+      App.rootContext.showMessage(message: "No new version available".tl);
+    }
+  } catch (e, s) {
+    Log.error("Check Update", e.toString(), s);
   }
 }
 
