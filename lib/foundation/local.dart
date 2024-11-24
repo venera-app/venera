@@ -364,8 +364,9 @@ class LocalManager with ChangeNotifier {
     var files = <File>[];
     await for (var entity in directory.list()) {
       if (entity is File) {
-        if (entity.absolute.path.replaceFirst(path, '').substring(1) ==
-            comic.cover) {
+        // Do not exclude comic.cover, since it may be the first page of the chapter.
+        // A file with name starting with 'cover.' is not a comic page.
+        if (entity.name.startsWith('cover.')) {
           continue;
         }
         //Hidden file in some file system
