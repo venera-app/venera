@@ -32,11 +32,11 @@ class Log {
   static const String? logFile = null;
 
   static void printWarning(String text) {
-    print('\x1B[33m$text\x1B[0m');
+    debugPrint('\x1B[33m$text\x1B[0m');
   }
 
   static void printError(String text) {
-    print('\x1B[31m$text\x1B[0m');
+    debugPrint('\x1B[31m$text\x1B[0m');
   }
 
   static void addLog(LogLevel level, String title, String content) {
@@ -44,15 +44,15 @@ class Log {
       content = "${content.substring(0, maxLogLength)}...";
     }
 
-    if (kDebugMode) {
-      switch (level) {
-        case LogLevel.error:
-          printError(content);
-        case LogLevel.warning:
-          printWarning(content);
-        case LogLevel.info:
-          print(content);
-      }
+    switch (level) {
+      case LogLevel.error:
+        printError(content);
+      case LogLevel.warning:
+        printWarning(content);
+      case LogLevel.info:
+        if(kDebugMode) {
+          debugPrint(content);
+        }
     }
 
     var newLog = LogItem(level, title, content);
