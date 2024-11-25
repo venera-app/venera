@@ -469,7 +469,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               ImageProvider image;
               var imageKey = images[index];
               if (imageKey.startsWith('file://')) {
-                image = FileImage(openFilePlatform(imageKey.replaceFirst("file://", '')));
+                image = FileImage(File(imageKey.replaceFirst("file://", '')));
               } else {
                 image = ReaderImageProvider(
                   imageKey,
@@ -515,7 +515,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       }
     }
     if (imageKey.startsWith("file://")) {
-      return await openFilePlatform(imageKey.substring(7)).readAsBytes();
+      return await File(imageKey.substring(7)).readAsBytes();
     } else {
       return (await CacheManager().findCache(
               "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!

@@ -95,10 +95,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     var local = LocalManager().find(id, comicType);
     if (path != null) {
       if (local == null) {
-        openDirectoryPlatform(path!).deleteIgnoreError(recursive: true);
+        Directory(path!).deleteIgnoreError(recursive: true);
       } else if (chapters != null) {
         for (var c in chapters!) {
-          var dir = openDirectoryPlatform(FilePath.join(path!, c));
+          var dir = Directory(FilePath.join(path!, c));
           if (dir.existsSync()) {
             dir.deleteSync(recursive: true);
           }
@@ -178,7 +178,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       }
       Directory saveTo;
       if (comic!.chapters != null) {
-        saveTo = openDirectoryPlatform(FilePath.join(
+        saveTo = Directory(FilePath.join(
           path!,
           comic!.chapters!.keys.elementAt(_chapter),
         ));
@@ -186,7 +186,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           saveTo.createSync();
         }
       } else {
-        saveTo = openDirectoryPlatform(path!);
+        saveTo = Directory(path!);
       }
       var task = _ImageDownloadWrapper(
         this,
@@ -268,7 +268,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
         }
         var fileType = detectFileType(data);
         var file =
-            openFilePlatform(FilePath.join(path!, "cover${fileType.ext}"));
+            File(FilePath.join(path!, "cover${fileType.ext}"));
         file.writeAsBytesSync(data);
         return "file://${file.path}";
       });
@@ -451,10 +451,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       tags: comic!.tags.entries.expand((e) {
         return e.value.map((v) => "${e.key}:$v");
       }).toList(),
-      directory: openDirectoryPlatform(path!).name,
+      directory: Directory(path!).name,
       chapters: comic!.chapters,
       cover:
-          openFilePlatform(_cover!.split("file://").last).uri.pathSegments.last,
+          File(_cover!.split("file://").last).uri.pathSegments.last,
       comicType: ComicType(source.key.hashCode),
       downloadedChapters: chapters ?? [],
       createdAt: DateTime.now(),
@@ -645,7 +645,7 @@ class ArchiveDownloadTask extends DownloadTask {
     _isRunning = false;
     await _downloader?.stop();
     if (path != null) {
-      openDirectoryPlatform(path!).deleteIgnoreError(recursive: true);
+      Directory(path!).deleteIgnoreError(recursive: true);
     }
     path = null;
     LocalManager().removeTask(this);
@@ -714,7 +714,7 @@ class ArchiveDownloadTask extends DownloadTask {
       path = dir.path;
     }
 
-    var resultFile = openFilePlatform(FilePath.join(path!, "archive.zip"));
+    var resultFile = File(FilePath.join(path!, "archive.zip"));
 
     Log.info("Download", "Downloading $archiveUrl");
 
@@ -792,7 +792,7 @@ class ArchiveDownloadTask extends DownloadTask {
   }
 
   String _findCover() {
-    var files = openDirectoryPlatform(path!).listSync();
+    var files = Directory(path!).listSync();
     for (var f in files) {
       if (f.name.startsWith('cover')) {
         return f.name;
@@ -813,7 +813,7 @@ class ArchiveDownloadTask extends DownloadTask {
       tags: comic.tags.entries.expand((e) {
         return e.value.map((v) => "${e.key}:$v");
       }).toList(),
-      directory: openDirectoryPlatform(path!).name,
+      directory: Directory(path!).name,
       chapters: null,
       cover: _findCover(),
       comicType: ComicType(source.key.hashCode),

@@ -1,5 +1,4 @@
 import 'dart:async' show Future, StreamController, scheduleMicrotask;
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:ui' as ui show Codec;
 import 'dart:ui';
@@ -108,7 +107,7 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
     }
   }
 
-  static final _cache = LinkedHashMap<String, Uint8List>();
+  static final _cache = <String, Uint8List>{};
 
   static var _cacheSize = 0;
 

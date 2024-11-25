@@ -60,7 +60,7 @@ class ImportComic {
           if (cancelled) {
             return imported;
           }
-          var comicDir = openDirectoryPlatform(
+          var comicDir = Directory(
               FilePath.join(comicSrc.path, comic['DIRNAME'] as String));
           String titleJP =
           comic['TITLE_JPN'] == null ? "" : comic['TITLE_JPN'] as String;
@@ -217,7 +217,7 @@ class ImportComic {
     chapters.sort();
     if (hasChapters && coverPath == '') {
       // use the first image in the first chapter as the cover
-      var firstChapter = openDirectoryPlatform('${directory.path}/${chapters.first}');
+      var firstChapter = Directory('${directory.path}/${chapters.first}');
       await for (var entry in firstChapter.list()) {
         if (entry is File) {
           coverPath = entry.name;
@@ -248,8 +248,8 @@ class ImportComic {
     var destination = data['destination'] as String;
     Map<String, String> result = {};
     for (var dir in toBeCopied) {
-      var source = openDirectoryPlatform(dir);
-      var dest = openDirectoryPlatform("$destination/${source.name}");
+      var source = Directory(dir);
+      var dest = Directory("$destination/${source.name}");
       if (dest.existsSync()) {
         // The destination directory already exists, and it is not managed by the app.
         // Rename the old directory to avoid conflicts.
