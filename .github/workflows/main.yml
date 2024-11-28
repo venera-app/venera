@@ -149,12 +149,38 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          name: venera.dmg
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-ios.ipa
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
           name: apks
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: arch_build
           path: outputs
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
+            outputs/*.ipa
+            outputs/*.dmg
             outputs/*.apk
+            outputs/*.zip
+            outputs/*.exe
+            outputs/*.deb
+            outputs/*.zst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
