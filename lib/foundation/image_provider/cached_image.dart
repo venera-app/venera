@@ -1,5 +1,4 @@
 import 'dart:async' show Future, StreamController;
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/network/images.dart';
@@ -25,7 +24,7 @@ class CachedImageProvider
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
     if(url.startsWith("file://")) {
-      var file = openFilePlatform(url.substring(7));
+      var file = File(url.substring(7));
       return file.readAsBytes();
     }
     await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {

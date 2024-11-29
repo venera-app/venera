@@ -187,7 +187,7 @@ abstract class CBZ {
       }
       int i = 1;
       for (var image in allImages) {
-        var src = openFilePlatform(image);
+        var src = File(image);
         var width = allImages.length.toString().length;
         var dstName =
             '${i.toString().padLeft(width, '0')}.${image.split('.').last}';
