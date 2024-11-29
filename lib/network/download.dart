@@ -454,7 +454,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       directory: Directory(path!).name,
       chapters: comic!.chapters,
       cover:
-          File(_cover!.split("file://").last).uri.pathSegments.last,
+          File(_cover!.split("file://").last).name,
       comicType: ComicType(source.key.hashCode),
       downloadedChapters: chapters ?? [],
       createdAt: DateTime.now(),

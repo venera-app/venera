@@ -327,38 +327,41 @@ Future<void> saveFile(
   }
 }
 
-Directory _openDirectoryPlatform(String path) {
-  if (App.isAndroid) {
-    var dir = AndroidDirectory.fromPathSync(path);
-    if (dir == null) {
-      return Directory(path);
+class _IOOverrides extends IOOverrides {
+  @override
+  Directory createDirectory(String path) {
+    if (App.isAndroid) {
+      var dir = AndroidDirectory.fromPathSync(path);
+      if (dir == null) {
+        return super.createDirectory(path);
+      }
+      return dir;
+    } else {
+      return super.createDirectory(path);
     }
-    return dir;
-  } else {
-    return Directory(path);
   }
-}
 
-File _openFilePlatform(String path) {
-  if (path.startsWith("file://")) {
-    path = path.substring(7);
-  }
-  if (App.isAndroid) {
-    var f = AndroidFile.fromPathSync(path);
-    if (f == null) {
-      return File(path);
+  @override
+  File createFile(String path) {
+    if (path.startsWith("file://")) {
+      path = path.substring(7);
     }
-    return f;
-  } else {
-    return File(path);
+    if (App.isAndroid) {
+      var f = AndroidFile.fromPathSync(path);
+      if (f == null) {
+        return super.createFile(path);
+      }
+      return f;
+    } else {
+      return super.createFile(path);
+    }
   }
 }
 
 void overrideIO(void Function() f) {
-  IOOverrides.runZoned(
+  IOOverrides.runWithIOOverrides(
     f,
-    createDirectory: _openDirectoryPlatform,
-    createFile: _openFilePlatform,
+    _IOOverrides(),
   );
 }
 
