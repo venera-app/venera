@@ -81,7 +81,7 @@ extension DirectoryExtension on Directory {
     int total = 0;
     for (var f in listSync(recursive: true)) {
       if (FileSystemEntity.typeSync(f.path) == FileSystemEntityType.file) {
-        total += await openFilePlatform(f.path).length();
+        total += await File(f.path).length();
       }
     }
     return total;
@@ -93,7 +93,21 @@ extension DirectoryExtension on Directory {
   }
 
   File joinFile(String name) {
-    return openFilePlatform(FilePath.join(path, name));
+    return File(FilePath.join(path, name));
+  }
+
+  void deleteContentsSync({recursive = true}) {
+    if (!existsSync()) return;
+    for (var f in listSync()) {
+      f.deleteIfExistsSync(recursive: recursive);
+    }
+  }
+
+  Future<void> deleteContents({recursive = true}) async {
+    if (!existsSync()) return;
+    for (var f in listSync()) {
+      await f.deleteIfExists(recursive: recursive);
+    }
   }
 }
 
@@ -124,14 +138,15 @@ String sanitizeFileName(String fileName) {
 Future<void> copyDirectory(Directory source, Directory destination) async {
   List<FileSystemEntity> contents = source.listSync();
   for (FileSystemEntity content in contents) {
-    String newPath = destination.path +
-        Platform.pathSeparator +
-        content.path.split(Platform.pathSeparator).last;
+    String newPath = FilePath.join(destination.path, content.name);
 
     if (content is File) {
-      content.copySync(newPath);
+      var resultFile = File(newPath);
+      resultFile.createSync();
+      var data = content.readAsBytesSync();
+      resultFile.writeAsBytesSync(data);
     } else if (content is Directory) {
-      Directory newDirectory = openDirectoryPlatform(newPath);
+      Directory newDirectory = Directory(newPath);
       newDirectory.createSync();
       copyDirectory(content.absolute, newDirectory.absolute);
     }
@@ -140,18 +155,18 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
 
 Future<void> copyDirectoryIsolate(
     Directory source, Directory destination) async {
-  await Isolate.run(() {
-    copyDirectory(source, destination);
+  await Isolate.run(() async {
+    await copyDirectory(source, destination);
   });
 }
 
 String findValidDirectoryName(String path, String directory) {
   var name = sanitizeFileName(directory);
-  var dir = openDirectoryPlatform("$path/$name");
+  var dir = Directory("$path/$name");
   var i = 1;
   while (dir.existsSync() && dir.listSync().isNotEmpty) {
     name = sanitizeFileName("$directory($i)");
-    dir = openDirectoryPlatform("$path/$name");
+    dir = Directory("$path/$name");
     i++;
   }
   return name;
@@ -184,11 +199,12 @@ class DirectoryPicker {
         directory = (await AndroidDirectory.pickDirectory())?.path;
       } else {
         // ios, macos
-        directory = await _methodChannel.invokeMethod<String?>("getDirectoryPath");
+        directory =
+            await _methodChannel.invokeMethod<String?>("getDirectoryPath");
       }
       if (directory == null) return null;
       _finalizer.attach(this, directory);
-      return openDirectoryPlatform(directory);
+      return Directory(directory);
     } finally {
       Future.delayed(const Duration(milliseconds: 100), () {
         IO._isSelectingFiles = false;
@@ -311,31 +327,42 @@ Future<void> saveFile(
   }
 }
 
-Directory openDirectoryPlatform(String path) {
-  if(App.isAndroid) {
-    var dir = AndroidDirectory.fromPathSync(path);
-    if(dir == null) {
-      return Directory(path);
+class _IOOverrides extends IOOverrides {
+  @override
+  Directory createDirectory(String path) {
+    if (App.isAndroid) {
+      var dir = AndroidDirectory.fromPathSync(path);
+      if (dir == null) {
+        return super.createDirectory(path);
+      }
+      return dir;
+    } else {
+      return super.createDirectory(path);
     }
-    return dir;
-  } else {
-    return Directory(path);
+  }
+
+  @override
+  File createFile(String path) {
+    if (path.startsWith("file://")) {
+      path = path.substring(7);
+    }
+    if (App.isAndroid) {
+      var f = AndroidFile.fromPathSync(path);
+      if (f == null) {
+        return super.createFile(path);
+      }
+      return f;
+    } else {
+      return super.createFile(path);
+    }
   }
 }
 
-File openFilePlatform(String path) {
-  if(path.startsWith("file://")) {
-    path = path.substring(7);
-  }
-  if(App.isAndroid) {
-    var f = AndroidFile.fromPathSync(path);
-    if(f == null) {
-      return File(path);
-    }
-    return f;
-  } else {
-    return File(path);
-  }
+void overrideIO(void Function() f) {
+  IOOverrides.runWithIOOverrides(
+    f,
+    _IOOverrides(),
+  );
 }
 
 class Share {

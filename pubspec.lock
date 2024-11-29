@@ -393,8 +393,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "829a566b738a26ea98e523807f49838e21308543"
-      resolved-ref: "829a566b738a26ea98e523807f49838e21308543"
+      ref: dd5242918da0ea9a0a50b0f87ade7a2def65453d
+      resolved-ref: dd5242918da0ea9a0a50b0f87ade7a2def65453d
       url: "https://github.com/pkuislm/flutter_saf.git"
     source: git
     version: "0.0.1"

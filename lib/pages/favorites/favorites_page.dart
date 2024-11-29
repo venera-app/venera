@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reorderable_grid_view/widgets/reorderable_builder.dart';
 import 'package:venera/components/components.dart';
@@ -11,9 +10,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
-import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
-import 'package:venera/network/download.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';

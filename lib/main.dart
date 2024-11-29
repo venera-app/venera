@@ -20,40 +20,42 @@ void main(List<String> args) {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
-  runZonedGuarded(() async {
-    await Rhttp.init();
-    WidgetsFlutterBinding.ensureInitialized();
-    await init();
-    if (App.isAndroid) {
-      handleLinks();
-    }
-    FlutterError.onError = (details) {
-      Log.error(
-          "Unhandled Exception", "${details.exception}\n${details.stack}");
-    };
-    runApp(const MyApp());
-    if (App.isDesktop) {
-      await windowManager.ensureInitialized();
-      windowManager.waitUntilReadyToShow().then((_) async {
-        await windowManager.setTitleBarStyle(
-          TitleBarStyle.hidden,
-          windowButtonVisibility: App.isMacOS,
-        );
-        if (App.isLinux) {
-          await windowManager.setBackgroundColor(Colors.transparent);
-        }
-        await windowManager.setMinimumSize(const Size(500, 600));
-        if (!App.isLinux) {
-          // https://github.com/leanflutter/window_manager/issues/460
-          var placement = await WindowPlacement.loadFromFile();
-          await placement.applyToWindow();
-          await windowManager.show();
-          WindowPlacement.loop();
-        }
-      });
-    }
-  }, (error, stack) {
-    Log.error("Unhandled Exception", "$error\n$stack");
+  overrideIO(() {
+    runZonedGuarded(() async {
+      await Rhttp.init();
+      WidgetsFlutterBinding.ensureInitialized();
+      await init();
+      if (App.isAndroid) {
+        handleLinks();
+      }
+      FlutterError.onError = (details) {
+        Log.error(
+            "Unhandled Exception", "${details.exception}\n${details.stack}");
+      };
+      runApp(const MyApp());
+      if (App.isDesktop) {
+        await windowManager.ensureInitialized();
+        windowManager.waitUntilReadyToShow().then((_) async {
+          await windowManager.setTitleBarStyle(
+            TitleBarStyle.hidden,
+            windowButtonVisibility: App.isMacOS,
+          );
+          if (App.isLinux) {
+            await windowManager.setBackgroundColor(Colors.transparent);
+          }
+          await windowManager.setMinimumSize(const Size(500, 600));
+          if (!App.isLinux) {
+            // https://github.com/leanflutter/window_manager/issues/460
+            var placement = await WindowPlacement.loadFromFile();
+            await placement.applyToWindow();
+            await windowManager.show();
+            WindowPlacement.loop();
+          }
+        });
+      }
+    }, (error, stack) {
+      Log.error("Unhandled Exception", "$error\n$stack");
+    });
   });
 }
 
