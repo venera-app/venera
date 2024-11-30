@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
 class SimpleController extends StateController {
-  final void Function()? refresh_;
+  final void Function()? refreshFunction;
 
-  SimpleController({this.refresh_});
+  final Map<String, dynamic> Function()? control;
+
+  SimpleController({this.refreshFunction, this.control});
 
   @override
   void refresh() {
-    (refresh_ ?? super.refresh)();
+    (refreshFunction ?? super.refresh)();
   }
+
+  Map<String, dynamic> get controlMap => control?.call() ?? {};
 }
 
 abstract class StateController {
@@ -71,8 +75,8 @@ abstract class StateController {
 
   static SimpleController putSimpleController(
       void Function() onUpdate, Object? tag,
-      {void Function()? refresh}) {
-    var controller = SimpleController(refresh_: refresh);
+      {void Function()? refresh, Map<String, dynamic> Function()? control}) {
+    var controller = SimpleController(refreshFunction: refresh, control: control);
     controller.stateUpdaters.add(Pair(null, onUpdate));
     _controllers.add(StateControllerWrapped(controller, false, tag));
     return controller;
@@ -202,6 +206,7 @@ abstract class StateWithController<T extends StatefulWidget> extends State<T> {
       },
       tag,
       refresh: refresh,
+      control: () => control,
     );
     super.initState();
   }
@@ -218,6 +223,8 @@ abstract class StateWithController<T extends StatefulWidget> extends State<T> {
   }
 
   Object? get tag;
+
+  Map<String, dynamic> get control => {};
 }
 
 class Pair<M, V>{
