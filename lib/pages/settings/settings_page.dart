@@ -178,8 +178,9 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
           Positioned.fill(child: buildLeft()),
           Positioned(
             left: offset,
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
+            right: 0,
+            top: 0,
+            bottom: 0,
             child: Listener(
               onPointerDown: handlePointerDown,
               child: AnimatedSwitcher(
