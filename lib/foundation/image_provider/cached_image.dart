@@ -21,22 +21,35 @@ class CachedImageProvider
 
   final String? cid;
 
+  static int loadingCount = 0;
+
+  static const _kMaxLoadingCount = 8;
+
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
-    if(url.startsWith("file://")) {
-      var file = File(url.substring(7));
-      return file.readAsBytes();
+    while(loadingCount > _kMaxLoadingCount) {
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-    await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {
-      chunkEvents.add(ImageChunkEvent(
-        cumulativeBytesLoaded: progress.currentBytes,
-        expectedTotalBytes: progress.totalBytes,
-      ));
-      if(progress.imageBytes != null) {
-        return progress.imageBytes!;
+    loadingCount++;
+    try {
+      if(url.startsWith("file://")) {
+        var file = File(url.substring(7));
+        return file.readAsBytes();
       }
+      await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {
+        chunkEvents.add(ImageChunkEvent(
+          cumulativeBytesLoaded: progress.currentBytes,
+          expectedTotalBytes: progress.totalBytes,
+        ));
+        if(progress.imageBytes != null) {
+          return progress.imageBytes!;
+        }
+      }
+      throw "Error: Empty response body.";
     }
-    throw "Error: Empty response body.";
+    finally {
+      loadingCount--;
+    }
   }
 
   @override
