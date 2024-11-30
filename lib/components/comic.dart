@@ -163,7 +163,7 @@ class ComicTile extends StatelessWidget {
   Widget buildImage(BuildContext context) {
     ImageProvider image;
     if (comic is LocalComic) {
-      image = FileImage((comic as LocalComic).coverFile);
+      image = LocalComicImageProvider(comic as LocalComic);
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
       if (localComic == null) {

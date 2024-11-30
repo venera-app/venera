@@ -7,6 +7,7 @@ import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
+import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/accounts_page.dart';
 import 'package:venera/pages/comic_page.dart';
@@ -418,8 +419,8 @@ class _LocalState extends State<_Local> {
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: AnimatedImage(
-                            image: FileImage(
-                              local[index].coverFile,
+                            image: LocalComicImageProvider(
+                              local[index],
                             ),
                             width: 96,
                             height: 128,
