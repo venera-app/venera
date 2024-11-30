@@ -172,7 +172,7 @@ class ComicDetails with HistoryMixin {
 
   ComicDetails.fromJson(Map<String, dynamic> json)
       : title = json["title"],
-        subTitle = json["subTitle"],
+        subTitle = json["subtitle"],
         cover = json["cover"],
         description = json["description"],
         tags = _generateMap(json["tags"]),
@@ -198,7 +198,9 @@ class ComicDetails with HistoryMixin {
         maxPage = json["maxPage"],
         comments = (json["comments"] as List?)
             ?.map((e) => Comment.fromJson(e))
-            .toList();
+            .toList(){
+    print(json);
+  }
 
   Map<String, dynamic> toJson() {
     return {

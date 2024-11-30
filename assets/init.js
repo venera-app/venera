@@ -877,6 +877,8 @@ function Comic({id, title, subtitle, subTitle, cover, tags, description, maxPage
 /**
  * Create a comic details object
  * @param title {string}
+ * @param subtitle {string}
+ * @param subTitle {string} - equal to subtitle
  * @param cover {string}
  * @param description {string?}
  * @param tags {Map<string, string[]> | {} | null | undefined}
@@ -897,8 +899,9 @@ function Comic({id, title, subtitle, subTitle, cover, tags, description, maxPage
  * @param comments {Comment[]?}- `since 1.0.7` App will display comments in the details page.
  * @constructor
  */
-function ComicDetails({title, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url, stars, maxPage, comments}) {
+function ComicDetails({title, subtitle, subTitle, cover, description, tags, chapters, isFavorite, subId, thumbnails, recommend, commentCount, likesCount, isLiked, uploader, updateTime, uploadTime, url, stars, maxPage, comments}) {
     this.title = title;
+    this.subtitle = subtitle ?? subTitle;
     this.cover = cover;
     this.description = description;
     this.tags = tags;
