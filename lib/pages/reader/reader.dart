@@ -98,6 +98,28 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   int get imagesPerPage => appdata.settings['readerScreenPicNumber'] ?? 1;
 
+  int _lastImagesPerPage = appdata.settings['readerScreenPicNumber'] ?? 1;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkImagesPerPageChange();
+  }
+
+  void _checkImagesPerPageChange() {
+    int currentImagesPerPage = imagesPerPage;
+    if (_lastImagesPerPage != currentImagesPerPage) {
+      _adjustPageForImagesPerPageChange(_lastImagesPerPage, currentImagesPerPage);
+      _lastImagesPerPage = currentImagesPerPage;
+    }
+  }
+
+  void _adjustPageForImagesPerPageChange(int oldImagesPerPage, int newImagesPerPage) {
+    int previousImageIndex = (page - 1) * oldImagesPerPage;
+    int newPage = (previousImageIndex ~/ newImagesPerPage) + 1;
+    page = newPage;
+  }
+
   History? history;
 
   @override
@@ -137,6 +159,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   @override
   Widget build(BuildContext context) {
+    _checkImagesPerPageChange();
     return KeyboardListener(
       focusNode: focusNode,
       autofocus: true,
