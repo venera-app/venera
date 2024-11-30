@@ -20,7 +20,7 @@ class ImportComic {
   const ImportComic({this.selectedFolder, this.copyToLocal = true});
 
   Future<bool> cbz() async {
-    var file = await selectFile(ext: ['cbz']);
+    var file = await selectFile(ext: ['cbz', 'zip']);
     Map<String?, List<LocalComic>> imported = {};
     if(file == null) {
       return false;

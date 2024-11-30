@@ -511,7 +511,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     String info = [
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
-      "Select a cbz file.".tl,
+      "Select a cbz/zip file.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
