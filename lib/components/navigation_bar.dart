@@ -47,10 +47,16 @@ class NaviPane extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
 
   @override
-  State<NaviPane> createState() => _NaviPaneState();
+  State<NaviPane> createState() => NaviPaneState();
+
+  static NaviPaneState of(BuildContext context) {
+    return context.findAncestorStateOfType<NaviPaneState>()!;
+  }
 }
 
-class _NaviPaneState extends State<NaviPane>
+typedef NaviItemTapListener = void Function(int);
+
+class NaviPaneState extends State<NaviPane>
     with SingleTickerProviderStateMixin {
   late int _currentPage = widget.initialPage;
 
@@ -65,6 +71,16 @@ class _NaviPaneState extends State<NaviPane>
   void Function()? mainViewUpdateHandler;
 
   late AnimationController controller;
+
+  final _naviItemTapListeners = <NaviItemTapListener>[];
+
+  void addNaviItemTapListener(NaviItemTapListener listener) {
+    _naviItemTapListeners.add(listener);
+  }
+
+  void removeNaviItemTapListener(NaviItemTapListener listener) {
+    _naviItemTapListeners.remove(listener);
+  }
 
   static const _kBottomBarHeight = 58.0;
 
@@ -85,8 +101,14 @@ class _NaviPaneState extends State<NaviPane>
   }
 
   void updatePage(int index) {
+    for (var listener in _naviItemTapListeners) {
+      listener(index);
+    }
     if (widget.observer.routes.length > 1) {
       widget.navigatorKey.currentState!.popUntil((route) => route.isFirst);
+    }
+    if (currentPage == index) {
+      return;
     }
     setState(() {
       currentPage = index;
@@ -670,14 +692,14 @@ class _NaviPopScope extends StatelessWidget {
 class _NaviMainView extends StatefulWidget {
   const _NaviMainView({required this.state});
 
-  final _NaviPaneState state;
+  final NaviPaneState state;
 
   @override
   State<_NaviMainView> createState() => _NaviMainViewState();
 }
 
 class _NaviMainViewState extends State<_NaviMainView> {
-  _NaviPaneState get state => widget.state;
+  NaviPaneState get state => widget.state;
 
   @override
   void initState() {

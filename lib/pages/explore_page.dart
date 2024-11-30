@@ -46,6 +46,18 @@ class _ExplorePageState extends State<ExplorePage>
     }
   }
 
+  void onNaviItemTapped(int index) {
+    if (index == 2) {
+      int page = controller.index;
+      String currentPageId = pages[page];
+      StateController.find<SimpleController>(tag: currentPageId)
+          .control!()['toTop']
+          ?.call();
+    }
+  }
+
+  NaviPaneState? naviPane;
+
   @override
   void initState() {
     pages = List<String>.from(appdata.settings["explore_pages"]);
@@ -59,13 +71,21 @@ class _ExplorePageState extends State<ExplorePage>
       vsync: this,
     );
     appdata.settings.addListener(onSettingsChanged);
+    NaviPane.of(context).addNaviItemTapListener(onNaviItemTapped);
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    naviPane = NaviPane.of(context);
+    super.didChangeDependencies();
   }
 
   @override
   void dispose() {
     controller.dispose();
     appdata.settings.removeListener(onSettingsChanged);
+    naviPane?.removeNaviItemTapListener(onNaviItemTapped);
     super.dispose();
   }
 
@@ -95,7 +115,7 @@ class _ExplorePageState extends State<ExplorePage>
   Widget buildEmpty() {
     var msg = "No Explore Pages".tl;
     msg += '\n';
-    if(ComicSource.isEmpty) {
+    if (ComicSource.isEmpty) {
       msg += "Add a comic source in home page".tl;
     } else {
       msg += "Please check your settings".tl;
@@ -232,6 +252,8 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
   bool _wantKeepAlive = true;
 
+  var scrollController = ScrollController();
+
   void onSettingsChanged() {
     var explorePages = appdata.settings["explore_pages"];
     if (!explorePages.contains(widget.title)) {
@@ -274,6 +296,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
         data,
         comicSourceKey,
         key: ValueKey(key),
+        controller: scrollController,
       );
     } else {
       return const Center(
@@ -287,6 +310,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
       loadPage: data.loadPage,
       loadNext: data.loadNext,
       key: ValueKey(key),
+      controller: scrollController,
     );
   }
 
@@ -323,6 +347,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
   Widget buildPage() {
     return SmoothCustomScrollView(
+      controller: scrollController,
       slivers: _buildPage().toList(),
     );
   }
@@ -352,14 +377,29 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
   @override
   bool get wantKeepAlive => _wantKeepAlive;
+
+  void toTop() {
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Map<String, dynamic> get control => {"toTop": toTop};
 }
 
 class _MixedExplorePage extends StatefulWidget {
-  const _MixedExplorePage(this.data, this.sourceKey, {super.key});
+  const _MixedExplorePage(this.data, this.sourceKey, {super.key, this.controller});
 
   final ExplorePageData data;
 
   final String sourceKey;
+
+  final ScrollController? controller;
 
   @override
   State<_MixedExplorePage> createState() => _MixedExplorePageState();
@@ -394,6 +434,7 @@ class _MixedExplorePageState
   @override
   Widget buildContent(BuildContext context, List<Object> data) {
     return SmoothCustomScrollView(
+      controller: widget.controller,
       slivers: [
         ...buildSlivers(context, data),
         if (haveNextPage) const ListLoadingIndicator().toSliver()
