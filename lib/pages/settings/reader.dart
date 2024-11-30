@@ -54,6 +54,16 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("autoPageTurningInterval");
           },
         ).toSliver(),
+        _SliderSetting(
+          title: "The number of pic in screen (Only Gallery Mode)".tl,
+          settingsIndex: "readerScreenPicNumber",
+          interval: 1,
+          min: 1,
+          max: 5,
+          onChanged: () {
+            widget.onChanged?.call("readerScreenPicNumber");
+          },
+        ).toSliver(),
         _SwitchSetting(
           title: 'Long press to zoom'.tl,
           settingKey: 'enableLongPressToZoom',

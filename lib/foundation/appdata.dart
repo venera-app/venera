@@ -106,6 +106,7 @@ class _Settings with ChangeNotifier {
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
+    'readerScreenPicNumber': 1, // 1 - 5
     'enableTapToTurnPages': true,
     'enablePageAnimation': true,
     'language': 'system', // system, zh-CN, zh-TW, en-US

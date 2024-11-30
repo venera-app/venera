@@ -1,6 +1,7 @@
 library venera_reader;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -82,7 +83,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   @override
-  int get maxPage => images?.length ?? 1;
+  int get maxPage =>
+      ((images?.length ?? 1) + imagesPerPage - 1) ~/ imagesPerPage;
 
   ComicType get type => widget.type;
 
@@ -93,6 +95,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   List<String>? images;
 
   late ReaderMode mode;
+
+  int get imagesPerPage => appdata.settings['readerScreenPicNumber'] ?? 1;
 
   History? history;
 
