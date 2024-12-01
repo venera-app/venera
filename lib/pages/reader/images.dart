@@ -83,7 +83,8 @@ class _ReaderImagesState extends State<_ReaderImages> {
       );
     } else {
       if (reader.mode.isGallery) {
-        return _GalleryMode(key: Key(reader.mode.key));
+        return _GalleryMode(
+            key: Key('${reader.mode.key}_${reader.imagesPerPage}'));
       } else {
         return _ContinuousMode(key: Key(reader.mode.key));
       }
@@ -110,6 +111,10 @@ class _GalleryModeState extends State<_GalleryMode>
 
   late _ReaderState reader;
 
+  int get totalPages => ((reader.images!.length + reader.imagesPerPage - 1) /
+          reader.imagesPerPage)
+      .ceil();
+
   @override
   void initState() {
     reader = context.reader;
@@ -124,8 +129,14 @@ class _GalleryModeState extends State<_GalleryMode>
 
   void cache(int current) {
     for (int i = current + 1; i <= current + preCacheCount; i++) {
-      if (i <= reader.maxPage && !cached[i]) {
-        _precacheImage(i, context);
+      if (i <= totalPages && !cached[i]) {
+        int startIndex = (i - 1) * reader.imagesPerPage;
+        int endIndex =
+            math.min(startIndex + reader.imagesPerPage, reader.images!.length);
+        for (int i = startIndex; i < endIndex; i++) {
+          precacheImage(
+              _createImageProviderFromKey(reader.images![i], context), context);
+        }
         cached[i] = true;
       }
     }
@@ -141,32 +152,34 @@ class _GalleryModeState extends State<_GalleryMode>
       scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
           ? Axis.vertical
           : Axis.horizontal,
-      itemCount: reader.images!.length + 2,
+      itemCount: totalPages + 2,
       builder: (BuildContext context, int index) {
-        ImageProvider? imageProvider;
-        if (index != 0 && index != reader.images!.length + 1) {
-          imageProvider = _createImageProvider(index, context);
-        } else {
+        if (index == 0 || index == totalPages + 1) {
           return PhotoViewGalleryPageOptions.customChild(
             scaleStateController: PhotoViewScaleStateController(),
             child: const SizedBox(),
           );
+        } else {
+          int pageIndex = index - 1;
+          int startIndex = pageIndex * reader.imagesPerPage;
+          int endIndex = math.min(startIndex + reader.imagesPerPage, reader.images!.length);
+          List<String> pageImages = reader.images!.sublist(startIndex, endIndex);
+
+          cached[index] = true;
+          cache(index);
+
+          photoViewControllers[index] = PhotoViewController();
+
+          return PhotoViewGalleryPageOptions.customChild(
+            child: PhotoView.customChild(
+              key: ValueKey('photo_view_$index'),
+              controller: photoViewControllers[index],
+              minScale: PhotoViewComputedScale.contained * 1.0,
+              maxScale: PhotoViewComputedScale.covered * 10.0,
+              child: buildPageImages(pageImages),
+            ),
+          );
         }
-
-        cached[index] = true;
-        cache(index);
-
-        photoViewControllers[index] ??= PhotoViewController();
-
-        return PhotoViewGalleryPageOptions(
-          filterQuality: FilterQuality.medium,
-          controller: photoViewControllers[index],
-          imageProvider: imageProvider,
-          fit: BoxFit.contain,
-          errorBuilder: (_, error, s, retry) {
-            return NetworkError(message: error.toString(), retry: retry);
-          },
-        );
       },
       pageController: controller,
       loadingBuilder: (context, event) => Center(
@@ -186,9 +199,9 @@ class _GalleryModeState extends State<_GalleryMode>
           if (!reader.toPrevChapter()) {
             reader.toPage(1);
           }
-        } else if (i == reader.maxPage + 1) {
+        } else if (i == totalPages + 1) {
           if (!reader.toNextChapter()) {
-            reader.toPage(reader.maxPage);
+            reader.toPage(totalPages);
           }
         } else {
           reader.setPage(i);
@@ -198,9 +211,30 @@ class _GalleryModeState extends State<_GalleryMode>
     );
   }
 
+  Widget buildPageImages(List<String> images) {
+    Axis axis = (reader.mode == ReaderMode.galleryTopToBottom)
+        ? Axis.vertical
+        : Axis.horizontal;
+
+    List<Widget> imageWidgets = images.map((imageKey) {
+      ImageProvider imageProvider =
+          _createImageProviderFromKey(imageKey, context);
+      return Expanded(
+        child: Image(
+          image: imageProvider,
+          fit: BoxFit.contain,
+        ),
+      );
+    }).toList();
+
+    return axis == Axis.vertical
+        ? Column(children: imageWidgets)
+        : Row(children: imageWidgets);
+  }
+
   @override
   Future<void> animateToPage(int page) {
-    if ((page - controller.page!).abs() > 1) {
+    if ((page - controller.page!.round()).abs() > 1) {
       controller.jumpToPage(page > controller.page! ? page - 1 : page + 1);
     }
     return controller.animateToPage(
@@ -597,6 +631,21 @@ class _ContinuousModeState extends State<_ContinuousMode>
         curve: Curves.ease,
       );
     }
+  }
+}
+
+ImageProvider _createImageProviderFromKey(
+    String imageKey, BuildContext context) {
+  if (imageKey.startsWith('file://')) {
+    return FileImage(File(imageKey.replaceFirst("file://", '')));
+  } else {
+    var reader = context.reader;
+    return ReaderImageProvider(
+      imageKey,
+      reader.type.comicSource!.key,
+      reader.cid,
+      reader.eid,
+    );
   }
 }
 
