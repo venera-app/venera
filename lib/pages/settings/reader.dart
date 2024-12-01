@@ -41,6 +41,11 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             "continuousTopToBottom": "Continuous (Top to Bottom)".tl,
           },
           onChanged: () {
+            var readerMode = appdata.settings['readerMode'];
+            if (readerMode?.toLowerCase().startsWith('continuous') ?? false) {
+              appdata.settings['readerScreenPicNumber'] = 1;
+              widget.onChanged?.call('readerScreenPicNumber');
+            }
             widget.onChanged?.call("readerMode");
           },
         ).toSliver(),
@@ -54,16 +59,21 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("autoPageTurningInterval");
           },
         ).toSliver(),
-        _SliderSetting(
-          title: "The number of pic in screen (Only Gallery Mode)".tl,
-          settingsIndex: "readerScreenPicNumber",
-          interval: 1,
-          min: 1,
-          max: 5,
-          onChanged: () {
-            widget.onChanged?.call("readerScreenPicNumber");
-          },
-        ).toSliver(),
+        SliverToBoxAdapter(
+          child: AbsorbPointer(
+            absorbing: (appdata.settings['readerMode']?.toLowerCase().startsWith('continuous') ?? false),
+            child: _SliderSetting(
+              title: "The number of pic in screen (Only Gallery Mode)".tl,
+              settingsIndex: "readerScreenPicNumber",
+              interval: 1,
+              min: 1,
+              max: 5,
+              onChanged: () {
+                widget.onChanged?.call("readerScreenPicNumber");
+              },
+            ),
+          ),
+        ),
         _SwitchSetting(
           title: 'Long press to zoom'.tl,
           settingKey: 'enableLongPressToZoom',
