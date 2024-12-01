@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -324,8 +325,25 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
             // use copy method
-            val filePath = FileUtils.getPathFromCopyOfFileFromUri(this, uri)
-            result.success(filePath)
+            val tmp = File(cacheDir, fileName)
+            if(tmp.exists()) {
+                tmp.delete()
+            }
+            Log.i("Venera", "copy file (${fileName}) to ${tmp.absolutePath}")
+            Thread {
+                try {
+                    contentResolver.openInputStream(uri)?.use { input ->
+                        FileOutputStream(tmp).use { output ->
+                            input.copyTo(output, bufferSize = DEFAULT_BUFFER_SIZE)
+                            output.flush()
+                        }
+                    }
+                    result.success(tmp.absolutePath)
+                }
+                catch (e: Exception) {
+                    result.error("copy error", e.message, null)
+                }
+            }.start()
         }
     }
 }
