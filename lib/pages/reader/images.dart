@@ -162,26 +162,21 @@ class _GalleryModeState extends State<_GalleryMode>
         } else {
           int pageIndex = index - 1;
           int startIndex = pageIndex * reader.imagesPerPage;
-          int endIndex = math.min(
-              startIndex + reader.imagesPerPage, reader.images!.length);
-          List<String> pageImages =
-              reader.images!.sublist(startIndex, endIndex);
+          int endIndex = math.min(startIndex + reader.imagesPerPage, reader.images!.length);
+          List<String> pageImages = reader.images!.sublist(startIndex, endIndex);
 
           cached[index] = true;
           cache(index);
 
-          photoViewControllers[index] ??= PhotoViewController();
+          photoViewControllers[index] = PhotoViewController();
 
           return PhotoViewGalleryPageOptions.customChild(
             child: PhotoView.customChild(
+              key: ValueKey('photo_view_$index'),
               controller: photoViewControllers[index],
-              child: buildPageImages(pageImages),
               minScale: PhotoViewComputedScale.contained * 1.0,
-              maxScale: PhotoViewComputedScale.covered * 3.0,
-            ),
-            childSize: Size(
-              MediaQuery.of(context).size.width,
-              MediaQuery.of(context).size.height,
+              maxScale: PhotoViewComputedScale.covered * 10.0,
+              child: buildPageImages(pageImages),
             ),
           );
         }
