@@ -170,14 +170,23 @@ class _GalleryModeState extends State<_GalleryMode>
 
           photoViewControllers[index] = PhotoViewController();
 
-          return PhotoViewGalleryPageOptions.customChild(
-            child: PhotoView.customChild(
-              key: ValueKey('photo_view_$index'),
+          if(reader.imagesPerPage == 1) {
+            return PhotoViewGalleryPageOptions(
+              filterQuality: FilterQuality.medium,
               controller: photoViewControllers[index],
-              minScale: PhotoViewComputedScale.contained * 1.0,
-              maxScale: PhotoViewComputedScale.covered * 10.0,
-              child: buildPageImages(pageImages),
-            ),
+              imageProvider: _createImageProviderFromKey(pageImages[0], context),
+              fit: BoxFit.contain,
+              errorBuilder: (_, error, s, retry) {
+                return NetworkError(message: error.toString(), retry: retry);
+              },
+            );
+          }
+
+          return PhotoViewGalleryPageOptions.customChild(
+            controller: photoViewControllers[index],
+            minScale: PhotoViewComputedScale.contained * 1.0,
+            maxScale: PhotoViewComputedScale.covered * 10.0,
+            child: buildPageImages(pageImages),
           );
         }
       },

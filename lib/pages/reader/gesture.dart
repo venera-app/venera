@@ -103,6 +103,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   }
 
   void onMouseWheel(bool forward) {
+    if (HardwareKeyboard.instance.isControlPressed) {
+      return;
+    }
     if (context.reader.mode.key.startsWith('gallery')) {
       if (forward) {
         if (!context.reader.toNextPage()) {
