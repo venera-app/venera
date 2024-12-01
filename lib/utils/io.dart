@@ -155,9 +155,7 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
 
 Future<void> copyDirectoryIsolate(
     Directory source, Directory destination) async {
-  await Isolate.run(() async {
-    await copyDirectory(source, destination);
-  });
+  await Isolate.run(() => overrideIO(() => copyDirectory(source, destination)));
 }
 
 String findValidDirectoryName(String path, String directory) {
@@ -358,6 +356,7 @@ class _IOOverrides extends IOOverrides {
       return super.createFile(path);
     }
   }
+
 }
 
 T overrideIO<T>(T Function() f) {
