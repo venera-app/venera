@@ -4,9 +4,11 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/local.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/utils/cbz.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/pdf.dart';
 import 'package:venera/utils/translations.dart';
 
 class LocalComicsPage extends StatefulWidget {
@@ -299,8 +301,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                               return ContentDialog(
                                 title: "Delete".tl,
                                 content: CheckboxListTile(
-                                  title:
-                                  Text("Also remove files on disk".tl),
+                                  title: Text("Also remove files on disk".tl),
                                   value: removeComicFile,
                                   onChanged: (v) {
                                     state(() {
@@ -361,6 +362,34 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                       }
                       controller.close();
                     }),
+                if (!multiSelectMode)
+                  MenuEntry(
+                    icon: Icons.picture_as_pdf_outlined,
+                    text: "Export as pdf".tl,
+                    onClick: () async {
+                      var cache = FilePath.join(App.cachePath, 'temp.pdf');
+                      var controller = showLoadingDialog(
+                        context,
+                        allowCancel: false,
+                      );
+                      try {
+                        await createPdfFromComicIsolate(
+                          comic: c as LocalComic,
+                          savePath: cache,
+                        );
+                        await saveFile(
+                          file: File(cache),
+                          filename: "${c.title}.pdf",
+                        );
+                      } catch (e, s) {
+                        Log.error("PDF Export", e, s);
+                        context.showMessage(message: e.toString());
+                      } finally {
+                        controller.close();
+                        File(cache).deleteIgnoreError();
+                      }
+                    },
+                  )
               ];
             },
           ),

@@ -360,8 +360,8 @@ class _IOOverrides extends IOOverrides {
   }
 }
 
-void overrideIO(void Function() f) {
-  IOOverrides.runWithIOOverrides(
+T overrideIO<T>(T Function() f) {
+  return IOOverrides.runWithIOOverrides<T>(
     f,
     _IOOverrides(),
   );

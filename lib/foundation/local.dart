@@ -76,7 +76,7 @@ class LocalComic with HistoryMixin implements Comic {
         cover,
       ));
 
-  String get baseDir => directory.contains("/") ? directory : FilePath.join(LocalManager().path, directory);
+  String get baseDir => (directory.contains('/') || directory.contains('\\')) ? directory : FilePath.join(LocalManager().path, directory);
 
   @override
   String get description => "";
