@@ -110,15 +110,22 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Import App Data".tl,
           callback: () async {
             var controller = showLoadingDialog(context);
-            var file = await selectFile(ext: ['venera']);
+            var file = await selectFile(ext: ['venera', 'picadata']);
             if (file != null) {
-              var cacheFile = File(FilePath.join(App.cachePath, "temp.venera"));
+              var cacheFile = File(FilePath.join(App.cachePath, "import_data_temp"));
               await file.saveTo(cacheFile.path);
               try {
-                await importAppData(cacheFile);
+                if(file.name.endsWith('picadata')) {
+                  await importPicaData(cacheFile);
+                } else {
+                  await importAppData(cacheFile);
+                }
               } catch (e, s) {
                 Log.error("Import data", e.toString(), s);
                 context.showMessage(message: "Failed to import data".tl);
+              }
+              finally {
+                cacheFile.deleteIgnoreError();
               }
             }
             controller.close();

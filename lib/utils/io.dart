@@ -265,7 +265,9 @@ Future<FileSelectResult?> selectFile({required List<String> ext}) async {
       file = FileSelectResult(xFile.path);
     }
     if (!ext.contains(file.path.split(".").last)) {
-      App.rootContext.showMessage(message: "Invalid file type");
+      App.rootContext.showMessage(
+        message: "Invalid file type: ${file.path.split(".").last}",
+      );
       return null;
     }
     return file;
