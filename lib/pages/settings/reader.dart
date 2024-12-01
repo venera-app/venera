@@ -62,15 +62,19 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         SliverToBoxAdapter(
           child: AbsorbPointer(
             absorbing: (appdata.settings['readerMode']?.toLowerCase().startsWith('continuous') ?? false),
-            child: _SliderSetting(
-              title: "The number of pic in screen (Only Gallery Mode)".tl,
-              settingsIndex: "readerScreenPicNumber",
-              interval: 1,
-              min: 1,
-              max: 5,
-              onChanged: () {
-                widget.onChanged?.call("readerScreenPicNumber");
-              },
+            child: AnimatedOpacity(
+              opacity: (appdata.settings['readerMode']?.toLowerCase().startsWith('continuous') ?? false) ? 0.5 : 1.0,
+              duration: Duration(milliseconds: 300),
+              child: _SliderSetting(
+                title: "The number of pic in screen (Only Gallery Mode)".tl,
+                settingsIndex: "readerScreenPicNumber",
+                interval: 1,
+                min: 1,
+                max: 5,
+                onChanged: () {
+                  widget.onChanged?.call("readerScreenPicNumber");
+                },
+              ),
             ),
           ),
         ),
