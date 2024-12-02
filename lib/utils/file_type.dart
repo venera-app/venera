@@ -13,7 +13,7 @@ class FileType {
     var mime = lookupMimeType('no-file.$ext') ?? 'application/octet-stream';
     // Android doesn't support some mime types
     mime = switch(mime) {
-      'text/javascript' => 'application/javascript',
+      'text/javascript' => 'application/octet-stream',
       'application/x-cbr' => 'application/octet-stream',
       _ => mime,
     };

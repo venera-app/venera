@@ -73,6 +73,15 @@ extension FileSystemEntityExt on FileSystemEntity {
 
 extension FileExtension on File {
   String get extension => path.split('.').last;
+
+  /// Copy the file to the specified path using memory.
+  ///
+  /// This method prevents errors caused by files from different file systems.
+  Future<void> copyMem(String newPath) async {
+    var newFile = File(newPath);
+    // Stream is not usable since [AndroidFile] does not support [openRead].
+    await newFile.writeAsBytes(await readAsBytes());
+  }
 }
 
 extension DirectoryExtension on Directory {
