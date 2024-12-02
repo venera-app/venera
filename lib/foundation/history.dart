@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/utils/translations.dart';
 
 import 'app.dart';
 
@@ -22,15 +24,18 @@ abstract mixin class HistoryMixin {
   HistoryType get historyType;
 }
 
-class History {
+class History implements Comic {
   HistoryType type;
 
   DateTime time;
 
+  @override
   String title;
 
+  @override
   String subtitle;
 
+  @override
   String cover;
   
   int ep;
@@ -44,6 +49,7 @@ class History {
   /// The number of episodes is 1-based.
   Set<int> readEpisode;
 
+  @override
   int? maxPage;
 
   History.fromModel(
@@ -137,6 +143,47 @@ class History {
 
   @override
   int get hashCode => Object.hash(id, type);
+
+  @override
+  String get description {
+    var res = "";
+    if (ep >= 1) {
+      res += "Chapter @ep".tlParams({
+        "ep": ep,
+      });
+    }
+    if (page >= 1) {
+      if (ep >= 1) {
+        res += " - ";
+      }
+      res += "Page @page".tlParams({
+        "page": page,
+      });
+    }
+    return res;
+  }
+
+  @override
+  String? get favoriteId => null;
+
+  @override
+  String? get language => null;
+
+  @override
+  String get sourceKey => type == ComicType.local
+      ? 'local'
+      : type.comicSource?.key ?? "Unknown:${type.value}";
+
+  @override
+  double? get stars => null;
+
+  @override
+  List<String>? get tags => null;
+
+  @override
+  Map<String, dynamic> toJson() {
+    throw UnimplementedError();
+  }
 }
 
 class HistoryManager with ChangeNotifier {

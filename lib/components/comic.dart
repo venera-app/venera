@@ -164,6 +164,8 @@ class ComicTile extends StatelessWidget {
     ImageProvider image;
     if (comic is LocalComic) {
       image = LocalComicImageProvider(comic as LocalComic);
+    } else if (comic is History) {
+      image = HistoryImageProvider(comic as History);
     } else if (comic.sourceKey == 'local') {
       var localComic = LocalManager().find(comic.id, ComicType.local);
       if (localComic == null) {

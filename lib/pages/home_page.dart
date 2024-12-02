@@ -7,6 +7,7 @@ import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/cached_image.dart';
+import 'package:venera/foundation/image_provider/history_image_provider.dart';
 import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/pages/accounts_page.dart';
@@ -265,21 +266,6 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      var cover = history[index].cover;
-                      ImageProvider imageProvider = CachedImageProvider(
-                        cover,
-                        sourceKey: history[index].type.comicSource?.key,
-                        cid: history[index].id,
-                      );
-                      if (!cover.isURL) {
-                        var localComic = LocalManager().find(
-                          history[index].id,
-                          history[index].type,
-                        );
-                        if (localComic != null) {
-                          imageProvider = FileImage(localComic.coverFile);
-                        }
-                      }
                       return InkWell(
                         onTap: () {
                           context.to(
@@ -302,7 +288,7 @@ class _HistoryState extends State<_History> {
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: AnimatedImage(
-                            image: imageProvider,
+                            image: HistoryImageProvider(history[index]),
                             width: 96,
                             height: 128,
                             fit: BoxFit.cover,
