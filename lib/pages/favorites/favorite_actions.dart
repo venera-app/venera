@@ -1,3 +1,5 @@
+import 'package:venera/foundation/appdata.dart';
+
 part of 'favorites_page.dart';
 
 /// Open a dialog to create a new favorite folder.
@@ -83,7 +85,7 @@ void addFavorite(Comic comic) {
   showDialog(
     context: App.rootContext,
     builder: (context) {
-      String? selectedFolder;
+      String? selectedFolder = appdata.settings['quickFavorite'];
 
       return StatefulBuilder(builder: (context, setState) {
         return ContentDialog(
