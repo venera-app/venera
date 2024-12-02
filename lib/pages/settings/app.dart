@@ -34,8 +34,25 @@ class _AppSettingsState extends State<AppSettings> {
           callback: () async {
             String? result;
             if (App.isAndroid) {
-              var picker = DirectoryPicker();
-              result = (await picker.pickDirectory())?.path;
+              var channel = const MethodChannel("venera/storage");
+              var permission = await channel.invokeMethod('');
+              if (permission != true) {
+                context.showMessage(message: "Permission denied".tl);
+                return;
+              }
+              var path = await selectDirectory();
+              if (path != null) {
+                // check if the path is writable
+                var testFile = File(FilePath.join(path, "test"));
+                try {
+                  await testFile.writeAsBytes([1]);
+                  await testFile.delete();
+                } catch (e) {
+                  context.showMessage(message: "Permission denied".tl);
+                  return;
+                }
+                result = path;
+              }
             } else if (App.isIOS) {
               result = await selectDirectoryIOS();
             } else {
