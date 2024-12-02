@@ -332,7 +332,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: _controller.animation ?? _controller,
       builder: buildTabBar,
     );
   }
@@ -427,7 +427,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: DefaultTextStyle(
             style: DefaultTextStyle.of(context).style.copyWith(
-                  color: i == _controller.index
+                  color: i == _controller.animation?.value.round()
                       ? context.colorScheme.primary
                       : context.colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
