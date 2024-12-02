@@ -68,7 +68,7 @@ dependencies:
   flutter_saf:
     git: 
       url: https://github.com/pkuislm/flutter_saf.git
-      ref: dd5242918da0ea9a0a50b0f87ade7a2def65453d
+      ref: 3315082b9f7055655610e4f6f136b69e48228c05
   pdf: ^3.11.1
 
 dev_dependencies:
