@@ -2,7 +2,6 @@ import 'dart:async' show Future, StreamController;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/local.dart';
-import 'package:venera/network/images.dart';
 import 'package:venera/utils/io.dart';
 import 'base_image_provider.dart';
 import 'local_comic_image.dart' as image_provider;
@@ -50,7 +49,11 @@ class LocalComicImageProvider
     if(file == null) {
       throw "Error: Cover not found.";
     }
-    return file.readAsBytes();
+    var data = await file.readAsBytes();
+    if(data.isEmpty) {
+      throw "Exception: Empty file(${file.path}).";
+    }
+    return data;
   }
 
   @override
