@@ -175,6 +175,8 @@ ${navMapStrBuilder.toString()}
   final zipPath = FilePath.join(cacheDir, '${data.title}.epub');
   ZipFile.compressFolder(workingDir.path, zipPath);
 
+  workingDir.deleteSync(recursive: true);
+
   return File(zipPath);
 }
 
