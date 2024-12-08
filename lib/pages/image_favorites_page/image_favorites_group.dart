@@ -97,13 +97,13 @@ class ImageFavoritesGroupState extends State<ImageFavoritesGroup> {
                                 .secondaryContainer,
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: AnimatedImage(
-                            image: HistoryImageProvider(history[index]),
-                            width: 96,
-                            height: 128,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                          ),
+                          // child: AnimatedImage(
+                          //   image: HistoryImageProvider(history[index]),
+                          //   width: 96,
+                          //   height: 128,
+                          //   fit: BoxFit.cover,
+                          //   filterQuality: FilterQuality.medium,
+                          // ),
                         ),
                       );
                     },

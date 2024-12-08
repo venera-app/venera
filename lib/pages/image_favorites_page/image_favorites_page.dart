@@ -1,32 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/pages/history_page.dart';
+import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/translations.dart';
 part "./image_favorites_group.dart";
-
-enum ImageFavoriteSortType {
-  name("name"),
-  timeAsc("time_asc"),
-  timeDesc("time_desc"),
-  favoriteNumDesc("favorite_num_desc");
-
-  final String value;
-
-  const ImageFavoriteSortType(this.value);
-
-  static ImageFavoriteSortType fromString(String value) {
-    for (var type in values) {
-      if (type.value == value) {
-        return type;
-      }
-    }
-    return name;
-  }
-}
 
 class ImageFavoritesPage extends StatefulWidget {
   const ImageFavoritesPage({super.key});
@@ -35,7 +17,8 @@ class ImageFavoritesPage extends StatefulWidget {
   State<ImageFavoritesPage> createState() => ImageFavoritesPageState();
 }
 
-class ImageFavoritesPageState extends State<ImageFavoritesPage> {
+class ImageFavoritesPageState extends State<ImageFavoritesPage>
+    with TickerProviderStateMixin {
   late ImageFavoriteSortType sortType;
 
   String keyword = "";
@@ -43,23 +26,94 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   bool searchMode = false;
 
   bool multiSelectMode = false;
+  late TabController controller = TabController(
+    length: 2,
+    vsync: this,
+  );
 
   Map<ImageFavorite, bool> selectedComics = {};
 
   void update() {
     if (keyword.isEmpty) {
       setState(() {
-        comics = LocalManager().getComics(sortType);
+        // comics = LocalManager().getComics(sortType);
       });
     } else {
       setState(() {
-        comics = LocalManager().search(keyword);
+        // comics = LocalManager().search(keyword);
       });
     }
   }
 
   @override
+  void initState() {
+    var sort = appdata.implicitData["local_sort"] ?? "name";
+    sortType = ImageFavoriteSortType.fromString(sort);
+    // comics = LocalManager().getComics(sortType);
+    // LocalManager().addListener(update);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    void selectAll() {
+      setState(() {
+        // selectedComics = [];
+      });
+    }
+
+    void deSelect() {
+      setState(() {
+        selectedComics.clear();
+      });
+    }
+
+    void invertSelection() {
+      setState(() {
+        // comics.asMap().forEach((k, v) {
+        //   selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+        // });
+        selectedComics.removeWhere((k, v) => !v);
+      });
+    }
+
+    void selectRange() {
+      setState(() {
+        List<int> l = [];
+        selectedComics.forEach((k, v) {
+          l.add(1);
+        });
+        if (l.isEmpty) {
+          return;
+        }
+        l.sort();
+        int start = l.first;
+        int end = l.last;
+        selectedComics.clear();
+        // selectedComics.addEntries(List.generate(end - start + 1, (i) {
+        //   return MapEntry(comics[start + i], true);
+        // }));
+      });
+    }
+
+    List<Widget> selectActions = [
+      IconButton(
+          icon: const Icon(Icons.select_all),
+          tooltip: "Select All".tl,
+          onPressed: selectAll),
+      IconButton(
+          icon: const Icon(Icons.deselect),
+          tooltip: "Deselect".tl,
+          onPressed: deSelect),
+      IconButton(
+          icon: const Icon(Icons.flip),
+          tooltip: "Invert Selection".tl,
+          onPressed: invertSelection),
+      IconButton(
+          icon: const Icon(Icons.border_horizontal_outlined),
+          tooltip: "Select in range".tl,
+          onPressed: selectRange),
+    ];
     var widget = SmoothCustomScrollView(
       slivers: [
         if (!searchMode && !multiSelectMode)
@@ -151,50 +205,32 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   }
 
   void sort() {
+    Widget tabBar = Material(
+      child: FilledTabBar(
+        tabs: ['Sort', 'Filter']
+            .map((e) => Tab(text: e.tl, key: Key(e)))
+            .toList(),
+        controller: controller,
+      ),
+    ).paddingTop(context.padding.top);
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
-            title: "Sort".tl,
-            content: Column(
-              children: [
-                RadioListTile<LocalSortType>(
-                  title: Text("Name".tl),
-                  value: LocalSortType.name,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-                RadioListTile<LocalSortType>(
-                  title: Text("Date".tl),
-                  value: LocalSortType.timeAsc,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-                RadioListTile<LocalSortType>(
-                  title: Text("Date Desc".tl),
-                  value: LocalSortType.timeDesc,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-              ],
+            content: Container(
+              // 向上移动一点, 减少 Column 顶部的 padding, 避免观感太差
+              transform: Matrix4.translationValues(0, -20, 0),
+              child: Column(
+                children: [
+                  tabBar,
+                ],
+              ),
             ),
             actions: [
               FilledButton(
                 onPressed: () {
-                  appdata.implicitData["local_sort"] = sortType.value;
+                  appdata.implicitData["image_favorite_sort"] = sortType.value;
                   appdata.writeImplicitData();
                   Navigator.pop(context);
                   update();

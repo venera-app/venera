@@ -46,21 +46,29 @@ class _ToastOverlay extends StatelessWidget {
           child: IconTheme(
             data: IconThemeData(
                 color: Theme.of(context).colorScheme.onInverseSurface),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) icon!.paddingRight(8),
-                  Text(
-                    message,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w500),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (trailing != null) trailing!.paddingLeft(8)
-                ],
+            child: IntrinsicWidth(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                constraints: BoxConstraints(
+                  maxWidth: context.width - 32,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) icon!.paddingRight(8),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (trailing != null) trailing!.paddingLeft(8)
+                  ],
+                ),
               ),
             ),
           ),
@@ -220,7 +228,7 @@ LoadingDialogController showLoadingDialog(BuildContext context,
         );
       });
 
-  var navigator = Navigator.of(context);
+  var navigator = Navigator.of(context, rootNavigator: true);
 
   navigator.push(loadingDialogRoute).then((value) => controller.closed = true);
 
@@ -234,13 +242,13 @@ LoadingDialogController showLoadingDialog(BuildContext context,
 class ContentDialog extends StatelessWidget {
   const ContentDialog({
     super.key,
-    required this.title,
+    this.title, // 如果不传 title 将不会展示
     required this.content,
     this.dismissible = true,
     this.actions = const [],
   });
 
-  final String title;
+  final String? title;
 
   final Widget content;
 
@@ -254,14 +262,16 @@ class ContentDialog extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Appbar(
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: dismissible ? context.pop : null,
-          ),
-          title: Text(title),
-          backgroundColor: Colors.transparent,
-        ),
+        title != null
+            ? Appbar(
+                leading: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: dismissible ? context.pop : null,
+                ),
+                title: Text(title!),
+                backgroundColor: Colors.transparent,
+              )
+            : const SizedBox.shrink(),
         this.content,
         const SizedBox(height: 16),
         Row(
@@ -352,7 +362,7 @@ Future<void> showInputDialog({
                   } else {
                     result = futureOr;
                   }
-                  if(result == null) {
+                  if (result == null) {
                     context.pop();
                   } else {
                     setState(() => error = result.toString());

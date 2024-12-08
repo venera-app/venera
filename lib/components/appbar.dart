@@ -189,20 +189,19 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         leading ??
             (Navigator.of(context).canPop()
                 ? Tooltip(
-              message: "Back".tl,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.maybePop(context),
-              ),
-            )
+                    message: "Back".tl,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.maybePop(context),
+                    ),
+                  )
                 : const SizedBox()),
         const SizedBox(
           width: 16,
         ),
         Expanded(
           child: DefaultTextStyle(
-            style:
-            DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
+            style: DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             child: title,
@@ -215,7 +214,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
       ],
     ).paddingTop(topPadding);
 
-    if(style == AppbarStyle.blur) {
+    if (style == AppbarStyle.blur) {
       return SizedBox.expand(
         child: BlurEffect(
           blur: 15,
