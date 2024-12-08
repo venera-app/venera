@@ -29,6 +29,7 @@ class _AppearanceSettingsState extends State<AppearanceSettings> {
           title: "Theme Color".tl,
           settingKey: "color",
           optionTranslation: {
+            "system": "System".tl,
             "red": "Red".tl,
             "pink": "Pink".tl,
             "purple": "Purple".tl,

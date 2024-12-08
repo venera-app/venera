@@ -1012,11 +1012,15 @@ class ComicListState extends State<ComicList> {
           while (_data[page] == null) {
             await _fetchNext();
           }
-          setState(() {});
+          if(mounted) {
+            setState(() {});
+          }
         } catch (e) {
-          setState(() {
-            _error = e.toString();
-          });
+          if(mounted) {
+            setState(() {
+              _error = e.toString();
+            });
+          }
         }
       }
     } finally {
