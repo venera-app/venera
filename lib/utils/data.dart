@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:isolate';
 
 import 'package:sqlite3/sqlite3.dart';
@@ -134,7 +135,8 @@ Future<void> importPicaData(File file) async {
             .select("SELECT name FROM sqlite_master WHERE type='table';")
             .map((e) => e["name"] as String)
             .toList();
-        folderNames.removeWhere((e) => e == "folder_order" || e == "folder_sync");
+        folderNames
+            .removeWhere((e) => e == "folder_order" || e == "folder_sync");
         for (var folderName in folderNames) {
           if (!LocalFavoritesManager().existsFolder(folderName)) {
             LocalFavoritesManager().createFolder(folderName);
@@ -147,7 +149,7 @@ Future<void> importPicaData(File file) async {
                 name: comic['name'],
                 coverPath: comic['cover_path'],
                 author: comic['author'],
-                type: ComicType(switch(comic['type']) {
+                type: ComicType(switch (comic['type']) {
                   0 => 'picacg'.hashCode,
                   1 => 'ehentai'.hashCode,
                   2 => 'jm'.hashCode,
@@ -161,11 +163,9 @@ Future<void> importPicaData(File file) async {
             );
           }
         }
-      }
-      catch(e) {
+      } catch (e) {
         Log.error("Import Data", "Failed to import local favorite: $e");
-      }
-      finally {
+      } finally {
         db.dispose();
       }
     }
@@ -176,7 +176,7 @@ Future<void> importPicaData(File file) async {
         for (var comic in db.select("SELECT * FROM history;")) {
           HistoryManager().addHistory(
             History.fromMap({
-              "type": switch(comic['type']) {
+              "type": switch (comic['type']) {
                 0 => 'picacg'.hashCode,
                 1 => 'ehentai'.hashCode,
                 2 => 'jm'.hashCode,
@@ -196,11 +196,22 @@ Future<void> importPicaData(File file) async {
             }),
           );
         }
-      }
-      catch(e) {
+        for (var comic in db.select("SELECT * FROM image_favorites;")) {
+          ImageFavoriteManager.add(
+            ImageFavorite.fromMap({
+              "id": comic['id'],
+              "title": comic["title"],
+              "time": comic["time"],
+              "imagePath": comic["cover"],
+              "ep": comic["ep"],
+              "page": comic["page"],
+              "otherInfo": jsonDecode(comic["other"]),
+            }),
+          );
+        }
+      } catch (e) {
         Log.error("Import Data", "Failed to import history: $e");
-      }
-      finally {
+      } finally {
         db.dispose();
       }
     }

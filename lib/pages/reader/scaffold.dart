@@ -18,8 +18,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool get isOpen => _isOpen;
 
-  bool get isReversed => context.reader.mode == ReaderMode.galleryRightToLeft ||
-                       context.reader.mode == ReaderMode.continuousRightToLeft;
+  bool get isReversed =>
+      context.reader.mode == ReaderMode.galleryRightToLeft ||
+      context.reader.mode == ReaderMode.continuousRightToLeft;
 
   int showFloatingButtonValue = 0;
 
@@ -233,13 +234,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 child: buildSlider(),
               ),
               IconButton.filledTonal(
-                onPressed: () => !isReversed
-                    ? context.reader.chapter < context.reader.maxChapter
-                        ? context.reader.toNextChapter()
-                        : context.reader.toPage(context.reader.maxPage)
-                  : context.reader.chapter > 1
-                        ? context.reader.toPrevChapter()
-                        : context.reader.toPage(1),
+                  onPressed: () => !isReversed
+                      ? context.reader.chapter < context.reader.maxChapter
+                          ? context.reader.toNextChapter()
+                          : context.reader.toPage(context.reader.maxPage)
+                      : context.reader.chapter > 1
+                          ? context.reader.toPrevChapter()
+                          : context.reader.toPage(1),
                   icon: const Icon(Icons.last_page)),
               const SizedBox(
                 width: 8,
@@ -263,6 +264,33 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 ),
               ),
               const Spacer(),
+              Tooltip(
+                message: "收藏图片".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.favorite),
+                  onPressed: () async {
+                    try {
+                      final id = "1";
+                      var image = ' await _persistentCurrentImage()';
+                      if (image != null) {
+                        image = image.split("/").last;
+                        var otherInfo = <String, dynamic>{};
+                        ImageFavoriteManager.add(ImageFavorite(
+                            id,
+                            image,
+                            context.reader.widget.name,
+                            DateTime.now(),
+                            1,
+                            context.reader.page,
+                            otherInfo));
+                        showToast(message: "成功收藏图片".tl, context: context);
+                      }
+                    } catch (e) {
+                      showToast(message: e.toString(), context: context);
+                    }
+                  },
+                ),
+              ),
               if (App.isWindows)
                 Tooltip(
                   message: "${"Full Screen".tl}(F12)",

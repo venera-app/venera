@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -32,7 +33,7 @@ class FavoritesPage extends StatefulWidget {
   State<FavoritesPage> createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage>  {
+class _FavoritesPageState extends State<FavoritesPage> {
   String? folder;
 
   bool isNetwork = false;
@@ -55,7 +56,7 @@ class _FavoritesPageState extends State<FavoritesPage>  {
   @override
   void initState() {
     var data = appdata.implicitData['favoriteFolder'];
-    if(data != null){
+    if (data != null) {
       folder = data['name'];
       isNetwork = data['isNetwork'] ?? false;
     }
@@ -98,7 +99,7 @@ class _FavoritesPageState extends State<FavoritesPage>  {
           alignment: Alignment.centerLeft,
           child: Material(
             child: SizedBox(
-              width: min(300, context.width-16),
+              width: min(300, context.width - 16),
               child: _LeftBar(
                 withAppbar: true,
                 favPage: this,

@@ -15,6 +15,7 @@ import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
+import 'package:venera/pages/image_favorites_page/image_favorites_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
@@ -22,6 +23,7 @@ import 'package:venera/utils/import_comic.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'local_comics_page.dart';
+part "./home_page/image_favorites.dart";
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -37,6 +39,7 @@ class HomePage extends StatelessWidget {
         const _Local(),
         const _ComicSourceWidget(),
         const _AccountsWidget(),
+        const ImageFavorites(),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
     );
@@ -85,7 +88,8 @@ class _SyncDataWidget extends StatefulWidget {
   State<_SyncDataWidget> createState() => _SyncDataWidgetState();
 }
 
-class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObserver {
+class _SyncDataWidgetState extends State<_SyncDataWidget>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -95,7 +99,7 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   }
 
   void update() {
-    if(mounted) {
+    if (mounted) {
       setState(() {});
     }
   }
@@ -112,8 +116,8 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if(state == AppLifecycleState.resumed) {
-      if(DateTime.now().difference(lastCheck) > const Duration(minutes: 10)) {
+    if (state == AppLifecycleState.resumed) {
+      if (DateTime.now().difference(lastCheck) > const Duration(minutes: 10)) {
         lastCheck = DateTime.now();
         DataSync().downloadData();
       }
@@ -123,7 +127,7 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if(!DataSync().isEnabled) {
+    if (!DataSync().isEnabled) {
       child = const SliverPadding(padding: EdgeInsets.zero);
     } else if (DataSync().isUploading || DataSync().isDownloading) {
       child = SliverToBoxAdapter(
@@ -161,17 +165,15 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.cloud_upload_outlined),
-                  onPressed: () async {
-                    DataSync().uploadData();
-                  }
-                ),
+                    icon: const Icon(Icons.cloud_upload_outlined),
+                    onPressed: () async {
+                      DataSync().uploadData();
+                    }),
                 IconButton(
-                  icon: const Icon(Icons.cloud_download_outlined),
-                  onPressed: () async {
-                    DataSync().downloadData();
-                  }
-                ),
+                    icon: const Icon(Icons.cloud_download_outlined),
+                    onPressed: () async {
+                      DataSync().downloadData();
+                    }),
               ],
             ),
           ),
@@ -520,50 +522,50 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
               ),
             )
           : Column(
-            key: key,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(width: 600),
-              ...List.generate(importMethods.length, (index) {
-                return RadioListTile(
-                  title: Text(importMethods[index]),
-                  value: index,
-                  groupValue: type,
-                  onChanged: (value) {
-                    setState(() {
-                      type = value as int;
-                    });
-                  },
-                );
-              }),
-              if(type != 3)
-                ListTile(
-                  title: Text("Add to favorites".tl),
-                  trailing: Select(
-                    current: selectedFolder,
-                    values: folders,
-                    minWidth: 112,
-                    onTap: (v) {
+              key: key,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(width: 600),
+                ...List.generate(importMethods.length, (index) {
+                  return RadioListTile(
+                    title: Text(importMethods[index]),
+                    value: index,
+                    groupValue: type,
+                    onChanged: (value) {
                       setState(() {
-                        selectedFolder = folders[v];
+                        type = value as int;
                       });
                     },
-                  ),
-                ).paddingHorizontal(8),
-              if(!App.isIOS && !App.isMacOS)
-                CheckboxListTile(
-                  enabled: true,
-                  title: Text("Copy to app local path".tl),
-                  value: copyToLocalFolder,
-                  onChanged:(v) {
-                    setState(() {
-                      copyToLocalFolder = !copyToLocalFolder;
-                    });
-                  }).paddingHorizontal(8),
-              const SizedBox(height: 8),
-              Text(info).paddingHorizontal(24),
-            ],
-          ),
+                  );
+                }),
+                if (type != 3)
+                  ListTile(
+                    title: Text("Add to favorites".tl),
+                    trailing: Select(
+                      current: selectedFolder,
+                      values: folders,
+                      minWidth: 112,
+                      onTap: (v) {
+                        setState(() {
+                          selectedFolder = folders[v];
+                        });
+                      },
+                    ),
+                  ).paddingHorizontal(8),
+                if (!App.isIOS && !App.isMacOS)
+                  CheckboxListTile(
+                      enabled: true,
+                      title: Text("Copy to app local path".tl),
+                      value: copyToLocalFolder,
+                      onChanged: (v) {
+                        setState(() {
+                          copyToLocalFolder = !copyToLocalFolder;
+                        });
+                      }).paddingHorizontal(8),
+                const SizedBox(height: 8),
+                Text(info).paddingHorizontal(24),
+              ],
+            ),
       actions: [
         Button.text(
           child: Row(
@@ -593,7 +595,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 help +=
                     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n"
                         .tl;
-                help +="If you import an EhViewer's database, program will automatically create folders according to the download label in that database.".tl;
+                help +=
+                    "If you import an EhViewer's database, program will automatically create folders according to the download label in that database."
+                        .tl;
                 return ContentDialog(
                   title: "Help".tl,
                   content: Text(help).paddingHorizontal(16),
@@ -626,16 +630,15 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       loading = true;
     });
     var importer = ImportComic(
-        selectedFolder: selectedFolder,
-        copyToLocal: copyToLocalFolder);
-    var result = switch(type) {
+        selectedFolder: selectedFolder, copyToLocal: copyToLocalFolder);
+    var result = switch (type) {
       0 => await importer.directory(true),
       1 => await importer.directory(false),
       2 => await importer.cbz(),
       3 => await importer.ehViewer(),
       int() => true,
     };
-    if(result) {
+    if (result) {
       context.pop();
     } else {
       setState(() {

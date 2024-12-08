@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'app.dart';
+part "image_favorites.dart";
 
 typedef HistoryType = ComicType;
 
@@ -37,7 +40,7 @@ class History implements Comic {
 
   @override
   String cover;
-  
+
   int ep;
 
   int page;
@@ -200,8 +203,6 @@ class HistoryManager with ChangeNotifier {
 
   Map<String, bool>? _cachedHistory;
 
-  static const _kMaxHistoryLength = 200;
-
   Future<void> init() async {
     _db = sqlite3.open("${App.dataPath}/history.db");
 
@@ -221,18 +222,13 @@ class HistoryManager with ChangeNotifier {
       """);
 
     notifyListeners();
+    ImageFavoriteManager.init();
   }
 
   /// add history. if exists, update time.
   ///
   /// This function would be called when user start reading.
   Future<void> addHistory(History newItem) async {
-    while(count() >= _kMaxHistoryLength) {
-      _db.execute("""
-        delete from history
-        where time == (select min(time) from history);
-      """);
-    }
     _db.execute("""
         insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -282,7 +278,7 @@ class HistoryManager with ChangeNotifier {
   }
 
   History? findSync(String id, ComicType type) {
-    if(_cachedHistory == null) {
+    if (_cachedHistory == null) {
       updateCache();
     }
     if (!_cachedHistory!.containsKey(id)) {
