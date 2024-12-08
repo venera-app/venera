@@ -23,14 +23,15 @@ class PaneActionEntry {
 }
 
 class NaviPane extends StatefulWidget {
-  const NaviPane({required this.paneItems,
-    required this.paneActions,
-    required this.pageBuilder,
-    this.initialPage = 0,
-    this.onPageChanged,
-    required this.observer,
-    required this.navigatorKey,
-    super.key});
+  const NaviPane(
+      {required this.paneItems,
+      required this.paneActions,
+      required this.pageBuilder,
+      this.initialPage = 0,
+      this.onPageChanged,
+      required this.observer,
+      required this.navigatorKey,
+      super.key});
 
   final List<PaneItemEntry> paneItems;
 
@@ -84,17 +85,14 @@ class NaviPaneState extends State<NaviPane>
 
   static const _kBottomBarHeight = 58.0;
 
-  static const _kFoldedSideBarWidth = 80.0;
+  static const _kFoldedSideBarWidth = 72.0;
 
-  static const _kSideBarWidth = 256.0;
+  static const _kSideBarWidth = 224.0;
 
   static const _kTopBarHeight = 48.0;
 
   double get bottomBarHeight =>
-      _kBottomBarHeight + MediaQuery
-          .of(context)
-          .padding
-          .bottom;
+      _kBottomBarHeight + MediaQuery.of(context).padding.bottom;
 
   void onNavigatorStateChange() {
     onRebuild(context);
@@ -136,10 +134,7 @@ class NaviPaneState extends State<NaviPane>
   }
 
   double targetFormContext(BuildContext context) {
-    var width = MediaQuery
-        .of(context)
-        .size
-        .width;
+    var width = MediaQuery.of(context).size.width;
     double target = 0;
     if (width > changePoint) {
       target = 2;
@@ -208,14 +203,13 @@ class NaviPaneState extends State<NaviPane>
     return Navigator(
       observers: [widget.observer],
       key: widget.navigatorKey,
-      onGenerateRoute: (settings) =>
-          AppPageRoute(
-            preventRebuild: false,
-            isRootRoute: true,
-            builder: (context) {
-              return _NaviMainView(state: this);
-            },
-          ),
+      onGenerateRoute: (settings) => AppPageRoute(
+        preventRebuild: false,
+        isRootRoute: true,
+        builder: (context) {
+          return _NaviMainView(state: this);
+        },
+      ),
     );
   }
 
@@ -252,20 +246,14 @@ class NaviPaneState extends State<NaviPane>
 
   Widget buildBottom() {
     return Material(
-      textStyle: Theme
-          .of(context)
-          .textTheme
-          .labelSmall,
+      textStyle: Theme.of(context).textTheme.labelSmall,
       elevation: 0,
       child: Container(
         height: _kBottomBarHeight,
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .outlineVariant,
+              color: Theme.of(context).colorScheme.outlineVariant,
               width: 1,
             ),
           ),
@@ -273,7 +261,7 @@ class NaviPaneState extends State<NaviPane>
         child: Row(
           children: List<Widget>.generate(
             widget.paneItems.length,
-                (index) {
+            (index) {
               return Expanded(
                 child: _SingleBottomNaviWidget(
                   enabled: currentPage == index,
@@ -293,7 +281,7 @@ class NaviPaneState extends State<NaviPane>
 
   Widget buildLeft() {
     final value = controller.value;
-    const paddingHorizontal = 16.0;
+    const paddingHorizontal = 12.0;
     return Material(
       child: Container(
         width: _kFoldedSideBarWidth +
@@ -303,57 +291,39 @@ class NaviPaneState extends State<NaviPane>
         decoration: BoxDecoration(
           border: Border(
             right: BorderSide(
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .outlineVariant,
-              width: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 1.0,
             ),
           ),
         ),
-        child: Row(
+        child: Column(
           children: [
-            SizedBox(
-              width: value == 3
-                  ? (_kSideBarWidth - paddingHorizontal * 2 - 1)
-                  : (_kFoldedSideBarWidth - paddingHorizontal * 2 - 1),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  SizedBox(height: MediaQuery
-                      .of(context)
-                      .padding
-                      .top),
-                  ...List<Widget>.generate(
-                    widget.paneItems.length,
-                        (index) =>
-                        _SideNaviWidget(
-                          enabled: currentPage == index,
-                          entry: widget.paneItems[index],
-                          showTitle: value == 3,
-                          onTap: () {
-                            updatePage(index);
-                          },
-                          key: ValueKey(index),
-                        ),
-                  ),
-                  const Spacer(),
-                  ...List<Widget>.generate(
-                    widget.paneActions.length,
-                        (index) =>
-                        _PaneActionWidget(
-                          entry: widget.paneActions[index],
-                          showTitle: value == 3,
-                          key: ValueKey(index + widget.paneItems.length),
-                        ),
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  )
-                ],
+            const SizedBox(height: 16),
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            ...List<Widget>.generate(
+              widget.paneItems.length,
+              (index) => _SideNaviWidget(
+                enabled: currentPage == index,
+                entry: widget.paneItems[index],
+                showTitle: value == 3,
+                onTap: () {
+                  updatePage(index);
+                },
+                key: ValueKey(index),
               ),
             ),
             const Spacer(),
+            ...List<Widget>.generate(
+              widget.paneActions.length,
+              (index) => _PaneActionWidget(
+                entry: widget.paneActions[index],
+                showTitle: value == 3,
+                key: ValueKey(index + widget.paneItems.length),
+              ),
+            ),
+            const SizedBox(
+              height: 16,
+            )
           ],
         ),
       ),
@@ -361,12 +331,13 @@ class NaviPaneState extends State<NaviPane>
   }
 }
 
-class _SideNaviWidget extends StatefulWidget {
-  const _SideNaviWidget({required this.enabled,
-    required this.entry,
-    required this.onTap,
-    required this.showTitle,
-    super.key});
+class _SideNaviWidget extends StatelessWidget {
+  const _SideNaviWidget(
+      {required this.enabled,
+      required this.entry,
+      required this.onTap,
+      required this.showTitle,
+      super.key});
 
   final bool enabled;
 
@@ -377,59 +348,36 @@ class _SideNaviWidget extends StatefulWidget {
   final bool showTitle;
 
   @override
-  State<_SideNaviWidget> createState() => _SideNaviWidgetState();
-}
-
-class _SideNaviWidgetState extends State<_SideNaviWidget> {
-  bool isHovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
-    final icon =
-    Icon(widget.enabled ? widget.entry.activeIcon : widget.entry.icon);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (details) => setState(() => isHovering = true),
-      onExit: (details) => setState(() => isHovering = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            width: double.infinity,
-            height: 42,
-            decoration: BoxDecoration(
-              color: widget.enabled
-                  ? colorScheme.primaryContainer
-                  : isHovering
-                  ? colorScheme.surfaceContainerHigh
-                  : null,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: widget.showTitle
-                ? Row(
-              children: [
-                icon,
-                const SizedBox(
-                  width: 12,
-                ),
-                Text(widget.entry.label)
-              ],
-            )
-                : Center(
-              child: icon,
-            )),
+    final colorScheme = Theme.of(context).colorScheme;
+    final icon = Icon(enabled ? entry.activeIcon : entry.icon);
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 38,
+        decoration: BoxDecoration(
+          color: enabled ? colorScheme.primaryContainer : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: showTitle ? Row(
+          children: [
+            icon,
+            const SizedBox(width: 12),
+            Text(entry.label)
+          ],
+        ) : Align(
+          alignment: Alignment.centerLeft,
+          child: icon,
+        ),
       ),
-    );
+    ).paddingVertical(4);
   }
 }
 
-class _PaneActionWidget extends StatefulWidget {
+class _PaneActionWidget extends StatelessWidget {
   const _PaneActionWidget(
       {required this.entry, required this.showTitle, super.key});
 
@@ -438,57 +386,36 @@ class _PaneActionWidget extends StatefulWidget {
   final bool showTitle;
 
   @override
-  State<_PaneActionWidget> createState() => _PaneActionWidgetState();
-}
-
-class _PaneActionWidgetState extends State<_PaneActionWidget> {
-  bool isHovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
-    final icon = Icon(widget.entry.icon);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (details) => setState(() => isHovering = true),
-      onExit: (details) => setState(() => isHovering = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: widget.entry.onTap,
-        child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            width: double.infinity,
-            height: 42,
-            decoration: BoxDecoration(
-                color: isHovering ? colorScheme.surfaceContainerHigh : null,
-                borderRadius: BorderRadius.circular(8)),
-            child: widget.showTitle
-                ? Row(
-              children: [
-                icon,
-                const SizedBox(
-                  width: 12,
-                ),
-                Text(widget.entry.label)
-              ],
-            )
-                : Center(
-              child: icon,
-            )),
+    final icon = Icon(entry.icon);
+    return InkWell(
+      onTap: entry.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 38,
+        child: showTitle ? Row(
+          children: [
+            icon,
+            const SizedBox(width: 12),
+            Text(entry.label)
+          ],
+        ) : Align(
+          alignment: Alignment.centerLeft,
+          child: icon,
+        ),
       ),
-    );
+    ).paddingVertical(4);
   }
 }
 
 class _SingleBottomNaviWidget extends StatefulWidget {
-  const _SingleBottomNaviWidget({required this.enabled,
-    required this.entry,
-    required this.onTap,
-    super.key});
+  const _SingleBottomNaviWidget(
+      {required this.enabled,
+      required this.entry,
+      required this.onTap,
+      super.key});
 
   final bool enabled;
 
@@ -556,11 +483,9 @@ class _SingleBottomNaviWidgetState extends State<_SingleBottomNaviWidget>
 
   Widget buildContent() {
     final value = controller.value;
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final icon =
-    Icon(widget.enabled ? widget.entry.activeIcon : widget.entry.icon);
+        Icon(widget.enabled ? widget.entry.activeIcon : widget.entry.icon);
     return Center(
       child: Container(
         width: 64,
@@ -661,12 +586,12 @@ class _NaviPopScope extends StatelessWidget {
     Widget res = App.isIOS
         ? child
         : PopScope(
-      canPop: App.isAndroid ? false : true,
-      onPopInvokedWithResult: (value, result) {
-        action();
-      },
-      child: child,
-    );
+            canPop: App.isAndroid ? false : true,
+            onPopInvokedWithResult: (value, result) {
+              action();
+            },
+            child: child,
+          );
     if (popGesture) {
       res = GestureDetector(
           onPanStart: (details) {
@@ -725,8 +650,8 @@ class _NaviMainViewState extends State<_NaviMainView> {
             ),
           ),
         ),
-        if (shouldShowAppBar) state.buildBottom().paddingBottom(
-            context.padding.bottom),
+        if (shouldShowAppBar)
+          state.buildBottom().paddingBottom(context.padding.bottom),
       ],
     );
   }

@@ -51,12 +51,10 @@ class _MenuRoute<T> extends PopupRoute<T> {
               ],
             ),
             child: BlurEffect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
               child: Material(
-                color: context.brightness == Brightness.light
-                    ? const Color(0xFFFAFAFA).withOpacity(0.82)
-                    : const Color(0xFF090909).withOpacity(0.82),
-                borderRadius: BorderRadius.circular(4),
+                color: context.colorScheme.surface.withOpacity(0.82),
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: width,
                   padding:
