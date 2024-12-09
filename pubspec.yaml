@@ -71,6 +71,7 @@ dependencies:
       ref: 3315082b9f7055655610e4f6f136b69e48228c05
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
