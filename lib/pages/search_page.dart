@@ -7,6 +7,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/aggregated_search_page.dart';
 import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/ext.dart';
@@ -27,6 +28,8 @@ class _SearchPageState extends State<SearchPage> {
 
   String searchTarget = "";
 
+  bool aggregatedSearch = false;
+
   var focusNode = FocusNode();
 
   var options = <String>[];
@@ -36,15 +39,21 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void search([String? text]) {
-    context
-        .to(
-          () => SearchResultPage(
-            text: text ?? controller.text,
-            sourceKey: searchTarget,
-            options: options,
-          ),
-        )
-        .then((_) => update());
+    if (aggregatedSearch) {
+      context
+          .to(() => AggregatedSearchPage(keyword: text ?? controller.text))
+          .then((_) => update());
+    } else {
+      context
+          .to(
+            () => SearchResultPage(
+              text: text ?? controller.text,
+              sourceKey: searchTarget,
+              options: options,
+            ),
+          )
+          .then((_) => update());
+    }
   }
 
   var suggestions = <Pair<String, TranslationType>>[];
@@ -189,6 +198,7 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.search),
               title: Text("Search in".tl),
             ),
             Wrap(
@@ -197,8 +207,9 @@ class _SearchPageState extends State<SearchPage> {
               children: sources.map((e) {
                 return OptionChip(
                   text: e.name,
-                  isSelected: searchTarget == e.key,
+                  isSelected: searchTarget == e.key || aggregatedSearch,
                   onTap: () {
+                    if (aggregatedSearch) return;
                     setState(() {
                       searchTarget = e.key;
                       useDefaultOptions();
@@ -206,6 +217,18 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 );
               }).toList(),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text("Aggregated Search".tl),
+              leading: Checkbox(
+                value: aggregatedSearch,
+                onChanged: (value) {
+                  setState(() {
+                    aggregatedSearch = value ?? false;
+                  });
+                },
+              ),
             ),
           ],
         ),
@@ -221,6 +244,10 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget buildSearchOptions() {
+    if (aggregatedSearch) {
+      return const SliverToBoxAdapter(child: SizedBox());
+    }
+
     var children = <Widget>[];
 
     final searchOptions =
@@ -262,9 +289,9 @@ class _SearchPageState extends State<SearchPage> {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           if (index == 0) {
-            return const Divider(
-              thickness: 0.6,
-            ).paddingTop(16);
+            return const SizedBox(
+              height: 16,
+            );
           }
           if (index == 1) {
             return ListTile(
