@@ -53,6 +53,7 @@ class CategoriesPage extends StatelessWidget {
             child: Column(
               children: [
                 FilledTabBar(
+                  key: PageStorageKey(categories.toString()),
                   tabs: categories.map((e) {
                     String title = e;
                     try {

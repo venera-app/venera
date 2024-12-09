@@ -297,12 +297,21 @@ class _FilledTabBarState extends State<FilledTabBar> {
     super.dispose();
   }
 
+  PageStorageBucket get bucket => PageStorage.of(context);
+
   @override
   void didChangeDependencies() {
     _controller = widget.controller ?? DefaultTabController.of(context);
-    _controller.animation!.addListener(onTabChanged);
     initPainter();
     super.didChangeDependencies();
+    var prevIndex = bucket.readState(context) as int?;
+    if (prevIndex != null &&
+        prevIndex != _controller.index &&
+        prevIndex >= 0 &&
+        prevIndex < widget.tabs.length) {
+      _controller.index = prevIndex;
+    }
+    _controller.animation!.addListener(onTabChanged);
   }
 
   @override
@@ -346,6 +355,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
       controller: scrollController,
       builder: (context, controller, physics) {
         return SingleChildScrollView(
+          key: const PageStorageKey('scroll'),
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.zero,
           controller: controller,
@@ -386,6 +396,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
     }
     updateScrollOffset(i);
     previousIndex = i;
+    bucket.writeState(context, i);
   }
 
   void updateScrollOffset(int i) {

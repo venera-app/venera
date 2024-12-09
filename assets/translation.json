@@ -247,7 +247,9 @@
     "A new version is available. Do you want to update now?" : "有新版本可用。您要现在更新吗？",
     "No new version available": "没有新版本可用",
     "Export as pdf": "导出为pdf",
-    "Export as epub": "导出为epub"
+    "Export as epub": "导出为epub",
+    "Aggregated Search": "聚合搜索",
+    "No search results found": "未找到搜索结果"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -497,6 +499,8 @@
     "A new version is available. Do you want to update now?" : "有新版本可用。您要現在更新嗎？",
     "No new version available": "沒有新版本可用",
     "Export as pdf": "匯出為pdf",
-    "Export as epub": "匯出為epub"
+    "Export as epub": "匯出為epub",
+    "Aggregated Search": "聚合搜索",
+    "No search results found": "未找到搜索結果"
   }
 }
