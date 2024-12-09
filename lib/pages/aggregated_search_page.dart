@@ -5,6 +5,7 @@ import "package:venera/foundation/app.dart";
 import "package:venera/foundation/comic_source/comic_source.dart";
 import "package:venera/foundation/image_provider/cached_image.dart";
 import "package:venera/pages/search_result_page.dart";
+import "package:venera/utils/translations.dart";
 
 import "comic_page.dart";
 
@@ -48,7 +49,7 @@ class _AggregatedSearchPageState extends State<AggregatedSearchPage> {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final source = sources[index];
-            return _SliverSearchResult(source: source, keyword: widget.keyword);
+            return _SliverSearchResult(source: source, keyword: _keyword);
           },
           childCount: sources.length,
         ),
@@ -192,6 +193,22 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
                   );
                 }),
               ),
+            )
+          else if (comics == null || comics!.isEmpty)
+            SizedBox(
+              height: _kComicHeight,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.error_outline),
+                      const SizedBox(width: 8),
+                      Text("No search results found".tl),
+                    ],
+                  ),
+                  const Spacer(),
+                ],
+              ).paddingHorizontal(16),
             )
           else
             SizedBox(
