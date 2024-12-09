@@ -281,7 +281,9 @@ class _FilledTabBarState extends State<FilledTabBar> {
 
   _IndicatorPainter? painter;
 
-  var scrollController = ScrollController();
+  var scrollController = ScrollController(
+    keepScrollOffset: false
+  );
 
   var tabBarKey = GlobalKey();
 
@@ -298,12 +300,20 @@ class _FilledTabBarState extends State<FilledTabBar> {
     super.dispose();
   }
 
+  PageStorageBucket get bucket => PageStorage.of(context);
+
   @override
   void didChangeDependencies() {
     _controller = widget.controller ?? DefaultTabController.of(context);
     _controller.animation!.addListener(onTabChanged);
     initPainter();
     super.didChangeDependencies();
+    var prevIndex = bucket.readState(context) as int?;
+    if (prevIndex != null && prevIndex != _controller.index) {
+      Future.microtask(() {
+        _controller.index = prevIndex;
+      });
+    }
   }
 
   @override
@@ -387,6 +397,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
     }
     updateScrollOffset(i);
     previousIndex = i;
+    bucket.writeState(context, i);
   }
 
   void updateScrollOffset(int i) {

@@ -62,10 +62,18 @@ class _MainPageState extends State<MainPage> {
   }
 
   final _pages = [
-    const HomePage(),
-    const FavoritesPage(),
-    const ExplorePage(),
-    const CategoriesPage(),
+    const HomePage(
+      key: PageStorageKey('home'),
+    ),
+    const FavoritesPage(
+      key: PageStorageKey('favorites'),
+    ),
+    const ExplorePage(
+      key: PageStorageKey('explore'),
+    ),
+    const CategoriesPage(
+      key: PageStorageKey('categories'),
+    ),
   ];
 
   var index = 0;

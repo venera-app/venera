@@ -865,6 +865,39 @@ class ComicListState extends State<ComicList> {
 
   String? _nextUrl;
 
+  Map<String, dynamic> get state => {
+    'maxPage': _maxPage,
+    'data': _data,
+    'page': _page,
+    'error': _error,
+    'loading': _loading,
+    'nextUrl': _nextUrl,
+  };
+
+  void restoreState(Map<String, dynamic>? state) {
+    if (state == null) {
+      return;
+    }
+    _maxPage = state['maxPage'];
+    _data.clear();
+    _data.addAll(state['data']);
+    _page = state['page'];
+    _error = state['error'];
+    _loading.clear();
+    _loading.addAll(state['loading']);
+    _nextUrl = state['nextUrl'];
+  }
+
+  void storeState() {
+    PageStorage.of(context).writeState(context, state);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    restoreState(PageStorage.of(context).readState(context));
+  }
+
   void remove(Comic c) {
     if (_data[_page] == null || !_data[_page]!.remove(c)) {
       for (var page in _data.values) {
@@ -1025,6 +1058,7 @@ class ComicListState extends State<ComicList> {
       }
     } finally {
       _loading[page] = false;
+      storeState();
     }
   }
 
@@ -1073,6 +1107,7 @@ class ComicListState extends State<ComicList> {
       );
     }
     return SmoothCustomScrollView(
+      key: const PageStorageKey('scroll'),
       controller: widget.controller,
       slivers: [
         if (widget.leadingSliver != null) widget.leadingSliver!,
