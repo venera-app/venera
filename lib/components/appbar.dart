@@ -189,20 +189,19 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         leading ??
             (Navigator.of(context).canPop()
                 ? Tooltip(
-              message: "Back".tl,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.maybePop(context),
-              ),
-            )
+                    message: "Back".tl,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.maybePop(context),
+                    ),
+                  )
                 : const SizedBox()),
         const SizedBox(
           width: 16,
         ),
         Expanded(
           child: DefaultTextStyle(
-            style:
-            DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
+            style: DefaultTextStyle.of(context).style.copyWith(fontSize: 20),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             child: title,
@@ -215,7 +214,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
       ],
     ).paddingTop(topPadding);
 
-    if(style == AppbarStyle.blur) {
+    if (style == AppbarStyle.blur) {
       return SizedBox.expand(
         child: BlurEffect(
           blur: 15,
@@ -281,9 +280,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
 
   _IndicatorPainter? painter;
 
-  var scrollController = ScrollController(
-    keepScrollOffset: false
-  );
+  var scrollController = ScrollController();
 
   var tabBarKey = GlobalKey();
 
@@ -305,15 +302,16 @@ class _FilledTabBarState extends State<FilledTabBar> {
   @override
   void didChangeDependencies() {
     _controller = widget.controller ?? DefaultTabController.of(context);
-    _controller.animation!.addListener(onTabChanged);
     initPainter();
     super.didChangeDependencies();
     var prevIndex = bucket.readState(context) as int?;
-    if (prevIndex != null && prevIndex != _controller.index) {
-      Future.microtask(() {
-        _controller.index = prevIndex;
-      });
+    if (prevIndex != null &&
+        prevIndex != _controller.index &&
+        prevIndex >= 0 &&
+        prevIndex < widget.tabs.length) {
+      _controller.index = prevIndex;
     }
+    _controller.animation!.addListener(onTabChanged);
   }
 
   @override
@@ -357,6 +355,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
       controller: scrollController,
       builder: (context, controller, physics) {
         return SingleChildScrollView(
+          key: const PageStorageKey('scroll'),
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.zero,
           controller: controller,
