@@ -242,11 +242,11 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
   late final String comicSourceKey;
 
-  int key = 0;
-
   bool _wantKeepAlive = true;
 
   var scrollController = ScrollController();
+
+  VoidCallback? refreshHandler;
 
   void onSettingsChanged() {
     var explorePages = appdata.settings["explore_pages"];
@@ -283,24 +283,33 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
     super.build(context);
     if (data.loadMultiPart != null) {
       return _MultiPartExplorePage(
-        key: PageStorageKey(key),
+        key: const PageStorageKey("comic_list"),
         data: data,
         controller: scrollController,
         comicSourceKey: comicSourceKey,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
       );
     } else if (data.loadPage != null || data.loadNext != null) {
       return ComicList(
         loadPage: data.loadPage,
         loadNext: data.loadNext,
-        key: PageStorageKey(key),
+        key: const PageStorageKey("comic_list"),
         controller: scrollController,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
       );
     } else if (data.loadMixed != null) {
       return _MixedExplorePage(
         data,
         comicSourceKey,
-        key: ValueKey(key),
+        key: const PageStorageKey("comic_list"),
         controller: scrollController,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
       );
     } else {
       return const Center(
@@ -314,9 +323,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
   @override
   void refresh() {
-    setState(() {
-      key++;
-    });
+    refreshHandler?.call();
   }
 
   @override
@@ -338,7 +345,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 
 class _MixedExplorePage extends StatefulWidget {
   const _MixedExplorePage(this.data, this.sourceKey,
-      {super.key, this.controller});
+      {super.key, this.controller, required this.refreshHandlerCallback});
 
   final ExplorePageData data;
 
@@ -346,12 +353,24 @@ class _MixedExplorePage extends StatefulWidget {
 
   final ScrollController? controller;
 
+  final void Function(VoidCallback c) refreshHandlerCallback;
+
   @override
   State<_MixedExplorePage> createState() => _MixedExplorePageState();
 }
 
 class _MixedExplorePageState
     extends MultiPageLoadingState<_MixedExplorePage, Object> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.refreshHandlerCallback(refresh);
+  }
+
+  void refresh() {
+    reset();
+  }
+
   Iterable<Widget> buildSlivers(BuildContext context, List<Object> data) sync* {
     List<Comic> cache = [];
     for (var part in data) {
@@ -470,6 +489,7 @@ class _MultiPartExplorePage extends StatefulWidget {
     required this.data,
     required this.controller,
     required this.comicSourceKey,
+    required this.refreshHandlerCallback,
   });
 
   final ExplorePageData data;
@@ -477,6 +497,8 @@ class _MultiPartExplorePage extends StatefulWidget {
   final ScrollController controller;
 
   final String comicSourceKey;
+
+  final void Function(VoidCallback c) refreshHandlerCallback;
 
   @override
   State<_MultiPartExplorePage> createState() => _MultiPartExplorePageState();
@@ -508,6 +530,15 @@ class _MultiPartExplorePageState extends State<_MultiPartExplorePage> {
     PageStorage.of(context).writeState(context, state);
   }
 
+  void refresh() {
+    setState(() {
+      loading = true;
+      message = null;
+      parts = null;
+    });
+    storeState();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -518,6 +549,7 @@ class _MultiPartExplorePageState extends State<_MultiPartExplorePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     restoreState(PageStorage.of(context).readState(context));
+    widget.refreshHandlerCallback(refresh);
   }
 
   void load() async {

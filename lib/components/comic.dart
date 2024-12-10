@@ -832,6 +832,7 @@ class ComicList extends StatefulWidget {
     this.errorLeading,
     this.menuBuilder,
     this.controller,
+    this.refreshHandlerCallback,
   });
 
   final Future<Res<List<Comic>>> Function(int page)? loadPage;
@@ -847,6 +848,8 @@ class ComicList extends StatefulWidget {
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
   final ScrollController? controller;
+
+  final void Function(VoidCallback c)? refreshHandlerCallback;
 
   @override
   State<ComicList> createState() => ComicListState();
@@ -892,10 +895,22 @@ class ComicListState extends State<ComicList> {
     PageStorage.of(context).writeState(context, state);
   }
 
+  void refresh() {
+    _data.clear();
+    _page = 1;
+    _maxPage = null;
+    _error = null;
+    _nextUrl = null;
+    _loading.clear();
+    storeState();
+    setState(() {});
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     restoreState(PageStorage.of(context).readState(context));
+    widget.refreshHandlerCallback?.call(refresh);
   }
 
   void remove(Comic c) {
