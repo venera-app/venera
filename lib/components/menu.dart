@@ -42,6 +42,9 @@ class _MenuRoute<T> extends PopupRoute<T> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
+              border: context.brightness == Brightness.dark
+                  ? Border.all(color: context.colorScheme.outlineVariant)
+                  : null,
               boxShadow: [
                 BoxShadow(
                   color: context.colorScheme.shadow.withOpacity(0.2),
@@ -51,10 +54,10 @@ class _MenuRoute<T> extends PopupRoute<T> {
               ],
             ),
             child: BlurEffect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(4),
               child: Material(
-                color: context.colorScheme.surface.withOpacity(0.82),
-                borderRadius: BorderRadius.circular(8),
+                color: context.colorScheme.surface.withOpacity(0.78),
+                borderRadius: BorderRadius.circular(4),
                 child: Container(
                   width: width,
                   padding:

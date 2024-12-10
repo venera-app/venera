@@ -43,7 +43,7 @@ class ComicTile extends StatelessWidget {
     var renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
     var location = renderBox.localToGlobal(
-      Offset(size.width / 2, size.height / 2),
+      Offset((size.width - 242) / 2, size.height / 2),
     );
     showMenu(location, context);
   }

@@ -223,7 +223,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
             children: [
               SelectableText(comic.title, style: ts.s18),
               if (comic.subTitle != null)
-                SelectableText(comic.subTitle!, style: ts.s14).paddingVertical(4),
+                SelectableText(comic.subTitle!, style: ts.s14)
+                    .paddingVertical(4),
               Text(
                 (ComicSource.find(comic.sourceKey)?.name) ?? '',
                 style: ts.s12,
@@ -1115,14 +1116,12 @@ class _ComicChaptersState extends State<_ComicChapters> {
                 (state.history?.readEpisode ?? const {}).contains(i + 1);
             return Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-              child: InkWell(
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                child: Material(
-                  elevation: 5,
-                  color: context.colorScheme.surface,
-                  surfaceTintColor: context.colorScheme.surfaceTint,
+              child: Material(
+                color: context.colorScheme.surfaceContainer,
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                child: InkWell(
+                  onTap: () => state.read(i + 1),
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  shadowColor: Colors.transparent,
                   child: Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1133,19 +1132,18 @@ class _ComicChaptersState extends State<_ComicChapters> {
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            color:
-                                visited ? context.colorScheme.outline : null),
+                          color: visited ? context.colorScheme.outline : null,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                onTap: () => state.read(i + 1),
               ),
             );
           }),
           gridDelegate: const SliverGridDelegateWithFixedHeight(
               maxCrossAxisExtent: 200, itemHeight: 48),
-        ),
+        ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
         if (eps.length > 20 && !showAll)
           SliverToBoxAdapter(
             child: Align(
@@ -1328,9 +1326,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
             ),
           )
         else if (isLoading)
-          const SliverToBoxAdapter(
-            child: ListLoadingIndicator(),
-          ),
+          const SliverListLoadingIndicator(),
         const SliverToBoxAdapter(
           child: Divider(),
         ),

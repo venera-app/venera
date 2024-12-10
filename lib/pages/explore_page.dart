@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
@@ -110,7 +111,9 @@ class _ExplorePageState extends State<ExplorePage>
     return Tab(text: i.ts(comicSource.key), key: Key(i));
   }
 
-  Widget buildBody(String i) => _SingleExplorePage(i, key: PageStorageKey(i));
+  Widget buildBody(String i) => Material(
+        child: _SingleExplorePage(i, key: PageStorageKey(i)),
+      );
 
   Widget buildEmpty() {
     var msg = "No Explore Pages".tl;
@@ -401,7 +404,7 @@ class _MixedExplorePageState
       controller: widget.controller,
       slivers: [
         ...buildSlivers(context, data),
-        if (haveNextPage) const ListLoadingIndicator().toSliver()
+        const SliverListLoadingIndicator(),
       ],
     );
   }
@@ -514,10 +517,10 @@ class _MultiPartExplorePageState extends State<_MultiPartExplorePage> {
   String? message;
 
   Map<String, dynamic> get state => {
-    "loading": loading,
-    "message": message,
-    "parts": parts,
-  };
+        "loading": loading,
+        "message": message,
+        "parts": parts,
+      };
 
   void restoreState(dynamic state) {
     if (state == null) return;
