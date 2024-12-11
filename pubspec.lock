@@ -388,6 +388,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_memory_info:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: a401e3f96dca6ab0ab07b6b2ec0b649833f04c14
+      url: "https://github.com/wgh136/flutter_memory_info"
+    source: git
+    version: "0.0.1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -1070,10 +1079,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "68d1e89a91ed61ad9c370f9f8b6effed9ae5e0ede22a270bdfa6daf79fc2290a"
+      sha256: "8b338d4486ab3fbc0ba0db9f9b4f5239b6697fcee427939a40e720cbb9ee0a69"
       url: "https://pub.dev"
     source: hosted
-    version: "5.5.4"
+    version: "5.9.0"
   window_manager:
     dependency: "direct main"
     description:

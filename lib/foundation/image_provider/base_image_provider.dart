@@ -1,5 +1,6 @@
 import 'dart:async' show Future, StreamController, scheduleMicrotask;
 import 'dart:convert';
+import 'dart:math';
 import 'dart:ui' as ui show Codec;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,39 @@ import 'package:venera/foundation/cache_manager.dart';
 abstract class BaseImageProvider<T extends BaseImageProvider<T>>
     extends ImageProvider<T> {
   const BaseImageProvider();
+
+  static double? _effectiveScreenWidth;
+
+  static const double _normalComicImageRatio = 0.72;
+
+  static const double _minComicImageWidth = 1920 * _normalComicImageRatio;
+
+  static TargetImageSize _getTargetSize(width, height) {
+    if (_effectiveScreenWidth == null) {
+      final screens = PlatformDispatcher.instance.displays;
+      for (var screen in screens) {
+        if (screen.size.width > screen.size.height) {
+          _effectiveScreenWidth = max(
+            _effectiveScreenWidth ?? 0,
+            screen.size.height * _normalComicImageRatio,
+          );
+        } else {
+          _effectiveScreenWidth = max(
+            _effectiveScreenWidth ?? 0,
+            screen.size.width
+          );
+        }
+      }
+      if (_effectiveScreenWidth! < _minComicImageWidth) {
+        _effectiveScreenWidth = _minComicImageWidth;
+      }
+    }
+    if (width > _effectiveScreenWidth!) {
+      height = (height * _effectiveScreenWidth! / width).round();
+      width = _effectiveScreenWidth!.round();
+    }
+    return TargetImageSize(width: width, height: height);
+  }
 
   @override
   ImageStreamCompleter loadImage(T key, ImageDecoderCallback decode) {
@@ -45,19 +79,12 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
 
       while (data == null && !stop) {
         try {
-          if(_cache.containsKey(key.key)){
-            data = _cache[key.key];
-          } else {
-            data = await load(chunkEvents);
-            _checkCacheSize();
-            _cache[key.key] = data;
-            _cacheSize += data.length;
-          }
+          data = await load(chunkEvents);
         } catch (e) {
-          if(e.toString().contains("Invalid Status Code: 404")) {
+          if (e.toString().contains("Invalid Status Code: 404")) {
             rethrow;
           }
-          if(e.toString().contains("Invalid Status Code: 403")) {
+          if (e.toString().contains("Invalid Status Code: 403")) {
             rethrow;
           }
           if (e.toString().contains("handshake")) {
@@ -73,23 +100,24 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
         }
       }
 
-      if(stop) {
+      if (stop) {
         throw Exception("Image loading is stopped");
       }
 
-      if(data!.isEmpty) {
+      if (data!.isEmpty) {
         throw Exception("Empty image data");
       }
 
       try {
         final buffer = await ImmutableBuffer.fromUint8List(data);
-        return await decode(buffer);
+        return await decode(buffer, getTargetSize: _getTargetSize);
       } catch (e) {
         await CacheManager().delete(this.key);
         if (data.length < 2 * 1024) {
           // data is too short, it's likely that the data is text, not image
           try {
-            var text = const Utf8Codec(allowMalformed: false).decoder.convert(data);
+            var text =
+                const Utf8Codec(allowMalformed: false).decoder.convert(data);
             throw Exception("Expected image data, but got text: $text");
           } catch (e) {
             // ignore
@@ -105,30 +133,6 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
     } finally {
       chunkEvents.close();
     }
-  }
-
-  static final _cache = <String, Uint8List>{};
-
-  static var _cacheSize = 0;
-
-  static var _cacheSizeLimit = 50 * 1024 * 1024;
-
-  static void _checkCacheSize(){
-    while (_cacheSize > _cacheSizeLimit){
-      var firstKey = _cache.keys.first;
-      _cacheSize -= _cache[firstKey]!.length;
-      _cache.remove(firstKey);
-    }
-  }
-
-  static void clearCache(){
-    _cache.clear();
-    _cacheSize = 0;
-  }
-
-  static void setCacheSizeLimit(int size){
-    _cacheSizeLimit = size;
-    _checkCacheSize();
   }
 
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents);
