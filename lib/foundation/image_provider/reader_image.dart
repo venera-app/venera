@@ -2,6 +2,7 @@ import 'dart:async' show Future, StreamController;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/network/images.dart';
+import 'package:venera/utils/io.dart';
 import 'base_image_provider.dart';
 import 'reader_image.dart' as image_provider;
 
@@ -20,6 +21,14 @@ class ReaderImageProvider
 
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+    if (imageKey.startsWith('file://')) {
+      var file = File(imageKey);
+      if (await file.exists()) {
+        return file.readAsBytes();
+      }
+      throw "Error: File not found.";
+    }
+
     await for (var event
         in ImageDownloader.loadComicImage(imageKey, sourceKey, cid, eid)) {
       chunkEvents.add(ImageChunkEvent(
