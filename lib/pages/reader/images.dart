@@ -651,7 +651,7 @@ ImageProvider _createImageProviderFromKey(
   var reader = context.reader;
   return ReaderImageProvider(
     imageKey,
-    reader.type.comicSource!.key,
+    reader.type.comicSource?.key,
     reader.cid,
     reader.eid,
   );
