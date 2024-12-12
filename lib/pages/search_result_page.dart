@@ -14,14 +14,14 @@ class SearchResultPage extends StatefulWidget {
     super.key,
     required this.text,
     required this.sourceKey,
-    required this.options,
+    this.options,
   });
 
   final String text;
 
   final String sourceKey;
 
-  final List<String> options;
+  final List<String>? options;
 
   @override
   State<SearchResultPage> createState() => _SearchResultPageState();
@@ -99,7 +99,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
       onSearch: search,
     );
     sourceKey = widget.sourceKey;
-    options = widget.options;
+    options = widget.options ?? const [];
     validateOptions();
     text = widget.text;
     appdata.addSearchHistory(text);

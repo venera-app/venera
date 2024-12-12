@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -128,6 +129,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     setState(() {});
   }
 
+  Color translateColorSetting() {
+    return switch (appdata.settings['color']) {
+      'red' => Colors.red,
+      'pink' => Colors.pink,
+      'purple' => Colors.purple,
+      'green' => Colors.green,
+      'orange' => Colors.orange,
+      'blue' => Colors.blue,
+      'yellow' => Colors.yellow,
+      'cyan' => Colors.cyan,
+      _ => Colors.blue,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget home;
@@ -140,90 +155,93 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     } else {
       home = const MainPage();
     }
-    return MaterialApp(
-      home: home,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: App.mainColor,
-          surface: Colors.white,
-          primary: App.mainColor.shade600,
-          // ignore: deprecated_member_use
-          background: Colors.white,
-        ),
-        fontFamily: App.isWindows ? "Microsoft YaHei" : null,
-      ),
-      navigatorKey: App.rootNavigatorKey,
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: App.mainColor,
+    return DynamicColorBuilder(builder: (light, dark) {
+      if (appdata.settings['color'] != 'system' || light == null || dark == null) {
+        var color = translateColorSetting();
+        light = ColorScheme.fromSeed(
+          seedColor: color,
+        );
+        dark = ColorScheme.fromSeed(
+          seedColor: color,
           brightness: Brightness.dark,
-          surface: Colors.black,
-          primary: App.mainColor.shade400,
-          // ignore: deprecated_member_use
-          background: Colors.black,
+        );
+      }
+      return MaterialApp(
+        home: home,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: light.copyWith(
+            surface: Colors.white,
+          ),
+          fontFamily: App.isWindows ? "Microsoft YaHei" : null,
         ),
-        fontFamily: App.isWindows ? "Microsoft YaHei" : null,
-      ),
-      themeMode: switch (appdata.settings['theme_mode']) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system
-      },
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      locale: () {
-        var lang = appdata.settings['language'];
-        if (lang == 'system') {
-          return null;
-        }
-        return switch (lang) {
-          'zh-CN' => const Locale('zh', 'CN'),
-          'zh-TW' => const Locale('zh', 'TW'),
-          'en-US' => const Locale('en'),
-          _ => null
-        };
-      }(),
-      supportedLocales: const [
-        Locale('en'),
-        Locale('zh', 'CN'),
-        Locale('zh', 'TW'),
-      ],
-      builder: (context, widget) {
-        ErrorWidget.builder = (details) {
-          Log.error(
-              "Unhandled Exception", "${details.exception}\n${details.stack}");
-          return Material(
-            child: Center(
-              child: Text(details.exception.toString()),
-            ),
-          );
-        };
-        if (widget != null) {
-          widget = OverlayWidget(widget);
-          if (App.isDesktop) {
-            widget = Shortcuts(
-              shortcuts: {
-                LogicalKeySet(LogicalKeyboardKey.escape): VoidCallbackIntent(
-                  App.pop,
-                ),
-              },
-              child: MouseBackDetector(
-                onTapDown: App.pop,
-                child: WindowFrame(widget),
+        navigatorKey: App.rootNavigatorKey,
+        darkTheme: ThemeData(
+          colorScheme: dark.copyWith(
+            surface: Colors.black,
+          ),
+          fontFamily: App.isWindows ? "Microsoft YaHei" : null,
+        ),
+        themeMode: switch (appdata.settings['theme_mode']) {
+          'light' => ThemeMode.light,
+          'dark' => ThemeMode.dark,
+          _ => ThemeMode.system
+        },
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        locale: () {
+          var lang = appdata.settings['language'];
+          if (lang == 'system') {
+            return null;
+          }
+          return switch (lang) {
+            'zh-CN' => const Locale('zh', 'CN'),
+            'zh-TW' => const Locale('zh', 'TW'),
+            'en-US' => const Locale('en'),
+            _ => null
+          };
+        }(),
+        supportedLocales: const [
+          Locale('en'),
+          Locale('zh', 'CN'),
+          Locale('zh', 'TW'),
+        ],
+        builder: (context, widget) {
+          ErrorWidget.builder = (details) {
+            Log.error(
+                "Unhandled Exception", "${details.exception}\n${details.stack}");
+            return Material(
+              child: Center(
+                child: Text(details.exception.toString()),
               ),
             );
+          };
+          if (widget != null) {
+            widget = OverlayWidget(widget);
+            if (App.isDesktop) {
+              widget = Shortcuts(
+                shortcuts: {
+                  LogicalKeySet(LogicalKeyboardKey.escape): VoidCallbackIntent(
+                    App.pop,
+                  ),
+                },
+                child: MouseBackDetector(
+                  onTapDown: App.pop,
+                  child: WindowFrame(widget),
+                ),
+              );
+            }
+            return _SystemUiProvider(Material(
+              child: widget,
+            ));
           }
-          return _SystemUiProvider(Material(
-            child: widget,
-          ));
-        }
-        throw ('widget is null');
-      },
-    );
+          throw ('widget is null');
+        },
+      );
+    });
   }
 }
 

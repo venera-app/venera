@@ -42,6 +42,7 @@ class History implements Comic {
 
   int page;
 
+  @override
   String id;
 
   /// readEpisode is a set of episode numbers that have been read.

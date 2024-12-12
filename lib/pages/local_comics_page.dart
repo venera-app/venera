@@ -7,6 +7,7 @@ import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/utils/cbz.dart';
+import 'package:venera/utils/epub.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/pdf.dart';
 import 'package:venera/utils/translations.dart';
@@ -387,6 +388,33 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                       } finally {
                         controller.close();
                         File(cache).deleteIgnoreError();
+                      }
+                    },
+                  ),
+                if (!multiSelectMode)
+                  MenuEntry(
+                    icon: Icons.import_contacts_outlined,
+                    text: "Export as epub".tl,
+                    onClick: () async {
+                      var controller = showLoadingDialog(
+                        context,
+                        allowCancel: false,
+                      );
+                      File? file;
+                      try {
+                        file = await createEpubWithLocalComic(
+                          c as LocalComic,
+                        );
+                        await saveFile(
+                          file: file,
+                          filename: "${c.title}.epub",
+                        );
+                      } catch (e, s) {
+                        Log.error("EPUB Export", e, s);
+                        context.showMessage(message: e.toString());
+                      } finally {
+                        controller.close();
+                        file?.deleteIgnoreError();
                       }
                     },
                   )

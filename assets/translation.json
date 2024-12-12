@@ -246,7 +246,12 @@
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要现在更新吗？",
     "No new version available": "没有新版本可用",
-    "Export as pdf": "导出为pdf"
+    "Export as pdf": "导出为pdf",
+    "Export as epub": "导出为epub",
+    "Aggregated Search": "聚合搜索",
+    "No search results found": "未找到搜索结果",
+    "Added @c comics to download queue." : "已添加 @c 本漫画到下载队列",
+    "Download started": "下载已开始"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -495,6 +500,11 @@
     "New version available": "有新版本可用",
     "A new version is available. Do you want to update now?" : "有新版本可用。您要現在更新嗎？",
     "No new version available": "沒有新版本可用",
-    "Export as pdf": "匯出為pdf"
+    "Export as pdf": "匯出為pdf",
+    "Export as epub": "匯出為epub",
+    "Aggregated Search": "聚合搜索",
+    "No search results found": "未找到搜索結果",
+    "Added @c comics to download queue." : "已添加 @c 本漫畫到下載隊列",
+    "Download started": "下載已開始"
   }
 }

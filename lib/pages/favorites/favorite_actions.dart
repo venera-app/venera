@@ -1,5 +1,3 @@
-import 'package:venera/foundation/appdata.dart';
-
 part of 'favorites_page.dart';
 
 /// Open a dialog to create a new favorite folder.

@@ -1,4 +1,4 @@
-library venera_reader;
+library;
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_memory_info/flutter_memory_info.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -21,6 +22,7 @@ import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/file_type.dart';
@@ -60,7 +62,7 @@ class Reader extends StatefulWidget {
 
   final String name;
 
-  /// Map<Chapter ID, Chapter Name>.
+  /// key: Chapter ID, value: Chapter Name
   /// null if the comic is a gallery
   final Map<String, String>? chapters;
 
@@ -142,7 +144,25 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     if(appdata.settings['enableTurnPageByVolumeKey']) {
       handleVolumeEvent();
     }
+    setImageCacheSize();
     super.initState();
+  }
+
+  void setImageCacheSize() async {
+    var availableRAM = await MemoryInfo.getFreePhysicalMemorySize();
+    if (availableRAM == null) return;
+    int maxImageCacheSize;
+    if (availableRAM < 1 << 30) {
+      maxImageCacheSize = 100 << 20;
+    } else if (availableRAM < 2 << 30) {
+      maxImageCacheSize = 200 << 20;
+    } else if (availableRAM < 4 << 30) {
+      maxImageCacheSize = 300 << 20;
+    } else {
+      maxImageCacheSize = 500 << 20;
+    }
+    Log.info("Reader", "Detect available RAM: $availableRAM, set image cache size to $maxImageCacheSize");
+    PaintingBinding.instance.imageCache.maximumSizeBytes = maxImageCacheSize;
   }
 
   @override
@@ -154,6 +174,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     Future.microtask(() {
       DataSync().onDataChanged();
     });
+    PaintingBinding.instance.imageCache.maximumSizeBytes = 100 << 20;
     super.dispose();
   }
 

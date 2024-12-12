@@ -110,7 +110,9 @@ class _ExplorePageState extends State<ExplorePage>
     return Tab(text: i.ts(comicSource.key), key: Key(i));
   }
 
-  Widget buildBody(String i) => _SingleExplorePage(i, key: Key(i));
+  Widget buildBody(String i) => Material(
+        child: _SingleExplorePage(i, key: PageStorageKey(i)),
+      );
 
   Widget buildEmpty() {
     var msg = "No Explore Pages".tl;
@@ -147,7 +149,7 @@ class _ExplorePageState extends State<ExplorePage>
 
     Widget tabBar = Material(
       child: FilledTabBar(
-        key: Key(pages.toString()),
+        key: PageStorageKey(pages.toString()),
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,
       ),
@@ -240,19 +242,13 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
     with AutomaticKeepAliveClientMixin<_SingleExplorePage> {
   late final ExplorePageData data;
 
-  bool loading = true;
-
-  String? message;
-
-  List<ExplorePagePart>? parts;
-
   late final String comicSourceKey;
-
-  int key = 0;
 
   bool _wantKeepAlive = true;
 
   var scrollController = ScrollController();
+
+  VoidCallback? refreshHandler;
 
   void onSettingsChanged() {
     var explorePages = appdata.settings["explore_pages"];
@@ -288,15 +284,34 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
   Widget build(BuildContext context) {
     super.build(context);
     if (data.loadMultiPart != null) {
-      return buildMultiPart();
+      return _MultiPartExplorePage(
+        key: const PageStorageKey("comic_list"),
+        data: data,
+        controller: scrollController,
+        comicSourceKey: comicSourceKey,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
+      );
     } else if (data.loadPage != null || data.loadNext != null) {
-      return buildComicList();
+      return ComicList(
+        loadPage: data.loadPage,
+        loadNext: data.loadNext,
+        key: const PageStorageKey("comic_list"),
+        controller: scrollController,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
+      );
     } else if (data.loadMixed != null) {
       return _MixedExplorePage(
         data,
         comicSourceKey,
-        key: ValueKey(key),
+        key: const PageStorageKey("comic_list"),
         controller: scrollController,
+        refreshHandlerCallback: (c) {
+          refreshHandler = c;
+        },
       );
     } else {
       return const Center(
@@ -305,74 +320,12 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
     }
   }
 
-  Widget buildComicList() {
-    return ComicList(
-      loadPage: data.loadPage,
-      loadNext: data.loadNext,
-      key: ValueKey(key),
-      controller: scrollController,
-    );
-  }
-
-  void load() async {
-    var res = await data.loadMultiPart!();
-    loading = false;
-    if (mounted) {
-      setState(() {
-        if (res.error) {
-          message = res.errorMessage;
-        } else {
-          parts = res.data;
-        }
-      });
-    }
-  }
-
-  Widget buildMultiPart() {
-    if (loading) {
-      load();
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    } else if (message != null) {
-      return NetworkError(
-        message: message!,
-        retry: refresh,
-        withAppbar: false,
-      );
-    } else {
-      return buildPage();
-    }
-  }
-
-  Widget buildPage() {
-    return SmoothCustomScrollView(
-      controller: scrollController,
-      slivers: _buildPage().toList(),
-    );
-  }
-
-  Iterable<Widget> _buildPage() sync* {
-    for (var part in parts!) {
-      yield* _buildExplorePagePart(part, comicSourceKey);
-    }
-  }
-
   @override
   Object? get tag => widget.title;
 
   @override
   void refresh() {
-    message = null;
-    if (data.loadMultiPart != null) {
-      setState(() {
-        loading = true;
-      });
-    } else {
-      setState(() {
-        key++;
-      });
-    }
+    refreshHandler?.call();
   }
 
   @override
@@ -393,7 +346,8 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
 }
 
 class _MixedExplorePage extends StatefulWidget {
-  const _MixedExplorePage(this.data, this.sourceKey, {super.key, this.controller});
+  const _MixedExplorePage(this.data, this.sourceKey,
+      {super.key, this.controller, required this.refreshHandlerCallback});
 
   final ExplorePageData data;
 
@@ -401,12 +355,24 @@ class _MixedExplorePage extends StatefulWidget {
 
   final ScrollController? controller;
 
+  final void Function(VoidCallback c) refreshHandlerCallback;
+
   @override
   State<_MixedExplorePage> createState() => _MixedExplorePageState();
 }
 
 class _MixedExplorePageState
     extends MultiPageLoadingState<_MixedExplorePage, Object> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.refreshHandlerCallback(refresh);
+  }
+
+  void refresh() {
+    reset();
+  }
+
   Iterable<Widget> buildSlivers(BuildContext context, List<Object> data) sync* {
     List<Comic> cache = [];
     for (var part in data) {
@@ -437,7 +403,7 @@ class _MixedExplorePageState
       controller: widget.controller,
       slivers: [
         ...buildSlivers(context, data),
-        if (haveNextPage) const ListLoadingIndicator().toSliver()
+        const SliverListLoadingIndicator(),
       ],
     );
   }
@@ -517,4 +483,126 @@ Iterable<Widget> _buildExplorePagePart(
 
   yield buildTitle(part);
   yield buildComics(part);
+}
+
+class _MultiPartExplorePage extends StatefulWidget {
+  const _MultiPartExplorePage({
+    super.key,
+    required this.data,
+    required this.controller,
+    required this.comicSourceKey,
+    required this.refreshHandlerCallback,
+  });
+
+  final ExplorePageData data;
+
+  final ScrollController controller;
+
+  final String comicSourceKey;
+
+  final void Function(VoidCallback c) refreshHandlerCallback;
+
+  @override
+  State<_MultiPartExplorePage> createState() => _MultiPartExplorePageState();
+}
+
+class _MultiPartExplorePageState extends State<_MultiPartExplorePage> {
+  late final ExplorePageData data;
+
+  List<ExplorePagePart>? parts;
+
+  bool loading = true;
+
+  String? message;
+
+  Map<String, dynamic> get state => {
+        "loading": loading,
+        "message": message,
+        "parts": parts,
+      };
+
+  void restoreState(dynamic state) {
+    if (state == null) return;
+    loading = state["loading"];
+    message = state["message"];
+    parts = state["parts"];
+  }
+
+  void storeState() {
+    PageStorage.of(context).writeState(context, state);
+  }
+
+  void refresh() {
+    setState(() {
+      loading = true;
+      message = null;
+      parts = null;
+    });
+    storeState();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    data = widget.data;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    restoreState(PageStorage.of(context).readState(context));
+    widget.refreshHandlerCallback(refresh);
+  }
+
+  void load() async {
+    var res = await data.loadMultiPart!();
+    loading = false;
+    if (mounted) {
+      setState(() {
+        if (res.error) {
+          message = res.errorMessage;
+        } else {
+          parts = res.data;
+        }
+      });
+      storeState();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      load();
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if (message != null) {
+      return NetworkError(
+        message: message!,
+        retry: () {
+          setState(() {
+            loading = true;
+            message = null;
+          });
+        },
+        withAppbar: false,
+      );
+    } else {
+      return buildPage();
+    }
+  }
+
+  Widget buildPage() {
+    return SmoothCustomScrollView(
+      key: const PageStorageKey('scroll'),
+      controller: widget.controller,
+      slivers: _buildPage().toList(),
+    );
+  }
+
+  Iterable<Widget> _buildPage() sync* {
+    for (var part in parts!) {
+      yield* _buildExplorePagePart(part, widget.comicSourceKey);
+    }
+  }
 }

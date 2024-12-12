@@ -267,13 +267,14 @@ class OptionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: _fastAnimationDuration,
       decoration: BoxDecoration(
         color: isSelected
-            ? context.colorScheme.primaryContainer
+            ? context.colorScheme.secondaryContainer
             : context.colorScheme.surface,
         border: isSelected
-            ? Border.all(color: context.colorScheme.primaryContainer)
+            ? Border.all(color: context.colorScheme.secondaryContainer)
             : Border.all(color: context.colorScheme.outline),
         borderRadius: BorderRadius.circular(8),
       ),

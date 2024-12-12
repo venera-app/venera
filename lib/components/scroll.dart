@@ -78,6 +78,9 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
       },
       onPointerSignal: (pointerSignal) {
         if (pointerSignal is PointerScrollEvent) {
+          if (HardwareKeyboard.instance.isShiftPressed) {
+            return;
+          }
           if (pointerSignal.kind == PointerDeviceKind.mouse &&
               !_isMouseScroll) {
             setState(() {

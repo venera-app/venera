@@ -112,3 +112,9 @@ extension StyledText on TextStyle {
 
   TextStyle withColor(Color? color) => copyWith(color: color);
 }
+
+extension ColorExt on Color {
+  Color toOpacity(double opacity) {
+    return withValues(alpha: opacity);
+  }
+}

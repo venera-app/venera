@@ -20,6 +20,8 @@ class _MenuRoute<T> extends PopupRoute<T> {
   @override
   String? get barrierLabel => "menu";
 
+  double get entryHeight => App.isMobile ? 42 : 36;
+
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
@@ -30,7 +32,7 @@ class _MenuRoute<T> extends PopupRoute<T> {
       left = size.width - width - 10;
     }
     var top = location.dy;
-    var height = 16 + 32 * entries.length;
+    var height = 16 + entryHeight * entries.length;
     if (top + height > size.height - 15) {
       top = size.height - height - 15;
     }
@@ -42,9 +44,12 @@ class _MenuRoute<T> extends PopupRoute<T> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
+              border: context.brightness == Brightness.dark
+                  ? Border.all(color: context.colorScheme.outlineVariant)
+                  : null,
               boxShadow: [
                 BoxShadow(
-                  color: context.colorScheme.shadow.withOpacity(0.2),
+                  color: context.colorScheme.shadow.toOpacity(0.2),
                   blurRadius: 8,
                   blurStyle: BlurStyle.outer,
                 ),
@@ -53,9 +58,7 @@ class _MenuRoute<T> extends PopupRoute<T> {
             child: BlurEffect(
               borderRadius: BorderRadius.circular(4),
               child: Material(
-                color: context.brightness == Brightness.light
-                    ? const Color(0xFFFAFAFA).withOpacity(0.82)
-                    : const Color(0xFF090909).withOpacity(0.82),
+                color: context.colorScheme.surface.toOpacity(0.78),
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
                   width: width,
@@ -83,7 +86,7 @@ class _MenuRoute<T> extends PopupRoute<T> {
         entry.onClick();
       },
       child: SizedBox(
-        height: App.isMobile ? 42 : 36,
+        height: entryHeight,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(

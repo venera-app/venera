@@ -38,7 +38,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       });
     } else {
       setState(() {
-        comics = LocalFavoritesManager().search(keyword);
+        comics = LocalFavoritesManager().searchInFolder(widget.folder, keyword);
       });
     }
   }
@@ -53,23 +53,57 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     super.initState();
   }
 
+  void selectAll() {
+    setState(() {
+      selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+    });
+  }
+
+  void invertSelection() {
+    setState(() {
+      comics.asMap().forEach((k, v) {
+        selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+      });
+      selectedComics.removeWhere((k, v) => !v);
+    });
+  }
+
+  bool downloadComic(FavoriteItem c) {
+    var source = c.type.comicSource;
+    if (source != null) {
+      bool isDownloaded = LocalManager().isDownloaded(
+        c.id,
+        (c).type,
+      );
+      if (isDownloaded) {
+        return false;
+      }
+      LocalManager().addTask(ImagesDownloadTask(
+        source: source,
+        comicId: c.id,
+        comicTitle: c.title,
+      ));
+      return true;
+    }
+    return false;
+  }
+
+  void downloadSelected() {
+    int count = 0;
+    for (var c in selectedComics.keys) {
+      if (downloadComic(c as FavoriteItem)) {
+        count++;
+      }
+    }
+    if (count > 0) {
+      context.showMessage(
+        message: "Added @c comics to download queue.".tlParams({"c": count}),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    void selectAll() {
-      setState(() {
-        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
-      });
-    }
-
-    void invertSelection() {
-      setState(() {
-        comics.asMap().forEach((k, v) {
-          selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
-        });
-        selectedComics.removeWhere((k, v) => !v);
-      });
-    }
-
     var body = Scaffold(
       body: SmoothCustomScrollView(slivers: [
         if (!searchMode && !multiSelectMode)
@@ -300,6 +334,11 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                         },
                       );
                     }),
+                MenuEntry(
+                  icon: Icons.download,
+                  text: "Download".tl,
+                  onClick: downloadSelected,
+                ),
               ]),
             ],
           )
@@ -336,6 +375,20 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         SliverGridComics(
           comics: comics,
           selections: selectedComics,
+          menuBuilder: (c) {
+            return [
+              MenuEntry(
+                icon: Icons.download,
+                text: "Download".tl,
+                onClick: () {
+                  downloadComic(c as FavoriteItem);
+                  context.showMessage(
+                    message: "Download started".tl,
+                  );
+                },
+              ),
+            ];
+          },
           onTap: multiSelectMode
               ? (c) {
                   setState(() {
@@ -425,7 +478,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               padding: EdgeInsets.only(bottom: context.padding.bottom + 16),
               child: Container(
                 constraints:
-                const BoxConstraints(maxHeight: 700, maxWidth: 500),
+                    const BoxConstraints(maxHeight: 700, maxWidth: 500),
                 child: Column(
                   children: [
                     Expanded(
@@ -443,7 +496,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                         targetFolders = LocalFavoritesManager()
                                             .folderNames
                                             .where((folder) =>
-                                        folder != favPage.folder)
+                                                folder != favPage.folder)
                                             .toList();
                                       });
                                     });
@@ -482,14 +535,14 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             onChanged: disabled
                                 ? null
                                 : (v) {
-                              setState(() {
-                                if (v!) {
-                                  selectedLocalFolders.add(folder);
-                                } else {
-                                  selectedLocalFolders.remove(folder);
-                                }
-                              });
-                            },
+                                    setState(() {
+                                      if (v!) {
+                                        selectedLocalFolders.add(folder);
+                                      } else {
+                                        selectedLocalFolders.remove(folder);
+                                      }
+                                    });
+                                  },
                           );
                         },
                       ),
@@ -592,12 +645,19 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
   late var comics = LocalFavoritesManager().getAllComics(widget.name);
   bool changed = false;
 
-  Color lightenColor(Color color, double lightenValue) {
-    int red = (color.red + ((255 - color.red) * lightenValue)).round();
-    int green = (color.green + ((255 - color.green) * lightenValue)).round();
-    int blue = (color.blue + ((255 - color.blue) * lightenValue)).round();
+  static int _floatToInt8(double x) {
+    return (x * 255.0).round() & 0xff;
+  }
 
-    return Color.fromARGB(color.alpha, red, green, blue);
+  Color lightenColor(Color color, double lightenValue) {
+    int red =
+        (_floatToInt8(color.r) + ((255 - color.r) * lightenValue)).round();
+    int green = (_floatToInt8(color.g) * 255 + ((255 - color.g) * lightenValue))
+        .round();
+    int blue = (_floatToInt8(color.b) * 255 + ((255 - color.b) * lightenValue))
+        .round();
+
+    return Color.fromARGB(_floatToInt8(color.a), red, green, blue);
   }
 
   @override
@@ -650,7 +710,7 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
           ),
         ],
       ),
-      body: ReorderableBuilder(
+      body: ReorderableBuilder<FavoriteItem>(
         key: reorderWidgetKey,
         scrollController: _scrollController,
         longPressDelay: App.isDesktop
@@ -659,14 +719,14 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
         onReorder: (reorderFunc) {
           changed = true;
           setState(() {
-            comics = reorderFunc(comics) as List<FavoriteItem>;
+            comics = reorderFunc(comics);
           });
           widget.onReorder(comics);
         },
         dragChildBoxDecoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: lightenColor(
-            Theme.of(context).splashColor.withOpacity(1),
+            Theme.of(context).splashColor.withAlpha(255),
             0.2,
           ),
         ),
