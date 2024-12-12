@@ -72,9 +72,7 @@ dependencies:
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
   shimmer: ^3.0.0
-  flutter_memory_info:
-    git:
-      url: https://github.com/wgh136/flutter_memory_info
+  flutter_memory_info: ^0.0.1
 
 dev_dependencies:
   flutter_test:
