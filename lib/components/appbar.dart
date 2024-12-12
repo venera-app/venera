@@ -76,7 +76,7 @@ class _AppbarState extends State<Appbar> {
     var content = Container(
       decoration: BoxDecoration(
         color: widget.backgroundColor ??
-            context.colorScheme.surface.withOpacity(0.72),
+            context.colorScheme.surface.toOpacity(0.72),
       ),
       height: _kAppBarHeight + context.padding.top,
       child: Row(
@@ -219,7 +219,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         child: BlurEffect(
           blur: 15,
           child: Material(
-            color: context.colorScheme.surface.withOpacity(0.72),
+            color: context.colorScheme.surface.toOpacity(0.72),
             elevation: 0,
             borderRadius: BorderRadius.circular(radius),
             child: body,
@@ -734,6 +734,7 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
                       icon: const Icon(Icons.clear),
                       onPressed: () {
                         editingController.clear();
+                        onChanged?.call("");
                       },
                     );
             },

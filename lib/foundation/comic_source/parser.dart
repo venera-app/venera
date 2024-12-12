@@ -90,11 +90,10 @@ class ComicSourceParser {
     var className = line1.split("class")[1].split("extends ComicSource").first;
     className = className.trim();
     JsEngine().runCode("""
-      (() => {
-        $js
+      (() => { $js
         this['temp'] = new $className()
       }).call()
-    """);
+    """, className);
     _name = JsEngine().runCode("this['temp'].name") ??
         (throw ComicSourceParseException('name is required'));
     var key = JsEngine().runCode("this['temp'].key") ??

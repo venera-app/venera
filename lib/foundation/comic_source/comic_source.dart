@@ -1,4 +1,4 @@
-library comic_source;
+library;
 
 import 'dart:async';
 import 'dart:collection';

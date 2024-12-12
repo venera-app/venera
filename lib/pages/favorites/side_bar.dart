@@ -179,7 +179,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
           color: isSelected
-              ? context.colorScheme.primaryContainer.withOpacity(0.36)
+              ? context.colorScheme.primaryContainer.toOpacity(0.36)
               : null,
           border: Border(
             left: BorderSide(
@@ -214,7 +214,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
           color: isSelected
-              ? context.colorScheme.primaryContainer.withOpacity(0.36)
+              ? context.colorScheme.primaryContainer.toOpacity(0.36)
               : null,
           border: Border(
             left: BorderSide(

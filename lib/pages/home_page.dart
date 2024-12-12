@@ -6,7 +6,6 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
-import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/image_provider/history_image_provider.dart';
 import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -17,7 +16,6 @@ import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/data_sync.dart';
-import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/import_comic.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -55,7 +53,7 @@ class _SearchBar extends StatelessWidget {
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Material(
-          color: context.colorScheme.surfaceContainer,
+          color: context.colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(32),
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
@@ -580,7 +578,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
           onPressed: () {
             showDialog(
               context: context,
-              barrierColor: Colors.black.withOpacity(0.2),
+              barrierColor: Colors.black.toOpacity(0.2),
               builder: (context) {
                 var help = '';
                 help +=

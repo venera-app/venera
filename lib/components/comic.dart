@@ -144,7 +144,7 @@ class ComicTile extends StatelessWidget {
                 if (history != null)
                   Container(
                     height: 24,
-                    color: Colors.blue.withOpacity(0.9),
+                    color: Colors.blue.toOpacity(0.9),
                     constraints: const BoxConstraints(minWidth: 24),
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: CustomPaint(
@@ -293,7 +293,7 @@ class ComicTile extends StatelessWidget {
                                     Radius.circular(10.0),
                                   ),
                                   child: Container(
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Colors.black.toOpacity(0.5),
                                     child: Padding(
                                       padding:
                                           const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -475,7 +475,7 @@ class _ComicDescription extends StatelessWidget {
             subtitle,
             style: TextStyle(
                 fontSize: 10.0,
-                color: context.colorScheme.onSurface.withOpacity(0.7)),
+                color: context.colorScheme.onSurface.toOpacity(0.7)),
             maxLines: 1,
             softWrap: true,
             overflow: TextOverflow.ellipsis,
@@ -780,7 +780,7 @@ class _SliverGridComics extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.72)
+                  ? Theme.of(context).colorScheme.secondaryContainer.toOpacity(0.72)
                   : null,
               borderRadius: BorderRadius.circular(12),
             ),
