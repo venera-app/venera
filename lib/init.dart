@@ -18,11 +18,11 @@ Future<void> init() async {
   await appdata.init();
   await App.init();
   await HistoryManager().init();
+  await TagsTranslation.readData();
   await LocalFavoritesManager().init();
   SingleInstanceCookieJar("${App.dataPath}/cookie.db");
   await JsEngine().init();
   await ComicSource.init();
   await LocalManager().init();
-  await TagsTranslation.readData();
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
 }

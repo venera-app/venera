@@ -38,7 +38,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       });
     } else {
       setState(() {
-        comics = LocalFavoritesManager().search(keyword);
+        comics = LocalFavoritesManager().searchInFolder(widget.folder, keyword);
       });
     }
   }
