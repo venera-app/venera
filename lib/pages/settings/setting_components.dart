@@ -384,7 +384,7 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
   Widget build(BuildContext context) {
     var tiles = keys.map((e) => buildItem(e)).toList();
 
-    var view = ReorderableBuilder(
+    var view = ReorderableBuilder<String>(
       key: reorderWidgetKey,
       scrollController: scrollController,
       longPressDelay: App.isDesktop
@@ -542,7 +542,7 @@ class _SettingPartTitle extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: context.colorScheme.onSurface.withOpacity(0.1),
+              color: context.colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
         ),

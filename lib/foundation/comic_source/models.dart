@@ -198,9 +198,7 @@ class ComicDetails with HistoryMixin {
         maxPage = json["maxPage"],
         comments = (json["comments"] as List?)
             ?.map((e) => Comment.fromJson(e))
-            .toList(){
-    print(json);
-  }
+            .toList();
 
   Map<String, dynamic> toJson() {
     return {

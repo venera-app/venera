@@ -563,7 +563,7 @@ class _VirtualWindowFrameState extends State<VirtualWindowFrame>
         boxShadow: <BoxShadow>[
           if (!_isMaximized && !_isFullScreen)
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.toOpacity(0.1),
               offset: Offset(0.0, _isFocused ? 4 : 2),
               blurRadius: 6,
             )

@@ -141,7 +141,7 @@ class FlyoutState extends State<Flyout> {
                     animation: animation,
                     builder: (context, builder) {
                       return ColoredBox(
-                        color: Colors.black.withOpacity(0.3 * animation.value),
+                        color: Colors.black.toOpacity(0.3 * animation.value),
                       );
                     },
                   ),
@@ -185,12 +185,18 @@ class FlyoutContent extends StatelessWidget {
         child: Material(
           borderRadius: BorderRadius.circular(8),
           type: MaterialType.card,
-          color: context.colorScheme.surface.withOpacity(0.82),
+          color: context.colorScheme.surface.toOpacity(0.82),
           child: Container(
             constraints: const BoxConstraints(
               minWidth: minFlyoutWidth,
             ),
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: context.brightness == ui.Brightness.dark
+                  ? Border.all(color: context.colorScheme.outlineVariant)
+                  : null,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,110 +219,5 @@ class FlyoutContent extends StatelessWidget {
         ).paddingAll(4),
       ),
     );
-  }
-}
-
-class FlyoutTextButton extends StatefulWidget {
-  const FlyoutTextButton(
-      {super.key,
-      required this.child,
-      required this.flyoutBuilder,
-      this.navigator});
-
-  final Widget child;
-
-  final WidgetBuilder flyoutBuilder;
-
-  final NavigatorState? navigator;
-
-  @override
-  State<FlyoutTextButton> createState() => _FlyoutTextButtonState();
-}
-
-class _FlyoutTextButtonState extends State<FlyoutTextButton> {
-  final FlyoutController _controller = FlyoutController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Flyout(
-        controller: _controller,
-        flyoutBuilder: widget.flyoutBuilder,
-        navigator: widget.navigator,
-        child: TextButton(
-          onPressed: () {
-            _controller.show();
-          },
-          child: widget.child,
-        ));
-  }
-}
-
-class FlyoutIconButton extends StatefulWidget {
-  const FlyoutIconButton(
-      {super.key,
-      required this.icon,
-      required this.flyoutBuilder,
-      this.navigator});
-
-  final Widget icon;
-
-  final WidgetBuilder flyoutBuilder;
-
-  final NavigatorState? navigator;
-
-  @override
-  State<FlyoutIconButton> createState() => _FlyoutIconButtonState();
-}
-
-class _FlyoutIconButtonState extends State<FlyoutIconButton> {
-  final FlyoutController _controller = FlyoutController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Flyout(
-        controller: _controller,
-        flyoutBuilder: widget.flyoutBuilder,
-        navigator: widget.navigator,
-        child: IconButton(
-          onPressed: () {
-            _controller.show();
-          },
-          icon: widget.icon,
-        ));
-  }
-}
-
-class FlyoutFilledButton extends StatefulWidget {
-  const FlyoutFilledButton(
-      {super.key,
-      required this.child,
-      required this.flyoutBuilder,
-      this.navigator});
-
-  final Widget child;
-
-  final WidgetBuilder flyoutBuilder;
-
-  final NavigatorState? navigator;
-
-  @override
-  State<FlyoutFilledButton> createState() => _FlyoutFilledButtonState();
-}
-
-class _FlyoutFilledButtonState extends State<FlyoutFilledButton> {
-  final FlyoutController _controller = FlyoutController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Flyout(
-        controller: _controller,
-        flyoutBuilder: widget.flyoutBuilder,
-        navigator: widget.navigator,
-        child: ElevatedButton(
-          onPressed: () {
-            _controller.show();
-          },
-          child: widget.child,
-        ));
   }
 }

@@ -1,4 +1,4 @@
-part of comic_source;
+part of 'comic_source.dart';
 
 class CategoryData {
   /// The title is displayed in the tab bar.

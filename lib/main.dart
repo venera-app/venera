@@ -172,7 +172,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: ThemeData(
           colorScheme: light.copyWith(
             surface: Colors.white,
-            background: Colors.white,
           ),
           fontFamily: App.isWindows ? "Microsoft YaHei" : null,
         ),
@@ -180,7 +179,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         darkTheme: ThemeData(
           colorScheme: dark.copyWith(
             surface: Colors.black,
-            background: Colors.black,
           ),
           fontFamily: App.isWindows ? "Microsoft YaHei" : null,
         ),

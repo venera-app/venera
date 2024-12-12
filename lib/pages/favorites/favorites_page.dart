@@ -92,7 +92,7 @@ class _FavoritesPageState extends State<FavoritesPage>  {
       barrierDismissible: true,
       fullscreenDialog: true,
       opaque: false,
-      barrierColor: Colors.black.withOpacity(0.36),
+      barrierColor: Colors.black.toOpacity(0.36),
       pageBuilder: (context, animation, secondary) {
         return Align(
           alignment: Alignment.centerLeft,

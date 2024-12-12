@@ -167,10 +167,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       child: Container(
         padding: EdgeInsets.only(top: context.padding.top),
         decoration: BoxDecoration(
-          color: context.colorScheme.surface.withOpacity(0.82),
+          color: context.colorScheme.surface.toOpacity(0.82),
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.toOpacity(0.5),
               width: 0.5,
             ),
           ),
@@ -357,10 +357,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     return BlurEffect(
       child: Container(
         decoration: BoxDecoration(
-          color: context.colorScheme.surface.withOpacity(0.82),
+          color: context.colorScheme.surface.toOpacity(0.82),
           border: Border(
             top: BorderSide(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.toOpacity(0.5),
               width: 0.5,
             ),
           ),
@@ -641,7 +641,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       color: Theme.of(context)
                           .colorScheme
                           .surfaceTint
-                          .withOpacity(0.2),
+                          .toOpacity(0.2),
                       child: const SizedBox.expand(),
                     ),
                   ),

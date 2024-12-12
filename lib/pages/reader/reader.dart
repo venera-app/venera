@@ -1,4 +1,4 @@
-library venera_reader;
+library;
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -62,7 +62,7 @@ class Reader extends StatefulWidget {
 
   final String name;
 
-  /// Map<Chapter ID, Chapter Name>.
+  /// key: Chapter ID, value: Chapter Name
   /// null if the comic is a gallery
   final Map<String, String>? chapters;
 

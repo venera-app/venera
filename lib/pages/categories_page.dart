@@ -262,7 +262,7 @@ class _CategoryPage extends StatelessWidget {
         builder: (context) {
           return Material(
             borderRadius: const BorderRadius.all(Radius.circular(8)),
-            color: context.colorScheme.primaryContainer.withOpacity(0.72),
+            color: context.colorScheme.primaryContainer.toOpacity(0.72),
             child: InkWell(
               borderRadius: const BorderRadius.all(Radius.circular(8)),
               onTap: () => onClick(tag, param),
