@@ -6,6 +6,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/image_provider/local_favorite_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'dart:io';
 
 import 'app.dart';
@@ -177,6 +178,28 @@ class LocalFavoritesManager with ChangeNotifier {
         source_folder text
       );
     """);
+    for (var folder in _getFolderNamesWithDB()) {
+      var columns = _db.select("""
+        pragma table_info("$folder");
+      """);
+      if (!columns.any((element) => element["name"] == "translated_tags")) {
+        _db.execute("""
+          alter table "$folder"
+          add column translated_tags TEXT;
+        """);
+        var comics = getAllComics(folder);
+        for (var comic in comics) {
+          var translatedTags = _translateTags(comic.tags);
+          _db.execute("""
+            update "$folder"
+            set translated_tags = ?
+            where id == ? and type == ?;
+          """, [translatedTags, comic.id, comic.type.value]);
+        }
+      } else {
+        break;
+      }
+    }
   }
 
   List<String> find(String id, ComicType type) {
@@ -338,6 +361,7 @@ class LocalFavoritesManager with ChangeNotifier {
         cover_path TEXT,
         time TEXT,
         display_order int,
+        translated_tags TEXT,
         primary key (id, type)
       );
     """);
@@ -391,6 +415,17 @@ class LocalFavoritesManager with ChangeNotifier {
     return FavoriteItem.fromRow(res.first);
   }
 
+  String _translateTags(List<String> tags) {
+    var res = <String>[];
+    for (var tag in tags) {
+      var translated = tag.translateTagsToCN;
+      if (translated != tag) {
+        res.add(translated);
+      }
+    }
+    return res.join(",");
+  }
+
   /// add comic to a folder.
   /// return true if success, false if already exists
   bool addComic(String folder, FavoriteItem comic, [int? order]) {
@@ -405,6 +440,7 @@ class LocalFavoritesManager with ChangeNotifier {
     if (res.isNotEmpty) {
       return false;
     }
+    var translatedTags = _translateTags(comic.tags);
     final params = [
       comic.id,
       comic.name,
@@ -412,22 +448,23 @@ class LocalFavoritesManager with ChangeNotifier {
       comic.type.value,
       comic.tags.join(","),
       comic.coverPath,
-      comic.time
+      comic.time,
+      translatedTags
     ];
     if (order != null) {
       _db.execute("""
-        insert into "$folder" (id, name, author, type, tags, cover_path, time, display_order)
-        values (?, ?, ?, ?, ?, ?, ?, ?);
+        insert into "$folder" (id, name, author, type, tags, cover_path, time, translated_tags, display_order)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?);
       """, [...params, order]);
     } else if (appdata.settings['newFavoriteAddTo'] == "end") {
       _db.execute("""
-        insert into "$folder" (id, name, author, type, tags, cover_path, time, display_order)
-        values (?, ?, ?, ?, ?, ?, ?, ?);
+        insert into "$folder" (id, name, author, type, tags, cover_path, time, translated_tags, display_order)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?);
       """, [...params, maxValue(folder) + 1]);
     } else {
       _db.execute("""
-        insert into "$folder" (id, name, author, type, tags, cover_path, time, display_order)
-        values (?, ?, ?, ?, ?, ?, ?, ?);
+        insert into "$folder" (id, name, author, type, tags, cover_path, time, translated_tags, display_order)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?);
       """, [...params, minValue(folder) - 1]);
     }
     notifyListeners();
@@ -501,10 +538,11 @@ class LocalFavoritesManager with ChangeNotifier {
     int count = 0;
     await Future.microtask(() {
       var all = allComics();
-      for(var c in all) {
+      for (var c in all) {
         var comicSource = c.type.comicSource;
-        if ((c.type == ComicType.local && LocalManager().find(c.id, c.type) == null) 
-          || (c.type != ComicType.local && comicSource == null)) {
+        if ((c.type == ComicType.local &&
+                LocalManager().find(c.id, c.type) == null) ||
+            (c.type != ComicType.local && comicSource == null)) {
           deleteComicWithId(c.folder, c.id, c.type);
           count++;
         }
@@ -593,6 +631,33 @@ class LocalFavoritesManager with ChangeNotifier {
     notifyListeners();
   }
 
+  List<FavoriteItem> searchInFolder(String folder, String keyword) {
+    var keywordList = keyword.split(" ");
+    keyword = keywordList.first;
+    keyword = "%$keyword%";
+    var res = _db.select("""
+      SELECT * FROM "$folder" 
+      WHERE name LIKE ? OR author LIKE ? OR tags LIKE ? OR translated_tags LIKE ?;
+    """, [keyword, keyword, keyword, keyword]);
+    var comics = res.map((e) => FavoriteItem.fromRow(e)).toList();
+    bool test(FavoriteItem comic, String keyword) {
+      if (comic.name.contains(keyword)) {
+        return true;
+      } else if (comic.author.contains(keyword)) {
+        return true;
+      } else if (comic.tags.any((element) => element.contains(keyword))) {
+        return true;
+      }
+      return false;
+    }
+
+    for (var i = 1; i < keywordList.length; i++) {
+      comics =
+          comics.where((element) => test(element, keywordList[i])).toList();
+    }
+    return comics;
+  }
+
   List<FavoriteItemWithFolderInfo> search(String keyword) {
     var keywordList = keyword.split(" ");
     keyword = keywordList.first;
@@ -601,8 +666,8 @@ class LocalFavoritesManager with ChangeNotifier {
       keyword = "%$keyword%";
       var res = _db.select("""
         SELECT * FROM "$table" 
-        WHERE name LIKE ? OR author LIKE ? OR tags LIKE ?;
-      """, [keyword, keyword, keyword]);
+        WHERE name LIKE ? OR author LIKE ? OR tags LIKE ? OR translated_tags LIKE ?;
+      """, [keyword, keyword, keyword, keyword]);
       for (var comic in res) {
         comics.add(
             FavoriteItemWithFolderInfo(FavoriteItem.fromRow(comic), table));
