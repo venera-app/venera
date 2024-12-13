@@ -152,14 +152,14 @@ class _FavoritesPageState extends State<FavoritesPage>  {
       );
     }
     if (!isNetwork) {
-      return _LocalFavoritesPage(folder: folder!, key: PageStorageKey(folder!));
+      return _LocalFavoritesPage(folder: folder!, key: PageStorageKey("local_$folder"));
     } else {
       var favoriteData = getFavoriteDataOrNull(folder!);
       if (favoriteData == null) {
         folder = null;
         return buildBody();
       } else {
-        return NetworkFavoritePage(favoriteData, key: PageStorageKey(folder!));
+        return NetworkFavoritePage(favoriteData, key: PageStorageKey("network_$folder"));
       }
     }
   }
