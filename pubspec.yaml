@@ -6,7 +6,7 @@ version: 1.1.1+111
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
-  flutter: 3.27.0
+  flutter: 3.27.1
 
 dependencies:
   flutter:
@@ -51,7 +51,7 @@ dependencies:
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
-  zip_flutter: ^0.0.2
+  zip_flutter: ^0.0.3
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
