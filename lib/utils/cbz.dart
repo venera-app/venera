@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:isolate';
 
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_type.dart';
@@ -63,7 +62,7 @@ abstract class CBZ {
     var cache = Directory(FilePath.join(App.cachePath, 'cbz_import'));
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
-    await Isolate.run(() => ZipFile.openAndExtract(file.path, cache.path));
+    await ZipFile.openAndExtractAsync(file.path, cache.path, 4);
     var metaDataFile = File(FilePath.join(cache.path, 'metadata.json'));
     ComicMetaData? metaData;
     if (metaDataFile.existsSync()) {
@@ -208,13 +207,13 @@ abstract class CBZ {
         ).toJson(),
       ),
     );
-    var cbz = File(FilePath.join(App.cachePath, '${comic.title}.cbz'));
+    var cbz = File(FilePath.join(App.cachePath, sanitizeFileName('${comic.title}.cbz')));
     await _compress(cache.path, cbz.path);
     cache.deleteSync(recursive: true);
     return cbz;
   }
 
   static _compress(String src, String dst) async {
-    await Isolate.run(() => ZipFile.compressFolder(src, dst));
+    await ZipFile.compressFolderAsync(src, dst, 4);
   }
 }

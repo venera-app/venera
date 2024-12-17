@@ -1125,12 +1125,11 @@ packages:
   zip_flutter:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: d5721f1fd8179ee4a5db59f932ae7c89d94e12a0
-      url: "https://github.com/wgh136/zip_flutter"
-    source: git
-    version: "0.0.1"
+      name: zip_flutter
+      sha256: "72b85f84dc5737e1c1dd7ed97ed0242f397872acc8d03044a5789b466dbf42b2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
 sdks:
   dart: ">=3.6.0 <4.0.0"
   flutter: ">=3.27.0"
