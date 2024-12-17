@@ -8,6 +8,10 @@
 
 A comic reader that support reading local and network comics.
 
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="75">](https://f-droid.org/packages/com.github.wgh136.venera/)
+
 ## Features
 
 - Read local comics
