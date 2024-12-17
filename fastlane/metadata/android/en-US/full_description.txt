@@ -1,0 +1,40 @@
+<p><a href="https://flutter.dev/"><img src="https://img.shields.io/badge/flutter-3.24.4-blue" alt="flutter"></a>
+<a href="https://github.com/venera-app/venera/blob/master/LICENSE"><img src="https://img.shields.io/github/license/venera-app/venera" alt="License"></a>
+<a href="https://github.com/venera-app/venera/releases"><img src="https://img.shields.io/github/v/release/venera-app/venera" alt="Download"></a>
+<a href="https://github.com/venera-app/venera/stargazers"><img src="https://img.shields.io/github/stars/venera-app/venera" alt="stars"></a>
+<a href="https://t.me/+Ws-IpmUutzkxMjhl"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=flat&amp;logo=telegram&amp;logoColor=white" alt="Telegram"></a></p>
+
+<p>A comic reader that support reading local and network comics.</p>
+
+<h2>Features</h2>
+
+<ul>
+<li>Read local comics</li>
+<li>Use javascript to create comic sources</li>
+<li>Read comics from network sources</li>
+<li>Manage favorite comics</li>
+<li>Download comics</li>
+<li>View comments, tags, and other information of comics if the source supports</li>
+<li>Login to comment, rate, and other operations if the source supports</li>
+</ul>
+
+<h2>Build from source</h2>
+
+<ol>
+<li>Clone the repository</li>
+<li>Install flutter, see <a href="https://flutter.dev/docs/get-started/install">flutter.dev</a></li>
+<li>Install rust, see <a href="https://rustup.rs/">rustup.rs</a></li>
+<li>Build for your platform: e.g. <code>flutter build apk</code></li>
+</ol>
+
+<h2>Create a new comic source</h2>
+
+<p>See <a href="https://github.com/venera-app/venera-configs">venera-configs</a></p>
+
+<h2>Thanks</h2>
+
+<h3>Tags Translation</h3>
+
+<p><a href="https://github.com/EhTagTranslation/Database"><img src="https://github-readme-stats.vercel.app/api/pin/?username=EhTagTranslation&amp;repo=Database" alt="Readme Card"></a></p>
+
+<p>The Chinese translation of the manga tags is from this project.</p>
