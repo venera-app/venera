@@ -6,7 +6,7 @@ version: 1.1.1+111
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
-  flutter: 3.27.0
+  flutter: 3.27.1
 
 dependencies:
   flutter:
@@ -21,7 +21,7 @@ dependencies:
   flutter_qjs:
     git:
       url: https://github.com/wgh136/flutter_qjs
-      ref: ade0b9d
+      ref: ff544f6693ba1d08d687403a4d1c36bf09d53b2e
   crypto: ^3.0.6
   dio: ^5.7.0
   html: ^0.15.5
@@ -54,10 +54,11 @@ dependencies:
   zip_flutter:
     git:
       url: https://github.com/wgh136/zip_flutter
+      ref: eafa3edda062d99eefc1e765f96f44659bdd6b3d
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
-      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
+      ref: 31fec41cefc565a8b2f4f71dcb5fde0359148333
   rhttp: 0.9.6
   webdav_client:
     git:
@@ -67,8 +68,8 @@ dependencies:
   local_auth: ^2.3.0
   flutter_saf:
     git: 
-      url: https://github.com/pkuislm/flutter_saf.git
-      ref: 3315082b9f7055655610e4f6f136b69e48228c05
+      url: https://github.com/UjuiUjuMandan/flutter_saf
+      ref: 480fb169dd1dcfd7e0bace6795f804f94603e1c9
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
   shimmer: ^3.0.0
