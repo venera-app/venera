@@ -146,14 +146,19 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
 
   String? _cover;
 
+  /// All images to download, key is chapter name
   Map<String, List<String>>? _images;
 
+  /// Downloaded image count
   int _downloadedCount = 0;
 
+  /// Total image count
   int _totalCount = 0;
 
+  /// Current downloading image index
   int _index = 0;
 
+  /// Current downloading chapter, index of [_images]
   int _chapter = 0;
 
   var tasks = <int, _ImageDownloadWrapper>{};
@@ -180,10 +185,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       if (comic!.chapters != null) {
         saveTo = Directory(FilePath.join(
           path!,
-          comic!.chapters!.keys.elementAt(_chapter),
+          _images!.keys.elementAt(_chapter),
         ));
         if (!saveTo.existsSync()) {
-          saveTo.createSync();
+          saveTo.createSync(recursive: true);
         }
       } else {
         saveTo = Directory(path!);
