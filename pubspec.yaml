@@ -51,7 +51,7 @@ dependencies:
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
-  zip_flutter: ^0.0.4
+  zip_flutter: ^0.0.5
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter

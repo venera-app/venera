@@ -77,7 +77,7 @@ class ComicTile extends StatelessWidget {
           icon: Icons.stars_outlined,
           text: 'Add to favorites'.tl,
           onClick: () {
-            addFavorite(comic);
+            addFavorite([comic]);
           },
         ),
         MenuEntry(

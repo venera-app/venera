@@ -1125,10 +1125,10 @@ packages:
     dependency: "direct main"
     description:
       name: zip_flutter
-      sha256: "78c9b6053117828581346d24b07943ba6d3032a13f68d15c133bc21df2cf178a"
+      sha256: "955b53d58709fcd9feefbed3d41b5522bc5273e677603e9fc67017a81e568d24"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4"
+    version: "0.0.5"
 sdks:
   dart: ">=3.6.0 <4.0.0"
   flutter: ">=3.27.1"
