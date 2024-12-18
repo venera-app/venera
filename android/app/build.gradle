@@ -93,6 +93,7 @@ android {
                         }
                     } else {
                         outputFileName = "venera-${variant.versionName}.apk"
+                        versionCodeOverride = variant.versionCode * 10
                     }
                 }
             }
