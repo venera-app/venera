@@ -408,8 +408,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: ade0b9d
-      resolved-ref: ade0b9d67331118c13a2b836684858e251512373
+      ref: "1657f62fe7545ac43a339e0a5ee2b82bacd81e9f"
+      resolved-ref: "1657f62fe7545ac43a339e0a5ee2b82bacd81e9f"
       url: "https://github.com/wgh136/flutter_qjs"
     source: git
     version: "0.3.7"
@@ -433,8 +433,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "3315082b9f7055655610e4f6f136b69e48228c05"
-      resolved-ref: "3315082b9f7055655610e4f6f136b69e48228c05"
+      ref: "7637b8b67d0a831f3cd7e702b8173e300880d32e"
+      resolved-ref: "7637b8b67d0a831f3cd7e702b8173e300880d32e"
       url: "https://github.com/pkuislm/flutter_saf.git"
     source: git
     version: "0.0.1"
@@ -628,8 +628,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
-      resolved-ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
+      ref: "9a784b193af5d55b2a35e58fa390bda3e4f35d00"
+      resolved-ref: "9a784b193af5d55b2a35e58fa390bda3e4f35d00"
       url: "https://github.com/venera-app/lodepng_flutter"
     source: git
     version: "0.0.1"

@@ -21,7 +21,7 @@ dependencies:
   flutter_qjs:
     git:
       url: https://github.com/wgh136/flutter_qjs
-      ref: ade0b9d
+      ref: 1657f62fe7545ac43a339e0a5ee2b82bacd81e9f
   crypto: ^3.0.6
   dio: ^5.7.0
   html: ^0.15.5
@@ -55,7 +55,7 @@ dependencies:
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
-      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
+      ref: 9a784b193af5d55b2a35e58fa390bda3e4f35d00
   rhttp: 0.9.6
   webdav_client:
     git:
@@ -66,7 +66,7 @@ dependencies:
   flutter_saf:
     git: 
       url: https://github.com/pkuislm/flutter_saf.git
-      ref: 3315082b9f7055655610e4f6f136b69e48228c05
+      ref: 7637b8b67d0a831f3cd7e702b8173e300880d32e
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
   shimmer: ^3.0.0
