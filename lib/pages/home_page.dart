@@ -495,12 +495,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
       "Select a cbz/zip file.".tl,
+      "Select a directory which contains multiple cbz/zip files.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
       "Single Comic".tl,
       "Multiple Comics".tl,
       "A cbz file".tl,
+      "Multiple cbz files".tl,
       "EhViewer downloads".tl
     ];
 
@@ -628,7 +630,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       0 => await importer.directory(true),
       1 => await importer.directory(false),
       2 => await importer.cbz(),
-      3 => await importer.ehViewer(),
+      3 => await importer.multipleCbz(),
+      4 => await importer.ehViewer(),
       int() => true,
     };
     if(result) {

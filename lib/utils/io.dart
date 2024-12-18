@@ -72,6 +72,7 @@ extension FileSystemEntityExt on FileSystemEntity {
 }
 
 extension FileExtension on File {
+  /// Get the file extension, not including the dot.
   String get extension => path.split('.').last;
 
   /// Copy the file to the specified path using memory.

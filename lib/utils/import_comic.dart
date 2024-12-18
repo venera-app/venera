@@ -37,6 +37,33 @@ class ImportComic {
     return registerComics(imported, false);
   }
 
+  Future<bool> multipleCbz() async {
+    var picker = DirectoryPicker();
+    var dir = await picker.pickDirectory();
+    if (dir != null) {
+      var files = (await dir.list().toList()).whereType<File>().toList();
+      files.removeWhere((e) => e.extension != 'cbz' && e.extension != 'zip');
+      Map<String?, List<LocalComic>> imported = {};
+      var controller = showLoadingDialog(App.rootContext, allowCancel: false);
+      var comics = <LocalComic>[];
+      for (var file in files) {
+        try {
+          var comic = await CBZ.import(file);
+          comics.add(comic);
+        } catch (e, s) {
+          Log.error("Import Comic", e.toString(), s);
+        }
+      }
+      if (comics.isEmpty) {
+        App.rootContext.showMessage(message: "No valid comics found".tl);
+      }
+      imported[selectedFolder] = comics;
+      controller.close();
+      return registerComics(imported, false);
+    }
+    return false;
+  }
+
   Future<bool> ehViewer() async {
     var dbFile = await selectFile(ext: ['db']);
     final picker = DirectoryPicker();
