@@ -1126,8 +1126,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "6d0c09e"
-      resolved-ref: "6d0c09e90b245166d41a66da2bc649d1c56e64d3"
+      ref: "51007a0"
+      resolved-ref: "51007a0c1f34ee7865ef3bdededf40e5f5df85bd"
       url: "https://github.com/wgh136/zip_flutter"
     source: git
     version: "0.0.3"
