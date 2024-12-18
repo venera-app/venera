@@ -292,7 +292,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               if (comicSource.commentsLoader != null)
                 _ActionButton(
                   icon: const Icon(Icons.comment),
-                  text: (comic.commentsCount ?? 'Comments'.tl).toString(),
+                  text: (comic.commentCount ?? 'Comments'.tl).toString(),
                   onPressed: showComments,
                   iconColor: context.useTextColor(Colors.green),
                 ),

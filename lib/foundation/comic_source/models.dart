@@ -145,7 +145,7 @@ class ComicDetails with HistoryMixin {
 
   final int? likesCount;
 
-  final int? commentsCount;
+  final int? commentCount;
 
   final String? uploader;
 
@@ -189,7 +189,7 @@ class ComicDetails with HistoryMixin {
         subId = json["subId"],
         likesCount = json["likesCount"],
         isLiked = json["isLiked"],
-        commentsCount = json["commentsCount"],
+        commentCount = json["commentCount"],
         uploader = json["uploader"],
         uploadTime = json["uploadTime"],
         updateTime = json["updateTime"],
@@ -216,7 +216,7 @@ class ComicDetails with HistoryMixin {
       "subId": subId,
       "isLiked": isLiked,
       "likesCount": likesCount,
-      "commentsCount": commentsCount,
+      "commentsCount": commentCount,
       "uploader": uploader,
       "uploadTime": uploadTime,
       "updateTime": updateTime,
