@@ -22,8 +22,15 @@ class PopUpWidget<T> extends PopupRoute<T> {
     Widget body = PopupIndicatorWidget(
       child: Container(
         decoration: showPopUp
-            ? const BoxDecoration(
+            ? BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(12)),
+                boxShadow: context.brightness == ui.Brightness.dark ? [
+                  BoxShadow(
+                    color: Colors.white.withAlpha(50),
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
+                  ),
+                ] : null,
               )
             : null,
         clipBehavior: showPopUp ? Clip.antiAlias : Clip.none,
@@ -86,7 +93,8 @@ class PopupIndicatorWidget extends InheritedWidget {
 }
 
 Future<T> showPopUpWidget<T>(BuildContext context, Widget widget) async {
-  return await Navigator.of(context, rootNavigator: true).push(PopUpWidget(widget));
+  return await Navigator.of(context, rootNavigator: true)
+      .push(PopUpWidget(widget));
 }
 
 class PopUpWidgetScaffold extends StatefulWidget {
@@ -127,9 +135,8 @@ class _PopUpWidgetScaffoldState extends State<PopUpWidgetScaffold> {
                   message: "Back".tl,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back_sharp),
-                    onPressed: () => context.canPop()
-                        ? context.pop()
-                        : App.pop(),
+                    onPressed: () =>
+                        context.canPop() ? context.pop() : App.pop(),
                   ),
                 ),
                 const SizedBox(

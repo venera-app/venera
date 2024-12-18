@@ -389,22 +389,29 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               ),
             ];
           },
-          onTap: multiSelectMode
-              ? (c) {
-                  setState(() {
-                    if (selectedComics.containsKey(c as FavoriteItem)) {
-                      selectedComics.remove(c);
-                      _checkExitSelectMode();
-                    } else {
-                      selectedComics[c] = true;
-                    }
-                    lastSelectedIndex = comics.indexOf(c);
-                  });
+          onTap: (c) {
+            if (multiSelectMode) {
+              setState(() {
+                if (selectedComics.containsKey(c as FavoriteItem)) {
+                  selectedComics.remove(c);
+                  _checkExitSelectMode();
+                } else {
+                  selectedComics[c] = true;
                 }
-              : (c) {
-                  App.mainNavigatorKey?.currentContext
-                      ?.to(() => ComicPage(id: c.id, sourceKey: c.sourceKey));
-                },
+                lastSelectedIndex = comics.indexOf(c);
+              });
+            } else if (appdata.settings["onClickFavorite"] == "viewDetail") {
+              App.mainNavigatorKey?.currentContext
+                  ?.to(() => ComicPage(id: c.id, sourceKey: c.sourceKey));
+            } else {
+              App.mainNavigatorKey?.currentContext?.to(
+                () => ReaderWithLoading(
+                  id: c.id,
+                  sourceKey: c.sourceKey,
+                ),
+              );
+            }
+          },
           onLongPressed: (c) {
             setState(() {
               if (!multiSelectMode) {

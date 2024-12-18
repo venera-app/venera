@@ -27,10 +27,8 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
             screen.size.height * _normalComicImageRatio,
           );
         } else {
-          _effectiveScreenWidth = max(
-            _effectiveScreenWidth ?? 0,
-            screen.size.width
-          );
+          _effectiveScreenWidth =
+              max(_effectiveScreenWidth ?? 0, screen.size.width);
         }
       }
       if (_effectiveScreenWidth! < _minComicImageWidth) {
@@ -110,7 +108,10 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
 
       try {
         final buffer = await ImmutableBuffer.fromUint8List(data);
-        return await decode(buffer, getTargetSize: _getTargetSize);
+        return await decode(
+          buffer,
+          getTargetSize: enableResize ? _getTargetSize : null,
+        );
       } catch (e) {
         await CacheManager().delete(this.key);
         if (data.length < 2 * 1024) {
@@ -151,6 +152,8 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
   String toString() {
     return "$runtimeType($key)";
   }
+
+  bool get enableResize => false;
 }
 
 typedef FileDecoderCallback = Future<ui.Codec> Function(Uint8List);

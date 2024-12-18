@@ -264,7 +264,8 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      return InkWell(
+                      return AnimatedTapRegion(
+                        borderRadius: 8,
                         onTap: () {
                           context.to(
                             () => ComicPage(
@@ -273,11 +274,9 @@ class _HistoryState extends State<_History> {
                             ),
                           );
                         },
-                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           width: 92,
                           height: 114,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Theme.of(context)
@@ -293,7 +292,7 @@ class _HistoryState extends State<_History> {
                             filterQuality: FilterQuality.medium,
                           ),
                         ),
-                      );
+                      ).paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8).paddingBottom(16),
@@ -386,15 +385,14 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      return InkWell(
+                      return AnimatedTapRegion(
                         onTap: () {
                           local[index].read();
                         },
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: 8,
                         child: Container(
                           width: 92,
                           height: 114,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Theme.of(context)
@@ -412,7 +410,7 @@ class _LocalState extends State<_Local> {
                             filterQuality: FilterQuality.medium,
                           ),
                         ),
-                      );
+                      ).paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8),
@@ -497,12 +495,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
       "Select a cbz/zip file.".tl,
+      "Select a directory which contains multiple cbz/zip files.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
       "Single Comic".tl,
       "Multiple Comics".tl,
       "A cbz file".tl,
+      "Multiple cbz files".tl,
       "EhViewer downloads".tl
     ];
 
@@ -630,7 +630,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       0 => await importer.directory(true),
       1 => await importer.directory(false),
       2 => await importer.cbz(),
-      3 => await importer.ehViewer(),
+      3 => await importer.multipleCbz(),
+      4 => await importer.ehViewer(),
       int() => true,
     };
     if(result) {

@@ -172,7 +172,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     isLiked = comic.isLiked ?? false;
     isFavorite = comic.isFavorite ?? false;
     if (comic.chapters == null) {
-      isDownloaded = await LocalManager().isDownloaded(
+      isDownloaded = LocalManager().isDownloaded(
         comic.id,
         comic.comicType,
         0,
@@ -292,7 +292,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               if (comicSource.commentsLoader != null)
                 _ActionButton(
                   icon: const Icon(Icons.comment),
-                  text: (comic.commentsCount ?? 'Comments'.tl).toString(),
+                  text: (comic.commentCount ?? 'Comments'.tl).toString(),
                   onPressed: showComments,
                   iconColor: context.useTextColor(Colors.green),
                 ),
@@ -679,7 +679,7 @@ abstract mixin class _ComicPageActions {
       return;
     }
     if (comic.chapters == null &&
-        await LocalManager().isDownloaded(comic.id, comic.comicType, 0)) {
+        LocalManager().isDownloaded(comic.id, comic.comicType, 0)) {
       App.rootContext.showMessage(message: "The comic is downloaded".tl);
       return;
     }

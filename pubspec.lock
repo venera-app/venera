@@ -446,11 +446,10 @@ packages:
   flutter_to_arch:
     dependency: "direct dev"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "15bfead0380fda79b0256b37c73b886b0882f1bf"
-      url: "https://github.com/wgh136/flutter_to_arch"
-    source: git
+      name: flutter_to_arch
+      sha256: "656cffc182b05af38aa96a1115931620b8865c4b0cfe00813b26fcff0875f2ab"
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.0"
   flutter_to_debian:
     dependency: "direct dev"
@@ -1125,12 +1124,11 @@ packages:
   zip_flutter:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "7fb4e6ad7662f787f2c248b01f89ccbf8e8ab5cc"
-      resolved-ref: "7fb4e6ad7662f787f2c248b01f89ccbf8e8ab5cc"
-      url: "https://github.com/wgh136/zip_flutter"
-    source: git
-    version: "0.0.4"
+      name: zip_flutter
+      sha256: "955b53d58709fcd9feefbed3d41b5522bc5273e677603e9fc67017a81e568d24"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
 sdks:
   dart: ">=3.6.0 <4.0.0"
   flutter: ">=3.27.1"

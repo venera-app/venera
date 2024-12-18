@@ -251,7 +251,14 @@
     "Aggregated Search": "聚合搜索",
     "No search results found": "未找到搜索结果",
     "Added @c comics to download queue." : "已添加 @c 本漫画到下载队列",
-    "Download started": "下载已开始"
+    "Download started": "下载已开始",
+    "Click favorite": "点击收藏",
+    "End": "末尾",
+    "None": "无",
+    "View Detail": "查看详情",
+    "Select a directory which contains multiple cbz/zip files." : "选择一个包含多个cbz/zip文件的目录",
+    "Multiple cbz files" : "多个cbz文件",
+    "No valid comics found" : "未找到有效的漫画"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -505,6 +512,13 @@
     "Aggregated Search": "聚合搜索",
     "No search results found": "未找到搜索結果",
     "Added @c comics to download queue." : "已添加 @c 本漫畫到下載隊列",
-    "Download started": "下載已開始"
+    "Download started": "下載已開始",
+    "Click favorite": "點擊收藏",
+    "End": "末尾",
+    "None": "無",
+    "View Detail": "查看詳情",
+    "Select a directory which contains multiple cbz/zip files." : "選擇一個包含多個cbz/zip文件的目錄",
+    "Multiple cbz files" : "多個cbz文件",
+    "No valid comics found" : "未找到有效的漫畫"
   }
 }

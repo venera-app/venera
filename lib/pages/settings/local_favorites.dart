@@ -16,18 +16,18 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
         SelectSetting(
           title: "Add new favorite to".tl,
           settingKey: "newFavoriteAddTo",
-          optionTranslation: const {
-            "start": "Start",
-            "end": "End",
+          optionTranslation: {
+            "start": "Start".tl,
+            "end": "End".tl,
           },
         ).toSliver(),
         SelectSetting(
           title: "Move favorite after reading".tl,
           settingKey: "moveFavoriteAfterRead",
-          optionTranslation: const {
-            "none": "None",
-            "end": "End",
-            "start": "Start",
+          optionTranslation: {
+            "none": "None".tl,
+            "end": "End".tl,
+            "start": "Start".tl,
           },
         ).toSliver(),
         SelectSetting(
@@ -47,6 +47,14 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
             context.showMessage(message: "Deleted @a favorite items".tlParams({'a': count}));
           },
           actionTitle: 'Delete'.tl,
+        ).toSliver(),
+        SelectSetting(
+          title: "Click favorite".tl,
+          settingKey: "onClickFavorite",
+          optionTranslation: {
+            "viewDetail": "View Detail".tl,
+            "read": "Read".tl,
+          },
         ).toSliver(),
       ],
     );

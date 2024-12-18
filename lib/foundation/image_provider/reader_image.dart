@@ -49,4 +49,7 @@ class ReaderImageProvider
 
   @override
   String get key => "$imageKey@$sourceKey@$cid@$eid";
+
+  @override
+  bool get enableResize => true;
 }

@@ -25,7 +25,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
     if (inProgress) return;
     inProgress = true;
     if (reader.type == ComicType.local ||
-        (await LocalManager()
+        (LocalManager()
             .isDownloaded(reader.cid, reader.type, reader.chapter))) {
       try {
         var images = await LocalManager()
