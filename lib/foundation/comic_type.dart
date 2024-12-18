@@ -28,4 +28,12 @@ class ComicType {
   }
 
   static const local = ComicType(0);
+
+  factory ComicType.fromKey(String key) {
+    if(key == "local") {
+      return local;
+    } else {
+      return ComicType(key.hashCode);
+    }
+  }
 }

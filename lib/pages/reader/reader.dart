@@ -18,11 +18,13 @@ import 'package:venera/components/custom_slider.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/cache_manager.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/file_type.dart';
@@ -36,6 +38,7 @@ part 'scaffold.dart';
 part 'images.dart';
 part 'gesture.dart';
 part 'comic_image.dart';
+part 'loading.dart';
 
 extension _ReaderContext on BuildContext {
   _ReaderState get reader => findAncestorStateOfType<_ReaderState>()!;
