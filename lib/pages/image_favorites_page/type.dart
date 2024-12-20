@@ -2,7 +2,8 @@ enum ImageFavoriteSortType {
   name("name"),
   timeAsc("time_asc"),
   timeDesc("time_desc"),
-  favoriteNumDesc("favorite_num_desc");
+  maxFavorites("max_favorites"), // 单本收藏数最多排序
+  favoritesCompareComicPages("favorites_compare_comic_pages"); // 单本收藏数比上总页数
 
   final String value;
 
@@ -18,9 +19,61 @@ enum ImageFavoriteSortType {
   }
 }
 
-class ImageFavoriteSortItem {
+class CustomListItem<T> {
   final String title;
-  final ImageFavoriteSortType value;
+  final T value;
 
-  ImageFavoriteSortItem(this.title, this.value);
+  CustomListItem(this.title, this.value);
+}
+
+enum TimeFilterEnum {
+  lastWeek("lastWeek"),
+  lastMonth("lastMonth"),
+  lastHalfYear("lastHalfYear"),
+  lastYear("lastYear"); // 单本收藏数最多排序
+
+  final String value;
+  const TimeFilterEnum(this.value);
+  static TimeFilterEnum fromString(String value) {
+    for (var type in values) {
+      if (type.value == value) {
+        return type;
+      }
+    }
+    return lastWeek;
+  }
+}
+
+const timeFilterList = [
+  TimeFilterEnum.lastWeek,
+  TimeFilterEnum.lastMonth,
+  TimeFilterEnum.lastHalfYear,
+  TimeFilterEnum.lastYear,
+];
+
+getDateTimeRangeFromFilter(String timeFilter) {
+  DateTime now = DateTime.now();
+  DateTime start = now;
+  DateTime end = now;
+  switch (timeFilter) {
+    case TimeFilterEnum.lastWeek:
+      start = now.subtract(const Duration(days: 7));
+      break;
+    case TimeFilterEnum.lastMonth:
+      start = now.subtract(const Duration(days: 30));
+      break;
+    case TimeFilterEnum.lastHalfYear:
+      start = now.subtract(const Duration(days: 180));
+      break;
+    case TimeFilterEnum.lastYear:
+      start = now.subtract(const Duration(days: 365));
+      break;
+    default:
+      // 会是 2024, 2025 之类的
+      int year = int.parse(timeFilter);
+      start = DateTime(year, 1, 1);
+      end = DateTime(year, 12, 31, 23, 59, 59);
+  }
+  List<DateTime> ranges = [start, end];
+  return ranges;
 }

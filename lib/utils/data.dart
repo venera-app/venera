@@ -197,6 +197,9 @@ Future<void> importPicaData(File file) async {
           );
         }
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
+          var otherInfo = jsonDecode(comic["other"]);
+          // 就洗一个较为通用的 url 的数据, 别的就不洗了
+          otherInfo["imageKey"] = otherInfo["url"];
           ImageFavoriteManager.add(
             ImageFavorite.fromMap({
               "id": comic['id'],
@@ -205,7 +208,7 @@ Future<void> importPicaData(File file) async {
               "imagePath": comic["cover"],
               "ep": comic["ep"],
               "page": comic["page"],
-              "otherInfo": jsonDecode(comic["other"]),
+              "otherInfo": otherInfo,
             }),
           );
         }

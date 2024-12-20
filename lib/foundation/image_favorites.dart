@@ -55,7 +55,7 @@ class ImageFavoriteManager {
 
   static void add(ImageFavorite favorite) {
     _db.execute("""
-      insert into image_favorites(id, title, time, cover, ep, page, other)
+      insert or replace into image_favorites(id, title, time, cover, ep, page, other)
       values(?, ?, ?, ?, ?, ?, ?);
     """, [
       favorite.id,
@@ -66,15 +66,19 @@ class ImageFavoriteManager {
       favorite.page,
       jsonEncode(favorite.otherInfo)
     ]);
-    Future.microtask(
-        () => StateController.findOrNull(tag: "home_page")?.update());
   }
 
   static List<ImageFavorite> getAll() {
     var res = _db.select("select * from image_favorites;");
     return res
-        .map((e) => ImageFavorite(e["id"], e["cover"], e["title"], e["time"],
-            e["ep"], e["page"], jsonDecode(e["other"])))
+        .map((e) => ImageFavorite(
+            e["id"],
+            e["cover"],
+            e["title"],
+            DateTime.fromMillisecondsSinceEpoch(e["time"]),
+            e["ep"],
+            e["page"],
+            jsonDecode(e["other"])))
         .toList();
   }
 
@@ -83,8 +87,20 @@ class ImageFavoriteManager {
       delete from image_favorites
       where id = ? and ep = ? and page = ?;
     """, [favorite.id, favorite.ep, favorite.page]);
-    Future.microtask(
-        () => StateController.findOrNull(tag: "home_page")?.update());
+  }
+
+  static List<String> get earliestTimeToNow {
+    var res = _db.select("select MIN(time) from image_favorites;");
+    int earliestYear =
+        DateTime.fromMillisecondsSinceEpoch(res.first.values.first! as int)
+            .year;
+    DateTime now = DateTime.now();
+    int currentYear = now.year;
+    List<String> yearsList = [];
+    for (int year = earliestYear; year <= currentYear; year++) {
+      yearsList.add(year.toString());
+    }
+    return yearsList;
   }
 
   static int get length {

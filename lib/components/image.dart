@@ -22,6 +22,7 @@ class AnimatedImage extends StatefulWidget {
     this.filterQuality = FilterQuality.medium,
     this.isAntiAlias = false,
     this.part,
+    this.onError,
     Map<String, String>? headers,
     int? cacheWidth,
     int? cacheHeight,
@@ -62,6 +63,8 @@ class AnimatedImage extends StatefulWidget {
   final bool isAntiAlias;
 
   final ImagePart? part;
+
+  final Function? onError;
 
   static void clear() => _AnimatedImageState.clear();
 
@@ -271,7 +274,7 @@ class _AnimatedImageState extends State<AnimatedImage>
     Widget result;
 
     if (_imageInfo != null) {
-      if(widget.part != null) {
+      if (widget.part != null) {
         return CustomPaint(
           painter: ImagePainter(
             image: _imageInfo!.image,
