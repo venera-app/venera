@@ -122,6 +122,7 @@ class _Settings with ChangeNotifier {
     'enableClockAndBatteryInfoInReader': true,
     'ignoreCertificateErrors': false,
     'authorizationRequired': false,
+    'onClickFavorite': 'viewDetail', // viewDetail, read
   };
 
   operator [](String key) {

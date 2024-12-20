@@ -5,6 +5,8 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+ext.abiCodes = ["armeabi-v7a": 1, "arm64-v8a": 2, "x86_64": 3]
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -35,7 +37,7 @@ android {
     splits{
         abi {
             reset()
-            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            include 'armeabi-v7a', 'arm64-v8a', 'x86_64'
             enable true
             universalApk true
         }
@@ -78,7 +80,7 @@ android {
     buildTypes {
         release {
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
             signingConfig signingConfigs.release
             applicationVariants.all { variant ->
@@ -86,12 +88,24 @@ android {
                     def abi = output.getFilter(com.android.build.OutputFile.ABI)
                     if (abi != null) {
                         outputFileName = "venera-${variant.versionName}-${abi}.apk"
+                        def abiVersionCode = project.ext.abiCodes.get(abi)
+                        if (abiVersionCode != null) {
+                            versionCodeOverride = variant.versionCode * 10 + abiVersionCode
+                        }
                     } else {
                         outputFileName = "venera-${variant.versionName}.apk"
+                        versionCodeOverride = variant.versionCode * 10
                     }
                 }
             }
         }
+    }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
     }
 }
 

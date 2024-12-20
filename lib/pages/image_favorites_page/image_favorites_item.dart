@@ -41,8 +41,16 @@ class ImageFavoritesGroup {
 }
 
 class ImageFavoritesItem extends StatefulWidget {
-  const ImageFavoritesItem({super.key, required this.imageFavoritesGroup});
+  const ImageFavoritesItem(
+      {super.key,
+      required this.imageFavoritesGroup,
+      required this.selectedImageFavorites,
+      required this.addSelected,
+      required this.multiSelectMode});
   final ImageFavoritesGroup imageFavoritesGroup;
+  final Function(ImageFavorite) addSelected;
+  final Map<ImageFavorite, bool> selectedImageFavorites;
+  final bool multiSelectMode;
   @override
   State<ImageFavoritesItem> createState() => ImageFavoritesItemState();
 }
@@ -100,7 +108,21 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () {
-          context.to(() => const HistoryPage());
+          if (widget.multiSelectMode) {
+            for (var ele in widget.imageFavoritesGroup.imageFavorites) {
+              widget.addSelected(ele);
+            }
+          } else {
+            App.mainNavigatorKey?.currentContext?.to(() => ComicPage(
+                  id: widget.imageFavoritesGroup.id,
+                  sourceKey: widget.imageFavoritesGroup.sourceKey,
+                ));
+          }
+        },
+        onLongPress: () {
+          for (var ele in widget.imageFavoritesGroup.imageFavorites) {
+            widget.addSelected(ele);
+          }
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -140,8 +162,12 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                 scrollDirection: Axis.horizontal,
                 itemCount: count,
                 itemBuilder: (context, index) {
-                  ImageProvider image = ImageFavoritesProvider(
-                      widget.imageFavoritesGroup.imageFavorites[index]);
+                  ImageFavorite curImageFavorite =
+                      widget.imageFavoritesGroup.imageFavorites[index];
+                  ImageProvider image =
+                      ImageFavoritesProvider(curImageFavorite);
+                  bool isSelected =
+                      widget.selectedImageFavorites[curImageFavorite] ?? false;
                   Widget imageWidget = AnimatedImage(
                     image: image,
                     width: 96,
@@ -153,27 +179,52 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                       hasRefreshImageKeyOnErr = true;
                     },
                   );
-                  int curPage =
-                      widget.imageFavoritesGroup.imageFavorites[index].page;
+                  int curPage = curImageFavorite.page;
                   String pageText =
                       curPage == 0 ? 'cover'.tl : (curPage + 1).toString();
                   return InkWell(
+                    onDoubleTap: () {},
                     onTap: () {
-                      // App.rootNavigatorKey
+                      if (widget.multiSelectMode) {
+                        widget.addSelected(curImageFavorite);
+                      } else {
+                        App.mainNavigatorKey?.currentContext?.to(
+                          () => ReaderWithLoading(
+                            id: widget.imageFavoritesGroup.id,
+                            sourceKey: widget.imageFavoritesGroup.sourceKey,
+                          ),
+                        );
+                      }
+                    },
+                    onLongPress: () {
+                      widget.addSelected(curImageFavorite);
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      width: 92,
-                      height: 131,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [imageWidget, Text(pageText, style: ts.s12)],
-                      ),
-                    ),
+                        width: 98,
+                        height: 128,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.secondaryContainer
+                              : null,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          children: [
+                            Container(
+                                height: 128,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer,
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: imageWidget),
+                            Text(pageText, style: ts.s12)
+                          ],
+                        )),
                   );
                 },
               ),

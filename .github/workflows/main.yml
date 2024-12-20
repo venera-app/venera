@@ -2,6 +2,9 @@ name: Build ALL
 run-name: Build ALL
 on:
   workflow_dispatch: {}
+  release:
+    types: [published]
+
 jobs:
   Build_MacOS:
     runs-on: macos-15
@@ -139,3 +142,45 @@ jobs:
           name: arch_build
           path: build/linux/arch/
 
+  Release:
+    runs-on: ubuntu-latest
+    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux]
+    if: github.event_name == 'release'  # 仅在 push 事件时执行
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: venera.dmg
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-ios.ipa
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: arch_build
+          path: outputs
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            outputs/*.ipa
+            outputs/*.dmg
+            outputs/*.apk
+            outputs/*.zip
+            outputs/*.exe
+            outputs/*.deb
+            outputs/*.zst
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}

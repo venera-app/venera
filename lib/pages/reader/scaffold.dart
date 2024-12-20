@@ -90,6 +90,36 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
   }
 
+  void dragListenerHandler() async {
+    // 过一秒执行, 避免 _gestureDetectorState 还未初始化
+    await Future.delayed(Duration(milliseconds: 1000));
+    var readerMode = context.reader.mode;
+    // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
+    double imageFavoritesListenDistance = 0;
+    _gestureDetectorState!.dragListenerForImageFavorites = _DragListener(
+      onMove: (offset) {
+        switch (readerMode) {
+          case ReaderMode.continuousTopToBottom:
+          case ReaderMode.galleryTopToBottom:
+            imageFavoritesListenDistance += offset.dx;
+            break;
+          case ReaderMode.continuousLeftToRight:
+          case ReaderMode.galleryLeftToRight:
+          case ReaderMode.galleryRightToLeft:
+          case ReaderMode.continuousRightToLeft:
+            imageFavoritesListenDistance += offset.dy;
+            break;
+        }
+      },
+      onEnd: () {
+        if (imageFavoritesListenDistance.abs() > 150) {
+          imageFavoritesAction();
+        }
+        imageFavoritesListenDistance = 0;
+      },
+    );
+  }
+
   @override
   void initState() {
     sliderFocus.canRequestFocus = false;
@@ -102,6 +132,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     }
     super.initState();
+    dragListenerHandler();
   }
 
   @override
@@ -168,10 +199,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       child: Container(
         padding: EdgeInsets.only(top: context.padding.top),
         decoration: BoxDecoration(
-          color: context.colorScheme.surface.withOpacity(0.82),
+          color: context.colorScheme.surface.toOpacity(0.82),
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.toOpacity(0.5),
               width: 0.5,
             ),
           ),
@@ -202,6 +233,57 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ),
       ),
     );
+  }
+
+  bool isLiked() {
+    String cid = context.reader.cid;
+    int chapter = context.reader.chapter;
+    int page = context.reader.page;
+    String sourceKey = context.reader.type.sourceKey;
+    String id = "$sourceKey-$cid";
+    return ImageFavoriteManager.isHas(id, chapter, page);
+  }
+
+  void imageFavoritesAction() {
+    try {
+      String cid = context.reader.cid;
+      String eid = context.reader.eid;
+      int page = context.reader.page - 1;
+      String sourceKey = context.reader.type.sourceKey;
+      String imageKey = context.reader.images![page];
+      String id = "$sourceKey-$cid";
+      if (isLiked()) {
+        ImageFavoriteManager.remove(id, int.parse(eid), page);
+        showToast(message: "成功取消收藏图片".tl, context: context);
+      } else {
+        var otherInfo = <String, dynamic>{"imageKey": imageKey};
+        // 如果是手动收藏的就标记一下, 避免把它误删除了
+        if (page == 0) {
+          otherInfo["notAuto"] = true;
+        } else {
+          ImageFavoriteManager.add(ImageFavorite(
+              id,
+              "",
+              context.reader.widget.name,
+              DateTime.now(),
+              int.parse(eid),
+              page,
+              otherInfo));
+        }
+        ImageFavoriteManager.add(ImageFavorite(
+            id,
+            "",
+            context.reader.widget.name,
+            DateTime.now(),
+            int.parse(eid),
+            page,
+            otherInfo));
+        showToast(message: "成功收藏图片".tl, context: context);
+      }
+      update();
+    } catch (e) {
+      showToast(message: e.toString(), context: context);
+    }
   }
 
   Widget buildBottom() {
@@ -267,29 +349,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               Tooltip(
                 message: "收藏图片".tl,
                 child: IconButton(
-                  icon: const Icon(Icons.favorite),
-                  onPressed: () async {
-                    try {
-                      final id = "1";
-                      var image = ' await _persistentCurrentImage()';
-                      if (image != null) {
-                        image = image.split("/").last;
-                        var otherInfo = <String, dynamic>{};
-                        ImageFavoriteManager.add(ImageFavorite(
-                            id,
-                            image,
-                            context.reader.widget.name,
-                            DateTime.now(),
-                            1,
-                            context.reader.page,
-                            otherInfo));
-                        showToast(message: "成功收藏图片".tl, context: context);
-                      }
-                    } catch (e) {
-                      showToast(message: e.toString(), context: context);
-                    }
-                  },
-                ),
+                    icon: Icon(
+                        isLiked() ? Icons.favorite : Icons.favorite_border),
+                    onPressed: imageFavoritesAction),
               ),
               if (App.isWindows)
                 Tooltip(
@@ -385,10 +447,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     return BlurEffect(
       child: Container(
         decoration: BoxDecoration(
-          color: context.colorScheme.surface.withOpacity(0.82),
+          color: context.colorScheme.surface.toOpacity(0.82),
           border: Border(
             top: BorderSide(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.toOpacity(0.5),
               width: 0.5,
             ),
           ),
@@ -669,7 +731,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       color: Theme.of(context)
                           .colorScheme
                           .surfaceTint
-                          .withOpacity(0.2),
+                          .toOpacity(0.2),
                       child: const SizedBox.expand(),
                     ),
                   ),

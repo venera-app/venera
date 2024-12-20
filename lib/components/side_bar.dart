@@ -57,10 +57,18 @@ class SideBarRoute<T> extends PopupRoute<T> {
 
     body = Container(
       decoration: BoxDecoration(
-          borderRadius: showSideBar
-              ? const BorderRadius.horizontal(left: Radius.circular(16))
-              : null,
-          color: Theme.of(context).colorScheme.surfaceTint),
+        borderRadius: showSideBar
+            ? const BorderRadius.horizontal(left: Radius.circular(16))
+            : null,
+        color: Theme.of(context).colorScheme.surfaceTint,
+        boxShadow: context.brightness == ui.Brightness.dark ? [
+          BoxShadow(
+            color: Colors.white.withAlpha(50),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ] : null,
+      ),
       clipBehavior: Clip.antiAlias,
       constraints: BoxConstraints(maxWidth: sideBarWidth),
       height: MediaQuery.of(context).size.height,

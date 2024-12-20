@@ -2,11 +2,11 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.0.8+108
+version: 1.1.2+112
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
-  flutter: 3.24.5
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: 3.27.1
 
 dependencies:
   flutter:
@@ -14,14 +14,14 @@ dependencies:
   path_provider: any
   flutter_localizations:
     sdk: flutter
-  intl: any
+  intl: ^0.19.0
   window_manager: ^0.4.3
   sqlite3: ^2.4.7
   sqlite3_flutter_libs: any
   flutter_qjs:
     git:
       url: https://github.com/wgh136/flutter_qjs
-      ref: ade0b9d
+      ref: 1657f62fe7545ac43a339e0a5ee2b82bacd81e9f
   crypto: ^3.0.6
   dio: ^5.7.0
   html: ^0.15.5
@@ -39,7 +39,7 @@ dependencies:
       url: https://github.com/venera-app/flutter.widgets
       ref: 09e756b1f1b04e6298318d99ec20a787fb360f59
       path: packages/scrollable_positioned_list
-  flutter_reorderable_grid_view: 5.3.2
+  flutter_reorderable_grid_view: ^5.4.0
   yaml: any
   uuid: ^4.5.1
   desktop_webview_window:
@@ -51,14 +51,12 @@ dependencies:
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
-  zip_flutter:
-    git:
-      url: https://github.com/wgh136/zip_flutter
+  zip_flutter: ^0.0.5
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
-      ref: d1c96cd6503103b3270dfe2f320d4a1c93780f53
-  rhttp: 0.9.1
+      ref: 9a784b193af5d55b2a35e58fa390bda3e4f35d00
+  rhttp: 0.9.6
   webdav_client:
     git:
       url: https://github.com/wgh136/webdav_client
@@ -68,17 +66,17 @@ dependencies:
   flutter_saf:
     git: 
       url: https://github.com/pkuislm/flutter_saf.git
-      ref: 3315082b9f7055655610e4f6f136b69e48228c05
+      ref: 7637b8b67d0a831f3cd7e702b8173e300880d32e
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
   shimmer: ^3.0.0
+  flutter_memory_info: ^0.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
-  flutter_to_arch:
-    git: https://github.com/wgh136/flutter_to_arch
+  flutter_lints: ^5.0.0
+  flutter_to_arch: ^1.0.0
   flutter_to_debian:
 
 flutter:

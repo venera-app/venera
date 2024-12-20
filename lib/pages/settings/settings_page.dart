@@ -267,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
         height: 46,
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
         decoration: BoxDecoration(
-          color: selected ? colors.primaryContainer.withOpacity(0.36) : null,
+          color: selected ? colors.primaryContainer.toOpacity(0.36) : null,
           border: Border(
             left: BorderSide(
               color: selected ? colors.primary : Colors.transparent,

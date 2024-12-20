@@ -25,7 +25,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
     if (inProgress) return;
     inProgress = true;
     if (reader.type == ComicType.local ||
-        (await LocalManager()
+        (LocalManager()
             .isDownloaded(reader.cid, reader.type, reader.chapter))) {
       try {
         var images = await LocalManager()
@@ -162,19 +162,22 @@ class _GalleryModeState extends State<_GalleryMode>
         } else {
           int pageIndex = index - 1;
           int startIndex = pageIndex * reader.imagesPerPage;
-          int endIndex = math.min(startIndex + reader.imagesPerPage, reader.images!.length);
-          List<String> pageImages = reader.images!.sublist(startIndex, endIndex);
+          int endIndex = math.min(
+              startIndex + reader.imagesPerPage, reader.images!.length);
+          List<String> pageImages =
+              reader.images!.sublist(startIndex, endIndex);
 
           cached[index] = true;
           cache(index);
 
           photoViewControllers[index] = PhotoViewController();
 
-          if(reader.imagesPerPage == 1) {
+          if (reader.imagesPerPage == 1) {
             return PhotoViewGalleryPageOptions(
               filterQuality: FilterQuality.medium,
               controller: photoViewControllers[index],
-              imageProvider: _createImageProviderFromKey(pageImages[0], context),
+              imageProvider:
+                  _createImageProviderFromKey(pageImages[0], context),
               fit: BoxFit.contain,
               errorBuilder: (_, error, s, retry) {
                 return NetworkError(message: error.toString(), retry: retry);
@@ -645,32 +648,19 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
 ImageProvider _createImageProviderFromKey(
     String imageKey, BuildContext context) {
-  if (imageKey.startsWith('file://')) {
-    return FileImage(File(imageKey.replaceFirst("file://", '')));
-  } else {
-    var reader = context.reader;
-    return ReaderImageProvider(
-      imageKey,
-      reader.type.comicSource!.key,
-      reader.cid,
-      reader.eid,
-    );
-  }
+  var reader = context.reader;
+  return ReaderImageProvider(
+    imageKey,
+    reader.type.comicSource?.key,
+    reader.cid,
+    reader.eid,
+  );
 }
 
 ImageProvider _createImageProvider(int page, BuildContext context) {
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
-  if (imageKey.startsWith('file://')) {
-    return FileImage(File(imageKey.replaceFirst("file://", '')));
-  } else {
-    return ReaderImageProvider(
-      imageKey,
-      reader.type.comicSource!.key,
-      reader.cid,
-      reader.eid,
-    );
-  }
+  return _createImageProviderFromKey(imageKey, context);
 }
 
 void _precacheImage(int page, BuildContext context) {

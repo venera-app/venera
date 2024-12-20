@@ -94,7 +94,7 @@ class _ExploreSettingsState extends State<ExploreSettings> {
 }
 
 class _ManageBlockingWordView extends StatefulWidget {
-  const _ManageBlockingWordView({super.key});
+  const _ManageBlockingWordView();
 
   @override
   State<_ManageBlockingWordView> createState() =>
@@ -135,7 +135,7 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
   void add() {
     showDialog(
       context: App.rootContext,
-      barrierColor: Colors.black.withOpacity(0.1),
+      barrierColor: Colors.black.toOpacity(0.1),
       builder: (context) {
         var controller = TextEditingController();
         String? error;

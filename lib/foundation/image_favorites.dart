@@ -36,8 +36,16 @@ class ImageFavorite {
         otherInfo = map["otherInfo"] ?? {};
 }
 
-class ImageFavoriteManager {
+class ImageFavoriteManager with ChangeNotifier {
   static Database get _db => HistoryManager()._db;
+  static ImageFavoriteManager? cache;
+  ImageFavoriteManager.create();
+  factory ImageFavoriteManager() {
+    return cache == null ? (cache = ImageFavoriteManager.create()) : cache!;
+  }
+  void updateValue() {
+    notifyListeners();
+  }
 
   /// 检查表image_favorites是否存在, 不存在则创建
   static void init() {
@@ -66,6 +74,26 @@ class ImageFavoriteManager {
       favorite.page,
       jsonEncode(favorite.otherInfo)
     ]);
+    ImageFavoriteManager().updateValue();
+  }
+
+  static void remove(String id, int ep, int page) async {
+    _db.execute("""
+      delete from image_favorites
+      where id == ? and ep == ? and page == ?;
+    """, [id, ep, page]);
+    ImageFavoriteManager().updateValue();
+  }
+
+  static bool isHas(String id, int ep, int page) {
+    var res = _db.select("""
+      select * from image_favorites
+      where id == ? and ep == ? and page == ?;
+    """, [id, ep, page]);
+    if (res.isEmpty) {
+      return false;
+    }
+    return true;
   }
 
   static List<ImageFavorite> getAll() {
@@ -87,6 +115,7 @@ class ImageFavoriteManager {
       delete from image_favorites
       where id = ? and ep = ? and page = ?;
     """, [favorite.id, favorite.ep, favorite.page]);
+    ImageFavoriteManager().updateValue();
   }
 
   static List<String> get earliestTimeToNow {

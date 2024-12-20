@@ -41,13 +41,29 @@ class AnimatedTapRegion extends StatefulWidget {
 }
 
 class _AnimatedTapRegionState extends State<AnimatedTapRegion> {
+  bool isScaled = false;
+
   bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
+      onEnter: (_) {
+        isHovered = true;
+        if (!isScaled) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (isHovered) {
+              setState(() => isScaled = true);
+            }
+          });
+        }
+      },
+      onExit: (_) {
+        isHovered = false;
+        if(isScaled) {
+          setState(() => isScaled = false);
+        }
+      },
       child: GestureDetector(
         onTap: widget.onTap,
         child: ClipRRect(
@@ -55,7 +71,7 @@ class _AnimatedTapRegionState extends State<AnimatedTapRegion> {
           clipBehavior: Clip.antiAlias,
           child: AnimatedScale(
             duration: _fastAnimationDuration,
-            scale: isHovered ? 1.1 : 1,
+            scale: isScaled ? 1.1 : 1,
             child: widget.child,
           ),
         ),

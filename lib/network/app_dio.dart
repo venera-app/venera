@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
@@ -281,13 +280,8 @@ class RHttpAdapter implements HttpClientAdapter {
       headers[key] ??= [];
       headers[key]!.add(entry.$2);
     }
-    var data = res.body;
-    if (headers['content-encoding']?.contains('gzip') ?? false) {
-      // rhttp does not support gzip decoding
-      data = gzip.decoder.bind(data).map((data) => Uint8List.fromList(data));
-    }
     return ResponseBody(
-      data,
+      res.body,
       res.statusCode,
       statusMessage: null,
       isRedirect: false,

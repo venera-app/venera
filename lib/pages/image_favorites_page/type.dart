@@ -1,3 +1,5 @@
+import 'package:venera/foundation/log.dart';
+
 enum ImageFavoriteSortType {
   name("name"),
   timeAsc("time_asc"),
@@ -55,25 +57,25 @@ getDateTimeRangeFromFilter(String timeFilter) {
   DateTime now = DateTime.now();
   DateTime start = now;
   DateTime end = now;
-  switch (timeFilter) {
-    case TimeFilterEnum.lastWeek:
+  try {
+    if (timeFilter == TimeFilterEnum.lastWeek.name) {
       start = now.subtract(const Duration(days: 7));
-      break;
-    case TimeFilterEnum.lastMonth:
+    } else if (timeFilter == TimeFilterEnum.lastMonth.name) {
       start = now.subtract(const Duration(days: 30));
-      break;
-    case TimeFilterEnum.lastHalfYear:
+    } else if (timeFilter == TimeFilterEnum.lastHalfYear.name) {
       start = now.subtract(const Duration(days: 180));
-      break;
-    case TimeFilterEnum.lastYear:
+    } else if (timeFilter == TimeFilterEnum.lastYear.name) {
       start = now.subtract(const Duration(days: 365));
-      break;
-    default:
-      // 会是 2024, 2025 之类的
+    } else {
+      // 是 2024, 2025 之类的
       int year = int.parse(timeFilter);
       start = DateTime(year, 1, 1);
       end = DateTime(year, 12, 31, 23, 59, 59);
+    }
+  } catch (e) {
+    Log.error("Date compute", e);
   }
+
   List<DateTime> ranges = [start, end];
   return ranges;
 }

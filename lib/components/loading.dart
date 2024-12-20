@@ -96,6 +96,20 @@ class ListLoadingIndicator extends StatelessWidget {
   }
 }
 
+class SliverListLoadingIndicator extends StatelessWidget {
+  const SliverListLoadingIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // SliverToBoxAdapter can not been lazy loaded.
+    // Use SliverList to make sure the animation can be lazy loaded.
+    return SliverList.list(children: const [
+      SizedBox(),
+      ListLoadingIndicator(),
+    ]);
+  }
+}
+
 abstract class LoadingState<T extends StatefulWidget, S extends Object>
     extends State<T> {
   bool isLoading = false;
@@ -299,9 +313,7 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
 
   Widget buildLoading(BuildContext context) {
     return Center(
-      child: const CircularProgressIndicator(
-        strokeWidth: 2,
-      ).fixWidth(32).fixHeight(32),
+      child: const CircularProgressIndicator().fixWidth(32).fixHeight(32),
     );
   }
 

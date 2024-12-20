@@ -9,10 +9,10 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
-import 'package:venera/pages/history_page.dart';
+import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/image_favorites_page/type.dart';
+import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/translations.dart';
-part "image_favorites_list.dart";
 part "image_favorites_item.dart";
 
 class ImageFavoritesPage extends StatefulWidget {
@@ -44,23 +44,16 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     vsync: this,
   );
   int tabIndex = 0;
-  Map<ImageFavorite, bool> selectedComics = {};
+  Map<ImageFavorite, bool> selectedImageFavorites = {};
+  late List<ImageFavorite> imageFavorites;
 
   void update() {
-    if (keyword.isEmpty) {
-      setState(() {
-        // comics = LocalManager().getComics(sortType);
-      });
-    } else {
-      setState(() {
-        // comics = LocalManager().search(keyword);
-      });
-    }
+    setState(() {});
   }
 
   void getInitImageFavorites() {
-    List<ImageFavorite> imageFavorites = ImageFavoriteManager.getAll();
-
+    imageFavorites = ImageFavoriteManager.getAll();
+    imageFavoritesGroup = [];
     for (var ele in imageFavorites) {
       try {
         ImageFavoritesGroup tempGroup = imageFavoritesGroup
@@ -76,22 +69,30 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     }
   }
 
+  void refreshImageFavorites() {
+    getInitImageFavorites();
+    update();
+  }
+
   void getCurImageFavorites() {
-    if (timeFilterSelect != "") {
-      timeFilter = getDateTimeRangeFromFilter(timeFilterSelect);
-      // 筛选到最终列表
-      curImageFavoritesGroup = imageFavoritesGroup.where((ele) {
+    // 筛选到最终列表
+    curImageFavoritesGroup = imageFavoritesGroup.where((ele) {
+      bool isFilter = true;
+      if (keyword != "") {
+        isFilter = ele.title.contains(keyword);
+      }
+      if (timeFilterSelect != "") {
+        timeFilter = getDateTimeRangeFromFilter(timeFilterSelect);
         DateTime start = timeFilter[0];
         DateTime end = timeFilter[1];
         DateTime dateTimeToCheck = ele.firstTime;
-        return dateTimeToCheck.isAfter(start) &&
-                dateTimeToCheck.isBefore(end) ||
-            dateTimeToCheck == start ||
-            dateTimeToCheck == end;
-      }).toList();
-    } else {
-      curImageFavoritesGroup = imageFavoritesGroup;
-    }
+        isFilter =
+            dateTimeToCheck.isAfter(start) && dateTimeToCheck.isBefore(end) ||
+                dateTimeToCheck == start ||
+                dateTimeToCheck == end;
+      }
+      return isFilter;
+    }).toList();
     // 给每个 group 的收藏图片排一个序
     for (var ele in curImageFavoritesGroup) {
       ele.imageFavorites.sort((a, b) => a.page.compareTo(b.page));
@@ -120,60 +121,73 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     timeFilterSelect =
         appdata.implicitData["image_favorites_time_filter"] ?? "";
     finalTimeList = List<String>.from([
-      ...timeFilterList.map((e) => e.toString()),
+      ...timeFilterList.map((e) => e.name),
       ...ImageFavoriteManager.earliestTimeToNow
     ]);
     getInitImageFavorites();
+    ImageFavoriteManager().addListener(refreshImageFavorites);
     super.initState();
   }
 
   @override
   void dispose() {
     controller.dispose();
+    ImageFavoriteManager().removeListener(refreshImageFavorites);
     super.dispose();
+  }
+
+  Widget buildMultiSelectMenu() {
+    return MenuButton(entries: [
+      MenuEntry(
+        icon: Icons.delete_outline,
+        text: "Delete".tl,
+        onClick: () {
+          selectedImageFavorites.keys.toList().forEach((ele) {
+            ImageFavoriteManager.delete(ele);
+          });
+          setState(() {
+            multiSelectMode = false;
+            selectedImageFavorites.clear();
+          });
+        },
+      )
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
     getCurImageFavorites();
     void selectAll() {
-      setState(() {
-        // selectedComics = [];
-      });
+      for (var ele in imageFavorites) {
+        selectedImageFavorites[ele] = true;
+      }
+      update();
     }
 
     void deSelect() {
       setState(() {
-        selectedComics.clear();
+        selectedImageFavorites.clear();
       });
     }
 
     void invertSelection() {
       setState(() {
-        // comics.asMap().forEach((k, v) {
-        //   selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
-        // });
-        selectedComics.removeWhere((k, v) => !v);
+        selectedImageFavorites.removeWhere((k, v) => !v);
       });
     }
 
-    void selectRange() {
-      setState(() {
-        List<int> l = [];
-        selectedComics.forEach((k, v) {
-          l.add(1);
-        });
-        if (l.isEmpty) {
-          return;
-        }
-        l.sort();
-        int start = l.first;
-        int end = l.last;
-        selectedComics.clear();
-        // selectedComics.addEntries(List.generate(end - start + 1, (i) {
-        //   return MapEntry(comics[start + i], true);
-        // }));
-      });
+    void addSelected(ImageFavorite i) {
+      if (selectedImageFavorites[i] == null) {
+        selectedImageFavorites[i] = true;
+      } else {
+        selectedImageFavorites.remove(i);
+      }
+      if (selectedImageFavorites.isEmpty) {
+        multiSelectMode = false;
+      } else {
+        multiSelectMode = true;
+      }
+      update();
     }
 
     List<Widget> selectActions = [
@@ -189,10 +203,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
           icon: const Icon(Icons.flip),
           tooltip: "Invert Selection".tl,
           onPressed: invertSelection),
-      IconButton(
-          icon: const Icon(Icons.border_horizontal_outlined),
-          tooltip: "Select in range".tl,
-          onPressed: selectRange),
+      buildMultiSelectMenu(),
     ];
     var widget = SmoothCustomScrollView(
       slivers: [
@@ -242,13 +253,13 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                 onPressed: () {
                   setState(() {
                     multiSelectMode = false;
-                    selectedComics.clear();
+                    selectedImageFavorites.clear();
                   });
                 },
               ),
             ),
             title: Text(
-                "Selected @c comics".tlParams({"c": selectedComics.length})),
+                "Selected @c ".tlParams({"c": selectedImageFavorites.length})),
             actions: selectActions,
           )
         else if (searchMode)
@@ -281,8 +292,11 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return ImageFavoritesItem(
-              imageFavoritesGroup: curImageFavoritesGroup[index]);
-        }, childCount: 2)),
+              imageFavoritesGroup: curImageFavoritesGroup[index],
+              selectedImageFavorites: selectedImageFavorites,
+              addSelected: addSelected,
+              multiSelectMode: multiSelectMode);
+        }, childCount: 10)),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
     );

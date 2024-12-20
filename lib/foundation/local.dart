@@ -389,7 +389,7 @@ class LocalManager with ChangeNotifier {
     return files.map((e) => "file://${e.path}").toList();
   }
 
-  Future<bool> isDownloaded(String id, ComicType type, [int? ep]) async {
+  bool isDownloaded(String id, ComicType type, [int? ep]) {
     var comic = find(id, type);
     if (comic == null) return false;
     if (comic.chapters == null || ep == null) return true;
@@ -473,13 +473,15 @@ class LocalManager with ChangeNotifier {
       var dir = Directory(FilePath.join(path, c.directory));
       dir.deleteIgnoreError(recursive: true);
     }
-    //Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
-    if(HistoryManager().findSync(c.id, c.comicType) != null) {
-      HistoryManager().remove(c.id, c.comicType);
-    }
-    var folders = LocalFavoritesManager().find(c.id, c.comicType);
-    for (var f in folders) {
-      LocalFavoritesManager().deleteComicWithId(f, c.id, c.comicType);
+    // Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
+    if(c.comicType == ComicType.local) {
+      if(HistoryManager().findSync(c.id, c.comicType) != null) {
+        HistoryManager().remove(c.id, c.comicType);
+      }
+      var folders = LocalFavoritesManager().find(c.id, c.comicType);
+      for (var f in folders) {
+        LocalFavoritesManager().deleteComicWithId(f, c.id, c.comicType);
+      }
     }
     remove(c.id, c.comicType);
     notifyListeners();

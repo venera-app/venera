@@ -6,7 +6,6 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
-import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/image_provider/history_image_provider.dart';
 import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -18,7 +17,6 @@ import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/image_favorites_page/image_favorites_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/data_sync.dart';
-import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/import_comic.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -58,7 +56,7 @@ class _SearchBar extends StatelessWidget {
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Material(
-          color: context.colorScheme.surfaceContainer,
+          color: context.colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(32),
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
@@ -268,7 +266,8 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      return InkWell(
+                      return AnimatedTapRegion(
+                        borderRadius: 8,
                         onTap: () {
                           context.to(
                             () => ComicPage(
@@ -277,11 +276,9 @@ class _HistoryState extends State<_History> {
                             ),
                           );
                         },
-                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           width: 92,
                           height: 114,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Theme.of(context)
@@ -297,7 +294,7 @@ class _HistoryState extends State<_History> {
                             filterQuality: FilterQuality.medium,
                           ),
                         ),
-                      );
+                      ).paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8).paddingBottom(16),
@@ -390,15 +387,14 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      return InkWell(
+                      return AnimatedTapRegion(
                         onTap: () {
                           local[index].read();
                         },
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: 8,
                         child: Container(
                           width: 92,
                           height: 114,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Theme.of(context)
@@ -416,7 +412,7 @@ class _LocalState extends State<_Local> {
                             filterQuality: FilterQuality.medium,
                           ),
                         ),
-                      );
+                      ).paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8),
@@ -501,12 +497,14 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
       "Select a cbz/zip file.".tl,
+      "Select a directory which contains multiple cbz/zip files.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
       "Single Comic".tl,
       "Multiple Comics".tl,
       "A cbz file".tl,
+      "Multiple cbz files".tl,
       "EhViewer downloads".tl
     ];
 
@@ -582,7 +580,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
           onPressed: () {
             showDialog(
               context: context,
-              barrierColor: Colors.black.withOpacity(0.2),
+              barrierColor: Colors.black.toOpacity(0.2),
               builder: (context) {
                 var help = '';
                 help +=
@@ -635,7 +633,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       0 => await importer.directory(true),
       1 => await importer.directory(false),
       2 => await importer.cbz(),
-      3 => await importer.ehViewer(),
+      3 => await importer.multipleCbz(),
+      4 => await importer.ehViewer(),
       int() => true,
     };
     if (result) {
