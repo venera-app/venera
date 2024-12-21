@@ -153,6 +153,15 @@ class LocalManager with ChangeNotifier {
 
   Directory get directory => Directory(path);
 
+  void _checkNoMedia() {
+    if (App.isAndroid) {
+      var file = File(FilePath.join(path, '.nomedia'));
+      if (!file.existsSync()) {
+        file.createSync();
+      }
+    }
+  }
+
   // return error message if failed
   Future<String?> setNewPath(String newPath) async {
     var newDir = Directory(newPath);
@@ -174,6 +183,7 @@ class LocalManager with ChangeNotifier {
     }
     await directory.deleteContents(recursive: true);
     path = newPath;
+    _checkNoMedia();
     return null;
   }
 
@@ -233,6 +243,7 @@ class LocalManager with ChangeNotifier {
     catch(e, s) {
       Log.error("IO", "Failed to create local folder: $e", s);
     }
+    _checkNoMedia();
     restoreDownloadingTasks();
   }
 
