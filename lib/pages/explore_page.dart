@@ -295,6 +295,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
       );
     } else if (data.loadPage != null || data.loadNext != null) {
       return ComicList(
+        enablePageStorage: true,
         loadPage: data.loadPage,
         loadNext: data.loadNext,
         key: const PageStorageKey("comic_list"),

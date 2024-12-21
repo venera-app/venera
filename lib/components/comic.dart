@@ -833,6 +833,7 @@ class ComicList extends StatefulWidget {
     this.menuBuilder,
     this.controller,
     this.refreshHandlerCallback,
+    this.enablePageStorage = false,
   });
 
   final Future<Res<List<Comic>>> Function(int page)? loadPage;
@@ -851,6 +852,8 @@ class ComicList extends StatefulWidget {
 
   final void Function(VoidCallback c)? refreshHandlerCallback;
 
+  final bool enablePageStorage;
+
   @override
   State<ComicList> createState() => ComicListState();
 }
@@ -868,6 +871,8 @@ class ComicListState extends State<ComicList> {
 
   String? _nextUrl;
 
+  late bool enablePageStorage = widget.enablePageStorage;
+
   Map<String, dynamic> get state => {
     'maxPage': _maxPage,
     'data': _data,
@@ -878,7 +883,7 @@ class ComicListState extends State<ComicList> {
   };
 
   void restoreState(Map<String, dynamic>? state) {
-    if (state == null) {
+    if (state == null || !enablePageStorage) {
       return;
     }
     _maxPage = state['maxPage'];
@@ -892,7 +897,9 @@ class ComicListState extends State<ComicList> {
   }
 
   void storeState() {
-    PageStorage.of(context).writeState(context, state);
+    if(enablePageStorage) {
+      PageStorage.of(context).writeState(context, state);
+    }
   }
 
   void refresh() {
@@ -1122,7 +1129,7 @@ class ComicListState extends State<ComicList> {
       );
     }
     return SmoothCustomScrollView(
-      key: const PageStorageKey('scroll'),
+      key: enablePageStorage ? PageStorageKey('scroll$_page') : null,
       controller: widget.controller,
       slivers: [
         if (widget.leadingSliver != null) widget.leadingSliver!,
