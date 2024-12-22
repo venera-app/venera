@@ -456,58 +456,63 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       var imagesOnScreen =
           continuesState.itemPositionsListener.itemPositions.value;
       var images = imagesOnScreen
-          .map((e) => context.reader.images![e.index - 1])
+          .map((e) => context.reader.images!.elementAtOrNull(e.index - 1))
+          .whereType<String>()
           .toList();
       String? selected;
-      await showPopUpWidget(
-        context,
-        PopUpWidgetScaffold(
-          title: "Select an image on screen".tl,
-          body: GridView.builder(
-            itemCount: images.length,
-            itemBuilder: (context, index) {
-              ImageProvider image;
-              var imageKey = images[index];
-              if (imageKey.startsWith('file://')) {
-                image = FileImage(File(imageKey.replaceFirst("file://", '')));
-              } else {
-                image = ReaderImageProvider(
-                  imageKey,
-                  reader.type.comicSource!.key,
-                  reader.cid,
-                  reader.eid,
-                );
-              }
-              return InkWell(
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                onTap: () {
-                  selected = images[index];
-                  App.rootContext.pop();
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(16)),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
+      if (images.length > 1) {
+        await showPopUpWidget(
+          context,
+          PopUpWidgetScaffold(
+            title: "Select an image on screen".tl,
+            body: GridView.builder(
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                ImageProvider image;
+                var imageKey = images[index];
+                if (imageKey.startsWith('file://')) {
+                  image = FileImage(File(imageKey.replaceFirst("file://", '')));
+                } else {
+                  image = ReaderImageProvider(
+                    imageKey,
+                    reader.type.comicSource!.key,
+                    reader.cid,
+                    reader.eid,
+                  );
+                }
+                return InkWell(
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  onTap: () {
+                    selected = images[index];
+                    App.rootContext.pop();
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
-                  ),
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Image(
                     width: double.infinity,
                     height: double.infinity,
-                    image: image,
+                    child: Image(
+                      width: double.infinity,
+                      height: double.infinity,
+                      image: image,
+                    ),
                   ),
-                ),
-              ).padding(const EdgeInsets.all(8));
-            },
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-              childAspectRatio: 0.7,
+                ).padding(const EdgeInsets.all(8));
+              },
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                childAspectRatio: 0.7,
+              ),
             ),
           ),
-        ),
-      );
+        );
+      } else {
+        selected = images.first;
+      }
       if (selected == null) {
         return null;
       } else {
