@@ -462,12 +462,18 @@ class LocalManager with ChangeNotifier {
   void restoreDownloadingTasks() {
     var file = File(FilePath.join(App.dataPath, 'downloading_tasks.json'));
     if (file.existsSync()) {
-      var tasks = jsonDecode(file.readAsStringSync());
-      for (var e in tasks) {
-        var task = DownloadTask.fromJson(e);
-        if (task != null) {
-          downloadingTasks.add(task);
+      try {
+        var tasks = jsonDecode(file.readAsStringSync());
+        for (var e in tasks) {
+          var task = DownloadTask.fromJson(e);
+          if (task != null) {
+            downloadingTasks.add(task);
+          }
         }
+      }
+      catch(e) {
+        file.delete();
+        Log.error("LocalManager", "Failed to restore downloading tasks: $e");
       }
     }
   }
