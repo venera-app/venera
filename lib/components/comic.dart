@@ -342,21 +342,39 @@ class ComicTile extends StatelessWidget {
   }
 
   List<String> _splitText(String text) {
-    // split text by space, comma. text in brackets will be kept together.
+    // split text by comma, brackets
     var words = <String>[];
     var buffer = StringBuffer();
     var inBracket = false;
+    String? prevBracket;
     for (var i = 0; i < text.length; i++) {
       var c = text[i];
       if (c == '[' || c == '(') {
-        inBracket = true;
-      } else if (c == ']' || c == ')') {
-        inBracket = false;
-      } else if (c == ' ' || c == ',') {
         if (inBracket) {
           buffer.write(c);
         } else {
-          words.add(buffer.toString());
+          if (buffer.isNotEmpty) {
+            words.add(buffer.toString().trim());
+            buffer.clear();
+          }
+          inBracket = true;
+          prevBracket = c;
+        }
+      } else if (c == ']' || c == ')') {
+        if (prevBracket == '[' && c == ']' || prevBracket == '(' && c == ')') {
+          if (buffer.isNotEmpty) {
+            words.add(buffer.toString().trim());
+            buffer.clear();
+          }
+          inBracket = false;
+        } else {
+          buffer.write(c);
+        }
+      } else if (c == ',') {
+        if (inBracket) {
+          buffer.write(c);
+        } else {
+          words.add(buffer.toString().trim());
           buffer.clear();
         }
       } else {
@@ -364,8 +382,10 @@ class ComicTile extends StatelessWidget {
       }
     }
     if (buffer.isNotEmpty) {
-      words.add(buffer.toString());
+      words.add(buffer.toString().trim());
     }
+    words.removeWhere((element) => element == "");
+    words = words.toSet().toList();
     return words;
   }
 
@@ -383,26 +403,33 @@ class ComicTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: 'Block'.tl,
-            content: Wrap(
-              runSpacing: 8,
-              spacing: 8,
-              children: [
-                for (var word in all)
-                  OptionChip(
-                    text: word,
-                    isSelected: words.contains(word),
-                    onTap: () {
-                      setState(() {
-                        if (!words.contains(word)) {
-                          words.add(word);
-                        } else {
-                          words.remove(word);
-                        }
-                      });
-                    },
-                  ),
-              ],
-            ).paddingHorizontal(16),
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: math.min(400, context.height - 136),
+              ),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  runSpacing: 8,
+                  spacing: 8,
+                  children: [
+                    for (var word in all)
+                      OptionChip(
+                        text: word,
+                        isSelected: words.contains(word),
+                        onTap: () {
+                          setState(() {
+                            if (!words.contains(word)) {
+                              words.add(word);
+                            } else {
+                              words.remove(word);
+                            }
+                          });
+                        },
+                      ),
+                  ],
+                ),
+              ).paddingHorizontal(16),
+            ),
             actions: [
               Button.filled(
                 onPressed: () {
