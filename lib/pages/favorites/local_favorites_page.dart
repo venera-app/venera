@@ -102,10 +102,13 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     }
   }
 
+  var scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
-    var body = Scaffold(
-      body: SmoothCustomScrollView(slivers: [
+    Widget body = SmoothCustomScrollView(
+      controller: scrollController,
+      slivers: [
         if (!searchMode && !multiSelectMode)
           SliverAppbar(
             style: context.width < changePoint
@@ -447,7 +450,17 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             });
           },
         ),
-      ]),
+      ],
+    );
+    body = Scrollbar(
+      controller: scrollController,
+      thickness: App.isDesktop ? 8 : 12,
+      radius: const Radius.circular(8),
+      interactive: true,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: body,
+      ),
     );
     return PopScope(
       canPop: !multiSelectMode && !searchMode,
