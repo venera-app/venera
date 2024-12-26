@@ -46,10 +46,12 @@ class ImageFavoritesItem extends StatefulWidget {
       required this.imageFavoritesGroup,
       required this.selectedImageFavorites,
       required this.addSelected,
-      required this.multiSelectMode});
+      required this.multiSelectMode,
+      required this.curImageFavoritesGroup});
   final ImageFavoritesGroup imageFavoritesGroup;
   final Function(ImageFavorite) addSelected;
   final Map<ImageFavorite, bool> selectedImageFavorites;
+  final List<ImageFavoritesGroup> curImageFavoritesGroup;
   final bool multiSelectMode;
   @override
   State<ImageFavoritesItem> createState() => ImageFavoritesItemState();
@@ -113,6 +115,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
               widget.addSelected(ele);
             }
           } else {
+            // 单击跳转漫画详情
             App.mainNavigatorKey?.currentContext?.to(() => ComicPage(
                   id: widget.imageFavoritesGroup.id,
                   sourceKey: widget.imageFavoritesGroup.sourceKey,
@@ -183,8 +186,18 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                   String pageText =
                       curPage == 0 ? 'cover'.tl : (curPage + 1).toString();
                   return InkWell(
-                    onDoubleTap: () {},
+                    onDoubleTap: () {
+                      // 双击浏览大图
+                      App.mainNavigatorKey?.currentContext?.to(
+                        () => ImageFavoritesPhotoView(
+                          imageFavoritesGroup: widget.imageFavoritesGroup,
+                          page: curImageFavorite.page,
+                          curImageFavoritesGroup: widget.curImageFavoritesGroup,
+                        ),
+                      );
+                    },
                     onTap: () {
+                      // 单击去阅读页面, 跳转到当前点击的page
                       if (widget.multiSelectMode) {
                         widget.addSelected(curImageFavorite);
                       } else {

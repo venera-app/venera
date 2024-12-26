@@ -1,7 +1,10 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
@@ -14,6 +17,7 @@ import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/translations.dart';
 part "image_favorites_item.dart";
+part "image_favorites_photo_view.dart";
 
 class ImageFavoritesPage extends StatefulWidget {
   const ImageFavoritesPage({super.key});
@@ -44,6 +48,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     vsync: this,
   );
   int tabIndex = 0;
+  // 多选的时候选中的图片
   Map<ImageFavorite, bool> selectedImageFavorites = {};
   late List<ImageFavorite> imageFavorites;
 
@@ -242,6 +247,18 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                   },
                 ),
               ),
+              MenuButton(
+                entries: [
+                  MenuEntry(
+                      icon: Icons.upload_file,
+                      text: "Export current to clipboard".tl,
+                      onClick: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: "要复制到剪贴板的内容"));
+                        showToast(message: "成功赋值到剪贴板".tl, context: context);
+                      }),
+                ],
+              ),
             ],
           )
         else if (multiSelectMode)
@@ -292,10 +309,12 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return ImageFavoritesItem(
-              imageFavoritesGroup: curImageFavoritesGroup[index],
-              selectedImageFavorites: selectedImageFavorites,
-              addSelected: addSelected,
-              multiSelectMode: multiSelectMode);
+            imageFavoritesGroup: curImageFavoritesGroup[index],
+            selectedImageFavorites: selectedImageFavorites,
+            addSelected: addSelected,
+            multiSelectMode: multiSelectMode,
+            curImageFavoritesGroup: curImageFavoritesGroup,
+          );
         }, childCount: 10)),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
@@ -305,10 +324,17 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
 
   void sort() {
     Widget tabBar = Material(
-      child: FilledTabBar(
-        key: PageStorageKey(optionTypes),
-        tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
-        controller: controller,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        // 向上移动一点, 减少 Column 顶部的 padding, 避免观感太差
+        transform: Matrix4.translationValues(0, -24, 0),
+        child: FilledTabBar(
+          key: PageStorageKey(optionTypes),
+          tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
+          controller: controller,
+        ),
       ),
     ).paddingTop(context.padding.top);
     showDialog(
@@ -322,56 +348,50 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
           }
 
           controller.addListener(handleTabIndex);
-
           return ContentDialog(
-            content: Container(
-                // 向上移动一点, 减少 Column 顶部的 padding, 避免观感太差
-                transform: Matrix4.translationValues(0, -20, 0),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  tabBar,
-                  tabIndex == 0
-                      ? Column(
-                          children: [
-                            CustomListItem('Name', ImageFavoriteSortType.name),
-                            CustomListItem(
-                                'timeAsc', ImageFavoriteSortType.timeAsc),
-                            CustomListItem(
-                                'timeDesc', ImageFavoriteSortType.timeDesc),
-                            CustomListItem('favorite Num Desc',
-                                ImageFavoriteSortType.maxFavorites),
-                            CustomListItem(
-                                'favoritesCompareComicPages',
-                                ImageFavoriteSortType
-                                    .favoritesCompareComicPages),
-                          ]
-                              .map(
-                                (e) => RadioListTile<ImageFavoriteSortType>(
-                                  title: Text(e.title.tl),
-                                  value: e.value,
-                                  groupValue: sortType,
-                                  onChanged: (v) {
-                                    setState(() {
-                                      sortType = v!;
-                                    });
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        )
-                      : ListTile(
-                          title: Text("时间筛选".tl),
-                          trailing: Select(
-                            current: timeFilterSelect,
-                            values: finalTimeList,
-                            minWidth: 64,
-                            onTap: (index) {
-                              setState(() {
-                                timeFilterSelect = finalTimeList[index];
-                              });
-                            },
-                          ),
-                        )
-                ])),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              tabBar,
+              tabIndex == 0
+                  ? Column(
+                      children: [
+                        CustomListItem('Name', ImageFavoriteSortType.name),
+                        CustomListItem(
+                            'timeAsc', ImageFavoriteSortType.timeAsc),
+                        CustomListItem(
+                            'timeDesc', ImageFavoriteSortType.timeDesc),
+                        CustomListItem('favorite Num Desc',
+                            ImageFavoriteSortType.maxFavorites),
+                        CustomListItem('favoritesCompareComicPages',
+                            ImageFavoriteSortType.favoritesCompareComicPages),
+                      ]
+                          .map(
+                            (e) => RadioListTile<ImageFavoriteSortType>(
+                              title: Text(e.title.tl),
+                              value: e.value,
+                              groupValue: sortType,
+                              onChanged: (v) {
+                                setState(() {
+                                  sortType = v!;
+                                });
+                              },
+                            ),
+                          )
+                          .toList(),
+                    )
+                  : ListTile(
+                      title: Text("时间筛选".tl),
+                      trailing: Select(
+                        current: timeFilterSelect,
+                        values: finalTimeList,
+                        minWidth: 64,
+                        onTap: (index) {
+                          setState(() {
+                            timeFilterSelect = finalTimeList[index];
+                          });
+                        },
+                      ),
+                    )
+            ]),
             actions: [
               FilledButton(
                 onPressed: () {
