@@ -201,8 +201,6 @@ class HistoryManager with ChangeNotifier {
 
   Map<String, bool>? _cachedHistory;
 
-  static const _kMaxHistoryLength = 200;
-
   Future<void> init() async {
     _db = sqlite3.open("${App.dataPath}/history.db");
 
@@ -228,12 +226,6 @@ class HistoryManager with ChangeNotifier {
   ///
   /// This function would be called when user start reading.
   Future<void> addHistory(History newItem) async {
-    while(count() >= _kMaxHistoryLength) {
-      _db.execute("""
-        delete from history
-        where time == (select min(time) from history);
-      """);
-    }
     _db.execute("""
         insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

@@ -25,6 +25,8 @@ class _ReaderWithLoadingState
       name: data.name,
       chapters: data.chapters,
       history: data.history,
+      initialChapter: data.history.ep,
+      initialPage: data.history.page,
     );
   }
 

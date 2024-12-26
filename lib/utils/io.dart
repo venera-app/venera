@@ -197,7 +197,7 @@ class DirectoryPicker {
 
   static const _methodChannel = MethodChannel("venera/method_channel");
 
-  Future<Directory?> pickDirectory() async {
+  Future<Directory?> pickDirectory({bool directAccess = false}) async {
     IO._isSelectingFiles = true;
     try {
       String? directory;
@@ -205,6 +205,16 @@ class DirectoryPicker {
         directory = await file_selector.getDirectoryPath();
       } else if (App.isAndroid) {
         directory = (await AndroidDirectory.pickDirectory())?.path;
+        if (directory != null && directAccess) {
+          // Native library does not have access to the directory. Copy it to cache.
+          var cache = FilePath.join(App.cachePath, "selected_directory");
+          if (Directory(cache).existsSync()) {
+            Directory(cache).deleteSync(recursive: true);
+          }
+          Directory(cache).createSync();
+          await copyDirectoryIsolate(Directory(directory), Directory(cache));
+          directory = cache;
+        }
       } else {
         // ios, macos
         directory =

@@ -6,23 +6,37 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/js_engine.dart';
 import 'package:venera/foundation/local.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'foundation/appdata.dart';
 
+extension FutureInit<T> on Future<T> {
+  /// Prevent unhandled exception
+  ///
+  /// A unhandled exception occurred in init() will cause the app to crash.
+  Future<void> wait() async {
+    try {
+      await this;
+    } catch (e, s) {
+      Log.error("init", "$e\n$s");
+    }
+  }
+}
+
 Future<void> init() async {
-  await SAFTaskWorker().init();
-  await AppTranslation.init();
-  await appdata.init();
-  await App.init();
-  await HistoryManager().init();
-  await TagsTranslation.readData();
-  await LocalFavoritesManager().init();
+  await SAFTaskWorker().init().wait();
+  await AppTranslation.init().wait();
+  await appdata.init().wait();
+  await App.init().wait();
+  await HistoryManager().init().wait();
+  await TagsTranslation.readData().wait();
+  await LocalFavoritesManager().init().wait();
   SingleInstanceCookieJar("${App.dataPath}/cookie.db");
-  await JsEngine().init();
-  await ComicSource.init();
-  await LocalManager().init();
+  await JsEngine().init().wait();
+  await ComicSource.init().wait();
+  await LocalManager().init().wait();
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
 }

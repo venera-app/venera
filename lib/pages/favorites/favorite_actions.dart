@@ -146,6 +146,18 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
 
         var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
 
+        var newTags = <String>[];
+        for(var entry in newInfo.tags.entries) {
+          const shouldIgnore = ['author', 'artist', 'time'];
+          var namespace = entry.key;
+          if (shouldIgnore.contains(namespace.toLowerCase())) {
+            continue;
+          }
+          for(var tag in entry.value) {
+            newTags.add("$namespace:$tag");
+          }
+        }
+
         comics[index] = FavoriteItem(
           id: c.id,
           name: newInfo.title,
@@ -154,7 +166,7 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
               newInfo.tags['author']?.firstOrNull ??
               c.author,
           type: c.type,
-          tags: c.tags,
+          tags: newTags,
         );
 
         LocalFavoritesManager().updateInfo(folder, comics[index]);

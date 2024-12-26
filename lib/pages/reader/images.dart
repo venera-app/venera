@@ -356,6 +356,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   var isCTRLPressed = false;
   static var _isMouseScrolling = false;
   var fingers = 0;
+  bool disableScroll = false;
 
   @override
   void initState() {
@@ -426,7 +427,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
           ? Axis.vertical
           : Axis.horizontal,
       reverse: reader.mode == ReaderMode.continuousRightToLeft,
-      physics: isCTRLPressed || _isMouseScrolling
+      physics: isCTRLPressed || _isMouseScrolling || disableScroll
           ? const NeverScrollableScrollPhysics()
           : const ClampingScrollPhysics(),
       itemBuilder: (context, index) {
@@ -460,6 +461,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
     widget = Listener(
       onPointerDown: (event) {
         fingers++;
+        if(fingers > 1 && !disableScroll) {
+          setState(() {
+            disableScroll = true;
+          });
+        }
         futurePosition = null;
         if (_isMouseScrolling) {
           setState(() {
@@ -469,6 +475,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
       },
       onPointerUp: (event) {
         fingers--;
+        if(fingers <= 1 && disableScroll) {
+          setState(() {
+            disableScroll = false;
+          });
+        }
       },
       onPointerPanZoomUpdate: (event) {
         if (event.scale == 1.0) {
