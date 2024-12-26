@@ -212,7 +212,11 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     if(history != null) {
       history!.page = page;
       history!.ep = chapter;
+      if (maxPage > 1) {
+        history!.maxPage = maxPage;
+      }
       history!.readEpisode.add(chapter);
+      history!.time = DateTime.now();
       HistoryManager().addHistory(history!);
     }
   }
