@@ -390,6 +390,19 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   );
                 },
               ),
+              if (appdata.settings["onClickFavorite"] == "viewDetail")
+                MenuEntry(
+                  icon: Icons.menu_book_outlined,
+                  text: "Read".tl,
+                  onClick: () {
+                    App.mainNavigatorKey?.currentContext?.to(
+                      () => ReaderWithLoading(
+                        id: c.id,
+                        sourceKey: c.sourceKey,
+                      ),
+                    );
+                  },
+                ),
             ];
           },
           onTap: (c) {
