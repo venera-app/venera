@@ -39,7 +39,7 @@ class ImportComic {
 
   Future<bool> multipleCbz() async {
     var picker = DirectoryPicker();
-    var dir = await picker.pickDirectory();
+    var dir = await picker.pickDirectory(directAccess: true);
     if (dir != null) {
       var files = (await dir.list().toList()).whereType<File>().toList();
       files.removeWhere((e) => e.extension != 'cbz' && e.extension != 'zip');

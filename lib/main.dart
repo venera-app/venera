@@ -156,30 +156,40 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       home = const MainPage();
     }
     return DynamicColorBuilder(builder: (light, dark) {
-      if (appdata.settings['color'] != 'system' || light == null || dark == null) {
+      if (appdata.settings['color'] != 'system' ||
+          light == null ||
+          dark == null) {
         var color = translateColorSetting();
         light = ColorScheme.fromSeed(
           seedColor: color,
+          surface: Colors.white,
         );
         dark = ColorScheme.fromSeed(
           seedColor: color,
           brightness: Brightness.dark,
+          surface: Colors.black,
+        );
+      } else {
+        light = ColorScheme.fromSeed(
+          seedColor: light.primary,
+          surface: Colors.white,
+        );
+        dark = ColorScheme.fromSeed(
+          seedColor: dark.primary,
+          brightness: Brightness.dark,
+          surface: Colors.black,
         );
       }
       return MaterialApp(
         home: home,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: light.copyWith(
-            surface: Colors.white,
-          ),
+          colorScheme: light,
           fontFamily: App.isWindows ? "Microsoft YaHei" : null,
         ),
         navigatorKey: App.rootNavigatorKey,
         darkTheme: ThemeData(
-          colorScheme: dark.copyWith(
-            surface: Colors.black,
-          ),
+          colorScheme: dark,
           fontFamily: App.isWindows ? "Microsoft YaHei" : null,
         ),
         themeMode: switch (appdata.settings['theme_mode']) {
@@ -211,8 +221,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ],
         builder: (context, widget) {
           ErrorWidget.builder = (details) {
-            Log.error(
-                "Unhandled Exception", "${details.exception}\n${details.stack}");
+            Log.error("Unhandled Exception",
+                "${details.exception}\n${details.stack}");
             return Material(
               child: Center(
                 child: Text(details.exception.toString()),

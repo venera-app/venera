@@ -293,6 +293,7 @@ class ContentDialog extends StatelessWidget {
           : const EdgeInsets.symmetric(horizontal: 16),
       elevation: 2,
       shadowColor: context.colorScheme.shadow,
+      backgroundColor: context.colorScheme.surface,
       child: AnimatedSize(
         duration: const Duration(milliseconds: 200),
         alignment: Alignment.topCenter,

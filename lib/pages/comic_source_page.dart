@@ -163,6 +163,9 @@ class _BodyState extends State<_Body> {
                 break;
               }
             }
+          } else {
+            current = item.value['options']
+                .firstWhere((e) => e['value'] == current)['text'] ?? current;
           }
           yield ListTile(
             title: Text((item.value['title'] as String).ts(source.key)),
