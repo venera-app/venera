@@ -4,6 +4,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/utils/cbz.dart';
@@ -140,6 +141,17 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           addFavorite(selectedComics.keys.toList());
         },
       ),
+      if (selectedComics.length == 1)
+        MenuEntry(
+          icon: Icons.chrome_reader_mode_outlined,
+          text: "View Detail".tl,
+          onClick: () {
+            context.to(() => ComicPage(
+              id: selectedComics.keys.first.id,
+              sourceKey: selectedComics.keys.first.sourceKey,
+            ));
+          },
+        ),
       if (selectedComics.length == 1)
         ...exportActions(selectedComics.keys.first),
     ]);
