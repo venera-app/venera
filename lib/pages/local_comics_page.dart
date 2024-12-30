@@ -404,8 +404,9 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
               var file = await CBZ.export(c);
               await saveFile(filename: file.name, file: file);
               await file.delete();
-            } catch (e) {
+            } catch (e, s) {
               context.showMessage(message: e.toString());
+              Log.error("CBZ Export", e, s);
             }
             controller.close();
           }),
