@@ -123,6 +123,8 @@ class _Settings with ChangeNotifier {
     'ignoreCertificateErrors': false,
     'authorizationRequired': false,
     'onClickFavorite': 'viewDetail', // viewDetail, read
+    'enableDnsOverrides': false,
+    'dnsOverrides': {},
   };
 
   operator [](String key) {

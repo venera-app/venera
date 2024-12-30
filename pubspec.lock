@@ -408,8 +408,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "1657f62fe7545ac43a339e0a5ee2b82bacd81e9f"
-      resolved-ref: "1657f62fe7545ac43a339e0a5ee2b82bacd81e9f"
+      ref: "9c99ac258a11f8e91761a5466a190efba3ca64af"
+      resolved-ref: "9c99ac258a11f8e91761a5466a190efba3ca64af"
       url: "https://github.com/wgh136/flutter_qjs"
     source: git
     version: "0.3.7"
@@ -1125,10 +1125,10 @@ packages:
     dependency: "direct main"
     description:
       name: zip_flutter
-      sha256: "955b53d58709fcd9feefbed3d41b5522bc5273e677603e9fc67017a81e568d24"
+      sha256: be21152c35fcb6d0ef4ce89fc3aed681f7adc0db5490ca3eb5893f23fd20e646
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.5"
+    version: "0.0.6"
 sdks:
   dart: ">=3.6.0 <4.0.0"
   flutter: ">=3.27.1"

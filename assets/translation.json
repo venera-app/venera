@@ -258,7 +258,9 @@
     "View Detail": "查看详情",
     "Select a directory which contains multiple cbz/zip files." : "选择一个包含多个cbz/zip文件的目录",
     "Multiple cbz files" : "多个cbz文件",
-    "No valid comics found" : "未找到有效的漫画"
+    "No valid comics found" : "未找到有效的漫画",
+    "Enable DNS Overrides": "启用DNS覆写",
+    "DNS Overrides": "DNS覆写"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -519,6 +521,8 @@
     "View Detail": "查看詳情",
     "Select a directory which contains multiple cbz/zip files." : "選擇一個包含多個cbz/zip文件的目錄",
     "Multiple cbz files" : "多個cbz文件",
-    "No valid comics found" : "未找到有效的漫畫"
+    "No valid comics found" : "未找到有效的漫畫",
+    "Enable DNS Overrides": "啟用DNS覆寫",
+    "DNS Overrides": "DNS覆寫"
   }
 }
