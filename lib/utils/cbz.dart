@@ -208,6 +208,7 @@ abstract class CBZ {
       ),
     );
     var cbz = File(FilePath.join(App.cachePath, sanitizeFileName('${comic.title}.cbz')));
+    if (cbz.existsSync()) cbz.deleteSync();
     await _compress(cache.path, cbz.path);
     cache.deleteSync(recursive: true);
     return cbz;
