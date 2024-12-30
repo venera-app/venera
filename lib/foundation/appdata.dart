@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/io.dart';
 
 class _Appdata {
@@ -24,6 +25,7 @@ class _Appdata {
     var file = File(FilePath.join(App.dataPath, 'appdata.json'));
     await file.writeAsString(data);
     _isSavingData = false;
+    DataSync().uploadData();
   }
 
   void addSearchHistory(String keyword) {
