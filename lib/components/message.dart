@@ -5,6 +5,7 @@ void showToast({
   required BuildContext context,
   Widget? icon,
   Widget? trailing,
+  int? seconds,
 }) {
   var newEntry = OverlayEntry(
       builder: (context) => _ToastOverlay(
@@ -17,7 +18,7 @@ void showToast({
 
   state?.addOverlay(newEntry);
 
-  Timer(const Duration(seconds: 2), () => state?.remove(newEntry));
+  Timer(Duration(seconds: seconds ?? 2), () => state?.remove(newEntry));
 }
 
 class _ToastOverlay extends StatelessWidget {

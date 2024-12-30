@@ -237,52 +237,90 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool isLiked() {
     String cid = context.reader.cid;
-    int chapter = context.reader.chapter;
+    String eid = context.reader.eid;
     int page = context.reader.page;
     String sourceKey = context.reader.type.sourceKey;
-    String id = "$sourceKey-$cid";
-    return ImageFavoriteManager.isHas(id, chapter, page);
+    return ImageFavoriteManager.isHas(cid, sourceKey, eid, page);
   }
 
   void imageFavoritesAction() {
     try {
-      String cid = context.reader.cid;
+      String id = context.reader.cid;
       String eid = context.reader.eid;
-      int page = context.reader.page - 1;
+      String title = context.reader.history!.title;
+      String subTitle = context.reader.history!.subtitle;
+      int maxPage = context.reader.history!.maxPage ?? 1;
+      int ep = context.reader.chapter;
+      int page = context.reader.page;
       String sourceKey = context.reader.type.sourceKey;
-      String imageKey = context.reader.images![page];
-      String id = "$sourceKey-$cid";
+      String imageKey = context.reader.images![page - 1];
+      List<String> tags = [];
+
+      String author = "";
+      var epName = context.reader.widget.chapters?.values
+              .elementAtOrNull(context.reader.chapter - 1) ??
+          "E${context.reader.chapter}";
+      Object comicDetails = context.reader.comicDetails;
+      if (comicDetails is ComicDetails) {
+        ImageFavoritesSomething something =
+            ImageFavoritesComic.getSomethingFromComicDetails(comicDetails, ep);
+        tags = something.tags;
+        author = something.author;
+      } else if (comicDetails is LocalComic) {
+        tags = comicDetails.tags;
+      }
+      var translatedTags = ImageFavoritesComic.tagsToTranslated(tags);
+
       if (isLiked()) {
-        ImageFavoriteManager.remove(id, int.parse(eid), page);
-        showToast(message: "成功取消收藏图片".tl, context: context);
-      } else {
-        var otherInfo = <String, dynamic>{"imageKey": imageKey};
-        // 如果是手动收藏的就标记一下, 避免把它误删除了
-        if (page == 0) {
-          otherInfo["notAuto"] = true;
-        } else {
-          ImageFavoriteManager.add(ImageFavorite(
-              id,
-              "",
-              context.reader.widget.name,
-              DateTime.now(),
-              int.parse(eid),
-              page,
-              otherInfo));
+        if (page == ImageFavoritesEp.firstPage) {
+          showToast(message: "封面不能在此取消收藏".tl, context: context);
+          return;
         }
-        ImageFavoriteManager.add(ImageFavorite(
+        ImageFavoriteManager.deleteImageFavoritePro([
+          ImageFavoritePro(page, imageKey, null, eid, id, ep, sourceKey, epName)
+        ]);
+        showToast(message: "取消收藏图片".tl, context: context);
+      } else {
+        ImageFavoritesComic? imageFavoritesComic = ImageFavoriteManager
+            .imageFavoritesComicList
+            .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
+        imageFavoritesComic ??= ImageFavoritesComic(
             id,
-            "",
-            context.reader.widget.name,
+            [],
+            title,
+            sourceKey,
+            tags,
+            translatedTags,
             DateTime.now(),
-            int.parse(eid),
-            page,
-            otherInfo));
+            author,
+            {},
+            subTitle,
+            maxPage);
+        ImageFavoritePro imageFavoritePro = ImageFavoritePro(
+            page, imageKey, null, eid, id, ep, sourceKey, epName);
+        ImageFavoritesEp? imageFavoritesEp = imageFavoritesComic
+            .imageFavoritesEp
+            .firstWhereOrNull((e) => e.eid == eid);
+        if (imageFavoritesEp == null) {
+          ImageFavoritePro copy = ImageFavoritePro.copy(imageFavoritePro);
+          copy.page = ImageFavoritesEp.firstPage;
+          copy.imageKey = context.reader.images![0];
+          copy.isAutoFavorite = true;
+          // 塞一个封面进去
+          imageFavoritesEp = ImageFavoritesEp(
+              eid, ep, [copy, imageFavoritePro], epName, maxPage);
+          imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
+        } else {
+          imageFavoritesEp.imageFavorites.add(imageFavoritePro);
+        }
+
+        ImageFavoriteManager.addOrUpdateOrDelete(imageFavoritesComic);
         showToast(message: "成功收藏图片".tl, context: context);
       }
       update();
-    } catch (e) {
-      showToast(message: e.toString(), context: context);
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
+      showToast(message: e.toString(), context: context, seconds: 1);
     }
   }
 

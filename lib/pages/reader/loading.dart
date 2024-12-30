@@ -5,11 +5,17 @@ class ReaderWithLoading extends StatefulWidget {
     super.key,
     required this.id,
     required this.sourceKey,
+    this.initialEp,
+    this.initialPage,
   });
 
   final String id;
 
   final String sourceKey;
+
+  final int? initialEp;
+
+  final int? initialPage;
 
   @override
   State<ReaderWithLoading> createState() => _ReaderWithLoadingState();
@@ -25,8 +31,9 @@ class _ReaderWithLoadingState
       name: data.name,
       chapters: data.chapters,
       history: data.history,
-      initialChapter: data.history.ep,
-      initialPage: data.history.page,
+      initialChapter: widget.initialEp ?? data.history.ep,
+      initialPage: widget.initialPage ?? data.history.page,
+      comicDetails: data.comicDetails,
     );
   }
 
@@ -47,17 +54,17 @@ class _ReaderWithLoadingState
       }
       return Res(
         ReaderProps(
-          type: ComicType.fromKey(widget.sourceKey),
-          cid: widget.id,
-          name: localComic.title,
-          chapters: localComic.chapters,
-          history: history ??
-              History.fromModel(
-                model: localComic,
-                ep: 0,
-                page: 0,
-              ),
-        ),
+            type: ComicType.fromKey(widget.sourceKey),
+            cid: widget.id,
+            name: localComic.title,
+            chapters: localComic.chapters,
+            history: history ??
+                History.fromModel(
+                  model: localComic,
+                  ep: 0,
+                  page: 0,
+                ),
+            comicDetails: localComic),
       );
     } else {
       var comic = await comicSource.loadComicInfo!(widget.id);
@@ -66,17 +73,17 @@ class _ReaderWithLoadingState
       }
       return Res(
         ReaderProps(
-          type: ComicType.fromKey(widget.sourceKey),
-          cid: widget.id,
-          name: comic.data.title,
-          chapters: comic.data.chapters,
-          history: history ??
-              History.fromModel(
-                model: comic.data,
-                ep: 0,
-                page: 0,
-              ),
-        ),
+            type: ComicType.fromKey(widget.sourceKey),
+            cid: widget.id,
+            name: comic.data.title,
+            chapters: comic.data.chapters,
+            history: history ??
+                History.fromModel(
+                  model: comic.data,
+                  ep: 0,
+                  page: 0,
+                ),
+            comicDetails: comic.data),
       );
     }
   }
@@ -92,6 +99,8 @@ class ReaderProps {
   final Map<String, String>? chapters;
 
   final History history;
+  // 缺少作者, 现在的作者都是上传者
+  final Object comicDetails;
 
   const ReaderProps({
     required this.type,
@@ -99,5 +108,6 @@ class ReaderProps {
     required this.name,
     required this.chapters,
     required this.history,
+    required this.comicDetails,
   });
 }

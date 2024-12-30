@@ -3,12 +3,16 @@ part of 'image_favorites_page.dart';
 class ImageFavoritesPhotoView extends StatefulWidget {
   const ImageFavoritesPhotoView(
       {super.key,
-      required this.imageFavoritesGroup,
-      required this.page,
-      required this.curImageFavoritesGroup});
-  final ImageFavoritesGroup imageFavoritesGroup;
-  final int page;
-  final List<ImageFavoritesGroup> curImageFavoritesGroup;
+      required this.imageFavoritesComic,
+      required this.imageFavoritePro,
+      required this.finalImageFavoritesComicList,
+      required this.goComicInfo,
+      required this.goReaderPage});
+  final ImageFavoritesComic imageFavoritesComic;
+  final ImageFavoritePro imageFavoritePro;
+  final List<ImageFavoritesComic> finalImageFavoritesComicList;
+  final Function(ImageFavoritesComic) goComicInfo;
+  final Function(ImageFavoritesComic, int, int) goReaderPage;
   @override
   State<ImageFavoritesPhotoView> createState() =>
       ImageFavoritesPhotoViewState();
@@ -19,25 +23,27 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   Map<ImageFavorite, bool> cancelImageFavorites = {};
   // 图片当前的 index
   late int curIndex;
-  late int curImageFavoritesGroupIndex;
+  late int curImageFavoritesComicIndex;
   @override
   void initState() {
-    curIndex = widget.imageFavoritesGroup.imageFavorites.indexWhere((ele) {
-      return ele.page == widget.page;
+    curIndex =
+        widget.imageFavoritesComic.sortedImageFavoritePros.indexWhere((ele) {
+      return ele.page == widget.imageFavoritePro.page &&
+          ele.eid == widget.imageFavoritePro.eid;
     });
     controller = PageController(initialPage: curIndex);
-    curImageFavoritesGroupIndex =
-        widget.curImageFavoritesGroup.indexWhere((ele) {
-      return ele.id == widget.imageFavoritesGroup.id;
+    curImageFavoritesComicIndex =
+        widget.finalImageFavoritesComicList.indexWhere((ele) {
+      return ele.id == widget.imageFavoritesComic.id;
     });
     super.initState();
   }
 
   void onPop() {}
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
-    final ImageFavorite curImageFavorite = widget
-        .curImageFavoritesGroup[curImageFavoritesGroupIndex]
-        .imageFavorites[index];
+    final ImageFavoritePro curImageFavorite = widget
+        .finalImageFavoritesComicList[curImageFavoritesComicIndex]
+        .sortedImageFavoritePros[index];
     return PhotoViewGalleryPageOptions(
         // 图片加载器 支持本地、网络
         imageProvider: ImageFavoritesProvider(curImageFavorite),
@@ -50,13 +56,21 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
         });
   }
 
+  Future<Uint8List?> _getCurrentImageData(ImageFavoritePro temp) async {
+    return (await CacheManager()
+            .findCache(ImageFavoritesProvider.getImageKey(temp)))!
+        .readAsBytes();
+  }
+
   @override
   Widget build(BuildContext context) {
-    ImageFavoritesGroup curGroup =
-        widget.curImageFavoritesGroup[curImageFavoritesGroupIndex];
-    ImageFavorite curImageFavorite = curGroup.imageFavorites[curIndex];
+    ImageFavoritesComic curComic =
+        widget.finalImageFavoritesComicList[curImageFavoritesComicIndex];
+    ImageFavoritePro curImageFavorite =
+        curComic.sortedImageFavoritePros[curIndex];
     int curPage = curImageFavorite.page;
-    String pageText = curPage == 0 ? 'cover'.tl : (curPage + 1).toString();
+    String pageText =
+        curPage == ImageFavoritesEp.firstPage ? 'cover'.tl : curPage.toString();
     return PopScope(
       onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) {
@@ -69,7 +83,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
             color: context.colorScheme.surface,
           ),
           builder: _buildItem,
-          itemCount: curGroup.imageFavorites.length,
+          itemCount: curComic.sortedImageFavoritePros.length,
           loadingBuilder: (context, event) => Center(
             child: SizedBox(
               width: 20.0,
@@ -99,7 +113,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              curGroup.title,
+              curComic.title,
               style: ts.s18,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -114,11 +128,11 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
             IconButton(
               icon: Icon(Icons.arrow_circle_left),
               onPressed: () {
-                if (curImageFavoritesGroupIndex == 0) {
-                  curImageFavoritesGroupIndex =
-                      widget.curImageFavoritesGroup.length - 1;
+                if (curImageFavoritesComicIndex == 0) {
+                  curImageFavoritesComicIndex =
+                      widget.finalImageFavoritesComicList.length - 1;
                 } else {
-                  curImageFavoritesGroupIndex -= 1;
+                  curImageFavoritesComicIndex -= 1;
                 }
                 curIndex = 0;
                 controller.jumpToPage(0);
@@ -139,25 +153,38 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
                 setState(() {});
               },
             ),
-            Text(
-              pageText,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             IconButton(
               icon: Icon(Icons.play_arrow),
-              onPressed: () {},
+              onPressed: () {
+                widget.goReaderPage(curComic, curImageFavorite.ep, curPage);
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.menu_book),
+              onPressed: () {
+                widget.goComicInfo(curComic);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: () async {
+                var data = await _getCurrentImageData(curImageFavorite);
+                if (data == null) {
+                  return;
+                }
+                var fileType = detectFileType(data);
+                var filename = "${curImageFavorite.page}${fileType.ext}";
+                saveFile(data: data, filename: filename);
+              },
             ),
             IconButton(
               icon: Icon(Icons.arrow_circle_right),
               onPressed: () {
-                if (curImageFavoritesGroupIndex ==
-                    widget.curImageFavoritesGroup.length - 1) {
-                  curImageFavoritesGroupIndex = 0;
+                if (curImageFavoritesComicIndex ==
+                    widget.finalImageFavoritesComicList.length - 1) {
+                  curImageFavoritesComicIndex = 0;
                 } else {
-                  curImageFavoritesGroupIndex += 1;
+                  curImageFavoritesComicIndex += 1;
                 }
                 curIndex = 0;
                 controller.jumpToPage(0);
@@ -167,8 +194,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
           ]),
         ),
         Positioned(
-            bottom: 33,
-            right: 20,
+            top: 70,
             child: IntrinsicWidth(
               stepWidth: 0,
               child: Container(
@@ -178,7 +204,8 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
                   color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text("${curIndex + 1}/${curGroup.imageFavorites.length}",
+                child: Text(
+                    "${curImageFavorite.epName} : $pageText : ${curIndex + 1}/${curComic.sortedImageFavoritePros.length}",
                     style: ts.s12),
               ),
             ))

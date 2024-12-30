@@ -119,6 +119,7 @@ class LocalComic with HistoryMixin implements Comic {
               ep: 0,
               page: 0,
             ),
+        comicDetails: this,
       ),
     );
   }
@@ -266,7 +267,7 @@ class LocalManager with ChangeNotifier {
   String findValidId(ComicType type) {
     final res = _db.select(
       '''
-      SELECT id FROM comics WHERE comic_type = ? 
+      SELECT id FROM comics WHERE comic_type = ?
       ORDER BY CAST(id AS INTEGER) DESC
       LIMIT 1;
       ''',
@@ -318,8 +319,8 @@ class LocalManager with ChangeNotifier {
   List<LocalComic> getComics(LocalSortType sortType) {
     var res = _db.select('''
       SELECT * FROM comics
-      ORDER BY 
-        ${sortType.value == 'name' ? 'title' : 'created_at'} 
+      ORDER BY
+        ${sortType.value == 'name' ? 'title' : 'created_at'}
         ${sortType.value == 'time_asc' ? 'ASC' : 'DESC'}
       ;
     ''');
@@ -361,7 +362,7 @@ class LocalManager with ChangeNotifier {
 
   LocalComic? findByName(String name) {
     final res = _db.select('''
-      SELECT * FROM comics 
+      SELECT * FROM comics
       WHERE title = ? OR directory = ?;
     ''', [name, name]);
     if (res.isEmpty) {

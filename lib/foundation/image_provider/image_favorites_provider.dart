@@ -13,16 +13,15 @@ class ImageFavoritesProvider
   /// [url] is the url of the image. Local file path is also supported.
   const ImageFavoritesProvider(this.imageFavorite);
 
-  final ImageFavorite imageFavorite;
+  final ImageFavoritePro imageFavorite;
 
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
-    String? imageKey = imageFavorite.otherInfo["imageKey"];
-    List<String> ids = imageFavorite.id.split('-');
-    String sourceKey = ids[0];
-    String cid = ids[1];
-    String eid = imageFavorite.ep.toString();
-    if (imageKey == null) {
+    String? imageKey = imageFavorite.imageKey;
+    String sourceKey = imageFavorite.sourceKey;
+    String cid = imageFavorite.id;
+    String eid = imageFavorite.eid;
+    if (imageKey == "") {
       throw "Error: imageFavorits no imageKey";
     }
     await for (var progress
@@ -43,7 +42,11 @@ class ImageFavoritesProvider
     return SynchronousFuture(this);
   }
 
+  static String getImageKey(ImageFavoritePro temp) {
+    return "${temp.imageKey}@${temp.sourceKey}@${temp.id}@${temp.eid}";
+  }
+
+  // 和 reader_image 的一样
   @override
-  String get key =>
-      "imageFavorite${imageFavorite.id}${imageFavorite.ep}${imageFavorite.page}";
+  String get key => getImageKey(imageFavorite);
 }

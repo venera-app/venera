@@ -27,8 +27,10 @@ import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/data_sync.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'package:venera/utils/volume.dart';
 import 'package:window_manager/window_manager.dart';
@@ -57,9 +59,12 @@ class Reader extends StatefulWidget {
     required this.history,
     this.initialPage,
     this.initialChapter,
+    required this.comicDetails,
   });
 
   final ComicType type;
+
+  final Object comicDetails;
 
   final String cid;
 
@@ -95,6 +100,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   String get cid => widget.cid;
 
+  Object get comicDetails => widget.comicDetails;
+
   String get eid => widget.chapters?.keys.elementAt(chapter - 1) ?? '0';
 
   List<String>? images;
@@ -114,12 +121,14 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   void _checkImagesPerPageChange() {
     int currentImagesPerPage = imagesPerPage;
     if (_lastImagesPerPage != currentImagesPerPage) {
-      _adjustPageForImagesPerPageChange(_lastImagesPerPage, currentImagesPerPage);
+      _adjustPageForImagesPerPageChange(
+          _lastImagesPerPage, currentImagesPerPage);
       _lastImagesPerPage = currentImagesPerPage;
     }
   }
 
-  void _adjustPageForImagesPerPageChange(int oldImagesPerPage, int newImagesPerPage) {
+  void _adjustPageForImagesPerPageChange(
+      int oldImagesPerPage, int newImagesPerPage) {
     int previousImageIndex = (page - 1) * oldImagesPerPage;
     int newPage = (previousImageIndex ~/ newImagesPerPage) + 1;
     page = newPage;
@@ -144,7 +153,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       updateHistory();
     });
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    if(appdata.settings['enableTurnPageByVolumeKey']) {
+    if (appdata.settings['enableTurnPageByVolumeKey']) {
       handleVolumeEvent();
     }
     setImageCacheSize();
@@ -164,7 +173,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     } else {
       maxImageCacheSize = 500 << 20;
     }
-    Log.info("Reader", "Detect available RAM: $availableRAM, set image cache size to $maxImageCacheSize");
+    Log.info("Reader",
+        "Detect available RAM: $availableRAM, set image cache size to $maxImageCacheSize");
     PaintingBinding.instance.imageCache.maximumSizeBytes = maxImageCacheSize;
   }
 
@@ -209,7 +219,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   void updateHistory() {
-    if(history != null) {
+    if (history != null) {
       history!.page = page;
       history!.ep = chapter;
       if (maxPage > 1) {
@@ -222,11 +232,11 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   void handleVolumeEvent() {
-    if(!App.isAndroid) {
+    if (!App.isAndroid) {
       // Currently only support Android
       return;
     }
-    if(volumeListener != null) {
+    if (volumeListener != null) {
       volumeListener?.cancel();
     }
     volumeListener = VolumeListener(
@@ -240,7 +250,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   void stopVolumeEvent() {
-    if(volumeListener != null) {
+    if (volumeListener != null) {
       volumeListener?.cancel();
       volumeListener = null;
     }
@@ -300,7 +310,8 @@ abstract mixin class _ReaderLocation {
   bool toPage(int page) {
     if (_validatePage(page)) {
       if (page == this.page) {
-        if(!(chapter == 1 && page == 1) && !(chapter == maxChapter && page == maxPage)) {
+        if (!(chapter == 1 && page == 1) &&
+            !(chapter == maxChapter && page == maxPage)) {
           return false;
         }
       }

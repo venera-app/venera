@@ -11,6 +11,7 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:zip_flutter/zip_flutter.dart';
 
 import 'io.dart';
@@ -196,21 +197,42 @@ Future<void> importPicaData(File file) async {
             }),
           );
         }
+        List<ImageFavoritesComic> imageFavoritesComicList = [];
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
-          var otherInfo = jsonDecode(comic["other"]);
-          // 就洗一个较为通用的 url 的数据, 别的就不洗了
-          otherInfo["imageKey"] = otherInfo["url"];
-          ImageFavoriteManager.add(
-            ImageFavorite.fromMap({
-              "id": comic['id'],
-              "title": comic["title"],
-              "time": comic["time"],
-              "imagePath": comic["cover"],
-              "ep": comic["ep"],
-              "page": comic["page"],
-              "otherInfo": otherInfo,
-            }),
-          );
+          String sourceKey = comic["id"].split("-")[0];
+          if (sourceKey == "htManga") {
+            sourceKey = "wnacg";
+          }
+          if (ComicSource.find(sourceKey) == null) {
+            continue;
+          }
+          String id = comic["id"].split("-")[1];
+          int page = comic["page"];
+          int ep = comic["ep"];
+          String title = comic["title"];
+          String epName = comic["epName"];
+          ImageFavoritesComic? tempComic =
+              ImageFavoriteManager.findFromComicList(
+                  imageFavoritesComicList, id, sourceKey, ep, page);
+          ImageFavoritePro curImageFavorite =
+              ImageFavoritePro(page, "", null, "", id, ep, sourceKey, epName);
+          if (tempComic == null) {
+            tempComic = ImageFavoritesComic(id, [], title, sourceKey, [], [],
+                DateTime.now(), "", {}, "", 1);
+            tempComic.imageFavoritesEp = [
+              ImageFavoritesEp("", ep, [curImageFavorite], epName, 1)
+            ];
+          } else {
+            ImageFavoritesEp? tempEp =
+                tempComic.imageFavoritesEp.firstWhereOrNull((e) => e.ep == ep);
+            if (tempEp == null) {
+              tempComic.imageFavoritesEp
+                  .add(ImageFavoritesEp("", ep, [curImageFavorite], epName, 1));
+            } else {
+              tempEp.imageFavorites.add(curImageFavorite);
+            }
+          }
+          ImageFavoriteManager.addOrUpdateOrDelete(tempComic);
         }
       } catch (e) {
         Log.error("Import Data", "Failed to import history: $e");
