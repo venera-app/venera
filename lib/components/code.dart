@@ -67,10 +67,6 @@ class _CodeEditorState extends State<CodeEditor> {
                   child: IntrinsicWidth(
                     stepWidth: 100,
                     child: TextField(
-                      style: TextStyle(
-                        fontFamily: 'consolas',
-                        fontFamilyFallback: ['Courier New', 'monospace'],
-                      ),
                       controller: _controller,
                       focusNode: _focusNode,
                       maxLines: null,
@@ -124,6 +120,20 @@ class _CodeTextEditingController extends TextEditingController {
       theme: _theme!,
     );
     var result = highlighter.highlight(text);
+    style = TextStyle(
+      fontFamily: 'consolas',
+      fontFamilyFallback: ['Courier New', 'monospace'],
+    );
+
+    return setTextSpanFont(result, style);
+  }
+
+  TextSpan setTextSpanFont(TextSpan span, TextStyle style) {
+    var result = TextSpan(
+      style: style.merge(span.style),
+      children: span.children?.whereType().map((e) => setTextSpanFont(e, style)).toList(),
+      text: span.text,
+    );
     return result;
   }
 }
