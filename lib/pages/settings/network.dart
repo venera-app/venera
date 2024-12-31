@@ -46,7 +46,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
   String port = '';
   String username = '';
   String password = '';
-  bool ignoreCertificateErrors = false;
 
   // USERNAME:PASSWORD@HOST:PORT
   String toProxyStr() {
@@ -104,8 +103,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
   void initState() {
     var proxy = appdata.settings['proxy'];
     parseProxyString(proxy);
-    ignoreCertificateErrors =
-        appdata.settings['ignoreCertificateErrors'] ?? false;
     super.initState();
   }
 
@@ -151,18 +148,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
               },
             ),
             if (type == 'manual') buildManualProxy(),
-            SwitchListTile(
-              title: Text("Ignore Certificate Errors".tl),
-              value: ignoreCertificateErrors,
-              onChanged: (v) {
-                setState(() {
-                  ignoreCertificateErrors = v;
-                });
-                appdata.settings['ignoreCertificateErrors'] =
-                    ignoreCertificateErrors;
-                appdata.saveData();
-              },
-            ),
           ],
         ),
       ),
