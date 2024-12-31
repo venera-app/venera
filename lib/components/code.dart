@@ -16,6 +16,7 @@ class _CodeEditorState extends State<CodeEditor> {
   late FocusNode _focusNode;
   var horizontalScrollController = ScrollController();
   var verticalScrollController = ScrollController();
+  int lineCount = 1;
 
   @override
   void initState() {
@@ -31,6 +32,13 @@ class _CodeEditorState extends State<CodeEditor> {
         }
         return KeyEventResult.ignored;
       };
+    lineCount = calculateLineCount(widget.initialValue ?? '');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    future = _controller.init(context.brightness);
   }
 
   void handleTab() {
@@ -41,10 +49,40 @@ class _CodeEditorState extends State<CodeEditor> {
     _controller.selection = TextSelection.collapsed(offset: start + 4);
   }
 
+  int calculateLineCount(String text) {
+    return text.split('\n').length;
+  }
+
+  Widget buildLineNumbers() {
+    return SizedBox(
+      width: 14 * 1.5,
+      child: Column(children: [
+        for (var i = 1; i <= lineCount; i++)
+          SizedBox(
+            height: 14 * 1.5,
+            child: Center(
+              child: Text(
+                i.toString(),
+                style: TextStyle(
+                  color: context.colorScheme.outline,
+                  fontSize: 14,
+                  height: 1.0,
+                  fontFamily: 'consolas',
+                  fontFamilyFallback: ['Courier New', 'monospace'],
+                ),
+              ).paddingBottom(6),
+            ),
+          ),
+      ],),
+    ).paddingVertical(8);
+  }
+
+  late Future future;
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _controller.init(context.brightness),
+      future: future,
       builder: (context, value) {
         if (value.connectionState == ConnectionState.waiting) {
           return const SizedBox();
@@ -64,22 +102,37 @@ class _CodeEditorState extends State<CodeEditor> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   controller: horizontalScrollController,
-                  child: IntrinsicWidth(
-                    stepWidth: 100,
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      maxLines: null,
-                      expands: true,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      buildLineNumbers(),
+                      IntrinsicWidth(
+                        stepWidth: 50,
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          maxLines: null,
+                          expands: true,
+                          cursorHeight: 1.5 * 14,
+                          style: TextStyle(
+                            height: 1.5,
+                            fontSize: 14
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.all(8),
+                          ),
+                          onChanged: (value) {
+                            widget.onChanged?.call(value);
+                            if (lineCount != calculateLineCount(value)) {
+                              setState(() {
+                                lineCount = calculateLineCount(value);
+                              });
+                            }
+                          },
+                          scrollController: verticalScrollController,
+                        ),
                       ),
-                      onChanged: (value) {
-                        widget.onChanged?.call(value);
-                      },
-                      scrollController: verticalScrollController,
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -121,17 +174,19 @@ class _CodeTextEditingController extends TextEditingController {
     );
     var result = highlighter.highlight(text);
     style = TextStyle(
+      height: 1.5,
+      fontSize: 14,
       fontFamily: 'consolas',
       fontFamilyFallback: ['Courier New', 'monospace'],
     );
 
-    return setTextSpanFont(result, style);
+    return mergeTextStyle(result, style);
   }
 
-  TextSpan setTextSpanFont(TextSpan span, TextStyle style) {
+  TextSpan mergeTextStyle(TextSpan span, TextStyle style) {
     var result = TextSpan(
       style: style.merge(span.style),
-      children: span.children?.whereType().map((e) => setTextSpanFont(e, style)).toList(),
+      children: span.children?.whereType().map((e) => mergeTextStyle(e, style)).toList(),
       text: span.text,
     );
     return result;
