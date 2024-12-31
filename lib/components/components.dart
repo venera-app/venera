@@ -45,3 +45,4 @@ part 'side_bar.dart';
 part 'comic.dart';
 part 'effects.dart';
 part 'gesture.dart';
+part 'code.dart';

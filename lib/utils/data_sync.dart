@@ -99,7 +99,7 @@ class DataSync with ChangeNotifier {
 
       try {
         appdata.settings['dataVersion']++;
-        await appdata.saveData();
+        await appdata.saveData(false);
         var data = await exportAppData();
         var time =
             (DateTime.now().millisecondsSinceEpoch ~/ 86400000).toString();

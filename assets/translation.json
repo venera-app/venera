@@ -259,7 +259,9 @@
     "Multiple cbz files" : "多个cbz文件",
     "No valid comics found" : "未找到有效的漫画",
     "Enable DNS Overrides": "启用DNS覆写",
-    "DNS Overrides": "DNS覆写"
+    "DNS Overrides": "DNS覆写",
+    "Custom Image Processing": "自定义图片处理",
+    "Enable": "启用"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -521,6 +523,8 @@
     "Multiple cbz files" : "多個cbz文件",
     "No valid comics found" : "未找到有效的漫畫",
     "Enable DNS Overrides": "啟用DNS覆寫",
-    "DNS Overrides": "DNS覆寫"
+    "DNS Overrides": "DNS覆寫",
+    "Custom Image Processing": "自定義圖片處理",
+    "Enable": "啟用"
   }
 }

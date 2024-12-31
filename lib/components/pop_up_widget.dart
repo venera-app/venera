@@ -155,6 +155,9 @@ class _PopUpWidgetScaffoldState extends State<PopUpWidgetScaffold> {
           ),
           NotificationListener<ScrollNotification>(
             onNotification: (notifications) {
+              if (notifications.metrics.axisDirection != AxisDirection.down) {
+                return false;
+              }
               if (notifications.metrics.pixels ==
                       notifications.metrics.minScrollExtent &&
                   !top) {
