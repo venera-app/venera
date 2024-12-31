@@ -55,25 +55,27 @@ class _CodeEditorState extends State<CodeEditor> {
 
   Widget buildLineNumbers() {
     return SizedBox(
-      width: 14 * 1.5,
-      child: Column(children: [
-        for (var i = 1; i <= lineCount; i++)
-          SizedBox(
-            height: 14 * 1.5,
-            child: Center(
-              child: Text(
-                i.toString(),
-                style: TextStyle(
-                  color: context.colorScheme.outline,
-                  fontSize: 14,
-                  height: 1.0,
-                  fontFamily: 'consolas',
-                  fontFamilyFallback: ['Courier New', 'monospace'],
+      width: 32,
+      child: Column(
+        children: [
+          for (var i = 1; i <= lineCount; i++)
+            SizedBox(
+              height: 14 * 1.5,
+              child: Center(
+                child: Text(
+                  i.toString(),
+                  style: TextStyle(
+                    color: context.colorScheme.outline,
+                    fontSize: 13,
+                    height: 1.0,
+                    fontFamily: 'Consolas',
+                    fontFamilyFallback: ['Courier New', 'monospace'],
+                  ),
                 ),
-              ).paddingBottom(6),
+              ),
             ),
-          ),
-      ],),
+        ],
+      ),
     ).paddingVertical(8);
   }
 
@@ -87,52 +89,60 @@ class _CodeEditorState extends State<CodeEditor> {
         if (value.connectionState == ConnectionState.waiting) {
           return const SizedBox();
         }
-        return Scrollbar(
-          thumbVisibility: true,
-          controller: verticalScrollController,
-          notificationPredicate: (notif) => notif.metrics.axis == Axis.vertical,
+        return GestureDetector(
+          onTap: () {
+            _controller.selection = TextSelection.collapsed(
+              offset: _controller.text.length,
+            );
+            _focusNode.requestFocus();
+          },
           child: Scrollbar(
             thumbVisibility: true,
-            controller: horizontalScrollController,
+            controller: verticalScrollController,
             notificationPredicate: (notif) =>
-                notif.metrics.axis == Axis.horizontal,
-            child: SizedBox.expand(
-              child: ScrollConfiguration(
-                behavior: _CustomScrollBehavior(),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  controller: horizontalScrollController,
-                  child: Row(
-                    children: [
-                      buildLineNumbers(),
-                      IntrinsicWidth(
-                        stepWidth: 50,
-                        child: TextField(
-                          controller: _controller,
-                          focusNode: _focusNode,
-                          maxLines: null,
-                          expands: true,
-                          cursorHeight: 1.5 * 14,
-                          style: TextStyle(
-                            height: 1.5,
-                            fontSize: 14
+                notif.metrics.axis == Axis.vertical,
+            child: Scrollbar(
+              thumbVisibility: true,
+              controller: horizontalScrollController,
+              notificationPredicate: (notif) =>
+                  notif.metrics.axis == Axis.horizontal,
+              child: SizedBox.expand(
+                child: ScrollConfiguration(
+                  behavior: _CustomScrollBehavior(),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: horizontalScrollController,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      controller: verticalScrollController,
+                      child: Row(
+                        children: [
+                          buildLineNumbers(),
+                          IntrinsicWidth(
+                            stepWidth: 100,
+                            child: TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              maxLines: null,
+                              cursorHeight: 1.5 * 14,
+                              style: TextStyle(height: 1.5, fontSize: 14),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(8),
+                              ),
+                              onChanged: (value) {
+                                widget.onChanged?.call(value);
+                                if (lineCount != calculateLineCount(value)) {
+                                  setState(() {
+                                    lineCount = calculateLineCount(value);
+                                  });
+                                }
+                              },
+                            ),
                           ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.all(8),
-                          ),
-                          onChanged: (value) {
-                            widget.onChanged?.call(value);
-                            if (lineCount != calculateLineCount(value)) {
-                              setState(() {
-                                lineCount = calculateLineCount(value);
-                              });
-                            }
-                          },
-                          scrollController: verticalScrollController,
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -176,8 +186,8 @@ class _CodeTextEditingController extends TextEditingController {
     style = TextStyle(
       height: 1.5,
       fontSize: 14,
-      fontFamily: 'consolas',
-      fontFamilyFallback: ['Courier New', 'monospace'],
+      fontFamily: 'Consolas',
+      fontFamilyFallback: ['Courier New', 'Roboto Mono', 'monospace'],
     );
 
     return mergeTextStyle(result, style);
@@ -186,7 +196,10 @@ class _CodeTextEditingController extends TextEditingController {
   TextSpan mergeTextStyle(TextSpan span, TextStyle style) {
     var result = TextSpan(
       style: style.merge(span.style),
-      children: span.children?.whereType().map((e) => mergeTextStyle(e, style)).toList(),
+      children: span.children
+          ?.whereType()
+          .map((e) => mergeTextStyle(e, style))
+          .toList(),
       text: span.text,
     );
     return result;
