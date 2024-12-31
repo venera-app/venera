@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/app_page_route.dart';
 import 'package:venera/foundation/appdata.dart';
