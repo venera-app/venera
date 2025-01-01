@@ -29,6 +29,7 @@ class CustomListItem<T> {
 }
 
 enum TimeFilterEnum {
+  all("all"),
   lastWeek("lastWeek"),
   lastMonth("lastMonth"),
   lastHalfYear("lastHalfYear"),
@@ -47,18 +48,22 @@ enum TimeFilterEnum {
 }
 
 const timeFilterList = [
+  TimeFilterEnum.all,
   TimeFilterEnum.lastWeek,
   TimeFilterEnum.lastMonth,
   TimeFilterEnum.lastHalfYear,
   TimeFilterEnum.lastYear,
 ];
-
+const numFilterList = ['0', '1', '2', '5', '10', '20', '50', '100'];
 getDateTimeRangeFromFilter(String timeFilter) {
   DateTime now = DateTime.now();
   DateTime start = now;
   DateTime end = now;
   try {
-    if (timeFilter == TimeFilterEnum.lastWeek.name) {
+    if (timeFilter == TimeFilterEnum.all.name) {
+      start = DateTime(2025, 1, 1);
+      end = DateTime(2099, 12, 31);
+    } else if (timeFilter == TimeFilterEnum.lastWeek.name) {
       start = now.subtract(const Duration(days: 7));
     } else if (timeFilter == TimeFilterEnum.lastMonth.name) {
       start = now.subtract(const Duration(days: 30));

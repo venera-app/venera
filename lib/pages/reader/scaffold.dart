@@ -245,11 +245,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   void imageFavoritesAction() {
     try {
+      if (context.reader.images![0].contains('file:///')) {
+        showToast(message: "本地收藏暂不支持".tl, context: context);
+        return;
+      }
       String id = context.reader.cid;
       String eid = context.reader.eid;
       String title = context.reader.history!.title;
       String subTitle = context.reader.history!.subtitle;
-      int maxPage = context.reader.history!.maxPage ?? 1;
+      int maxPage = context.reader.images!.length;
       int ep = context.reader.chapter;
       int page = context.reader.page;
       String sourceKey = context.reader.type.sourceKey;

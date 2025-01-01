@@ -17,7 +17,9 @@ import 'package:venera/utils/translations.dart';
 import 'comic_page.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final List<String>? initialOptions;
+
+  const SearchPage({super.key, this.initialOptions});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -138,6 +140,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void initState() {
+    options = widget.initialOptions ?? [];
     var defaultSearchTarget = appdata.settings['defaultSearchTarget'];
     if (defaultSearchTarget != null &&
         ComicSource.find(defaultSearchTarget) != null) {

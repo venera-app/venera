@@ -64,7 +64,9 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
         ele.imageKey = images[ele.page - 1];
       }
       ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     }
     isImageKeyLoading = false;
   }
@@ -182,7 +184,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                     height: 128,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.medium,
-                    onError: () {
+                    onError: (Object error, StackTrace? stackTrace) {
                       refreshImageKey(curImageFavoritesEp);
                       hasRefreshImageKeyOnErr = true;
                     },

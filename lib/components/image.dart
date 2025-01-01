@@ -172,6 +172,8 @@ class _AnimatedImageState extends State<AnimatedImage>
         _handleImageFrame,
         onChunk: _handleImageChunk,
         onError: (Object error, StackTrace? stackTrace) {
+          // 图片加错错误回调
+          widget.onError?.call(error, stackTrace);
           setState(() {
             _lastException = error;
           });

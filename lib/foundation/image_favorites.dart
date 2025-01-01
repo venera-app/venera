@@ -40,9 +40,20 @@ class ImageFavoritePro extends ImageFavorite {
       'id': id,
       'ep': ep,
       'sourceKey': sourceKey,
+      'epName': epName,
     };
   }
 
+  ImageFavoritePro.fromJson(Map<String, dynamic> json)
+      : this(
+            json['page'],
+            json['imageKey'],
+            json['isAutoFavorite'],
+            json['eid'],
+            json['id'],
+            json['ep'],
+            json['sourceKey'],
+            json['epName']);
   // 复制构造函数
   ImageFavoritePro.copy(ImageFavoritePro other)
       : this(other.page, other.imageKey, other.isAutoFavorite, other.eid,
@@ -71,6 +82,13 @@ class ImageFavoritesEp {
     };
   }
 
+  ImageFavoritesEp.fromJson(Map<String, dynamic> json)
+      : eid = json['eid'],
+        ep = json['ep'],
+        imageFavorites = List<ImageFavoritePro>.from(
+            json['imageFavorites'].map((e) => ImageFavoritePro.fromJson(e))),
+        epName = json['epName'],
+        maxPage = json['maxPage'];
   // 是否有封面
   bool get isHasFirstPage {
     return imageFavorites[0].page == firstPage;
@@ -118,7 +136,35 @@ class ImageFavoritesComic {
       this.other,
       this.subTitle,
       this.maxPage);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'subTitle': subTitle,
+      'author': author,
+      'tags': tags,
+      'translatedTags': translatedTags,
+      'time': time.millisecondsSinceEpoch,
+      'maxPage': maxPage,
+      'sourceKey': sourceKey,
+      'imageFavoritesEp': imageFavoritesEp,
+      'other': other,
+    };
+  }
 
+  ImageFavoritesComic.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        title = json['title'],
+        subTitle = json['subTitle'],
+        author = json['author'],
+        tags = List<String>.from(json['tags']),
+        translatedTags = List<String>.from(json['translatedTags']),
+        time = DateTime.fromMillisecondsSinceEpoch(json['time']),
+        maxPage = json['maxPage'],
+        sourceKey = json['sourceKey'],
+        imageFavoritesEp = List<ImageFavoritesEp>.from(
+            json['imageFavoritesEp'].map((e) => ImageFavoritesEp.fromJson(e))),
+        other = json['other'];
   // 是否都有imageKey
   bool get isAllHasImageKey {
     return imageFavoritesEp
@@ -322,10 +368,10 @@ class ImageFavoriteManager with ChangeNotifier {
   static List<ImageFavoritesComic> getAll(String? keyword) {
     if (!hasInit) return [];
     var res = [];
-    if (keyword == null) {
+    if (keyword == null || keyword == "") {
       res = _db.select("select * from image_favorites;");
     } else {
-      _db.select(
+      res = _db.select(
         """
     select * from image_favorites
     WHERE LOWER(title) LIKE LOWER(?)

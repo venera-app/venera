@@ -25,8 +25,8 @@ part "image_favorites_item.dart";
 part "image_favorites_photo_view.dart";
 
 class ImageFavoritesPage extends StatefulWidget {
-  const ImageFavoritesPage({super.key});
-
+  const ImageFavoritesPage({super.key, this.initialKeyword});
+  final String? initialKeyword;
   @override
   State<ImageFavoritesPage> createState() => ImageFavoritesPageState();
 }
@@ -35,6 +35,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     with TickerProviderStateMixin {
   late ImageFavoriteSortType sortType;
   late String timeFilterSelect;
+  late String numFilterSelect;
   late List<String> finalTimeList;
   // 所有的图片收藏
   List<ImageFavoritesComic> imageFavoritesComicList = [];
@@ -48,10 +49,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
   List<String> optionTypes = ['Sort', 'Filter'];
 
   bool multiSelectMode = false;
-  late TabController controller = TabController(
-    length: 2,
-    vsync: this,
-  );
+  late TabController controller;
   int tabIndex = 0;
   // 多选的时候选中的图片
   Map<ImageFavoritePro, bool> selectedImageFavorites = {};
@@ -70,8 +68,10 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
   }
 
   void refreshImageFavorites() {
-    getInitImageFavorites();
-    update();
+    if (mounted) {
+      getInitImageFavorites();
+      update();
+    }
   }
 
   void getCurImageFavorites() {
@@ -82,7 +82,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     // 筛选到最终列表
     curImageFavoritesComicList = tempList.where((ele) {
       bool isFilter = true;
-      if (timeFilterSelect != "") {
+      if (timeFilterSelect != TimeFilterEnum.all.name) {
         timeFilter = getDateTimeRangeFromFilter(timeFilterSelect);
         DateTime start = timeFilter[0];
         DateTime end = timeFilter[1];
@@ -91,6 +91,10 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
             dateTimeToCheck.isAfter(start) && dateTimeToCheck.isBefore(end) ||
                 dateTimeToCheck == start ||
                 dateTimeToCheck == end;
+      }
+      if (numFilterSelect != numFilterList[0]) {
+        isFilter =
+            ele.sortedImageFavoritePros.length > int.parse(numFilterSelect);
       }
       return isFilter;
     }).toList();
@@ -123,10 +127,20 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
 
   @override
   void initState() {
+    controller = TabController(
+      length: 2,
+      vsync: this,
+    );
+    if (widget.initialKeyword != null) {
+      keyword = widget.initialKeyword!;
+      searchMode = true;
+    }
     var sort = appdata.implicitData["image_favorites_sort"] ?? "name";
     sortType = ImageFavoriteSortType.fromString(sort);
-    timeFilterSelect =
-        appdata.implicitData["image_favorites_time_filter"] ?? "";
+    timeFilterSelect = appdata.implicitData["image_favorites_time_filter"] ??
+        TimeFilterEnum.all.name;
+    numFilterSelect =
+        appdata.implicitData["image_favorites_num_filter"] ?? numFilterList[0];
     finalTimeList = List<String>.from([
       ...timeFilterList.map((e) => e.name),
       ...ImageFavoriteManager.earliestTimeToNow
@@ -226,6 +240,10 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                 message: "Sort".tl,
                 child: IconButton(
                   icon: const Icon(Icons.sort),
+                  color: timeFilterSelect != TimeFilterEnum.all.name ||
+                          numFilterSelect != numFilterList[0]
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                   onPressed: sort,
                 ),
               ),
@@ -241,18 +259,6 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                     });
                   },
                 ),
-              ),
-              MenuButton(
-                entries: [
-                  MenuEntry(
-                      icon: Icons.upload_file,
-                      text: "Export current to clipboard".tl,
-                      onClick: () async {
-                        await Clipboard.setData(
-                            ClipboardData(text: "要复制到剪贴板的内容"));
-                        showToast(message: "成功赋值到剪贴板".tl, context: context);
-                      }),
-                ],
               ),
             ],
           )
@@ -295,6 +301,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                 hintText: "Search".tl,
                 border: InputBorder.none,
               ),
+              controller: TextEditingController(text: keyword),
               onChanged: (v) {
                 keyword = v;
                 update();
@@ -398,6 +405,19 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                               });
                             },
                           ),
+                        ),
+                        ListTile(
+                          title: Text("图片收藏数大于".tl),
+                          trailing: Select(
+                            current: numFilterSelect,
+                            values: numFilterList,
+                            minWidth: 64,
+                            onTap: (index) {
+                              setState(() {
+                                numFilterSelect = numFilterList[index];
+                              });
+                            },
+                          ),
                         )
                       ],
                     )
@@ -410,9 +430,10 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                       timeFilterSelect;
                   appdata.writeImplicitData();
                   controller.removeListener(handleTabIndex);
-
-                  Navigator.pop(context);
-                  update();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    update();
+                  }
                 },
                 child: Text("Confirm".tl),
               ),
