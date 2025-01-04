@@ -18,11 +18,18 @@ import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 part "image_favorites_item.dart";
 part "image_favorites_photo_view.dart";
+
+class LoadingImageFavoritesEpRes {
+  bool isLoaded;
+  bool isInvalid;
+  LoadingImageFavoritesEpRes({required this.isLoaded, required this.isInvalid});
+}
 
 class ImageFavoritesPage extends StatefulWidget {
   const ImageFavoritesPage({super.key, this.initialKeyword});
@@ -31,9 +38,8 @@ class ImageFavoritesPage extends StatefulWidget {
   State<ImageFavoritesPage> createState() => ImageFavoritesPageState();
 }
 
-class ImageFavoritesPageState extends State<ImageFavoritesPage>
-    with TickerProviderStateMixin {
-  late ImageFavoriteSortType sortType;
+class ImageFavoritesPageState extends State<ImageFavoritesPage> {
+  late String sortType;
   late String timeFilterSelect;
   late String numFilterSelect;
   late List<String> finalTimeList;
@@ -41,22 +47,28 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
   List<ImageFavoritesComic> imageFavoritesComicList = [];
   late List<ImageFavoritesComic> curImageFavoritesComicList;
   late List<DateTime> timeFilter;
+  Map<ImageFavoritesEp, LoadingImageFavoritesEpRes> isRefreshEpMap = {};
   String keyword = "";
 
   // 进入关键词搜索模式
   bool searchMode = false;
 
-  List<String> optionTypes = ['Sort', 'Filter'];
-
   bool multiSelectMode = false;
-  late TabController controller;
-  int tabIndex = 0;
   // 多选的时候选中的图片
   Map<ImageFavoritePro, bool> selectedImageFavorites = {};
   late List<ImageFavoritePro> imageFavoritePros;
 
   void update() {
     setState(() {});
+  }
+
+  void updateDialogConfig(String tempSortType, String tempTimeFilterSelect,
+      String tempNumFilterSelect) {
+    setState(() {
+      sortType = tempSortType;
+      timeFilterSelect = tempTimeFilterSelect;
+      numFilterSelect = tempNumFilterSelect;
+    });
   }
 
   void getInitImageFavorites() {
@@ -82,7 +94,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
     // 筛选到最终列表
     curImageFavoritesComicList = tempList.where((ele) {
       bool isFilter = true;
-      if (timeFilterSelect != TimeFilterEnum.all.name) {
+      if (timeFilterSelect != TimeFilterEnum.all.value) {
         timeFilter = getDateTimeRangeFromFilter(timeFilterSelect);
         DateTime start = timeFilter[0];
         DateTime end = timeFilter[1];
@@ -99,50 +111,55 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
       return isFilter;
     }).toList();
     // 给列表排序
-    switch (sortType) {
-      case ImageFavoriteSortType.name:
-        curImageFavoritesComicList.sort((a, b) => a.title.compareTo(b.title));
-        break;
-      case ImageFavoriteSortType.timeAsc:
-        curImageFavoritesComicList.sort((a, b) => a.time.compareTo(b.time));
-        break;
-      case ImageFavoriteSortType.timeDesc:
-        curImageFavoritesComicList.sort((a, b) => b.time.compareTo(a.time));
-        break;
-      case ImageFavoriteSortType.maxFavorites:
-        curImageFavoritesComicList.sort((a, b) => b
-            .sortedImageFavoritePros.length
-            .compareTo(a.sortedImageFavoritePros.length));
-        break;
-      case ImageFavoriteSortType.favoritesCompareComicPages:
-        curImageFavoritesComicList.sort((a, b) {
-          double tempA = a.sortedImageFavoritePros.length / a.maxPageFromEp;
-          double tempB = b.sortedImageFavoritePros.length / b.maxPageFromEp;
-          return tempB.compareTo(tempA);
-        });
-        break;
-      default:
+    if (sortType == ImageFavoriteSortType.title.value) {
+      curImageFavoritesComicList.sort((a, b) => a.title.compareTo(b.title));
+    } else if (sortType == ImageFavoriteSortType.timeAsc.value) {
+      curImageFavoritesComicList.sort((a, b) => a.time.compareTo(b.time));
+    } else if (sortType == ImageFavoriteSortType.timeDesc.value) {
+      curImageFavoritesComicList.sort((a, b) => b.time.compareTo(a.time));
+    } else if (sortType == ImageFavoriteSortType.maxFavorites.value) {
+      curImageFavoritesComicList.sort((a, b) => b.sortedImageFavoritePros.length
+          .compareTo(a.sortedImageFavoritePros.length));
+    } else if (sortType ==
+        ImageFavoriteSortType.favoritesCompareComicPages.value) {
+      curImageFavoritesComicList.sort((a, b) {
+        double tempA = a.sortedImageFavoritePros.length / a.maxPageFromEp;
+        double tempB = b.sortedImageFavoritePros.length / b.maxPageFromEp;
+        return tempB.compareTo(tempA);
+      });
     }
   }
 
   @override
   void initState() {
-    controller = TabController(
-      length: 2,
-      vsync: this,
-    );
     if (widget.initialKeyword != null) {
       keyword = widget.initialKeyword!;
       searchMode = true;
     }
-    var sort = appdata.implicitData["image_favorites_sort"] ?? "name";
-    sortType = ImageFavoriteSortType.fromString(sort);
-    timeFilterSelect = appdata.implicitData["image_favorites_time_filter"] ??
-        TimeFilterEnum.all.name;
+    String initSortType = appdata.implicitData["image_favorites_sort"] ??
+        ImageFavoriteSortType.title.value;
+    sortType = ImageFavoriteSortType.values
+            .firstWhereOrNull((e) => e.value == initSortType)
+            ?.value ??
+        ImageFavoriteSortType.title.value;
+    String initTimeFilter =
+        appdata.implicitData["image_favorites_time_filter"] ??
+            TimeFilterEnum.all.value;
+    // 可能是年份
+    int yearNum = int.tryParse(initTimeFilter) ?? 2023;
+    bool isValideYearNum = yearNum >= 2023 && yearNum <= 2099;
+    if (!isValideYearNum) {
+      timeFilterSelect = timeFilterList
+              .firstWhereOrNull((e) => e.value == initTimeFilter)
+              ?.value ??
+          TimeFilterEnum.all.value;
+    } else {
+      timeFilterSelect = initTimeFilter;
+    }
     numFilterSelect =
         appdata.implicitData["image_favorites_num_filter"] ?? numFilterList[0];
     finalTimeList = List<String>.from([
-      ...timeFilterList.map((e) => e.name),
+      ...timeFilterList.map((e) => e.value),
       ...ImageFavoriteManager.earliestTimeToNow
     ]);
     getInitImageFavorites();
@@ -152,7 +169,6 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
 
   @override
   void dispose() {
-    controller.dispose();
     ImageFavoriteManager().removeListener(refreshImageFavorites);
     super.dispose();
   }
@@ -223,7 +239,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
       slivers: [
         if (!searchMode && !multiSelectMode)
           SliverAppbar(
-            title: Text("Local".tl),
+            title: Text("Image Favorites".tl),
             actions: [
               Tooltip(
                 message: "Search".tl,
@@ -240,7 +256,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
                 message: "Sort".tl,
                 child: IconButton(
                   icon: const Icon(Icons.sort),
-                  color: timeFilterSelect != TimeFilterEnum.all.name ||
+                  color: timeFilterSelect != TimeFilterEnum.all.value ||
                           numFilterSelect != numFilterList[0]
                       ? Theme.of(context).colorScheme.primary
                       : null,
@@ -311,6 +327,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return ImageFavoritesItem(
+            isRefreshEpMap: isRefreshEpMap,
             imageFavoritesComic: curImageFavoritesComicList[index],
             selectedImageFavorites: selectedImageFavorites,
             addSelected: addSelected,
@@ -336,13 +353,76 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
   }
 
   void sort() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ImageFavoritesDialog(
+          initSortType: sortType,
+          initTimeFilterSelect: timeFilterSelect,
+          initNumFilterSelect: numFilterSelect,
+          finalTimeList: finalTimeList,
+          updateDialogConfig: updateDialogConfig,
+        );
+      },
+    );
+  }
+}
+
+class ImageFavoritesDialog extends StatefulWidget {
+  ImageFavoritesDialog({
+    super.key,
+    required this.initSortType,
+    required this.initTimeFilterSelect,
+    required this.initNumFilterSelect,
+    required this.finalTimeList,
+    required this.updateDialogConfig,
+  });
+  String initSortType;
+  String initTimeFilterSelect;
+  String initNumFilterSelect;
+  final List<String> finalTimeList;
+  final Function updateDialogConfig;
+  @override
+  State<ImageFavoritesDialog> createState() => ImageFavoritesDialogState();
+}
+
+class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
+    with TickerProviderStateMixin {
+  late TabController controller;
+  List<String> optionTypes = ['Sort', 'Filter'];
+  int tabIndex = 0;
+  void handleTabIndex() {
+    if (mounted) {
+      setState(() {
+        tabIndex = controller.index;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    controller = TabController(
+      length: 2,
+      vsync: this,
+    );
+    controller.addListener(handleTabIndex);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(handleTabIndex);
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Widget tabBar = Material(
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
         ),
-        // 向上移动一点, 减少 Column 顶部的 padding, 避免观感太差
-        transform: Matrix4.translationValues(0, -24, 0),
         child: FilledTabBar(
           key: PageStorageKey(optionTypes),
           tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
@@ -350,97 +430,83 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage>
         ),
       ),
     ).paddingTop(context.padding.top);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          void handleTabIndex() {
-            setState(() {
-              tabIndex = controller.index;
-            });
-          }
-
-          controller.addListener(handleTabIndex);
-          return ContentDialog(
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              tabBar,
-              tabIndex == 0
-                  ? Column(
-                      children: [
-                        CustomListItem('Name', ImageFavoriteSortType.name),
-                        CustomListItem(
-                            'timeAsc', ImageFavoriteSortType.timeAsc),
-                        CustomListItem(
-                            'timeDesc', ImageFavoriteSortType.timeDesc),
-                        CustomListItem('favorite Num Desc',
-                            ImageFavoriteSortType.maxFavorites),
-                        CustomListItem('favoritesCompareComicPages',
-                            ImageFavoriteSortType.favoritesCompareComicPages),
-                      ]
-                          .map(
-                            (e) => RadioListTile<ImageFavoriteSortType>(
-                              title: Text(e.title.tl),
-                              value: e.value,
-                              groupValue: sortType,
-                              onChanged: (v) {
-                                setState(() {
-                                  sortType = v!;
-                                });
-                              },
-                            ),
-                          )
-                          .toList(),
+    return ContentDialog(
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        tabBar,
+        tabIndex == 0
+            ? Column(
+                children: [
+                  ImageFavoriteSortType.title,
+                  ImageFavoriteSortType.timeAsc,
+                  ImageFavoriteSortType.timeDesc,
+                  ImageFavoriteSortType.maxFavorites,
+                  ImageFavoriteSortType.favoritesCompareComicPages,
+                ]
+                    .map(
+                      (e) => RadioListTile<String>(
+                        title: Text(e.value.tl),
+                        value: e.value,
+                        groupValue: widget.initSortType,
+                        onChanged: (v) {
+                          setState(() {
+                            widget.initSortType = v!;
+                          });
+                        },
+                      ),
                     )
-                  : Column(
-                      children: [
-                        ListTile(
-                          title: Text("时间筛选".tl),
-                          trailing: Select(
-                            current: timeFilterSelect,
-                            values: finalTimeList,
-                            minWidth: 64,
-                            onTap: (index) {
-                              setState(() {
-                                timeFilterSelect = finalTimeList[index];
-                              });
-                            },
-                          ),
-                        ),
-                        ListTile(
-                          title: Text("图片收藏数大于".tl),
-                          trailing: Select(
-                            current: numFilterSelect,
-                            values: numFilterList,
-                            minWidth: 64,
-                            onTap: (index) {
-                              setState(() {
-                                numFilterSelect = numFilterList[index];
-                              });
-                            },
-                          ),
-                        )
-                      ],
-                    )
-            ]),
-            actions: [
-              FilledButton(
-                onPressed: () {
-                  appdata.implicitData["image_favorites_sort"] = sortType.value;
-                  appdata.implicitData["image_favorites_time_filter"] =
-                      timeFilterSelect;
-                  appdata.writeImplicitData();
-                  controller.removeListener(handleTabIndex);
-                  if (mounted) {
-                    Navigator.pop(context);
-                    update();
-                  }
-                },
-                child: Text("Confirm".tl),
-              ),
-            ],
-          );
-        });
-      },
+                    .toList(),
+              )
+            : Column(
+                children: [
+                  ListTile(
+                    title: Text("Time Filter".tl),
+                    trailing: Select(
+                      current: widget.initTimeFilterSelect,
+                      values: widget.finalTimeList,
+                      minWidth: 64,
+                      onTap: (index) {
+                        setState(() {
+                          widget.initTimeFilterSelect =
+                              widget.finalTimeList[index];
+                        });
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    title: Text("Image Favorites Greater Than".tl),
+                    trailing: Select(
+                      current: widget.initNumFilterSelect,
+                      values: numFilterList,
+                      minWidth: 64,
+                      onTap: (index) {
+                        setState(() {
+                          widget.initNumFilterSelect = numFilterList[index];
+                        });
+                      },
+                    ),
+                  )
+                ],
+              )
+      ]),
+      actions: [
+        FilledButton(
+          onPressed: () {
+            appdata.implicitData["image_favorites_sort"] = widget.initSortType;
+            appdata.implicitData["image_favorites_time_filter"] =
+                widget.initTimeFilterSelect;
+            appdata.implicitData["image_favorites_num_filter"] =
+                widget.initNumFilterSelect;
+            appdata.writeImplicitData();
+            controller.removeListener(handleTabIndex);
+            if (mounted) {
+              Navigator.pop(context);
+              widget.updateDialogConfig(widget.initSortType,
+                  widget.initTimeFilterSelect, widget.initNumFilterSelect);
+            }
+          },
+          child: Text("Confirm".tl),
+        ),
+      ],
     );
   }
 }

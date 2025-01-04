@@ -1,11 +1,11 @@
 import 'package:venera/foundation/log.dart';
 
 enum ImageFavoriteSortType {
-  name("name"),
-  timeAsc("time_asc"),
-  timeDesc("time_desc"),
-  maxFavorites("max_favorites"), // 单本收藏数最多排序
-  favoritesCompareComicPages("favorites_compare_comic_pages"); // 单本收藏数比上总页数
+  title("Title"),
+  timeAsc("Time Asc"),
+  timeDesc("Time Desc"),
+  maxFavorites("Favorite Num"), // 单本收藏数最多排序
+  favoritesCompareComicPages("Favorite Num Compare Comic Pages"); // 单本收藏数比上总页数
 
   final String value;
 
@@ -17,23 +17,16 @@ enum ImageFavoriteSortType {
         return type;
       }
     }
-    return name;
+    return title;
   }
 }
 
-class CustomListItem<T> {
-  final String title;
-  final T value;
-
-  CustomListItem(this.title, this.value);
-}
-
 enum TimeFilterEnum {
-  all("all"),
-  lastWeek("lastWeek"),
-  lastMonth("lastMonth"),
-  lastHalfYear("lastHalfYear"),
-  lastYear("lastYear"); // 单本收藏数最多排序
+  all("All"),
+  lastWeek("Last Week"),
+  lastMonth("Last Month"),
+  lastHalfYear("Last Half Year"),
+  lastYear("Last Year"); // 单本收藏数最多排序
 
   final String value;
   const TimeFilterEnum(this.value);
@@ -43,7 +36,7 @@ enum TimeFilterEnum {
         return type;
       }
     }
-    return lastWeek;
+    return all;
   }
 }
 
@@ -60,16 +53,16 @@ getDateTimeRangeFromFilter(String timeFilter) {
   DateTime start = now;
   DateTime end = now;
   try {
-    if (timeFilter == TimeFilterEnum.all.name) {
+    if (timeFilter == TimeFilterEnum.all.value) {
       start = DateTime(2025, 1, 1);
       end = DateTime(2099, 12, 31);
-    } else if (timeFilter == TimeFilterEnum.lastWeek.name) {
+    } else if (timeFilter == TimeFilterEnum.lastWeek.value) {
       start = now.subtract(const Duration(days: 7));
-    } else if (timeFilter == TimeFilterEnum.lastMonth.name) {
+    } else if (timeFilter == TimeFilterEnum.lastMonth.value) {
       start = now.subtract(const Duration(days: 30));
-    } else if (timeFilter == TimeFilterEnum.lastHalfYear.name) {
+    } else if (timeFilter == TimeFilterEnum.lastHalfYear.value) {
       start = now.subtract(const Duration(days: 180));
-    } else if (timeFilter == TimeFilterEnum.lastYear.name) {
+    } else if (timeFilter == TimeFilterEnum.lastYear.value) {
       start = now.subtract(const Duration(days: 365));
     } else {
       // 是 2024, 2025 之类的

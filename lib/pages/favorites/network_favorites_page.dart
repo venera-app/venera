@@ -20,8 +20,7 @@ Future<bool> _deleteComic(
       return StatefulBuilder(builder: (context, setState) {
         return ContentDialog(
           title: "Remove".tl,
-          content: Text("Remove comic from favorite?".tl)
-              .paddingHorizontal(16),
+          content: Text("Remove comic from favorite?".tl).paddingHorizontal(16),
           actions: [
             Button.filled(
               isLoading: loading,
@@ -94,9 +93,8 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
     return ComicList(
       key: comicListKey,
       leadingSliver: SliverAppbar(
-        style: context.width < changePoint
-            ? AppbarStyle.shadow
-            : AppbarStyle.blur,
+        style:
+            context.width < changePoint ? AppbarStyle.shadow : AppbarStyle.blur,
         leading: Tooltip(
           message: "Folders".tl,
           child: context.width <= _kTwoPanelChangeWidth
@@ -117,7 +115,7 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
               icon: Icons.sync,
               text: "Convert to local".tl,
               onClick: () {
-                importNetworkFolder(widget.data.key, null, null);
+                importNetworkFolder(widget.data.key, 9999999, null, null);
               },
             )
           ]),
@@ -215,9 +213,8 @@ class _MultiFolderFavoritesPageState extends State<_MultiFolderFavoritesPage> {
   @override
   Widget build(BuildContext context) {
     var sliverAppBar = SliverAppbar(
-      style: context.width < changePoint
-          ? AppbarStyle.shadow
-          : AppbarStyle.blur,
+      style:
+          context.width < changePoint ? AppbarStyle.shadow : AppbarStyle.blur,
       leading: Tooltip(
         message: "Folders".tl,
         child: context.width <= _kTwoPanelChangeWidth
@@ -431,8 +428,7 @@ class _FolderTile extends StatelessWidget {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Delete".tl,
-            content: Text("Delete folder?".tl)
-                .paddingHorizontal(16),
+            content: Text("Delete folder?".tl).paddingHorizontal(16),
             actions: [
               Button.filled(
                 isLoading: loading,
@@ -558,7 +554,7 @@ class _FavoriteFolder extends StatelessWidget {
               icon: Icons.sync,
               text: "Convert to local".tl,
               onClick: () {
-                importNetworkFolder(data.key, title, folderID);
+                importNetworkFolder(data.key, 9999999, title, folderID);
               },
             )
           ]),

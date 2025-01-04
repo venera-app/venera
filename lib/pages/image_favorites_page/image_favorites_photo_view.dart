@@ -73,8 +73,9 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
     ImageFavoritePro curImageFavorite =
         curComic.sortedImageFavoritePros[curIndex];
     int curPage = curImageFavorite.page;
-    String pageText =
-        curPage == ImageFavoritesEp.firstPage ? 'cover'.tl : "第$curPage页";
+    String pageText = curPage == ImageFavoritesEp.firstPage
+        ? 'Cover'.tl
+        : "Page @a".tlParams({'a': curPage});
     return PopScope(
       onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) {
@@ -116,12 +117,23 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
           right: 0,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              curComic.title,
-              style: ts.s18,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ).paddingTop(20),
+            child: InkWell(
+              onTap: () {
+                widget.goComicInfo(curComic);
+              },
+              onDoubleTap: () {
+                Clipboard.setData(ClipboardData(text: curComic.title));
+                showToast(
+                    message: "Copy the title successfully".tl,
+                    context: context);
+              },
+              child: Text(
+                curComic.title,
+                style: ts.s18,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ).paddingTop(20),
+            ),
           ),
         ),
         Positioned(
@@ -135,71 +147,89 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
                   "${curImageFavorite.epName} : $pageText : ${curIndex + 1}/${curComic.sortedImageFavoritePros.length}",
                   style: ts.s12),
               Spacer(),
-              IconButton(
-                icon: Icon(Icons.arrow_circle_left),
-                onPressed: () {
-                  if (curImageFavoritesComicIndex == 0) {
-                    curImageFavoritesComicIndex =
-                        widget.finalImageFavoritesComicList.length - 1;
-                  } else {
-                    curImageFavoritesComicIndex -= 1;
-                  }
-                  curIndex = 0;
-                  controller.jumpToPage(0);
-                  setState(() {});
-                },
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_circle_left),
+                  onPressed: () {
+                    if (curImageFavoritesComicIndex == 0) {
+                      curImageFavoritesComicIndex =
+                          widget.finalImageFavoritesComicList.length - 1;
+                    } else {
+                      curImageFavoritesComicIndex -= 1;
+                    }
+                    curIndex = 0;
+                    controller.jumpToPage(0);
+                    setState(() {});
+                  },
+                ),
               ),
-              IconButton(
-                icon: cancelImageFavorites[curImageFavorite] == true
-                    ? Icon(Icons.favorite_border)
-                    : Icon(Icons.favorite),
-                onPressed: () {
-                  if (cancelImageFavorites[curImageFavorite] == true) {
-                    cancelImageFavorites[curImageFavorite] = false;
-                  } else {
-                    cancelImageFavorites[curImageFavorite] = true;
-                  }
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: cancelImageFavorites[curImageFavorite] == true
+                      ? Icon(Icons.favorite_border)
+                      : Icon(Icons.favorite),
+                  onPressed: () {
+                    if (cancelImageFavorites[curImageFavorite] == true) {
+                      cancelImageFavorites[curImageFavorite] = false;
+                    } else {
+                      cancelImageFavorites[curImageFavorite] = true;
+                    }
 
-                  setState(() {});
-                },
+                    setState(() {});
+                  },
+                ),
               ),
-              IconButton(
-                icon: Icon(Icons.play_arrow),
-                onPressed: () {
-                  widget.goReaderPage(curComic, curImageFavorite.ep, curPage);
-                },
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: Icon(Icons.play_arrow),
+                  onPressed: () {
+                    widget.goReaderPage(curComic, curImageFavorite.ep, curPage);
+                  },
+                ),
               ),
-              IconButton(
-                icon: Icon(Icons.menu_book),
-                onPressed: () {
-                  widget.goComicInfo(curComic);
-                },
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: Icon(Icons.menu_book),
+                  onPressed: () {
+                    widget.goComicInfo(curComic);
+                  },
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.download),
-                onPressed: () async {
-                  var data = await _getCurrentImageData(curImageFavorite);
-                  if (data == null) {
-                    return;
-                  }
-                  var fileType = detectFileType(data);
-                  var filename = "${curImageFavorite.page}${fileType.ext}";
-                  saveFile(data: data, filename: filename);
-                },
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () async {
+                    var data = await _getCurrentImageData(curImageFavorite);
+                    if (data == null) {
+                      return;
+                    }
+                    var fileType = detectFileType(data);
+                    var filename = "${curImageFavorite.page}${fileType.ext}";
+                    saveFile(data: data, filename: filename);
+                  },
+                ),
               ),
-              IconButton(
-                icon: Icon(Icons.arrow_circle_right),
-                onPressed: () {
-                  if (curImageFavoritesComicIndex ==
-                      widget.finalImageFavoritesComicList.length - 1) {
-                    curImageFavoritesComicIndex = 0;
-                  } else {
-                    curImageFavoritesComicIndex += 1;
-                  }
-                  curIndex = 0;
-                  controller.jumpToPage(0);
-                  setState(() {});
-                },
+              Flexible(
+                flex: 1,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_circle_right),
+                  onPressed: () {
+                    if (curImageFavoritesComicIndex ==
+                        widget.finalImageFavoritesComicList.length - 1) {
+                      curImageFavoritesComicIndex = 0;
+                    } else {
+                      curImageFavoritesComicIndex += 1;
+                    }
+                    curIndex = 0;
+                    controller.jumpToPage(0);
+                    setState(() {});
+                  },
+                ),
               ),
             ]),
           ),

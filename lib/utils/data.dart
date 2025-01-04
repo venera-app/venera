@@ -138,6 +138,21 @@ Future<void> importPicaData(File file) async {
             .toList();
         folderNames
             .removeWhere((e) => e == "folder_order" || e == "folder_sync");
+        for (var folderSyncValue in db.select("SELECT * FROM folder_sync;")) {
+          var folderName = folderSyncValue["folder_name"];
+          var sourceKey = folderSyncValue["source_key"];
+          sourceKey = sourceKey == "htManga" ? "wnacg" : sourceKey;
+          // 有值就跳过
+          if (LocalFavoritesManager().findLinked(folderName).$1 != null) {
+            continue;
+          }
+          try {
+            LocalFavoritesManager().linkFolderToNetwork(folderName, sourceKey,
+                jsonDecode(folderSyncValue["sync_data"])["folderId"]);
+          } catch (e, stack) {
+            Log.error(e.toString(), stack);
+          }
+        }
         for (var folderName in folderNames) {
           if (!LocalFavoritesManager().existsFolder(folderName)) {
             LocalFavoritesManager().createFolder(folderName);
@@ -197,9 +212,11 @@ Future<void> importPicaData(File file) async {
             }),
           );
         }
-        List<ImageFavoritesComic> imageFavoritesComicList = [];
+        List<ImageFavoritesComic> imageFavoritesComicList =
+            ImageFavoriteManager.imageFavoritesComicList;
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
           String sourceKey = comic["id"].split("-")[0];
+          // 换名字了, 绅士漫画
           if (sourceKey == "htManga") {
             sourceKey = "wnacg";
           }
@@ -208,12 +225,12 @@ Future<void> importPicaData(File file) async {
           }
           String id = comic["id"].split("-")[1];
           int page = comic["page"];
-          int ep = comic["ep"];
+          // 章节和page是从1开始的, pica 可能有从 0 开始的, 得转一下
+          int ep = comic["ep"] == 0 ? 1 : comic["ep"];
           String title = comic["title"];
-          String epName = comic["epName"];
-          ImageFavoritesComic? tempComic =
-              ImageFavoriteManager.findFromComicList(
-                  imageFavoritesComicList, id, sourceKey, ep, page);
+          String epName = "";
+          ImageFavoritesComic? tempComic = imageFavoritesComicList
+              .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
           ImageFavoritePro curImageFavorite =
               ImageFavoritePro(page, "", null, "", id, ep, sourceKey, epName);
           if (tempComic == null) {
@@ -222,6 +239,7 @@ Future<void> importPicaData(File file) async {
             tempComic.imageFavoritesEp = [
               ImageFavoritesEp("", ep, [curImageFavorite], epName, 1)
             ];
+            imageFavoritesComicList.add(tempComic);
           } else {
             ImageFavoritesEp? tempEp =
                 tempComic.imageFavoritesEp.firstWhereOrNull((e) => e.ep == ep);
@@ -229,13 +247,20 @@ Future<void> importPicaData(File file) async {
               tempComic.imageFavoritesEp
                   .add(ImageFavoritesEp("", ep, [curImageFavorite], epName, 1));
             } else {
-              tempEp.imageFavorites.add(curImageFavorite);
+              // 如果已经有这个page了, 就不添加了
+              if (tempEp.imageFavorites
+                      .firstWhereOrNull((e) => e.page == page) ==
+                  null) {
+                tempEp.imageFavorites.add(curImageFavorite);
+              }
             }
           }
-          ImageFavoriteManager.addOrUpdateOrDelete(tempComic);
         }
-      } catch (e) {
-        Log.error("Import Data", "Failed to import history: $e");
+        for (var temp in imageFavoritesComicList) {
+          ImageFavoriteManager.addOrUpdateOrDelete(temp);
+        }
+      } catch (e, stack) {
+        Log.error("Import Data", "Failed to import history: $e", stack);
       } finally {
         db.dispose();
       }

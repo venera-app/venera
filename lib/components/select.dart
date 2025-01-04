@@ -50,7 +50,7 @@ class Select extends StatelessWidget {
                 .map((e) => PopupMenuItem(
                       height: App.isMobile ? 46 : 40,
                       value: e,
-                      child: Text(e),
+                      child: Text(e.tl),
                     ))
                 .toList(),
           ).then((value) {
@@ -66,7 +66,7 @@ class Select extends StatelessWidget {
               constraints: BoxConstraints(
                 minWidth: minWidth != null ? (minWidth! - 32) : 0,
               ),
-              child: Text(current ?? ' ', style: ts.s14),
+              child: Text((current ?? ' ').tl, style: ts.s14),
             ),
             const SizedBox(width: 8),
             Icon(Icons.arrow_drop_down, color: context.colorScheme.primary),

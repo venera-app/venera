@@ -123,6 +123,7 @@ class _Settings with ChangeNotifier {
     'enableTurnPageByVolumeKey': true,
     'enableClockAndBatteryInfoInReader': true,
     'ignoreCertificateErrors': false,
+    'supportSwipeToFavorite': 'yes', // yes, no
     'authorizationRequired': false,
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,

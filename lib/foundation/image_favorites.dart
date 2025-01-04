@@ -100,6 +100,7 @@ class ImageFavoritesEp {
   }
 }
 
+// 从漫画详情中获取到的信息
 class ImageFavoritesSomething {
   String author;
   String subTitle;
@@ -238,6 +239,7 @@ class ImageFavoritesComic {
 class ImageFavoriteManager with ChangeNotifier {
   static Database get _db => HistoryManager()._db;
   static ImageFavoriteManager? cache;
+  final Throttler _throttler = Throttler(duration: Duration(seconds: 2));
   static List<ImageFavoritesComic> imageFavoritesComicList = getAll(null);
   ImageFavoriteManager.create();
   static bool hasInit = false;
@@ -245,8 +247,11 @@ class ImageFavoriteManager with ChangeNotifier {
     return cache == null ? (cache = ImageFavoriteManager.create()) : cache!;
   }
   void updateValue() {
-    imageFavoritesComicList = getAll(null);
-    notifyListeners();
+    // 避免从pica导入的时候, 疯狂触发
+    _throttler.run(() {
+      imageFavoritesComicList = getAll(null);
+      notifyListeners();
+    });
   }
 
   /// 检查表image_favorites是否存在, 不存在则创建

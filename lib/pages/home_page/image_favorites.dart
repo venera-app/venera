@@ -147,16 +147,18 @@ class ImageFavoritesState extends State<ImageFavorites> {
   }
 
   void refreshImageFavorites() async {
-    imageFavoritesCompute = null;
-    allImageFavoritePros = [];
-    for (var comic in ImageFavoriteManager.imageFavoritesComicList) {
-      allImageFavoritePros.addAll(comic.sortedImageFavoritePros);
+    if(mounted){
+      imageFavoritesCompute = null;
+      allImageFavoritePros = [];
+      for (var comic in ImageFavoriteManager.imageFavoritesComicList) {
+        allImageFavoritePros.addAll(comic.sortedImageFavoritePros);
+      }
+      setState(() {});
+      // 避免性能开销, 开一个线程计算
+      imageFavoritesCompute = await compute(computeImageFavorites,
+          jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
+      setState(() {});
     }
-    setState(() {});
-    // 避免性能开销, 开一个线程计算
-    imageFavoritesCompute = await compute(computeImageFavorites,
-        jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
-    setState(() {});
   }
 
   @override
@@ -261,7 +263,8 @@ class ImageFavoritesState extends State<ImageFavorites> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "@a Comic, @b image favorites".tlParams({
+                    "Calculate your favorite from @a comics and @b images"
+                        .tlParams({
                       "a": ImageFavoriteManager.length.toString(),
                       "b": allImageFavoritePros.length
                     }),
@@ -272,7 +275,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
                     Row(
                       children: [
                         Text(
-                          "作者:".tl,
+                          "Author: ".tl,
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.authors,
@@ -283,7 +286,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
                     Row(
                       children: [
                         Text(
-                          "标签:".tl,
+                          "Tags: ".tl,
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.tags,
@@ -294,7 +297,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
                     Row(
                       children: [
                         Text(
-                          "漫画(数量):".tl,
+                          "Comics(number): ".tl,
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.comicByNum,
@@ -305,7 +308,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
                     Row(
                       children: [
                         Text(
-                          "漫画(比例):".tl,
+                          "Comics(percentage): ".tl,
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.comicByPercentage,

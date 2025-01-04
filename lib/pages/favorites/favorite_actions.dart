@@ -147,13 +147,13 @@ Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
         var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
 
         var newTags = <String>[];
-        for(var entry in newInfo.tags.entries) {
+        for (var entry in newInfo.tags.entries) {
           const shouldIgnore = ['author', 'artist', 'time'];
           var namespace = entry.key;
           if (shouldIgnore.contains(namespace.toLowerCase())) {
             continue;
           }
-          for(var tag in entry.value) {
+          for (var tag in entry.value) {
             newTags.add("$namespace:$tag");
           }
         }
@@ -305,6 +305,7 @@ Future<void> sortFolders() async {
 
 Future<void> importNetworkFolder(
   String source,
+  int updatePageNum,
   String? folder,
   String? folderID,
 ) async {
@@ -312,7 +313,7 @@ Future<void> importNetworkFolder(
   if (comicSource == null) {
     return;
   }
-  if(folder != null && folder.isEmpty) {
+  if (folder != null && folder.isEmpty) {
     folder = null;
   }
   var resultName = folder ?? comicSource.name;
@@ -324,7 +325,7 @@ Future<void> importNetworkFolder(
       return;
     }
   }
-  if(!exists) {
+  if (!exists) {
     LocalFavoritesManager().createFolder(resultName);
     LocalFavoritesManager().linkFolderToNetwork(
       resultName,
@@ -332,21 +333,28 @@ Future<void> importNetworkFolder(
       folderID ?? "",
     );
   }
-
+  bool isNewToOldSort = comicSource.favoriteData?.isNewToOldSort ?? true;
   var current = 0;
+  int receivedComics = 0;
+  int requestCount = 0;
   var isFinished = false;
+  int maxPage = 1;
   String? next;
-
+  // 如果是从旧到新, 先取一下maxPage
+  if (!isNewToOldSort) {
+    var res = await comicSource.favoriteData?.loadComic!(1, folderID);
+    maxPage = res?.subData ?? 1;
+  }
   Future<void> fetchNext() async {
     var retry = 3;
-
-    while (true) {
+    while (updatePageNum >= requestCount && !isFinished) {
       try {
         if (comicSource.favoriteData?.loadComic != null) {
-          next ??= '1';
+          next ??= isNewToOldSort ? '1' : maxPage.toString();
           var page = int.parse(next!);
           var res = await comicSource.favoriteData!.loadComic!(page, folderID);
           var count = 0;
+          receivedComics += res.data.length;
           for (var c in res.data) {
             var result = LocalFavoritesManager().addComic(
               resultName,
@@ -363,16 +371,19 @@ Future<void> importNetworkFolder(
               count++;
             }
           }
+          requestCount++;
           current += count;
           if (res.data.isEmpty || res.subData == page) {
             isFinished = true;
             next = null;
           } else {
-            next = (page + 1).toString();
+            next =
+                isNewToOldSort ? (page + 1).toString() : (page - 1).toString();
           }
         } else if (comicSource.favoriteData?.loadNext != null) {
           var res = await comicSource.favoriteData!.loadNext!(next, folderID);
           var count = 0;
+          receivedComics += res.data.length;
           for (var c in res.data) {
             var result = LocalFavoritesManager().addComic(
               resultName,
@@ -389,6 +400,7 @@ Future<void> importNetworkFolder(
               count++;
             }
           }
+          requestCount++;
           current += count;
           if (res.data.isEmpty || res.subData == null) {
             isFinished = true;
@@ -408,6 +420,8 @@ Future<void> importNetworkFolder(
         continue;
       }
     }
+    // 跳出循环, 表示已经完成, 强制为 true, 避免死循环
+    isFinished = true;
   }
 
   bool isCanceled = false;
@@ -415,6 +429,7 @@ Future<void> importNetworkFolder(
   bool isErrored() => errorMsg != null;
 
   void Function()? updateDialog;
+  void Function()? closeDialog;
 
   showDialog(
     context: App.rootContext,
@@ -422,6 +437,7 @@ Future<void> importNetworkFolder(
       return StatefulBuilder(
         builder: (context, setState) {
           updateDialog = () => setState(() {});
+          closeDialog = () => Navigator.pop(context);
           return ContentDialog(
             title: isFinished
                 ? "Finished".tl
@@ -437,8 +453,11 @@ Future<void> importNetworkFolder(
                   value: isFinished ? 1 : null,
                 ),
                 const SizedBox(height: 4),
-                Text("Imported @c comics".tlParams({
-                  "c": current,
+                Text("Imported @a comics, loaded @b pages, received @c comics"
+                    .tlParams({
+                  "a": current,
+                  "b": requestCount,
+                  "c": receivedComics,
                 })),
                 const SizedBox(height: 4),
                 if (isErrored()) Text("Error: $errorMsg"),
@@ -476,4 +495,5 @@ Future<void> importNetworkFolder(
       break;
     }
   }
+  closeDialog?.call();
 }

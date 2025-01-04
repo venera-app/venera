@@ -96,28 +96,30 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     var readerMode = context.reader.mode;
     // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
     double imageFavoritesListenDistance = 0;
-    _gestureDetectorState!.dragListenerForImageFavorites = _DragListener(
-      onMove: (offset) {
-        switch (readerMode) {
-          case ReaderMode.continuousTopToBottom:
-          case ReaderMode.galleryTopToBottom:
-            imageFavoritesListenDistance += offset.dx;
-            break;
-          case ReaderMode.continuousLeftToRight:
-          case ReaderMode.galleryLeftToRight:
-          case ReaderMode.galleryRightToLeft:
-          case ReaderMode.continuousRightToLeft:
-            imageFavoritesListenDistance += offset.dy;
-            break;
-        }
-      },
-      onEnd: () {
-        if (imageFavoritesListenDistance.abs() > 150) {
-          imageFavoritesAction();
-        }
-        imageFavoritesListenDistance = 0;
-      },
-    );
+    if (appdata.settings['supportSwipeToFavorite'] == 'yes') {
+      _gestureDetectorState!.dragListenerForImageFavorites = _DragListener(
+        onMove: (offset) {
+          switch (readerMode) {
+            case ReaderMode.continuousTopToBottom:
+            case ReaderMode.galleryTopToBottom:
+              imageFavoritesListenDistance += offset.dx;
+              break;
+            case ReaderMode.continuousLeftToRight:
+            case ReaderMode.galleryLeftToRight:
+            case ReaderMode.galleryRightToLeft:
+            case ReaderMode.continuousRightToLeft:
+              imageFavoritesListenDistance += offset.dy;
+              break;
+          }
+        },
+        onEnd: () {
+          if (imageFavoritesListenDistance.abs() > 150) {
+            imageFavoritesAction();
+          }
+          imageFavoritesListenDistance = 0;
+        },
+      );
+    }
   }
 
   @override
@@ -246,7 +248,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   void imageFavoritesAction() {
     try {
       if (context.reader.images![0].contains('file:///')) {
-        showToast(message: "本地收藏暂不支持".tl, context: context);
+        showToast(
+            message: "Local comic collection is not supported at present".tl,
+            context: context);
         return;
       }
       String id = context.reader.cid;
@@ -277,13 +281,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
       if (isLiked()) {
         if (page == ImageFavoritesEp.firstPage) {
-          showToast(message: "封面不能在此取消收藏".tl, context: context);
+          showToast(
+              message: "The cover cannot be uncollected here".tl,
+              context: context);
           return;
         }
         ImageFavoriteManager.deleteImageFavoritePro([
           ImageFavoritePro(page, imageKey, null, eid, id, ep, sourceKey, epName)
         ]);
-        showToast(message: "取消收藏图片".tl, context: context);
+        showToast(message: "Uncollect the image".tl, context: context);
       } else {
         ImageFavoritesComic? imageFavoritesComic = ImageFavoriteManager
             .imageFavoritesComicList
@@ -319,7 +325,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         }
 
         ImageFavoriteManager.addOrUpdateOrDelete(imageFavoritesComic);
-        showToast(message: "成功收藏图片".tl, context: context);
+        showToast(message: "Successfully collected".tl, context: context);
       }
       update();
     } catch (e, stackTrace) {
@@ -389,7 +395,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               ),
               const Spacer(),
               Tooltip(
-                message: "收藏图片".tl,
+                message: "Collect the image".tl,
                 child: IconButton(
                     icon: Icon(
                         isLiked() ? Icons.favorite : Icons.favorite_border),

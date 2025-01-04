@@ -193,7 +193,7 @@ class ComicSourceParser {
       login = (account, pwd) async {
         try {
           await JsEngine().runCode("""
-          ComicSource.sources.$_key.account.login(${jsonEncode(account)}, 
+          ComicSource.sources.$_key.account.login(${jsonEncode(account)},
           ${jsonEncode(pwd)})
         """);
           var source = ComicSource.find(_key!)!;
@@ -502,9 +502,9 @@ class ComicSourceParser {
       try {
         var res = await JsEngine().runCode("""
           ComicSource.sources.$_key.categoryComics.load(
-            ${jsonEncode(category)}, 
-            ${jsonEncode(param)}, 
-            ${jsonEncode(options)}, 
+            ${jsonEncode(category)},
+            ${jsonEncode(param)},
+            ${jsonEncode(options)},
             ${jsonEncode(page)}
           )
         """);
@@ -618,6 +618,7 @@ class ComicSourceParser {
     if (!_checkExists("favorites")) return null;
 
     final bool multiFolder = _getValue("favorites.multiFolder");
+    final bool? isNewToOldSort = _getValue("favorites.isNewToOldSort");
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async {
       if (!ComicSource.find(_key!)!.isLogged) {
@@ -770,6 +771,7 @@ class ComicSourceParser {
       addFolder: addFolder,
       deleteFolder: deleteFolder,
       addOrDelFavorite: addOrDelFavFunc,
+      isNewToOldSort: isNewToOldSort,
     );
   }
 
