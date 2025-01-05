@@ -145,6 +145,7 @@ class _SearchPageState extends State<SearchPage> {
     } else {
       searchTarget = ComicSource.all().first.key;
     }
+    aggregatedSearch = appdata.settings['aggregatedSearchSetting'] ?? false;
     controller = SearchBarController(
       onSearch: search,
     );
@@ -226,6 +227,7 @@ class _SearchPageState extends State<SearchPage> {
                 onChanged: (value) {
                   setState(() {
                     aggregatedSearch = value ?? false;
+                    appdata.settings['aggregatedSearchSetting'] = aggregatedSearch;
                   });
                 },
               ),
