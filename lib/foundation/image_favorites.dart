@@ -73,7 +73,7 @@ class ImageFavoritePro extends ImageFavorite {
 }
 
 class ImageFavoritesEp {
-  final String eid;
+  String eid;
   final int ep;
   int maxPage;
   String epName;

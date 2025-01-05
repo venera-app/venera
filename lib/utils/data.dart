@@ -198,17 +198,18 @@ Future<void> importPicaData(File file) async {
                 2 => 'jm'.hashCode,
                 3 => 'hitomi'.hashCode,
                 4 => 'wnacg'.hashCode,
-                6 => 'nhentai'.hashCode,
+                5 => 'nhentai'.hashCode,
                 _ => comic['type']
               },
               "id": comic['target'],
-              "maxPage": comic["max_page"],
+              "max_page": comic["max_page"],
               "ep": comic["ep"],
               "page": comic["page"],
               "time": comic["time"],
               "title": comic["title"],
               "subtitle": comic["subtitle"],
               "cover": comic["cover"],
+              "readEpisode": [comic["ep"]],
             }),
           );
         }

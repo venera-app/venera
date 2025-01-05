@@ -376,7 +376,6 @@ class _IOOverrides extends IOOverrides {
       return super.createFile(path);
     }
   }
-
 }
 
 T overrideIO<T>(T Function() f) {

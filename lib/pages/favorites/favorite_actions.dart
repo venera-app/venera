@@ -333,7 +333,7 @@ Future<void> importNetworkFolder(
       folderID ?? "",
     );
   }
-  bool isNewToOldSort = comicSource.favoriteData?.isNewToOldSort ?? true;
+  bool isOldToNewSort = comicSource.favoriteData?.isOldToNewSort ?? false;
   var current = 0;
   int receivedComics = 0;
   int requestCount = 0;
@@ -341,7 +341,7 @@ Future<void> importNetworkFolder(
   int maxPage = 1;
   String? next;
   // 如果是从旧到新, 先取一下maxPage
-  if (!isNewToOldSort) {
+  if (isOldToNewSort) {
     var res = await comicSource.favoriteData?.loadComic!(1, folderID);
     maxPage = res?.subData ?? 1;
   }
@@ -350,7 +350,7 @@ Future<void> importNetworkFolder(
     while (updatePageNum >= requestCount && !isFinished) {
       try {
         if (comicSource.favoriteData?.loadComic != null) {
-          next ??= isNewToOldSort ? '1' : maxPage.toString();
+          next ??= isOldToNewSort ? maxPage.toString() : '1';
           var page = int.parse(next!);
           var res = await comicSource.favoriteData!.loadComic!(page, folderID);
           var count = 0;
@@ -378,7 +378,7 @@ Future<void> importNetworkFolder(
             next = null;
           } else {
             next =
-                isNewToOldSort ? (page + 1).toString() : (page - 1).toString();
+                isOldToNewSort ? (page - 1).toString() : (page + 1).toString();
           }
         } else if (comicSource.favoriteData?.loadNext != null) {
           var res = await comicSource.favoriteData!.loadNext!(next, folderID);

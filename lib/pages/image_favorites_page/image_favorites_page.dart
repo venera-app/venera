@@ -347,7 +347,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
                 _debouncer.run(() {
                   keyword = _textEditingController.text;
                   update();
-                }, Duration(seconds: 1));
+                }, Duration(milliseconds: 500));
               },
             ),
           ),

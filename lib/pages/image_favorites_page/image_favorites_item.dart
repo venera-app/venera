@@ -28,7 +28,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
   bool hasRefreshImageKeyOnErr = false;
   late LoadingImageFavoritesComicRes loadingImageFavoritesComicRes;
 
-  // 如果 imageKey 失效了, 或者刚从pica导入(没有imageKey)
+  // 如果刚从pica导入(没有imageKey) 或者 imageKey 失效了, 刷新一下
   void refreshImageKey(ImageFavoritesEp imageFavoritesEp) async {
     if (isImageKeyLoading ||
         hasRefreshImageKeyOnErr ||
@@ -40,6 +40,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
     isImageKeyLoading = true;
     ComicSource? comicSource =
         ComicSource.find(widget.imageFavoritesComic.sourceKey);
+    // 拿一下漫画信息和对应章节的图片
     var resArr = await Future.wait([
       comicSource!.loadComicPages!(
         widget.imageFavoritesComic.id,
@@ -54,33 +55,62 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
     if (comicInfoRes.errorMessage?.contains("404") ?? false) {
       loadingImageFavoritesComicRes.isInvalid = true;
       widget.setRefreshComicList(loadingImageFavoritesComicRes);
-    } else if (!comicPagesRes.error && !comicInfoRes.error) {
-      List<String> images = comicPagesRes.data;
+      if (mounted) {
+        setState(() {});
+      }
+      return;
+    }
+    if (!comicInfoRes.error) {
       ImageFavoritesSomething something =
           ImageFavoritesComic.getSomethingFromComicDetails(
               comicInfoRes.data, imageFavoritesEp.ep);
       // 刷新一下值, 保存最新的
       widget.imageFavoritesComic.author = something.author;
-      widget.imageFavoritesComic.maxPage = images.length;
       widget.imageFavoritesComic.subTitle = something.subTitle;
       widget.imageFavoritesComic.tags = something.tags;
       widget.imageFavoritesComic.translatedTags = something.translatedTags;
-      imageFavoritesEp.maxPage = images.length;
       imageFavoritesEp.epName = something.epName;
-      // 塞一个封面进去
-      if (!imageFavoritesEp.isHasFirstPage) {
-        ImageFavoritePro copy =
-            ImageFavoritePro.copy(imageFavoritesEp.imageFavorites[0]);
-        copy.page = ImageFavoritesEp.firstPage;
-        copy.isAutoFavorite = true;
-        imageFavoritesEp.imageFavorites.insert(0, copy);
-      }
-      // 统一刷一下最新的imageKey
-      for (var ele in imageFavoritesEp.imageFavorites) {
-        ele.imageKey = images[ele.page - 1];
-      }
-      ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
+    } else {
+      return;
     }
+    if (comicPagesRes.error) {
+      // 能加载漫画信息, 说明只是章节对不太上, 刷新一下章节
+      var chapters = comicInfoRes.data.chapters;
+      // 兜底一下, 如果章节对不上return, 说明是调用接口更新过章节的, 比如拷贝, jm, 避免丢失最初正确的eid
+      // 拷贝, jm可能会更新章节顺序, 以eid为准比较好
+      if (imageFavoritesEp.eid != imageFavoritesEp.ep.toString()) {
+        return;
+      }
+      var finalEid = chapters?.keys.elementAt(imageFavoritesEp.ep - 1) ?? '0';
+      var resArr = await Future.wait([
+        comicSource!.loadComicPages!(
+          widget.imageFavoritesComic.id,
+          finalEid,
+        )
+      ]);
+      comicPagesRes = resArr[0];
+      if (comicPagesRes.error) {
+        return;
+      } else {
+        imageFavoritesEp.eid = finalEid;
+      }
+    }
+    List<String> images = comicPagesRes.data;
+    widget.imageFavoritesComic.maxPage = images.length;
+    imageFavoritesEp.maxPage = images.length;
+    // 塞一个封面进去
+    if (!imageFavoritesEp.isHasFirstPage) {
+      ImageFavoritePro copy =
+          ImageFavoritePro.copy(imageFavoritesEp.imageFavorites[0]);
+      copy.page = ImageFavoritesEp.firstPage;
+      copy.isAutoFavorite = true;
+      imageFavoritesEp.imageFavorites.insert(0, copy);
+    }
+    // 统一刷一下最新的imageKey
+    for (var ele in imageFavoritesEp.imageFavorites) {
+      ele.imageKey = images[ele.page - 1];
+    }
+    ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
     if (mounted) {
       setState(() {});
     }
@@ -212,25 +242,9 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                             .firstWhere((e) {
                           return e.eid == curImageFavorite.eid;
                         });
-                        ImageProvider image =
-                            ImageFavoritesProvider(curImageFavorite);
                         bool isSelected =
                             widget.selectedImageFavorites[curImageFavorite] ??
                                 false;
-                        Widget imageWidget = AnimatedImage(
-                          image: image,
-                          width: 96,
-                          height: 128,
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium,
-                          onError: (Object error, StackTrace? stackTrace) {
-                            if (loadingImageFavoritesComicRes.isLoaded) {
-                              return;
-                            }
-                            refreshImageKey(curImageFavoritesEp);
-                            hasRefreshImageKeyOnErr = true;
-                          },
-                        );
                         int curPage = curImageFavorite.page;
                         String pageText = curPage == ImageFavoritesEp.firstPage
                             ? '@a Cover'
@@ -287,7 +301,23 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                                             .secondaryContainer,
                                       ),
                                       clipBehavior: Clip.antiAlias,
-                                      child: imageWidget),
+                                      child: AnimatedImage(
+                                        image: ImageFavoritesProvider(
+                                            curImageFavorite),
+                                        width: 96,
+                                        height: 128,
+                                        fit: BoxFit.cover,
+                                        filterQuality: FilterQuality.medium,
+                                        onError: (Object error,
+                                            StackTrace? stackTrace) {
+                                          if (loadingImageFavoritesComicRes
+                                              .isLoaded) {
+                                            return;
+                                          }
+                                          refreshImageKey(curImageFavoritesEp);
+                                          hasRefreshImageKeyOnErr = true;
+                                        },
+                                      )),
                                   Text(
                                     pageText,
                                     style: ts.s10,

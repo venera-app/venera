@@ -44,30 +44,29 @@ class _SelectUpdatePageNumState extends State<_SelectUpdatePageNum> {
         Row(
           children: [Text(text)],
         ),
-        if (source?.favoriteData?.isNewToOldSort != null)
-          Row(
-            children: [
-              Text("Update the page number by the latest collection".tl),
-              Spacer(),
-              Select(
-                current: updatePageNum.toString() == '9999999'
-                    ? allPageText
-                    : updatePageNum.toString(),
-                values: pageNumList,
-                minWidth: 64,
-                onTap: (index) {
-                  setState(() {
-                    updatePageNum = int.parse(pageNumList[index] == allPageText
-                        ? '9999999'
-                        : pageNumList[index]);
-                    appdata.implicitData["local_favorites_update_page_num"] =
-                        updatePageNum;
-                    appdata.writeImplicitData();
-                  });
-                },
-              )
-            ],
-          ),
+        Row(
+          children: [
+            Text("Update the page number by the latest collection".tl),
+            Spacer(),
+            Select(
+              current: updatePageNum.toString() == '9999999'
+                  ? allPageText
+                  : updatePageNum.toString(),
+              values: pageNumList,
+              minWidth: 64,
+              onTap: (index) {
+                setState(() {
+                  updatePageNum = int.parse(pageNumList[index] == allPageText
+                      ? '9999999'
+                      : pageNumList[index]);
+                  appdata.implicitData["local_favorites_update_page_num"] =
+                      updatePageNum;
+                  appdata.writeImplicitData();
+                });
+              },
+            )
+          ],
+        ),
       ],
     );
   }
@@ -814,6 +813,17 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
                 title: "Reorder".tl,
                 content: "Long press and drag to reorder.".tl,
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.swap_vert),
+            onPressed: () {
+              setState(() {
+                comics = comics.reversed.toList();
+                changed = true;
+                showToast(
+                    message: "Reversed successfully".tl, context: context);
+              });
             },
           ),
         ],
