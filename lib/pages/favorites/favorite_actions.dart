@@ -347,7 +347,7 @@ Future<void> importNetworkFolder(
   }
   Future<void> fetchNext() async {
     var retry = 3;
-    while (updatePageNum >= requestCount && !isFinished) {
+    while (updatePageNum > requestCount && !isFinished) {
       try {
         if (comicSource.favoriteData?.loadComic != null) {
           next ??= isOldToNewSort ? maxPage.toString() : '1';
@@ -379,6 +379,10 @@ Future<void> importNetworkFolder(
           } else {
             next =
                 isOldToNewSort ? (page - 1).toString() : (page + 1).toString();
+            // 兼容收藏顺序按时间从旧到新的漫画拉取
+            if (next == '0') {
+              isFinished = true;
+            }
           }
         } else if (comicSource.favoriteData?.loadNext != null) {
           var res = await comicSource.favoriteData!.loadNext!(next, folderID);

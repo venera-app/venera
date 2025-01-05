@@ -53,7 +53,7 @@ class _SelectUpdatePageNumState extends State<_SelectUpdatePageNum> {
                   ? allPageText
                   : updatePageNum.toString(),
               values: pageNumList,
-              minWidth: 64,
+              minWidth: 48,
               onTap: (index) {
                 setState(() {
                   updatePageNum = int.parse(pageNumList[index] == allPageText
