@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -154,14 +153,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
       );
     }
     if (!isNetwork) {
-      return _LocalFavoritesPage(folder: folder!, key: PageStorageKey("local_$folder"));
+      return _LocalFavoritesPage(
+          folder: folder!, key: PageStorageKey("local_$folder"));
     } else {
       var favoriteData = getFavoriteDataOrNull(folder!);
       if (favoriteData == null) {
         folder = null;
         return buildBody();
       } else {
-        return NetworkFavoritePage(favoriteData, key: PageStorageKey("network_$folder"));
+        return NetworkFavoritePage(favoriteData,
+            key: PageStorageKey("network_$folder"));
       }
     }
   }

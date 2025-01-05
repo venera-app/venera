@@ -61,9 +61,17 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         ).toSliver(),
         SliverToBoxAdapter(
           child: AbsorbPointer(
-            absorbing: (appdata.settings['readerMode']?.toLowerCase().startsWith('continuous') ?? false),
+            absorbing: (appdata.settings['readerMode']
+                    ?.toLowerCase()
+                    .startsWith('continuous') ??
+                false),
             child: AnimatedOpacity(
-              opacity: (appdata.settings['readerMode']?.toLowerCase().startsWith('continuous') ?? false) ? 0.5 : 1.0,
+              opacity: (appdata.settings['readerMode']
+                          ?.toLowerCase()
+                          .startsWith('continuous') ??
+                      false)
+                  ? 0.5
+                  : 1.0,
               duration: Duration(milliseconds: 300),
               child: _SliderSetting(
                 title: "The number of pic in screen (Only Gallery Mode)".tl,
@@ -93,7 +101,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call('limitImageWidth');
           },
         ).toSliver(),
-        if(App.isAndroid)
+        if (App.isAndroid)
           _SwitchSetting(
             title: 'Turn page by volume keys'.tl,
             settingKey: 'enableTurnPageByVolumeKey',
@@ -108,7 +116,67 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("enableClockAndBatteryInfoInReader");
           },
         ).toSliver(),
+        _PopupWindowSetting(
+          title: "Custom Image Processing".tl,
+          builder: () => _CustomImageProcessing(),
+        ).toSliver(),
       ],
+    );
+  }
+}
+
+class _CustomImageProcessing extends StatefulWidget {
+  const _CustomImageProcessing();
+
+  @override
+  State<_CustomImageProcessing> createState() => __CustomImageProcessingState();
+}
+
+class __CustomImageProcessingState extends State<_CustomImageProcessing> {
+  var current = '';
+
+  @override
+  void initState() {
+    super.initState();
+    current = appdata.settings['customImageProcessing'];
+  }
+
+  @override
+  void dispose() {
+    appdata.settings['customImageProcessing'] = current;
+    appdata.saveData();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopUpWidgetScaffold(
+      title: "Custom Image Processing".tl,
+      body: Column(
+        children: [
+          _SwitchSetting(
+            title: "Enable".tl,
+            settingKey: "enableCustomImageProcessing",
+          ),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: context.colorScheme.outlineVariant),
+              ),
+              child: SizedBox.expand(
+                child: CodeEditor(
+                  initialValue: appdata.settings['customImageProcessing'],
+                  onChanged: (value) {
+                    current = value;
+                  },
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
     );
   }
 }

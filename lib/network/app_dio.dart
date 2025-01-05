@@ -108,7 +108,6 @@ class MyLogInterceptor implements Interceptor {
 
 class AppDio with DioMixin {
   String? _proxy = proxy;
-  static bool get ignoreCertificateErrors => appdata.settings['ignoreCertificateErrors'] == true;
 
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
@@ -116,9 +115,6 @@ class AppDio with DioMixin {
       proxySettings: proxy == null
           ? const rhttp.ProxySettings.noProxy()
           : rhttp.ProxySettings.proxy(proxy!),
-      tlsSettings: rhttp.TlsSettings(
-        verifyCertificates: !ignoreCertificateErrors,
-      ),
     ));
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
@@ -196,9 +192,6 @@ class AppDio with DioMixin {
         proxySettings: proxy == null
             ? const rhttp.ProxySettings.noProxy()
             : rhttp.ProxySettings.proxy(proxy!),
-        tlsSettings: rhttp.TlsSettings(
-          verifyCertificates: !ignoreCertificateErrors,
-        ),
       ));
     }
     try {
@@ -247,9 +240,6 @@ class RHttpAdapter implements HttpClientAdapter {
         keepAlivePing: Duration(seconds: 30),
       ),
       throwOnStatusCode: false,
-      tlsSettings: rhttp.TlsSettings(
-        verifyCertificates: !AppDio.ignoreCertificateErrors,
-      ),
       dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
     );
   }

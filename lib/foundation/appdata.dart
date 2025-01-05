@@ -13,7 +13,7 @@ class _Appdata {
 
   bool _isSavingData = false;
 
-  Future<void> saveData() async {
+  Future<void> saveData([bool sync = true]) async {
     if (_isSavingData) {
       await Future.doWhile(() async {
         await Future.delayed(const Duration(milliseconds: 20));
@@ -25,7 +25,9 @@ class _Appdata {
     var file = File(FilePath.join(App.dataPath, 'appdata.json'));
     await file.writeAsString(data);
     _isSavingData = false;
-    DataSync().uploadData();
+    if (sync) {
+      DataSync().uploadData();
+    }
   }
 
   void addSearchHistory(String keyword) {
@@ -78,6 +80,25 @@ class _Appdata {
     };
   }
 
+  /// Following fields are related to device-specific data and should not be synced.
+  static const _disableSync = [
+    "proxy",
+    "authorizationRequired",
+    "customImageProcessing",
+  ];
+
+  /// Sync data from another device
+  void syncData(Map<String, dynamic> data) {
+    for (var key in data.keys) {
+      if (_disableSync.contains(key)) {
+        continue;
+      }
+      settings[key] = data[key];
+    }
+    searchHistory = List.from(data['searchHistory']);
+    saveData();
+  }
+
   var implicitData = <String, dynamic>{};
 
   void writeImplicitData() {
@@ -128,6 +149,8 @@ class _Settings with ChangeNotifier {
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,
     'dnsOverrides': {},
+    'enableCustomImageProcessing': false,
+    'customImageProcessing': _defaultCustomImageProcessing,
   };
 
   operator [](String key) {
@@ -144,3 +167,16 @@ class _Settings with ChangeNotifier {
     return _data.toString();
   }
 }
+
+const _defaultCustomImageProcessing = '''
+/**
+ * Process an image
+ * @param image {ArayBuffer} - The image to process
+ * @param cid {string} - The comic ID
+ * @param eid {string} - The episode ID
+ * @returns {Promise<ArrayBuffer>} - The processed image
+ */
+async function processImage(image, cid, eid) {
+    return image;
+}
+''';

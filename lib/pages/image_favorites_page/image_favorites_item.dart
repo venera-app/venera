@@ -83,7 +83,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
       }
       var finalEid = chapters?.keys.elementAt(imageFavoritesEp.ep - 1) ?? '0';
       var resArr = await Future.wait([
-        comicSource!.loadComicPages!(
+        comicSource.loadComicPages!(
           widget.imageFavoritesComic.id,
           finalEid,
         )
@@ -349,8 +349,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
             Row(
               children: [
                 Text(
-                  "Earliest collection time".tl +
-                      ": $time | ${widget.imageFavoritesComic.sourceKey}",
+                  "${"Earliest collection time".tl}: $time | ${widget.imageFavoritesComic.sourceKey}",
                   textAlign: TextAlign.left,
                   style: const TextStyle(
                     fontSize: 12.0,
