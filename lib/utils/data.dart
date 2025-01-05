@@ -133,8 +133,8 @@ Future<void> importPicaData(File file) async {
             .removeWhere((e) => e == "folder_order" || e == "folder_sync");
         for (var folderSyncValue in db.select("SELECT * FROM folder_sync;")) {
           var folderName = folderSyncValue["folder_name"];
-          var sourceKey = folderSyncValue["key"];
-          sourceKey = sourceKey == "htManga" ? "wnacg" : sourceKey;
+          String sourceKey = folderSyncValue["key"];
+          sourceKey = sourceKey.toLowerCase() == "htmanga" ? "wnacg" : sourceKey;
           // 有值就跳过
           if (LocalFavoritesManager().findLinked(folderName).$1 != null) {
             continue;
@@ -211,7 +211,7 @@ Future<void> importPicaData(File file) async {
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
           String sourceKey = comic["id"].split("-")[0];
           // 换名字了, 绅士漫画
-          if (sourceKey == "htManga") {
+          if (sourceKey.toLowerCase() == "htmanga") {
             sourceKey = "wnacg";
           }
           if (ComicSource.find(sourceKey) == null) {
