@@ -2,16 +2,24 @@ part of '../home_page.dart';
 
 class ImageFavoritesFindComic {
   final String id;
-  final String title;
+  final String fullTitle;
+  final String showTitle;
   final String sourceKey;
 
-  const ImageFavoritesFindComic(this.id, this.title, this.sourceKey);
+  const ImageFavoritesFindComic(
+      this.id, this.fullTitle, this.showTitle, this.sourceKey);
+}
+
+class ImageFavoritesTextWithCount {
+  final String text;
+  final int count;
+  const ImageFavoritesTextWithCount(this.text, this.count);
 }
 
 // 算出最喜欢的
 class ImageFavoritesCompute {
-  final List<String> tags;
-  final List<String> authors;
+  final List<ImageFavoritesTextWithCount> tags;
+  final List<ImageFavoritesTextWithCount> authors;
   // 喜欢的图片数
   final List<ImageFavoritesFindComic> comicByNum;
   // 图片数比上总页数
@@ -35,22 +43,29 @@ class ImageFavorites extends StatefulWidget {
   State<ImageFavorites> createState() => ImageFavoritesState();
 }
 
-List<String> exceptTags = ['連載中'];
+// 去掉这些没有意义的标签
+List<String> exceptTags = [
+  '連載中',
+  '',
+  'translated',
+  'chinese',
+  'sole male',
+  'sole female',
+  'original',
+  'doujinshi',
+  'manga',
+  'multi-work series',
+  'mosaic censorship',
+  'dilf',
+  'bbm',
+  'uncensored',
+  'full censorship'
+].map((e) => e.toLowerCase()).toList();
 
 class ImageFavoritesState extends State<ImageFavorites> {
   ImageFavoritesCompute? imageFavoritesCompute;
   List<ImageFavoritePro> allImageFavoritePros = [];
   static String separator = "*venera*";
-  static var enableTranslate = App.locale.languageCode == 'zh';
-  static Color getColor(Color baseColor, double depth) {
-    // 将 RGB 颜色转换为 HSV 颜色
-    HSVColor hsvColor = HSVColor.fromColor(baseColor);
-    // 根据深度调整明度
-    HSVColor adjustedColor = hsvColor.withValue((1 - depth) * hsvColor.value);
-    // 将调整后的 HSV 颜色转换回 RGB 颜色
-    Color finalColor = adjustedColor.toColor();
-    return finalColor;
-  }
 
   static ImageFavoritesFindComic fromStringToImageFavoritesFindComic(
       String str, String suffix, List<ImageFavoritesComic> tempComicsList) {
@@ -62,7 +77,8 @@ class ImageFavoritesState extends State<ImageFavorites> {
     });
     return ImageFavoritesFindComic(
         id,
-        '${comic.title.length > 10 ? comic.title.substring(0, 10) : comic.title}... $suffix',
+        comic.title,
+        '${comic.title.length > 36 ? comic.title.substring(0, 36) : comic.title}... $suffix',
         sourceKey);
   }
 
@@ -76,19 +92,20 @@ class ImageFavoritesState extends State<ImageFavorites> {
     Map<String, int> comicMaxPages = {};
 
     for (ImageFavoritesComic imageFavoritesComic in tempComics) {
-      // 统计标签
       for (var tag in imageFavoritesComic.tags) {
-        String finalTag = enableTranslate ? tag.translateTagsToCN : tag;
+        String finalTag = tag;
         tagCount[finalTag] = (tagCount[finalTag] ?? 0) + 1;
       }
 
-      // 统计作者下的图片数
       if (imageFavoritesComic.author != "") {
-        authorCount[imageFavoritesComic.author] =
-            (authorCount[imageFavoritesComic.author] ?? 0) +
-                imageFavoritesComic.sortedImageFavoritePros.length;
+        String finalAuthor = imageFavoritesComic.author;
+        authorCount[finalAuthor] = (authorCount[finalAuthor] ?? 0) +
+            imageFavoritesComic.sortedImageFavoritePros.length;
       }
-
+      // 小于10页的漫画不统计
+      if (imageFavoritesComic.maxPageFromEp < 10) {
+        continue;
+      }
       // 统计漫画图片数和总页数
       String comicId =
           '${imageFavoritesComic.sourceKey}$separator${imageFavoritesComic.id}';
@@ -121,24 +138,20 @@ class ImageFavoritesState extends State<ImageFavorites> {
         return percentageB.compareTo(percentageA);
       });
 
-    // 只返回前10个结果
     return ImageFavoritesCompute(
         sortedTags
-            .where((tag) => !exceptTags.contains(tag))
-            .take(10)
-            .map((tag) => '$tag (${tagCount[tag]})')
+            .where((tag) => !exceptTags.contains(tag.toLowerCase()))
+            .map((tag) => ImageFavoritesTextWithCount(tag, tagCount[tag]!))
             .toList(),
         sortedAuthors
-            .take(10)
-            .map((author) => '$author (${authorCount[author]})')
+            .map((author) =>
+                ImageFavoritesTextWithCount(author, authorCount[author]!))
             .toList(),
         sortedComicsByNum
-            .take(10)
             .map((comic) => fromStringToImageFavoritesFindComic(
                 comic.key, '(${comic.value})', tempComics))
             .toList(),
         sortedComicsByPercentage
-            .take(10)
             .map((comic) => fromStringToImageFavoritesFindComic(
                 comic.key,
                 '(${(comicImageCount[comic.key]! / comicMaxPages[comic.key]! * 100).toStringAsFixed(1)}%)',
@@ -147,7 +160,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
   }
 
   void refreshImageFavorites() async {
-    if(mounted){
+    if (mounted) {
       imageFavoritesCompute = null;
       allImageFavoritePros = [];
       for (var comic in ImageFavoriteManager.imageFavoritesComicList) {
@@ -178,26 +191,23 @@ class ImageFavoritesState extends State<ImageFavorites> {
     Object text,
     ImageFavoritesComputeType type,
   ) {
-    bool isString = text is String;
+    bool textWithCount = text is ImageFavoritesTextWithCount;
+    bool isAuthor = type == ImageFavoritesComputeType.authors;
+    var enableTranslate = App.locale.languageCode == 'zh';
+    String translateText = '';
+    if (textWithCount) {
+      translateText = enableTranslate ? text.text.translateTagsToCN : text.text;
+      if (isAuthor) {
+        translateText = TagsTranslation.artistTags[text.text] ?? text.text;
+      }
+    }
     return InkWell(
       onTap: () {
-        RegExp regExp = RegExp(r" \(\d+\)");
-        if (type == ImageFavoritesComputeType.tags) {
-          // 跳转到标签搜索页面
-          context.to(() => ImageFavoritesPage(
-              initialKeyword: (text as String).replaceAll(regExp, '')));
-        }
-        if (type == ImageFavoritesComputeType.authors) {
-          context.to(() => ImageFavoritesPage(
-              initialKeyword: (text as String).replaceAll(regExp, '')));
-        }
-        if (type == ImageFavoritesComputeType.comicByNum ||
-            type == ImageFavoritesComputeType.comicByPercentage) {
-          context.to(() => ComicPage(
-                id: (text as ImageFavoritesFindComic).id,
-                sourceKey: text.sourceKey,
-              ));
-        }
+        RegExp regExpForTag = RegExp(r" \(\d+\)$");
+        context.to(() => ImageFavoritesPage(
+            initialKeyword: (textWithCount
+                ? text.text.replaceAll(regExpForTag, '')
+                : (text as ImageFavoritesFindComic).fullTitle)));
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -206,7 +216,9 @@ class ImageFavoritesState extends State<ImageFavorites> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          isString ? text : (text as ImageFavoritesFindComic).title,
+          textWithCount
+              ? "${enableTranslate ? translateText : text.text} (${text.count})"
+              : (text as ImageFavoritesFindComic).showTitle,
         ),
       ),
     );
@@ -263,7 +275,7 @@ class ImageFavoritesState extends State<ImageFavorites> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Calculate your favorite from @a comics and @b images"
+                    "Calculate your favorite from @a comics and @b images, After the parentheses are the number of pictures or the number of pictures compared to the number of comic pages"
                         .tlParams({
                       "a": ImageFavoriteManager.length.toString(),
                       "b": allImageFavoritePros.length

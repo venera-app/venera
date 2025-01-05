@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:math';
 
@@ -22,13 +23,20 @@ import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
+import 'package:venera/utils/utils.dart';
 part "image_favorites_item.dart";
 part "image_favorites_photo_view.dart";
 
-class LoadingImageFavoritesEpRes {
+class LoadingImageFavoritesComicRes {
   bool isLoaded;
   bool isInvalid;
-  LoadingImageFavoritesEpRes({required this.isLoaded, required this.isInvalid});
+  String id;
+  String sourceKey;
+  LoadingImageFavoritesComicRes(
+      {required this.isLoaded,
+      required this.isInvalid,
+      required this.id,
+      required this.sourceKey});
 }
 
 class ImageFavoritesPage extends StatefulWidget {
@@ -47,7 +55,9 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   List<ImageFavoritesComic> imageFavoritesComicList = [];
   late List<ImageFavoritesComic> curImageFavoritesComicList;
   late List<DateTime> timeFilter;
-  Map<ImageFavoritesEp, LoadingImageFavoritesEpRes> isRefreshEpMap = {};
+  List<LoadingImageFavoritesComicRes> isRefreshComicList = [];
+  late TextEditingController _textEditingController;
+  final Debouncer _debouncer = Debouncer();
   String keyword = "";
 
   // 进入关键词搜索模式
@@ -57,6 +67,18 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   // 多选的时候选中的图片
   Map<ImageFavoritePro, bool> selectedImageFavorites = {};
   late List<ImageFavoritePro> imageFavoritePros;
+  // 避免重复请求
+  void setRefreshComicList(LoadingImageFavoritesComicRes res) {
+    LoadingImageFavoritesComicRes? tempRes =
+        isRefreshComicList.firstWhereOrNull(
+            (e) => e.id == res.id && e.sourceKey == res.sourceKey);
+    if (tempRes == null) {
+      isRefreshComicList.add(res);
+    } else {
+      tempRes.isLoaded = res.isLoaded;
+      tempRes.isInvalid = res.isInvalid;
+    }
+  }
 
   void update() {
     setState(() {});
@@ -136,6 +158,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
       keyword = widget.initialKeyword!;
       searchMode = true;
     }
+    _textEditingController = TextEditingController(text: keyword);
     String initSortType = appdata.implicitData["image_favorites_sort"] ??
         ImageFavoriteSortType.title.value;
     sortType = ImageFavoriteSortType.values
@@ -169,7 +192,9 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
 
   @override
   void dispose() {
+    _textEditingController.dispose();
     ImageFavoriteManager().removeListener(refreshImageFavorites);
+    scrollController.dispose();
     super.dispose();
   }
 
@@ -258,7 +283,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
                   icon: const Icon(Icons.sort),
                   color: timeFilterSelect != TimeFilterEnum.all.value ||
                           numFilterSelect != numFilterList[0]
-                      ? Theme.of(context).colorScheme.primary
+                      ? Theme.of(context).colorScheme.inversePrimary
                       : null,
                   onPressed: sort,
                 ),
@@ -313,26 +338,29 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
             ),
             title: TextField(
               autofocus: true,
+              controller: _textEditingController,
               decoration: InputDecoration(
                 hintText: "Search".tl,
                 border: InputBorder.none,
               ),
-              controller: TextEditingController(text: keyword),
               onChanged: (v) {
-                keyword = v;
-                update();
+                _debouncer.run(() {
+                  keyword = _textEditingController.text;
+                  update();
+                }, Duration(seconds: 1));
               },
             ),
           ),
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return ImageFavoritesItem(
-            isRefreshEpMap: isRefreshEpMap,
+            isRefreshComicList: isRefreshComicList,
             imageFavoritesComic: curImageFavoritesComicList[index],
             selectedImageFavorites: selectedImageFavorites,
             addSelected: addSelected,
             multiSelectMode: multiSelectMode,
             finalImageFavoritesComicList: curImageFavoritesComicList,
+            setRefreshComicList: setRefreshComicList,
           );
         }, childCount: curImageFavoritesComicList.length)),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
@@ -349,7 +377,24 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
             context.width > changePoint ? widget.paddingHorizontal(8) : widget,
       ),
     );
-    return body;
+    return PopScope(
+      canPop: !multiSelectMode && !searchMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (multiSelectMode) {
+          setState(() {
+            multiSelectMode = false;
+            selectedImageFavorites.clear();
+          });
+        } else if (searchMode) {
+          setState(() {
+            searchMode = false;
+            keyword = "";
+            update();
+          });
+        }
+      },
+      child: body,
+    );
   }
 
   void sort() {

@@ -58,6 +58,18 @@ class ImageFavoritePro extends ImageFavorite {
   ImageFavoritePro.copy(ImageFavoritePro other)
       : this(other.page, other.imageKey, other.isAutoFavorite, other.eid,
             other.id, other.ep, other.sourceKey, other.epName);
+  @override
+  bool operator ==(Object other) {
+    return other is ImageFavoritePro &&
+        other.id == id &&
+        other.sourceKey == sourceKey &&
+        other.page == page &&
+        other.eid == eid &&
+        other.ep == ep;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sourceKey, page, eid, ep);
 }
 
 class ImageFavoritesEp {
@@ -239,7 +251,7 @@ class ImageFavoritesComic {
 class ImageFavoriteManager with ChangeNotifier {
   static Database get _db => HistoryManager()._db;
   static ImageFavoriteManager? cache;
-  final Throttler _throttler = Throttler(duration: Duration(seconds: 2));
+  final Debouncer _debouncer = Debouncer();
   static List<ImageFavoritesComic> imageFavoritesComicList = getAll(null);
   ImageFavoriteManager.create();
   static bool hasInit = false;
@@ -247,11 +259,11 @@ class ImageFavoriteManager with ChangeNotifier {
     return cache == null ? (cache = ImageFavoriteManager.create()) : cache!;
   }
   void updateValue() {
-    // 避免从pica导入的时候, 疯狂触发
-    _throttler.run(() {
+    // 避免从pica导入的时候, 疯狂触发更新
+    _debouncer.run(() {
       imageFavoritesComicList = getAll(null);
       notifyListeners();
-    });
+    }, Duration(seconds: 5));
   }
 
   /// 检查表image_favorites是否存在, 不存在则创建
@@ -285,7 +297,8 @@ class ImageFavoriteManager with ChangeNotifier {
       List<ImageFavoritesEp> tempImageFavoritesEp = [];
       for (var e in favorite.imageFavoritesEp) {
         int index = tempImageFavoritesEp.indexWhere((i) => i.ep == e.ep);
-        if (index == -1) {
+        // 再做一层保险, 防止出现ep为0的脏数据
+        if (index == -1 && e.ep > 0) {
           tempImageFavoritesEp.add(e);
         }
       }
@@ -462,6 +475,9 @@ class ImageFavoriteManager with ChangeNotifier {
 
   static List<String> get earliestTimeToNow {
     var res = _db.select("select MIN(time) from image_favorites;");
+    if (res.first.values.first == null) {
+      return [];
+    }
     int earliestYear =
         DateTime.fromMillisecondsSinceEpoch(res.first.values.first! as int)
             .year;
