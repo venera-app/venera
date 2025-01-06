@@ -150,6 +150,7 @@ class _Settings with ChangeNotifier {
     'enableCustomImageProcessing': false,
     'customImageProcessing': _defaultCustomImageProcessing,
     'sni': true,
+    'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
   };
 
   operator [](String key) {

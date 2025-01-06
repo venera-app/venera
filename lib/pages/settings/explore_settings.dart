@@ -88,6 +88,30 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           title: "Keyword blocking".tl,
           builder: () => const _ManageBlockingWordView(),
         ).toSliver(),
+        SelectSetting(
+          title: "Default Search Target".tl,
+          settingKey: "defaultSearchTarget",
+          optionTranslation: {
+            '_aggregated_': "Aggregated".tl,
+            ...((){
+              var map = <String, String>{};
+              for (var c in ComicSource.all()) {
+                map[c.key] = c.name;
+              }
+              return map;
+            }()),
+          },
+        ).toSliver(),
+        SelectSetting(
+          title: "Auto Language Filters".tl,
+          settingKey: "autoAddLanguageFilter",
+          optionTranslation: {
+            'none': "None".tl,
+            'chinese': "Chinese",
+            'english': "English",
+            'japanese': "Japanese",
+          },
+        ).toSliver(),
       ],
     );
   }
@@ -150,7 +174,7 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
                 errorText: error,
               ),
               onChanged: (s) {
-                if(error != null){
+                if (error != null) {
                   setState(() {
                     error = null;
                   });
@@ -160,7 +184,8 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
             actions: [
               Button.filled(
                 onPressed: () {
-                  if(appdata.settings["blockedWords"].contains(controller.text)){
+                  if (appdata.settings["blockedWords"]
+                      .contains(controller.text)) {
                     setState(() {
                       error = "Keyword already exists".tl;
                     });

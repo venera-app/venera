@@ -139,7 +139,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     var defaultSearchTarget = appdata.settings['defaultSearchTarget'];
-    if (defaultSearchTarget != null &&
+    if (defaultSearchTarget == "_aggregated_") {
+      aggregatedSearch = true;
+    } else if (defaultSearchTarget != null &&
         ComicSource.find(defaultSearchTarget) != null) {
       searchTarget = defaultSearchTarget;
     } else {

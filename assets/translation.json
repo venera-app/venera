@@ -261,7 +261,10 @@
     "Enable DNS Overrides": "启用DNS覆写",
     "DNS Overrides": "DNS覆写",
     "Custom Image Processing": "自定义图片处理",
-    "Enable": "启用"
+    "Enable": "启用",
+    "Aggregated": "聚合",
+    "Default Search Target": "默认搜索目标",
+    "Auto Language Filters": "自动语言筛选"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -525,6 +528,9 @@
     "Enable DNS Overrides": "啟用DNS覆寫",
     "DNS Overrides": "DNS覆寫",
     "Custom Image Processing": "自定義圖片處理",
-    "Enable": "啟用"
+    "Enable": "啟用",
+    "Aggregated": "聚合",
+    "Default Search Target": "默認搜索目標",
+    "Auto Language Filters": "自動語言篩選"
   }
 }
