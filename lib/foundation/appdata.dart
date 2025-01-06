@@ -113,7 +113,7 @@ class _Settings with ChangeNotifier {
     'cacheSize': 2048, // in MB
     'downloadThreads': 5,
     'enableLongPressToZoom': true,
-    'checkUpdateOnStart': true,
+    'checkUpdateOnStart': false,
     'limitImageWidth': true,
     'webdav': [], // empty means not configured
     'dataVersion': 0,
