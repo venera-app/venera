@@ -28,6 +28,9 @@ class _MenuRoute<T> extends PopupRoute<T> {
     var width = entries.first.icon == null ? 216.0 : 242.0;
     final size = MediaQuery.of(context).size;
     var left = location.dx;
+    if (left < 10) {
+      left = 10;
+    } 
     if (left + width > size.width - 10) {
       left = size.width - width - 10;
     }

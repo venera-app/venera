@@ -108,7 +108,6 @@ class MyLogInterceptor implements Interceptor {
 
 class AppDio with DioMixin {
   String? _proxy = proxy;
-  static bool get ignoreCertificateErrors => appdata.settings['ignoreCertificateErrors'] == true;
 
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
@@ -116,9 +115,6 @@ class AppDio with DioMixin {
       proxySettings: proxy == null
           ? const rhttp.ProxySettings.noProxy()
           : rhttp.ProxySettings.proxy(proxy!),
-      tlsSettings: rhttp.TlsSettings(
-        verifyCertificates: !ignoreCertificateErrors,
-      ),
     ));
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
@@ -196,9 +192,6 @@ class AppDio with DioMixin {
         proxySettings: proxy == null
             ? const rhttp.ProxySettings.noProxy()
             : rhttp.ProxySettings.proxy(proxy!),
-        tlsSettings: rhttp.TlsSettings(
-          verifyCertificates: !ignoreCertificateErrors,
-        ),
       ));
     }
     try {
@@ -222,6 +215,22 @@ class AppDio with DioMixin {
 class RHttpAdapter implements HttpClientAdapter {
   rhttp.ClientSettings settings;
 
+  static Map<String, List<String>> _getOverrides() {
+    if (!appdata.settings['enableDnsOverrides'] == true) {
+      return {};
+    }
+    var config = appdata.settings["dnsOverrides"];
+    var result = <String, List<String>>{};
+    if (config is Map) {
+      for (var entry in config.entries) {
+        if (entry.key is String && entry.value is String) {
+          result[entry.key] = [entry.value];
+        }
+      }
+    }
+    return result;
+  }
+
   RHttpAdapter([this.settings = const rhttp.ClientSettings()]) {
     settings = settings.copyWith(
       redirectSettings: const rhttp.RedirectSettings.limited(5),
@@ -231,8 +240,9 @@ class RHttpAdapter implements HttpClientAdapter {
         keepAlivePing: Duration(seconds: 30),
       ),
       throwOnStatusCode: false,
+      dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
       tlsSettings: rhttp.TlsSettings(
-        verifyCertificates: !AppDio.ignoreCertificateErrors,
+        sni: appdata.settings['sni'] != false,
       ),
     );
   }

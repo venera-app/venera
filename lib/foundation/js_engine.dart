@@ -58,6 +58,11 @@ class JsEngine with _JSEngineApi {
     JsEngine().init();
   }
 
+  void resetDio() {
+    _dio = AppDio(BaseOptions(
+        responseType: ResponseType.plain, validateStatus: (status) => true));
+  }
+
   Future<void> init() async {
     if (!_closed) {
       return;
@@ -198,7 +203,8 @@ class JsEngine with _JSEngineApi {
               ..findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
           },
         );
-        dio.interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
+        dio.interceptors
+            .add(CookieManagerSql(SingleInstanceCookieJar.instance!));
         dio.interceptors.add(LogInterceptor());
       }
       response = await dio!.request(req["url"],

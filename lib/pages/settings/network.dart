@@ -17,6 +17,10 @@ class _NetworkSettingsState extends State<NetworkSettings> {
           title: "Proxy".tl,
           builder: () => const _ProxySettingView(),
         ).toSliver(),
+        _PopupWindowSetting(
+          title: "DNS Overrides".tl,
+          builder: () => const _DNSOverrides(),
+        ).toSliver(),
         _SliderSetting(
           title: "Download Threads".tl,
           settingsIndex: 'downloadThreads',
@@ -42,7 +46,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
   String port = '';
   String username = '';
   String password = '';
-  bool ignoreCertificateErrors = false;
 
   // USERNAME:PASSWORD@HOST:PORT
   String toProxyStr() {
@@ -100,7 +103,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
   void initState() {
     var proxy = appdata.settings['proxy'];
     parseProxyString(proxy);
-    ignoreCertificateErrors = appdata.settings['ignoreCertificateErrors'] ?? false;
     super.initState();
   }
 
@@ -146,17 +148,6 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
               },
             ),
             if (type == 'manual') buildManualProxy(),
-            SwitchListTile(
-              title: Text("Ignore Certificate Errors".tl),
-              value: ignoreCertificateErrors,
-              onChanged: (v) {
-                setState(() {
-                  ignoreCertificateErrors = v;
-                });
-                appdata.settings['ignoreCertificateErrors'] = ignoreCertificateErrors;
-                appdata.saveData();
-              },
-            ),
           ],
         ),
       ),
@@ -248,5 +239,141 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
         ],
       ),
     ).paddingHorizontal(16).paddingTop(16);
+  }
+}
+
+class _DNSOverrides extends StatefulWidget {
+  const _DNSOverrides();
+
+  @override
+  State<_DNSOverrides> createState() => __DNSOverridesState();
+}
+
+class __DNSOverridesState extends State<_DNSOverrides> {
+  var overrides = <(String, String)>[];
+
+  @override
+  void initState() {
+    for (var entry in (appdata.settings['dnsOverrides'] as Map).entries) {
+      if (entry.key is String && entry.value is String) {
+        overrides.add((entry.key, entry.value));
+      }
+    }
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    var map = <String, String>{};
+    for (var entry in overrides) {
+      map[entry.$1] = entry.$2;
+    }
+    appdata.settings['dnsOverrides'] = map;
+    appdata.saveData();
+    JsEngine().resetDio();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopUpWidgetScaffold(
+      title: "DNS Overrides".tl,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _SwitchSetting(
+              title: "Enable DNS Overrides".tl,
+              settingKey: "enableDnsOverrides",
+            ),
+            _SwitchSetting(
+              title: "Server Name Indication",
+              settingKey: "sni",
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 1,
+              margin: EdgeInsets.symmetric(horizontal: 8),
+              color: context.colorScheme.outlineVariant,
+            ),
+            for (var i = 0; i < overrides.length; i++) buildOverride(i),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  overrides.add(('', ''));
+                });
+              },
+              icon: const Icon(Icons.add),
+              label: Text("Add".tl),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildOverride(int index) {
+    var entry = overrides[index];
+    return Container(
+      height: 48,
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: context.colorScheme.outlineVariant,
+          ),
+          left: BorderSide(
+            color: context.colorScheme.outlineVariant,
+          ),
+          right: BorderSide(
+            color: context.colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: "Domain".tl,
+              ),
+              controller: TextEditingController(text: entry.$1),
+              onChanged: (v) {
+                overrides[index] = (v, entry.$2);
+              },
+            ).paddingHorizontal(8),
+          ),
+          Container(
+            width: 1,
+            color: context.colorScheme.outlineVariant,
+          ),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: "IP".tl,
+              ),
+              controller: TextEditingController(text: entry.$2),
+              onChanged: (v) {
+                overrides[index] = (entry.$1, v);
+              },
+            ).paddingHorizontal(8),
+          ),
+          Container(
+            width: 1,
+            color: context.colorScheme.outlineVariant,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () {
+              setState(() {
+                overrides.removeAt(index);
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

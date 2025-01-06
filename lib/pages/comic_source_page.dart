@@ -111,13 +111,12 @@ class _BodyState extends State<_Body> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (App.isDesktop)
-                  Tooltip(
-                    message: "Edit".tl,
-                    child: IconButton(
-                        onPressed: () => edit(source),
-                        icon: const Icon(Icons.edit_note)),
-                  ),
+                Tooltip(
+                  message: "Edit".tl,
+                  child: IconButton(
+                      onPressed: () => edit(source),
+                      icon: const Icon(Icons.edit_note)),
+                ),
                 Tooltip(
                   message: "Update".tl,
                   child: IconButton(
@@ -165,7 +164,8 @@ class _BodyState extends State<_Body> {
             }
           } else {
             current = item.value['options']
-                .firstWhere((e) => e['value'] == current)['text'] ?? current;
+                    .firstWhere((e) => e['value'] == current)['text'] ??
+                current;
           }
           yield ListTile(
             title: Text((item.value['title'] as String).ts(source.key)),
@@ -249,27 +249,35 @@ class _BodyState extends State<_Body> {
   }
 
   void edit(ComicSource source) async {
-    try {
-      await Process.run("code", [source.filePath], runInShell: true);
-      await showDialog(
+    if (App.isDesktop) {
+      try {
+        await Process.run("code", [source.filePath], runInShell: true);
+        await showDialog(
           context: App.rootContext,
           builder: (context) => AlertDialog(
-                title: const Text("Reload Configs"),
-                actions: [
-                  TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("cancel")),
-                  TextButton(
-                      onPressed: () async {
-                        await ComicSource.reload();
-                        App.forceRebuild();
-                      },
-                      child: const Text("continue")),
-                ],
-              ));
-    } catch (e) {
-      context.showMessage(message: "Failed to launch vscode");
+            title: const Text("Reload Configs"),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("cancel")),
+              TextButton(
+                  onPressed: () async {
+                    await ComicSource.reload();
+                    App.forceRebuild();
+                  },
+                  child: const Text("continue")),
+            ],
+          ),
+        );
+        return;
+      } catch (e) {
+        //
+      }
     }
+    context.to(() => _EditFilePage(source.filePath)).then((value) async {
+      await ComicSource.reload();
+      setState(() {});
+    });
   }
 
   static Future<void> update(ComicSource source) async {
@@ -300,12 +308,14 @@ class _BodyState extends State<_Body> {
   }
 
   Widget buildCard(BuildContext context) {
-    Widget buildButton({required Widget child, required VoidCallback onPressed}) {
+    Widget buildButton(
+        {required Widget child, required VoidCallback onPressed}) {
       return Button.normal(
         onPressed: onPressed,
         child: child,
       ).fixHeight(32);
     }
+
     return SliverToBoxAdapter(
       child: SizedBox(
         width: double.infinity,
@@ -560,4 +570,52 @@ void _addAllPagesWithComicSource(ComicSource source) {
   appdata.settings['favorites'] = networkFavorites.toSet().toList();
 
   appdata.saveData();
+}
+
+class _EditFilePage extends StatefulWidget {
+  const _EditFilePage(this.path);
+
+  final String path;
+
+  @override
+  State<_EditFilePage> createState() => __EditFilePageState();
+}
+
+class __EditFilePageState extends State<_EditFilePage> {
+  var current = '';
+
+  @override
+  void initState() {
+    super.initState();
+    current = File(widget.path).readAsStringSync();
+  }
+
+  @override
+  void dispose() {
+    File(widget.path).writeAsStringSync(current);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: Appbar(
+        title: Text("Edit".tl),
+      ),
+      body: Column(
+        children: [
+          Container(
+            height: 0.6,
+            color: context.colorScheme.outlineVariant,
+          ),
+          Expanded(
+            child: CodeEditor(
+              initialValue: current,
+              onChanged: (value) => current = value,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
