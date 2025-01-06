@@ -72,6 +72,7 @@ dependencies:
   shimmer: ^3.0.0
   flutter_memory_info: ^0.0.1
   syntax_highlight: ^0.4.0
+  text_scroll: ^0.2.0
 
 dev_dependencies:
   flutter_test:
