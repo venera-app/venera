@@ -264,7 +264,8 @@
     "Enable": "启用",
     "Aggregated": "聚合",
     "Default Search Target": "默认搜索目标",
-    "Auto Language Filters": "自动语言筛选"
+    "Auto Language Filters": "自动语言筛选",
+    "Check for updates on startup": "启动时检查更新"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -531,6 +532,7 @@
     "Enable": "啟用",
     "Aggregated": "聚合",
     "Default Search Target": "默認搜索目標",
-    "Auto Language Filters": "自動語言篩選"
+    "Auto Language Filters": "自動語言篩選",
+    "Check for updates on startup": "啟動時檢查更新"
   }
 }
