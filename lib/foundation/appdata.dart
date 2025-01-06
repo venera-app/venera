@@ -149,6 +149,7 @@ class _Settings with ChangeNotifier {
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
     'customImageProcessing': _defaultCustomImageProcessing,
+    'sni': true,
   };
 
   operator [](String key) {
