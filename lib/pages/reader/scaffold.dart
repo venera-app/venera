@@ -240,9 +240,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   bool isLiked() {
     String cid = context.reader.cid;
     String eid = context.reader.eid;
+    int ep = context.reader.chapter;
     int page = context.reader.page;
     String sourceKey = context.reader.type.sourceKey;
-    return ImageFavoriteManager.isHas(cid, sourceKey, eid, page);
+    return ImageFavoriteManager.isHas(cid, sourceKey, eid, page, ep);
   }
 
   void imageFavoritesAction() {
@@ -254,11 +255,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         return;
       }
       String id = context.reader.cid;
+      int ep = context.reader.chapter;
       String eid = context.reader.eid;
       String title = context.reader.history!.title;
       String subTitle = context.reader.history!.subtitle;
       int maxPage = context.reader.images!.length;
-      int ep = context.reader.chapter;
       int page = context.reader.page;
       String sourceKey = context.reader.type.sourceKey;
       String imageKey = context.reader.images![page - 1];
@@ -308,9 +309,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             maxPage);
         ImageFavoritePro imageFavoritePro = ImageFavoritePro(
             page, imageKey, null, eid, id, ep, sourceKey, epName);
-        ImageFavoritesEp? imageFavoritesEp = imageFavoritesComic
-            .imageFavoritesEp
-            .firstWhereOrNull((e) => e.eid == eid);
+        ImageFavoritesEp? imageFavoritesEp =
+            imageFavoritesComic.imageFavoritesEp.firstWhereOrNull((e) {
+          return e.ep == ep;
+        });
         if (imageFavoritesEp == null) {
           ImageFavoritePro copy = ImageFavoritePro.copy(imageFavoritePro);
           copy.page = ImageFavoritesEp.firstPage;
@@ -321,6 +323,16 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               eid, ep, [copy, imageFavoritePro], epName, maxPage);
           imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
         } else {
+          if (imageFavoritesEp.eid != eid) {
+            // 空字符串说明是从pica导入的, 那我们就手动刷一遍保证一致
+            if (imageFavoritesEp.eid == "") {
+              imageFavoritesEp.eid == eid;
+            } else {
+              showToast(
+                  message: "漫画的章节顺序可能发生了变化, 暂不支持收藏此章节".tl, context: context);
+              return;
+            }
+          }
           imageFavoritesEp.imageFavorites.add(imageFavoritePro);
         }
 

@@ -134,7 +134,8 @@ Future<void> importPicaData(File file) async {
         for (var folderSyncValue in db.select("SELECT * FROM folder_sync;")) {
           var folderName = folderSyncValue["folder_name"];
           String sourceKey = folderSyncValue["key"];
-          sourceKey = sourceKey.toLowerCase() == "htmanga" ? "wnacg" : sourceKey;
+          sourceKey =
+              sourceKey.toLowerCase() == "htmanga" ? "wnacg" : sourceKey;
           // 有值就跳过
           if (LocalFavoritesManager().findLinked(folderName).$1 != null) {
             continue;
@@ -225,21 +226,21 @@ Future<void> importPicaData(File file) async {
           String epName = "";
           ImageFavoritesComic? tempComic = imageFavoritesComicList
               .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
-          ImageFavoritePro curImageFavorite = ImageFavoritePro(
-              page, "", null, ep.toString(), id, ep, sourceKey, epName);
+          ImageFavoritePro curImageFavorite =
+              ImageFavoritePro(page, "", null, "", id, ep, sourceKey, epName);
           if (tempComic == null) {
             tempComic = ImageFavoritesComic(id, [], title, sourceKey, [], [],
                 DateTime.now(), "", {}, "", 1);
             tempComic.imageFavoritesEp = [
-              ImageFavoritesEp(ep.toString(), ep, [curImageFavorite], epName, 1)
+              ImageFavoritesEp("", ep, [curImageFavorite], epName, 1)
             ];
             imageFavoritesComicList.add(tempComic);
           } else {
             ImageFavoritesEp? tempEp =
                 tempComic.imageFavoritesEp.firstWhereOrNull((e) => e.ep == ep);
             if (tempEp == null) {
-              tempComic.imageFavoritesEp.add(ImageFavoritesEp(
-                  ep.toString(), ep, [curImageFavorite], epName, 1));
+              tempComic.imageFavoritesEp
+                  .add(ImageFavoritesEp("", ep, [curImageFavorite], epName, 1));
             } else {
               // 如果已经有这个page了, 就不添加了
               if (tempEp.imageFavorites

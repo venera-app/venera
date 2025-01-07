@@ -727,7 +727,14 @@ class _SliverGridComicsState extends State<SliverGridComics> {
         comics.add(comic);
       }
     }
+    HistoryManager().addListener(update);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    HistoryManager().removeListener(update);
+    super.dispose();
   }
 
   void update() {
@@ -807,7 +814,10 @@ class _SliverGridComics extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.secondaryContainer.toOpacity(0.72)
+                  ? Theme.of(context)
+                      .colorScheme
+                      .secondaryContainer
+                      .toOpacity(0.72)
                   : null,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -901,13 +911,13 @@ class ComicListState extends State<ComicList> {
   late bool enablePageStorage = widget.enablePageStorage;
 
   Map<String, dynamic> get state => {
-    'maxPage': _maxPage,
-    'data': _data,
-    'page': _page,
-    'error': _error,
-    'loading': _loading,
-    'nextUrl': _nextUrl,
-  };
+        'maxPage': _maxPage,
+        'data': _data,
+        'page': _page,
+        'error': _error,
+        'loading': _loading,
+        'nextUrl': _nextUrl,
+      };
 
   void restoreState(Map<String, dynamic>? state) {
     if (state == null || !enablePageStorage) {
@@ -924,7 +934,7 @@ class ComicListState extends State<ComicList> {
   }
 
   void storeState() {
-    if(enablePageStorage) {
+    if (enablePageStorage) {
       PageStorage.of(context).writeState(context, state);
     }
   }
@@ -1094,11 +1104,11 @@ class ComicListState extends State<ComicList> {
           while (_data[page] == null) {
             await _fetchNext();
           }
-          if(mounted) {
+          if (mounted) {
             setState(() {});
           }
         } catch (e) {
-          if(mounted) {
+          if (mounted) {
             setState(() {
               _error = e.toString();
             });

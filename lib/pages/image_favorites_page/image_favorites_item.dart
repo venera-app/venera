@@ -76,9 +76,9 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
     if (comicPagesRes.error) {
       // 能加载漫画信息, 说明只是章节对不太上, 刷新一下章节
       var chapters = comicInfoRes.data.chapters;
-      // 兜底一下, 如果章节对不上return, 说明是调用接口更新过章节的, 比如拷贝, jm, 避免丢失最初正确的eid
-      // 拷贝, jm可能会更新章节顺序, 以eid为准比较好
-      if (imageFavoritesEp.eid != imageFavoritesEp.ep.toString()) {
+      // 兜底一下, 如果不是从pica导入的空字符串, 说明是调用接口更新过章节的, 比如jm, 避免丢失最初正确的eid
+      // 拷贝等多章节可能会更新章节顺序, 后续如果碰到这种情况多的话, 就在右上角出一个功能批量刷新一下
+      if (imageFavoritesEp.eid != "") {
         return;
       }
       var finalEid = chapters?.keys.elementAt(imageFavoritesEp.ep - 1) ?? '0';
@@ -240,7 +240,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                         ImageFavoritesEp curImageFavoritesEp = widget
                             .imageFavoritesComic.imageFavoritesEp
                             .firstWhere((e) {
-                          return e.eid == curImageFavorite.eid;
+                          return e.ep == curImageFavorite.ep;
                         });
                         bool isSelected =
                             widget.selectedImageFavorites[curImageFavorite] ??

@@ -29,7 +29,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
     curIndex =
         widget.imageFavoritesComic.sortedImageFavoritePros.indexWhere((ele) {
       return ele.page == widget.imageFavoritePro.page &&
-          ele.eid == widget.imageFavoritePro.eid;
+          ele.ep == widget.imageFavoritePro.ep;
     });
     controller = PageController(initialPage: curIndex);
     curImageFavoritesComicIndex =

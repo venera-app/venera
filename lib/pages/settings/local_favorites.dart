@@ -59,17 +59,6 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
             "read": "Read".tl,
           },
         ).toSliver(),
-        SelectSetting(
-          title: "Support sliding to collect images".tl,
-          settingKey: "supportSwipeToFavorite",
-          optionTranslation: {
-            "yes": "Yes".tl,
-            "no": "No".tl,
-          },
-          help:
-              "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"
-                  .tl,
-        ).toSliver(),
       ],
     );
   }

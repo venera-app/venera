@@ -73,6 +73,7 @@ class ImageFavoritePro extends ImageFavorite {
 }
 
 class ImageFavoritesEp {
+  // 小心拷贝等多章节的可能更新章节顺序
   String eid;
   final int ep;
   int maxPage;
@@ -294,9 +295,12 @@ class ImageFavoriteManager with ChangeNotifier {
       where id == ? and source_key == ?;
     """, [favorite.id, favorite.sourceKey]);
     } else {
+      // 去重章节
       List<ImageFavoritesEp> tempImageFavoritesEp = [];
       for (var e in favorite.imageFavoritesEp) {
-        int index = tempImageFavoritesEp.indexWhere((i) => i.ep == e.ep);
+        int index = tempImageFavoritesEp.indexWhere((i) {
+          return i.ep == e.ep;
+        });
         // 再做一层保险, 防止出现ep为0的脏数据
         if (index == -1 && e.ep > 0) {
           tempImageFavoritesEp.add(e);
@@ -351,18 +355,16 @@ class ImageFavoriteManager with ChangeNotifier {
       List<ImageFavoritesComic> tempList,
       String id,
       String sourceKey,
-      dynamic eid,
-      int page) {
+      String eid,
+      int page,
+      int ep) {
     ImageFavoritesComic? temp = tempList
         .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
     if (temp == null) {
       return null;
     } else {
       ImageFavoritesEp? tempEp = temp.imageFavoritesEp.firstWhereOrNull((e) {
-        if (eid is int) {
-          return e.ep == eid;
-        }
-        return e.eid == eid;
+        return e.ep == ep;
       });
       if (tempEp == null) {
         return null;
@@ -377,9 +379,9 @@ class ImageFavoriteManager with ChangeNotifier {
     }
   }
 
-  static bool isHas(String id, String sourceKey, String eid, int page) {
+  static bool isHas(String id, String sourceKey, String eid, int page, int ep) {
     return findFromComicList(
-            imageFavoritesComicList, id, sourceKey, eid, page) !=
+            imageFavoritesComicList, id, sourceKey, eid, page, ep) !=
         null;
   }
 
@@ -444,7 +446,7 @@ class ImageFavoriteManager with ChangeNotifier {
   static void deleteImageFavoritePro(
       List<ImageFavoritePro> imageFavoriteProList) {
     for (var e in imageFavoritesComicList) {
-      // 找到需要删除的具体图片
+      // 找到同一个漫画中的需要删除的具体图片
       List<ImageFavoritePro> filterImageFavoritesPro =
           imageFavoriteProList.where((i) {
         return i.id == e.id && i.sourceKey == e.sourceKey;
@@ -455,7 +457,7 @@ class ImageFavoriteManager with ChangeNotifier {
           i.imageFavorites = i.imageFavorites.where((j) {
             ImageFavoritePro? temp =
                 filterImageFavoritesPro.firstWhereOrNull((k) {
-              return k.eid == j.eid && k.page == j.page;
+              return k.page == j.page && k.ep == j.ep;
             });
             // 如果没有匹配到, 说明不是这个章节和page, 就留着
             return temp == null;
