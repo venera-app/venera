@@ -331,6 +331,9 @@ class ImageFavoriteManager with ChangeNotifier {
         finalImageFavorites.sort((a, b) => a["page"].compareTo(b["page"]));
         finalImageFavoritesEp[epIndex]["imageFavorites"] = finalImageFavorites;
       }
+      if (tempImageFavoritesEp.isEmpty) {
+        throw "Error: No ImageFavoritesEp";
+      }
       _db.execute("""
       insert or replace into image_favorites(id, title, sub_title, author, tags, translated_tags, time, max_page, source_key, image_favorites_ep, other)
       values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

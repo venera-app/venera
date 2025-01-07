@@ -241,6 +241,9 @@ class RHttpAdapter implements HttpClientAdapter {
       ),
       throwOnStatusCode: false,
       dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
+      tlsSettings: rhttp.TlsSettings(
+        sni: appdata.settings['sni'] != false,
+      ),
     );
   }
 

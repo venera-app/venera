@@ -235,110 +235,109 @@ class ComicTile extends StatelessWidget {
   }
 
   Widget _buildBriefMode(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: _onTap,
-              onLongPress:
-                  enableLongPressed ? () => _onLongPressed(context) : null,
-              onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: buildImage(context),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: _onTap,
+          onLongPress: enableLongPressed ? () => _onLongPressed(context) : null,
+          onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.toOpacity(0.2),
+                              blurRadius: 2,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: (() {
-                              final subtitle =
-                                  comic.subtitle?.replaceAll('\n', '').trim();
-                              final text = comic.description.isNotEmpty
-                                  ? comic.description.split('|').join('\n')
-                                  : (subtitle?.isNotEmpty == true
-                                      ? subtitle
-                                      : null);
-                              final scale =
-                                  (appdata.settings['comicTileScale'] as num)
-                                      .toDouble();
-                              final fortSize = scale < 0.85
-                                  ? 8.0 // 小尺寸
-                                  : (scale < 1.0 ? 10.0 : 12.0);
-
-                              if (text == null) {
-                                return const SizedBox
-                                    .shrink(); // 如果没有文本，则不显示任何内容
-                              }
-
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 2, vertical: 2),
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(10.0),
-                                  ),
-                                  child: Container(
-                                    color: Colors.black.toOpacity(0.5),
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.fromLTRB(8, 6, 8, 6),
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxWidth: constraints.maxWidth,
-                                        ),
-                                        child: Text(
-                                          text,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: fortSize,
-                                            color: Colors.white,
-                                          ),
-                                          textAlign: TextAlign.right,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            })(),
-                          ),
-                        ],
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: buildImage(context),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                    child: Text(
-                      comic.title.replaceAll('\n', ''),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: (() {
+                        final subtitle =
+                            comic.subtitle?.replaceAll('\n', '').trim();
+                        final text = comic.description.isNotEmpty
+                            ? comic.description.split('|').join('\n')
+                            : (subtitle?.isNotEmpty == true ? subtitle : null);
+                        final fortSize = constraints.maxWidth < 80
+                            ? 8.0
+                            : constraints.maxWidth < 150
+                                ? 10.0
+                                : 12.0;
+
+                        if (text == null) {
+                          return const SizedBox();
+                        }
+
+                        var children = <Widget>[];
+                        for (var line in text.split('\n')) {
+                          children.add(Container(
+                            margin: const EdgeInsets.fromLTRB(2, 0, 2, 2),
+                            padding: constraints.maxWidth < 80
+                                ? const EdgeInsets.fromLTRB(3, 1, 3, 1)
+                                : constraints.maxWidth < 150
+                                    ? const EdgeInsets.fromLTRB(4, 2, 4, 2)
+                                    : const EdgeInsets.fromLTRB(5, 2, 5, 2),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.black.toOpacity(0.5),
+                            ),
+                            constraints: BoxConstraints(
+                              maxWidth: constraints.maxWidth,
+                            ),
+                            child: Text(
+                              line,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: fortSize,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.right,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ));
+                        }
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: children,
+                        );
+                      })(),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
-        ));
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+                child: TextScroll(
+                  comic.title.replaceAll('\n', ''),
+                  mode: TextScrollMode.endless,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  delayBefore: Duration(milliseconds: 500),
+                  velocity: const Velocity(pixelsPerSecond: Offset(40, 0)),
+                ),
+              ),
+            ],
+          ).paddingHorizontal(6).paddingVertical(8),
+        );
+      },
+    );
   }
 
   List<String> _splitText(String text) {

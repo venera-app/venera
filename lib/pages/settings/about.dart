@@ -61,6 +61,10 @@ class _AboutSettingsState extends State<AboutSettings> {
             },
           ).fixHeight(32),
         ).toSliver(),
+        _SwitchSetting(
+          title: "Check for updates on startup".tl,
+          settingKey: "checkUpdateOnStart",
+        ).toSliver(),
         ListTile(
           title: const Text("Github"),
           trailing: const Icon(Icons.open_in_new),
@@ -102,7 +106,9 @@ Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true]) async {
             return ContentDialog(
               title: "New version available".tl,
               content: Text(
-                  "A new version is available. Do you want to update now?".tl),
+                      "A new version is available. Do you want to update now?"
+                          .tl)
+                  .paddingHorizontal(8),
               actions: [
                 Button.text(
                   onPressed: () {

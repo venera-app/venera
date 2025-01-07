@@ -151,6 +151,8 @@ class _Settings with ChangeNotifier {
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
     'customImageProcessing': _defaultCustomImageProcessing,
+    'sni': true,
+    'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
   };
 
   operator [](String key) {
