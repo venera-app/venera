@@ -138,6 +138,12 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   void initState() {
     page = widget.initialPage ?? 1;
     chapter = widget.initialChapter ?? 1;
+    if (page < 1) {
+      page = 1;
+    }
+    if (chapter < 1) {
+      chapter = 1;
+    }
     mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     history = widget.history;
     Future.microtask(() {
