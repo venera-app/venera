@@ -238,12 +238,17 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   bool isLiked() {
-    String cid = context.reader.cid;
-    String eid = context.reader.eid;
-    int ep = context.reader.chapter;
-    int page = context.reader.page;
-    String sourceKey = context.reader.type.sourceKey;
-    return ImageFavoriteManager.isHas(cid, sourceKey, eid, page, ep);
+    try {
+      String cid = context.reader.cid;
+      String eid = context.reader.eid;
+      int ep = context.reader.chapter;
+      int page = context.reader.page;
+      String sourceKey = context.reader.type.sourceKey;
+      return ImageFavoriteManager.isHas(cid, sourceKey, eid, page, ep);
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
+      return false;
+    }
   }
 
   void imageFavoritesAction() {
@@ -328,8 +333,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             if (imageFavoritesEp.eid == "") {
               imageFavoritesEp.eid == eid;
             } else {
+              // 避免多章节漫画源的章节顺序发生变化, 如果情况比较多, 做一个以eid为准更新ep的功能
               showToast(
-                  message: "漫画的章节顺序可能发生了变化, 暂不支持收藏此章节".tl, context: context);
+                  message:
+                      "The chapter order of the comic may have changed, temporarily not supported for collection"
+                          .tl,
+                  context: context);
               return;
             }
           }
@@ -508,12 +517,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       child: Container(
         decoration: BoxDecoration(
           color: context.colorScheme.surface.toOpacity(0.82),
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.toOpacity(0.5),
-              width: 0.5,
-            ),
-          ),
+          border: isOpen
+              ? Border(
+                  top: BorderSide(
+                    color: Colors.grey.toOpacity(0.5),
+                    width: 0.5,
+                  ),
+                )
+              : null,
         ),
         padding: EdgeInsets.only(bottom: context.padding.bottom),
         child: child,

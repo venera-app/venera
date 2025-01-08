@@ -264,7 +264,7 @@ class ImageFavoriteManager with ChangeNotifier {
     _debouncer.run(() {
       imageFavoritesComicList = getAll(null);
       notifyListeners();
-    }, Duration(seconds: 5));
+    }, Duration(seconds: 4));
   }
 
   /// 检查表image_favorites是否存在, 不存在则创建
@@ -315,7 +315,7 @@ class ImageFavoriteManager with ChangeNotifier {
         for (ImageFavoritePro j in e.imageFavorites) {
           int index =
               finalImageFavorites.indexWhere((i) => i["page"] == j.page);
-          if (index == -1) {
+          if (index == -1 && j.page > 0) {
             // isAutoFavorite 为 null 不写入数据库, 同时只保留需要的属性, 避免增加太多重复字段在数据库里
             if (j.isAutoFavorite != null) {
               finalImageFavorites.add({

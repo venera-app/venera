@@ -160,17 +160,21 @@ class ImageFavoritesState extends State<ImageFavorites> {
   }
 
   void refreshImageFavorites() async {
-    if (mounted) {
-      imageFavoritesCompute = null;
-      allImageFavoritePros = [];
-      for (var comic in ImageFavoriteManager.imageFavoritesComicList) {
-        allImageFavoritePros.addAll(comic.sortedImageFavoritePros);
+    try {
+      if (mounted) {
+        imageFavoritesCompute = null;
+        allImageFavoritePros = [];
+        for (var comic in ImageFavoriteManager.imageFavoritesComicList) {
+          allImageFavoritePros.addAll(comic.sortedImageFavoritePros);
+        }
+        setState(() {});
+        // 避免性能开销, 开一个线程计算
+        imageFavoritesCompute = await compute(computeImageFavorites,
+            jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
+        setState(() {});
       }
-      setState(() {});
-      // 避免性能开销, 开一个线程计算
-      imageFavoritesCompute = await compute(computeImageFavorites,
-          jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
-      setState(() {});
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
     }
   }
 

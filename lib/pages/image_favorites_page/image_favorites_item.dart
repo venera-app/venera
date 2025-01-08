@@ -30,91 +30,95 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
 
   // 如果刚从pica导入(没有imageKey) 或者 imageKey 失效了, 刷新一下
   void refreshImageKey(ImageFavoritesEp imageFavoritesEp) async {
-    if (isImageKeyLoading ||
-        hasRefreshImageKeyOnErr ||
-        loadingImageFavoritesComicRes.isLoaded) {
-      return;
-    }
-    loadingImageFavoritesComicRes.isLoaded = true;
-    widget.setRefreshComicList(loadingImageFavoritesComicRes);
-    isImageKeyLoading = true;
-    ComicSource? comicSource =
-        ComicSource.find(widget.imageFavoritesComic.sourceKey);
-    // 拿一下漫画信息和对应章节的图片
-    var resArr = await Future.wait([
-      comicSource!.loadComicPages!(
-        widget.imageFavoritesComic.id,
-        imageFavoritesEp.eid,
-      ),
-      comicSource.loadComicInfo!(
-        widget.imageFavoritesComic.id,
-      )
-    ]);
-    Res<List<String>> comicPagesRes = resArr[0] as Res<List<String>>;
-    Res<ComicDetails> comicInfoRes = resArr[1] as Res<ComicDetails>;
-    if (comicInfoRes.errorMessage?.contains("404") ?? false) {
-      loadingImageFavoritesComicRes.isInvalid = true;
+    try {
+      if (isImageKeyLoading ||
+          hasRefreshImageKeyOnErr ||
+          loadingImageFavoritesComicRes.isLoaded) {
+        return;
+      }
+      loadingImageFavoritesComicRes.isLoaded = true;
       widget.setRefreshComicList(loadingImageFavoritesComicRes);
+      isImageKeyLoading = true;
+      ComicSource? comicSource =
+          ComicSource.find(widget.imageFavoritesComic.sourceKey);
+      // 拿一下漫画信息和对应章节的图片
+      var resArr = await Future.wait([
+        comicSource!.loadComicPages!(
+          widget.imageFavoritesComic.id,
+          imageFavoritesEp.eid,
+        ),
+        comicSource.loadComicInfo!(
+          widget.imageFavoritesComic.id,
+        )
+      ]);
+      Res<List<String>> comicPagesRes = resArr[0] as Res<List<String>>;
+      Res<ComicDetails> comicInfoRes = resArr[1] as Res<ComicDetails>;
+      if (comicInfoRes.errorMessage?.contains("404") ?? false) {
+        loadingImageFavoritesComicRes.isInvalid = true;
+        widget.setRefreshComicList(loadingImageFavoritesComicRes);
+        if (mounted) {
+          setState(() {});
+        }
+        return;
+      }
+      if (!comicInfoRes.error) {
+        ImageFavoritesSomething something =
+            ImageFavoritesComic.getSomethingFromComicDetails(
+                comicInfoRes.data, imageFavoritesEp.ep);
+        // 刷新一下值, 保存最新的
+        widget.imageFavoritesComic.author = something.author;
+        widget.imageFavoritesComic.subTitle = something.subTitle;
+        widget.imageFavoritesComic.tags = something.tags;
+        widget.imageFavoritesComic.translatedTags = something.translatedTags;
+        imageFavoritesEp.epName = something.epName;
+      } else {
+        return;
+      }
+      if (comicPagesRes.error) {
+        // 能加载漫画信息, 说明只是章节对不太上, 刷新一下章节
+        var chapters = comicInfoRes.data.chapters;
+        // 兜底一下, 如果不是从pica导入的空字符串, 说明是调用接口更新过章节的, 比如jm, 避免丢失最初正确的eid
+        // 拷贝等多章节可能会更新章节顺序, 后续如果碰到这种情况多的话, 就在右上角出一个功能批量刷新一下
+        if (imageFavoritesEp.eid != "") {
+          return;
+        }
+        var finalEid = chapters?.keys.elementAt(imageFavoritesEp.ep - 1) ?? '0';
+        var resArr = await Future.wait([
+          comicSource.loadComicPages!(
+            widget.imageFavoritesComic.id,
+            finalEid,
+          )
+        ]);
+        comicPagesRes = resArr[0];
+        if (comicPagesRes.error) {
+          return;
+        } else {
+          imageFavoritesEp.eid = finalEid;
+        }
+      }
+      List<String> images = comicPagesRes.data;
+      widget.imageFavoritesComic.maxPage = images.length;
+      imageFavoritesEp.maxPage = images.length;
+      // 塞一个封面进去
+      if (!imageFavoritesEp.isHasFirstPage) {
+        ImageFavoritePro copy =
+            ImageFavoritePro.copy(imageFavoritesEp.imageFavorites[0]);
+        copy.page = ImageFavoritesEp.firstPage;
+        copy.isAutoFavorite = true;
+        imageFavoritesEp.imageFavorites.insert(0, copy);
+      }
+      // 统一刷一下最新的imageKey
+      for (var ele in imageFavoritesEp.imageFavorites) {
+        ele.imageKey = images[ele.page - 1];
+      }
+      ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
       if (mounted) {
         setState(() {});
       }
-      return;
+      isImageKeyLoading = false;
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
     }
-    if (!comicInfoRes.error) {
-      ImageFavoritesSomething something =
-          ImageFavoritesComic.getSomethingFromComicDetails(
-              comicInfoRes.data, imageFavoritesEp.ep);
-      // 刷新一下值, 保存最新的
-      widget.imageFavoritesComic.author = something.author;
-      widget.imageFavoritesComic.subTitle = something.subTitle;
-      widget.imageFavoritesComic.tags = something.tags;
-      widget.imageFavoritesComic.translatedTags = something.translatedTags;
-      imageFavoritesEp.epName = something.epName;
-    } else {
-      return;
-    }
-    if (comicPagesRes.error) {
-      // 能加载漫画信息, 说明只是章节对不太上, 刷新一下章节
-      var chapters = comicInfoRes.data.chapters;
-      // 兜底一下, 如果不是从pica导入的空字符串, 说明是调用接口更新过章节的, 比如jm, 避免丢失最初正确的eid
-      // 拷贝等多章节可能会更新章节顺序, 后续如果碰到这种情况多的话, 就在右上角出一个功能批量刷新一下
-      if (imageFavoritesEp.eid != "") {
-        return;
-      }
-      var finalEid = chapters?.keys.elementAt(imageFavoritesEp.ep - 1) ?? '0';
-      var resArr = await Future.wait([
-        comicSource.loadComicPages!(
-          widget.imageFavoritesComic.id,
-          finalEid,
-        )
-      ]);
-      comicPagesRes = resArr[0];
-      if (comicPagesRes.error) {
-        return;
-      } else {
-        imageFavoritesEp.eid = finalEid;
-      }
-    }
-    List<String> images = comicPagesRes.data;
-    widget.imageFavoritesComic.maxPage = images.length;
-    imageFavoritesEp.maxPage = images.length;
-    // 塞一个封面进去
-    if (!imageFavoritesEp.isHasFirstPage) {
-      ImageFavoritePro copy =
-          ImageFavoritePro.copy(imageFavoritesEp.imageFavorites[0]);
-      copy.page = ImageFavoritesEp.firstPage;
-      copy.isAutoFavorite = true;
-      imageFavoritesEp.imageFavorites.insert(0, copy);
-    }
-    // 统一刷一下最新的imageKey
-    for (var ele in imageFavoritesEp.imageFavorites) {
-      ele.imageKey = images[ele.page - 1];
-    }
-    ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
-    if (mounted) {
-      setState(() {});
-    }
-    isImageKeyLoading = false;
   }
 
   void goComicInfo(ImageFavoritesComic comic) {
