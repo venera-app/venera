@@ -339,6 +339,7 @@ Future<void> importNetworkFolder(
   int requestCount = 0;
   var isFinished = false;
   int maxPage = 1;
+  List<FavoriteItem> comics = [];
   String? next;
   // 如果是从旧到新, 先取一下maxPage
   if (isOldToNewSort) {
@@ -350,25 +351,25 @@ Future<void> importNetworkFolder(
     while (updatePageNum > requestCount && !isFinished) {
       try {
         if (comicSource.favoriteData?.loadComic != null) {
-          next ??= isOldToNewSort ? maxPage.toString() : '1';
+          // 从旧到新的情况下, 假设有10页, 更新3页, 则从第8页开始, 8, 9, 10 三页
+          next ??=
+              isOldToNewSort ? (maxPage - updatePageNum + 1).toString() : '1';
           var page = int.parse(next!);
           var res = await comicSource.favoriteData!.loadComic!(page, folderID);
           var count = 0;
           receivedComics += res.data.length;
           for (var c in res.data) {
-            var result = LocalFavoritesManager().addComic(
-              resultName,
-              FavoriteItem(
+            if (!LocalFavoritesManager()
+                .comicExists(resultName, c.id, ComicType(source.hashCode))) {
+              count++;
+              comics.add(FavoriteItem(
                 id: c.id,
                 name: c.title,
                 coverPath: c.cover,
                 type: ComicType(source.hashCode),
                 author: c.subtitle ?? '',
                 tags: c.tags ?? [],
-              ),
-            );
-            if (result) {
-              count++;
+              ));
             }
           }
           requestCount++;
@@ -377,31 +378,24 @@ Future<void> importNetworkFolder(
             isFinished = true;
             next = null;
           } else {
-            next =
-                isOldToNewSort ? (page - 1).toString() : (page + 1).toString();
-            // 兼容收藏顺序按时间从旧到新的漫画拉取
-            if (next == '0') {
-              isFinished = true;
-            }
+            next = (page + 1).toString();
           }
         } else if (comicSource.favoriteData?.loadNext != null) {
           var res = await comicSource.favoriteData!.loadNext!(next, folderID);
           var count = 0;
           receivedComics += res.data.length;
           for (var c in res.data) {
-            var result = LocalFavoritesManager().addComic(
-              resultName,
-              FavoriteItem(
+            if (!LocalFavoritesManager()
+                .comicExists(resultName, c.id, ComicType(source.hashCode))) {
+              count++;
+              comics.add(FavoriteItem(
                 id: c.id,
                 name: c.title,
                 coverPath: c.cover,
                 type: ComicType(source.hashCode),
                 author: c.subtitle ?? '',
                 tags: c.tags ?? [],
-              ),
-            );
-            if (result) {
-              count++;
+              ));
             }
           }
           requestCount++;
@@ -499,5 +493,16 @@ Future<void> importNetworkFolder(
       break;
     }
   }
-  closeDialog?.call();
+  try {
+    if (appdata.settings['newFavoriteAddTo'] == "start" && !isOldToNewSort) {
+      // 如果是插到最前, 并且是从新到旧, 反转一下
+      comics = comics.reversed.toList();
+    }
+    for (var c in comics) {
+      LocalFavoritesManager().addComic(resultName, c);
+    }
+    closeDialog?.call();
+  } catch (e, stackTrace) {
+    Log.error("Unhandled Exception", e.toString(), stackTrace);
+  }
 }
