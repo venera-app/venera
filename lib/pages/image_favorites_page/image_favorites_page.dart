@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -16,11 +18,13 @@ import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/comic_page.dart';
+import 'package:venera/pages/home_page.dart';
 import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'package:venera/utils/utils.dart';
 part "image_favorites_item.dart";
@@ -47,6 +51,7 @@ class ImageFavoritesPage extends StatefulWidget {
 
 class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   late String sortType;
+  ImageFavoritesCompute? imageFavoritesCompute;
   late String timeFilterSelect;
   late String numFilterSelect;
   late List<String> finalTimeList;
@@ -92,15 +97,19 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
     });
   }
 
-  void getInitImageFavorites() {
+  void getInitImageFavorites() async {
     imageFavoritePros = [];
     for (var e in ImageFavoriteManager.imageFavoritesComicList) {
       imageFavoritePros.addAll(e.sortedImageFavoritePros);
     }
     imageFavoritesComicList = ImageFavoriteManager.imageFavoritesComicList;
+    imageFavoritesCompute = await compute(
+        ImageFavoritesState.computeImageFavorites,
+        jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
+    update();
   }
 
-  void refreshImageFavorites() {
+  void refreshImageFavorites() async {
     if (mounted) {
       getInitImageFavorites();
       update();
@@ -258,7 +267,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
           onPressed: deSelect),
       buildMultiSelectMenu(),
     ];
-    var widget = SmoothCustomScrollView(
+    var scrollWidget = SmoothCustomScrollView(
       controller: scrollController,
       slivers: [
         if (!searchMode && !multiSelectMode)
@@ -360,6 +369,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
             multiSelectMode: multiSelectMode,
             finalImageFavoritesComicList: curImageFavoritesComicList,
             setRefreshComicList: setRefreshComicList,
+            imageFavoritesCompute: imageFavoritesCompute,
           );
         }, childCount: curImageFavoritesComicList.length)),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
@@ -372,8 +382,9 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
       interactive: true,
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-        child:
-            context.width > changePoint ? widget.paddingHorizontal(8) : widget,
+        child: context.width > changePoint
+            ? scrollWidget.paddingHorizontal(8)
+            : scrollWidget,
       ),
     );
     return PopScope(

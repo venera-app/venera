@@ -10,6 +10,7 @@ class ImageFavoritesItem extends StatefulWidget {
     required this.finalImageFavoritesComicList,
     required this.isRefreshComicList,
     required this.setRefreshComicList,
+    this.imageFavoritesCompute,
   });
   final ImageFavoritesComic imageFavoritesComic;
   final Function(ImageFavoritePro) addSelected;
@@ -18,6 +19,7 @@ class ImageFavoritesItem extends StatefulWidget {
   final bool multiSelectMode;
   final List<LoadingImageFavoritesComicRes> isRefreshComicList;
   final Function(LoadingImageFavoritesComicRes) setRefreshComicList;
+  final ImageFavoritesCompute? imageFavoritesCompute;
   @override
   State<ImageFavoritesItem> createState() => ImageFavoritesItemState();
 }
@@ -162,8 +164,19 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
         refreshImageKey(e);
       }
     }
-    String time = DateFormat('yyyy-MM-dd HH:mm:ss')
-        .format(widget.imageFavoritesComic.time);
+    var enableTranslate = App.locale.languageCode == 'zh';
+    String time =
+        DateFormat('yyyy-MM-dd HH:mm').format(widget.imageFavoritesComic.time);
+    List<String> hotTags = [];
+    for (ImageFavoritesTextWithCount e
+        in widget.imageFavoritesCompute?.tags ?? []) {
+      if (widget.imageFavoritesComic.tags.contains(e.text)) {
+        hotTags.add(e.text);
+      }
+      if (hotTags.length == 5) {
+        break;
+      }
+    }
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
@@ -353,14 +366,27 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
             Row(
               children: [
                 Text(
-                  "${"Earliest collection time".tl}: $time | ${widget.imageFavoritesComic.sourceKey}",
+                  "${"Collection time".tl}:$time | ${widget.imageFavoritesComic.sourceKey}",
                   textAlign: TextAlign.left,
                   style: const TextStyle(
                     fontSize: 12.0,
                   ),
-                ),
+                ).paddingRight(8),
+                if (hotTags.isNotEmpty)
+                  Expanded(
+                    child: Text(
+                      hotTags
+                          .map((e) => enableTranslate ? e.translateTagsToCN : e)
+                          .join(" "),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 12.0,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
               ],
-            ).paddingHorizontal(16).paddingBottom(8),
+            ).paddingHorizontal(8).paddingBottom(8),
           ],
         ),
       ),

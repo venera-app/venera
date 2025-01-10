@@ -140,7 +140,9 @@ class ImageFavoritesState extends State<ImageFavorites> {
 
     return ImageFavoritesCompute(
         sortedTags
-            .where((tag) => !exceptTags.contains(tag.toLowerCase()))
+            .where((tag) =>
+                !exceptTags.contains(tag.toLowerCase()) &&
+                !RegExp(r"\d+").hasMatch(tag))
             .map((tag) => ImageFavoritesTextWithCount(tag, tagCount[tag]!))
             .toList(),
         sortedAuthors
