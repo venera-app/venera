@@ -501,6 +501,8 @@ Future<void> importNetworkFolder(
     for (var c in comics) {
       LocalFavoritesManager().addComic(resultName, c);
     }
+    // 延迟一点, 让用户看清楚到底新增了多少
+    await Future.delayed(const Duration(milliseconds: 500));
     closeDialog?.call();
   } catch (e, stackTrace) {
     Log.error("Unhandled Exception", e.toString(), stackTrace);

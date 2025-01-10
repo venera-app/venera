@@ -260,9 +260,10 @@ class ImageFavoriteManager with ChangeNotifier {
     return cache == null ? (cache = ImageFavoriteManager.create()) : cache!;
   }
   void updateValue() {
+    // 立刻触发, 让阅读界面可以看到图片收藏的图标状态更新了
+    imageFavoritesComicList = getAll(null);
     // 避免从pica导入的时候, 疯狂触发更新
     _debouncer.run(() {
-      imageFavoritesComicList = getAll(null);
       notifyListeners();
     }, Duration(seconds: 4));
   }

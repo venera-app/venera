@@ -117,11 +117,12 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           },
         ).toSliver(),
         SelectSetting(
-          title: "Support sliding to collect images".tl,
-          settingKey: "supportSwipeToFavorite",
+          title: "Quick collect image".tl,
+          settingKey: "quickCollectImage",
           optionTranslation: {
-            "yes": "Yes".tl,
-            "no": "No".tl,
+            "No": "Not enable".tl,
+            "DoubleTap": "Double Tap".tl,
+            "Swipe": "Swipe".tl,
           },
           help:
               "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"

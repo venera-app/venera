@@ -93,10 +93,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   void dragListenerHandler() async {
     // 过一秒执行, 避免 _gestureDetectorState 还未初始化
     await Future.delayed(Duration(milliseconds: 1000));
+    if(!mounted) return;
     var readerMode = context.reader.mode;
     // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
     double imageFavoritesListenDistance = 0;
-    if (appdata.settings['supportSwipeToFavorite'] == 'yes') {
+    _gestureDetectorState!.dragListenerForImageFavorites = null;
+    if (appdata.settings['quickCollectImage'] == 'Swipe') {
       _gestureDetectorState!.dragListenerForImageFavorites = _DragListener(
         onMove: (offset) {
           switch (readerMode) {
@@ -295,7 +297,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ImageFavoriteManager.deleteImageFavoritePro([
           ImageFavoritePro(page, imageKey, null, eid, id, ep, sourceKey, epName)
         ]);
-        showToast(message: "Uncollect the image".tl, context: context);
+        showToast(message: "Uncollect the image".tl, context: context, seconds: 1);
       } else {
         ImageFavoritesComic? imageFavoritesComic = ImageFavoriteManager
             .imageFavoritesComicList
@@ -346,7 +348,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         }
 
         ImageFavoriteManager.addOrUpdateOrDelete(imageFavoritesComic);
-        showToast(message: "Successfully collected".tl, context: context);
+        showToast(message: "Successfully collected".tl, context: context, seconds: 1);
       }
       update();
     } catch (e, stackTrace) {
