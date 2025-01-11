@@ -44,8 +44,11 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   }
 
   void onPop() {
-    ImageFavoriteManager().deleteImageFavorite(
-        cancelImageFavorites.keys.toList());
+    List<ImageFavorite> tempList = cancelImageFavorites.entries
+        .where((e) => e.value == true)
+        .map((e) => e.key)
+        .toList();
+    ImageFavoriteManager().deleteImageFavorite(tempList);
   }
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
@@ -74,12 +77,10 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   Widget build(BuildContext context) {
     ImageFavoritesComic curComic =
         widget.finalImageFavoritesComicList[curImageFavoritesComicIndex];
-    ImageFavorite curImageFavorite =
-        curComic.sortedImageFavorites[curIndex];
+    ImageFavorite curImageFavorite = curComic.sortedImageFavorites[curIndex];
     int curPage = curImageFavorite.page;
-    String pageText = curPage == firstPage
-        ? 'Cover'.tl
-        : "Page @a".tlParams({'a': curPage});
+    String pageText =
+        curPage == firstPage ? 'Cover'.tl : "Page @a".tlParams({'a': curPage});
     return PopScope(
       onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) {
