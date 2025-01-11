@@ -331,6 +331,27 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
               },
             ),
           ),
+        if (appdata.implicitData['Guide_imageFavoritesPage_DoubleTap'] != true)
+          SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Text(
+                  'Double tap comic copy title, double tap image open gallery'
+                      .tl,
+                ),
+                Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: () {
+                    appdata.implicitData['Guide_imageFavoritesPage_DoubleTap'] =
+                        true;
+                    appdata.writeImplicitData();
+                    update();
+                  },
+                )
+              ],
+            ).paddingHorizontal(8),
+          ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
@@ -516,7 +537,8 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
         FilledButton(
           onPressed: () {
             appdata.implicitData["image_favorites_sort"] = sortType.value;
-            appdata.implicitData["image_favorites_time_filter"] = timeFilter.value;
+            appdata.implicitData["image_favorites_time_filter"] =
+                timeFilter.value;
             appdata.implicitData["image_favorites_number_filter"] = numFilter;
             appdata.writeImplicitData();
             controller.removeListener(handleTabIndex);
