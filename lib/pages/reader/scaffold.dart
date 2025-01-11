@@ -93,7 +93,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   void dragListenerHandler() async {
     // 过一秒执行, 避免 _gestureDetectorState 还未初始化
     await Future.delayed(Duration(milliseconds: 1000));
-    if(!mounted) return;
+    if (!mounted) return;
     var readerMode = context.reader.mode;
     // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
     double imageFavoritesListenDistance = 0;
@@ -297,7 +297,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ImageFavoriteManager.deleteImageFavoritePro([
           ImageFavoritePro(page, imageKey, null, eid, id, ep, sourceKey, epName)
         ]);
-        showToast(message: "Uncollect the image".tl, context: context, seconds: 1);
+        showToast(
+            message: "Uncollect the image".tl, context: context, seconds: 1);
       } else {
         ImageFavoritesComic? imageFavoritesComic = ImageFavoriteManager
             .imageFavoritesComicList
@@ -321,13 +322,18 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           return e.ep == ep;
         });
         if (imageFavoritesEp == null) {
-          ImageFavoritePro copy = ImageFavoritePro.copy(imageFavoritePro);
-          copy.page = ImageFavoritesEp.firstPage;
-          copy.imageKey = context.reader.images![0];
-          copy.isAutoFavorite = true;
-          // 塞一个封面进去
-          imageFavoritesEp = ImageFavoritesEp(
-              eid, ep, [copy, imageFavoritePro], epName, maxPage);
+          if (page != ImageFavoritesEp.firstPage) {
+            ImageFavoritePro copy = ImageFavoritePro.copy(imageFavoritePro);
+            copy.page = ImageFavoritesEp.firstPage;
+            copy.imageKey = context.reader.images![0];
+            copy.isAutoFavorite = true;
+            // 不是第一页的话, 自动塞一个封面进去
+            imageFavoritesEp = ImageFavoritesEp(
+                eid, ep, [copy, imageFavoritePro], epName, maxPage);
+          } else {
+            imageFavoritesEp =
+                ImageFavoritesEp(eid, ep, [imageFavoritePro], epName, maxPage);
+          }
           imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
         } else {
           if (imageFavoritesEp.eid != eid) {
@@ -348,7 +354,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         }
 
         ImageFavoriteManager.addOrUpdateOrDelete(imageFavoritesComic);
-        showToast(message: "Successfully collected".tl, context: context, seconds: 1);
+        showToast(
+            message: "Successfully collected".tl, context: context, seconds: 1);
       }
       update();
     } catch (e, stackTrace) {
@@ -722,7 +729,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         onChanged: (key) {
           if (key == "readerMode") {
             context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
-            App.rootContext.pop();
+            // 这行代码似乎会导致页面白屏, 所有 widget 都不显示
+            // App.rootContext.pop();
           }
           if (key == "enableTurnPageByVolumeKey") {
             if (appdata.settings[key]) {
@@ -730,6 +738,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             } else {
               context.reader.stopVolumeEvent();
             }
+          }
+          if (key == "quickCollectImage") {
+            dragListenerHandler();
           }
           context.reader.update();
         },

@@ -124,6 +124,9 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             "DoubleTap": "Double Tap".tl,
             "Swipe": "Swipe".tl,
           },
+          onChanged: () {
+            widget.onChanged?.call("quickCollectImage");
+          },
           help:
               "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"
                   .tl,
