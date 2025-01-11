@@ -119,7 +119,8 @@ class LocalComic with HistoryMixin implements Comic {
               ep: 0,
               page: 0,
             ),
-        comicDetails: this,
+        author: subtitle,
+        tags: tags,
       ),
     );
   }

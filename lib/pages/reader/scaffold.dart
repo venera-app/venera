@@ -240,22 +240,18 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   bool isLiked() {
-    try {
-      String cid = context.reader.cid;
-      String eid = context.reader.eid;
-      int ep = context.reader.chapter;
-      int page = context.reader.page;
-      String sourceKey = context.reader.type.sourceKey;
-      return ImageFavoriteManager.isHas(cid, sourceKey, eid, page, ep);
-    } catch (e, stackTrace) {
-      Log.error("Unhandled Exception", e.toString(), stackTrace);
-      return false;
-    }
+    return ImageFavoriteManager().has(
+      context.reader.cid,
+      context.reader.type.sourceKey,
+      context.reader.eid,
+      context.reader.page,
+      context.reader.chapter,
+    );
   }
 
   void imageFavoritesAction() {
     try {
-      if (context.reader.images![0].contains('file:///')) {
+      if (context.reader.images![0].contains('file://')) {
         showToast(
             message: "Local comic collection is not supported at present".tl,
             context: context);
@@ -270,69 +266,64 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       int page = context.reader.page;
       String sourceKey = context.reader.type.sourceKey;
       String imageKey = context.reader.images![page - 1];
-      List<String> tags = [];
+      List<String> tags = context.reader.widget.tags;
+      String author = context.reader.widget.author;
 
-      String author = "";
       var epName = context.reader.widget.chapters?.values
               .elementAtOrNull(context.reader.chapter - 1) ??
           "E${context.reader.chapter}";
-      Object comicDetails = context.reader.comicDetails;
-      if (comicDetails is ComicDetails) {
-        ImageFavoritesSomething something =
-            ImageFavoritesComic.getSomethingFromComicDetails(comicDetails, ep);
-        tags = something.tags;
-        author = something.author;
-      } else if (comicDetails is LocalComic) {
-        tags = comicDetails.tags;
-      }
-      var translatedTags = ImageFavoritesComic.tagsToTranslated(tags);
+      var translatedTags = tags.map((e) => e.translateTagsToCN).toList();
 
       if (isLiked()) {
-        if (page == ImageFavoritesEp.firstPage) {
+        if (page == firstPage) {
           showToast(
-              message: "The cover cannot be uncollected here".tl,
-              context: context);
+            message: "The cover cannot be uncollected here".tl,
+            context: context,
+          );
           return;
         }
-        ImageFavoriteManager.deleteImageFavoritePro([
-          ImageFavoritePro(page, imageKey, null, eid, id, ep, sourceKey, epName)
+        ImageFavoriteManager().deleteImageFavorite([
+          ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName)
         ]);
         showToast(
-            message: "Uncollect the image".tl, context: context, seconds: 1);
+          message: "Uncollected the image".tl,
+          context: context,
+          seconds: 1,
+        );
       } else {
-        ImageFavoritesComic? imageFavoritesComic = ImageFavoriteManager
-            .imageFavoritesComicList
-            .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
-        imageFavoritesComic ??= ImageFavoritesComic(
-            id,
-            [],
-            title,
-            sourceKey,
-            tags,
-            translatedTags,
-            DateTime.now(),
-            author,
-            {},
-            subTitle,
-            maxPage);
-        ImageFavoritePro imageFavoritePro = ImageFavoritePro(
-            page, imageKey, null, eid, id, ep, sourceKey, epName);
+        var imageFavoritesComic = ImageFavoriteManager().find(id, sourceKey) ??
+            ImageFavoritesComic(
+              id,
+              [],
+              title,
+              sourceKey,
+              tags,
+              translatedTags,
+              DateTime.now(),
+              author,
+              {},
+              subTitle,
+              maxPage,
+            );
+        ImageFavorite imageFavorite =
+            ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName);
         ImageFavoritesEp? imageFavoritesEp =
             imageFavoritesComic.imageFavoritesEp.firstWhereOrNull((e) {
           return e.ep == ep;
         });
         if (imageFavoritesEp == null) {
-          if (page != ImageFavoritesEp.firstPage) {
-            ImageFavoritePro copy = ImageFavoritePro.copy(imageFavoritePro);
-            copy.page = ImageFavoritesEp.firstPage;
-            copy.imageKey = context.reader.images![0];
-            copy.isAutoFavorite = true;
+          if (page != firstPage) {
+            var copy = imageFavorite.copyWith(
+              page: firstPage,
+              isAutoFavorite: true,
+              imageKey: context.reader.images![0],
+            );
             // 不是第一页的话, 自动塞一个封面进去
             imageFavoritesEp = ImageFavoritesEp(
-                eid, ep, [copy, imageFavoritePro], epName, maxPage);
+                eid, ep, [copy, imageFavorite], epName, maxPage);
           } else {
             imageFavoritesEp =
-                ImageFavoritesEp(eid, ep, [imageFavoritePro], epName, maxPage);
+                ImageFavoritesEp(eid, ep, [imageFavorite], epName, maxPage);
           }
           imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
         } else {
@@ -343,23 +334,24 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             } else {
               // 避免多章节漫画源的章节顺序发生变化, 如果情况比较多, 做一个以eid为准更新ep的功能
               showToast(
-                  message:
-                      "The chapter order of the comic may have changed, temporarily not supported for collection"
-                          .tl,
-                  context: context);
+                message:
+                    "The chapter order of the comic may have changed, temporarily not supported for collection"
+                        .tl,
+                context: context,
+              );
               return;
             }
           }
-          imageFavoritesEp.imageFavorites.add(imageFavoritePro);
+          imageFavoritesEp.imageFavorites.add(imageFavorite);
         }
 
-        ImageFavoriteManager.addOrUpdateOrDelete(imageFavoritesComic);
+        ImageFavoriteManager().addOrUpdateOrDelete(imageFavoritesComic);
         showToast(
             message: "Successfully collected".tl, context: context, seconds: 1);
       }
       update();
     } catch (e, stackTrace) {
-      Log.error("Unhandled Exception", e.toString(), stackTrace);
+      Log.error("Image Favorite", e, stackTrace);
       showToast(message: e.toString(), context: context, seconds: 1);
     }
   }
@@ -729,8 +721,6 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         onChanged: (key) {
           if (key == "readerMode") {
             context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
-            // 这行代码似乎会导致页面白屏, 所有 widget 都不显示
-            // App.rootContext.pop();
           }
           if (key == "enableTurnPageByVolumeKey") {
             if (appdata.settings[key]) {

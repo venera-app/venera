@@ -2,17 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/ext.dart';
-import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
-import 'package:venera/utils/utils.dart';
 
 import 'app.dart';
+import 'consts.dart';
 part "image_favorites.dart";
 
 typedef HistoryType = ComicType;
@@ -227,7 +227,7 @@ class HistoryManager with ChangeNotifier {
       """);
 
     notifyListeners();
-    ImageFavoriteManager.init();
+    ImageFavoriteManager().init();
   }
 
   /// add history. if exists, update time.

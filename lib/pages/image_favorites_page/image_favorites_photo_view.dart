@@ -8,11 +8,13 @@ class ImageFavoritesPhotoView extends StatefulWidget {
       required this.finalImageFavoritesComicList,
       required this.goComicInfo,
       required this.goReaderPage});
+
   final ImageFavoritesComic imageFavoritesComic;
-  final ImageFavoritePro imageFavoritePro;
+  final ImageFavorite imageFavoritePro;
   final List<ImageFavoritesComic> finalImageFavoritesComicList;
   final Function(ImageFavoritesComic) goComicInfo;
   final Function(ImageFavoritesComic, int, int) goReaderPage;
+
   @override
   State<ImageFavoritesPhotoView> createState() =>
       ImageFavoritesPhotoViewState();
@@ -20,14 +22,16 @@ class ImageFavoritesPhotoView extends StatefulWidget {
 
 class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   late PageController controller;
-  Map<ImageFavoritePro, bool> cancelImageFavorites = {};
+  Map<ImageFavorite, bool> cancelImageFavorites = {};
+
   // 图片当前的 index
   late int curIndex;
   late int curImageFavoritesComicIndex;
+
   @override
   void initState() {
     curIndex =
-        widget.imageFavoritesComic.sortedImageFavoritePros.indexWhere((ele) {
+        widget.imageFavoritesComic.sortedImageFavorites.indexWhere((ele) {
       return ele.page == widget.imageFavoritePro.page &&
           ele.ep == widget.imageFavoritePro.ep;
     });
@@ -40,14 +44,14 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   }
 
   void onPop() {
-    ImageFavoriteManager.deleteImageFavoritePro(
+    ImageFavoriteManager().deleteImageFavorite(
         cancelImageFavorites.keys.toList());
   }
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
-    final ImageFavoritePro curImageFavorite = widget
+    final ImageFavorite curImageFavorite = widget
         .finalImageFavoritesComicList[curImageFavoritesComicIndex]
-        .sortedImageFavoritePros[index];
+        .sortedImageFavorites[index];
     return PhotoViewGalleryPageOptions(
         // 图片加载器 支持本地、网络
         imageProvider: ImageFavoritesProvider(curImageFavorite),
@@ -60,7 +64,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
         });
   }
 
-  Future<Uint8List?> _getCurrentImageData(ImageFavoritePro temp) async {
+  Future<Uint8List?> _getCurrentImageData(ImageFavorite temp) async {
     return (await CacheManager()
             .findCache(ImageFavoritesProvider.getImageKey(temp)))!
         .readAsBytes();
@@ -70,10 +74,10 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   Widget build(BuildContext context) {
     ImageFavoritesComic curComic =
         widget.finalImageFavoritesComicList[curImageFavoritesComicIndex];
-    ImageFavoritePro curImageFavorite =
-        curComic.sortedImageFavoritePros[curIndex];
+    ImageFavorite curImageFavorite =
+        curComic.sortedImageFavorites[curIndex];
     int curPage = curImageFavorite.page;
-    String pageText = curPage == ImageFavoritesEp.firstPage
+    String pageText = curPage == firstPage
         ? 'Cover'.tl
         : "Page @a".tlParams({'a': curPage});
     return PopScope(
@@ -88,7 +92,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
             color: context.colorScheme.surface,
           ),
           builder: _buildItem,
-          itemCount: curComic.sortedImageFavoritePros.length,
+          itemCount: curComic.sortedImageFavorites.length,
           loadingBuilder: (context, event) => Center(
             child: SizedBox(
               width: 20.0,
@@ -102,8 +106,8 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
             ),
           ),
           enableRotation: true,
-          customSize: MediaQuery.of(context)
-              .size, //定义图片默认缩放基础的大小,默认全屏 MediaQuery.of(context).size
+          customSize: MediaQuery.of(context).size,
+          //定义图片默认缩放基础的大小,默认全屏 MediaQuery.of(context).size
           pageController: controller,
           onPageChanged: (index) {
             setState(() {
@@ -144,7 +148,7 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(children: [
               Text(
-                  "${curImageFavorite.epName} : $pageText : ${curIndex + 1}/${curComic.sortedImageFavoritePros.length}",
+                  "${curImageFavorite.epName} : $pageText : ${curIndex + 1}/${curComic.sortedImageFavorites.length}",
                   style: ts.s12),
               Spacer(),
               Flexible(

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -18,7 +17,6 @@ import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/comic_page.dart';
-import 'package:venera/pages/home_page.dart';
 import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/ext.dart';
@@ -26,8 +24,9 @@ import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
-import 'package:venera/utils/utils.dart';
+
 part "image_favorites_item.dart";
+
 part "image_favorites_photo_view.dart";
 
 class LoadingImageFavoritesComicRes {
@@ -35,6 +34,7 @@ class LoadingImageFavoritesComicRes {
   bool isInvalid;
   String id;
   String sourceKey;
+
   LoadingImageFavoritesComicRes(
       {required this.isLoaded,
       required this.isInvalid,
@@ -44,33 +44,35 @@ class LoadingImageFavoritesComicRes {
 
 class ImageFavoritesPage extends StatefulWidget {
   const ImageFavoritesPage({super.key, this.initialKeyword});
+
   final String? initialKeyword;
+
   @override
   State<ImageFavoritesPage> createState() => ImageFavoritesPageState();
 }
 
 class ImageFavoritesPageState extends State<ImageFavoritesPage> {
-  late String sortType;
+  late ImageFavoriteSortType sortType;
   ImageFavoritesCompute? imageFavoritesCompute;
-  late String timeFilterSelect;
-  late String numFilterSelect;
-  late List<String> finalTimeList;
+  late TimeFilterEnum timeFilterSelect;
+  late int numFilterSelect;
+
   // 所有的图片收藏
-  List<ImageFavoritesComic> imageFavoritesComicList = [];
-  late List<ImageFavoritesComic> curImageFavoritesComicList;
+  List<ImageFavoritesComic> comics = [];
   late List<DateTime> timeFilter;
   List<LoadingImageFavoritesComicRes> isRefreshComicList = [];
   late TextEditingController _textEditingController;
-  final Debouncer _debouncer = Debouncer();
   String keyword = "";
 
   // 进入关键词搜索模式
   bool searchMode = false;
 
   bool multiSelectMode = false;
+
   // 多选的时候选中的图片
-  Map<ImageFavoritePro, bool> selectedImageFavorites = {};
-  late List<ImageFavoritePro> imageFavoritePros;
+  Map<ImageFavorite, bool> selectedImageFavorites = {};
+  late List<ImageFavorite> imageFavoritePros;
+
   // 避免重复请求
   void setRefreshComicList(LoadingImageFavoritesComicRes res) {
     LoadingImageFavoritesComicRes? tempRes =
@@ -85,27 +87,28 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   }
 
   void update() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  void updateDialogConfig(String tempSortType, String tempTimeFilterSelect,
-      String tempNumFilterSelect) {
+  void updateDialogConfig(ImageFavoriteSortType sortType,
+      TimeFilterEnum timeFilter, int numFilter) {
     setState(() {
-      sortType = tempSortType;
-      timeFilterSelect = tempTimeFilterSelect;
-      numFilterSelect = tempNumFilterSelect;
+      this.sortType = sortType;
+      timeFilterSelect = timeFilter;
+      numFilterSelect = numFilter;
     });
   }
 
   void getInitImageFavorites() async {
     imageFavoritePros = [];
-    for (var e in ImageFavoriteManager.imageFavoritesComicList) {
-      imageFavoritePros.addAll(e.sortedImageFavoritePros);
+    for (var e in ImageFavoriteManager().imageFavoritesComicList) {
+      imageFavoritePros.addAll(e.sortedImageFavorites);
     }
-    imageFavoritesComicList = ImageFavoriteManager.imageFavoritesComicList;
-    imageFavoritesCompute = await compute(
-        ImageFavoritesState.computeImageFavorites,
-        jsonEncode(ImageFavoriteManager.imageFavoritesComicList));
+    getCurImageFavorites();
+    imageFavoritesCompute =
+        await ImageFavoriteManager().computeImageFavorites();
     update();
   }
 
@@ -117,46 +120,38 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
   }
 
   void getCurImageFavorites() {
-    List<ImageFavoritesComic> tempList = imageFavoritesComicList;
-    if (keyword != "") {
-      tempList = ImageFavoriteManager.search(keyword);
-    }
+    comics = searchMode
+        ? ImageFavoriteManager().search(keyword)
+        : ImageFavoriteManager().getAll();
+    var now = DateTime.now();
     // 筛选到最终列表
-    curImageFavoritesComicList = tempList.where((ele) {
+    comics = comics.where((ele) {
       bool isFilter = true;
-      if (timeFilterSelect != TimeFilterEnum.all.value) {
-        timeFilter = getDateTimeRangeFromFilter(timeFilterSelect);
-        DateTime start = timeFilter[0];
-        DateTime end = timeFilter[1];
-        DateTime dateTimeToCheck = ele.time;
-        isFilter =
-            dateTimeToCheck.isAfter(start) && dateTimeToCheck.isBefore(end) ||
-                dateTimeToCheck == start ||
-                dateTimeToCheck == end;
+      if (timeFilterSelect != TimeFilterEnum.all) {
+        isFilter = now.difference(ele.time) <= timeFilterSelect.duration;
       }
       if (numFilterSelect != numFilterList[0]) {
-        isFilter =
-            ele.sortedImageFavoritePros.length > int.parse(numFilterSelect);
+        isFilter = ele.sortedImageFavorites.length > numFilterSelect;
       }
       return isFilter;
     }).toList();
     // 给列表排序
-    if (sortType == ImageFavoriteSortType.title.value) {
-      curImageFavoritesComicList.sort((a, b) => a.title.compareTo(b.title));
-    } else if (sortType == ImageFavoriteSortType.timeAsc.value) {
-      curImageFavoritesComicList.sort((a, b) => a.time.compareTo(b.time));
-    } else if (sortType == ImageFavoriteSortType.timeDesc.value) {
-      curImageFavoritesComicList.sort((a, b) => b.time.compareTo(a.time));
-    } else if (sortType == ImageFavoriteSortType.maxFavorites.value) {
-      curImageFavoritesComicList.sort((a, b) => b.sortedImageFavoritePros.length
-          .compareTo(a.sortedImageFavoritePros.length));
-    } else if (sortType ==
-        ImageFavoriteSortType.favoritesCompareComicPages.value) {
-      curImageFavoritesComicList.sort((a, b) {
-        double tempA = a.sortedImageFavoritePros.length / a.maxPageFromEp;
-        double tempB = b.sortedImageFavoritePros.length / b.maxPageFromEp;
-        return tempB.compareTo(tempA);
-      });
+    switch (sortType) {
+      case ImageFavoriteSortType.title:
+        comics.sort((a, b) => a.title.compareTo(b.title));
+      case ImageFavoriteSortType.timeAsc:
+        comics.sort((a, b) => a.time.compareTo(b.time));
+      case ImageFavoriteSortType.timeDesc:
+        comics.sort((a, b) => b.time.compareTo(a.time));
+      case ImageFavoriteSortType.maxFavorites:
+        comics.sort((a, b) => b.sortedImageFavorites.length
+            .compareTo(a.sortedImageFavorites.length));
+      case ImageFavoriteSortType.favoritesCompareComicPages:
+        comics.sort((a, b) {
+          double tempA = a.sortedImageFavorites.length / a.maxPageFromEp;
+          double tempB = b.sortedImageFavorites.length / b.maxPageFromEp;
+          return tempB.compareTo(tempA);
+        });
     }
   }
 
@@ -167,32 +162,14 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
       searchMode = true;
     }
     _textEditingController = TextEditingController(text: keyword);
-    String initSortType = appdata.implicitData["image_favorites_sort"] ??
-        ImageFavoriteSortType.title.value;
-    sortType = ImageFavoriteSortType.values
-            .firstWhereOrNull((e) => e.value == initSortType)
-            ?.value ??
-        ImageFavoriteSortType.title.value;
-    String initTimeFilter =
-        appdata.implicitData["image_favorites_time_filter"] ??
-            TimeFilterEnum.all.value;
-    // 可能是年份
-    int yearNum = int.tryParse(initTimeFilter) ?? 2023;
-    bool isValideYearNum = yearNum >= 2023 && yearNum <= 2099;
-    if (!isValideYearNum) {
-      timeFilterSelect = timeFilterList
-              .firstWhereOrNull((e) => e.value == initTimeFilter)
-              ?.value ??
-          TimeFilterEnum.all.value;
-    } else {
-      timeFilterSelect = initTimeFilter;
-    }
-    numFilterSelect =
-        appdata.implicitData["image_favorites_num_filter"] ?? numFilterList[0];
-    finalTimeList = List<String>.from([
-      ...timeFilterList.map((e) => e.value),
-      ...ImageFavoriteManager.earliestTimeToNow
-    ]);
+    sortType = ImageFavoriteSortType.values.firstWhereOrNull(
+            (e) => e.value == appdata.implicitData["image_favorites_sort"]) ??
+        ImageFavoriteSortType.title;
+    timeFilterSelect = TimeFilterEnum.values.firstWhereOrNull((e) =>
+            e.value == appdata.implicitData["image_favorites_time_filter"]) ??
+        TimeFilterEnum.all;
+    numFilterSelect = appdata.implicitData["image_favorites_number_filter"] ??
+        numFilterList[0];
     getInitImageFavorites();
     ImageFavoriteManager().addListener(refreshImageFavorites);
     super.initState();
@@ -212,9 +189,8 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
         icon: Icons.delete_outline,
         text: "Delete".tl,
         onClick: () {
-          selectedImageFavorites.keys.toList().forEach((ele) {
-            ImageFavoriteManager.deleteImageFavoritePro([ele]);
-          });
+          ImageFavoriteManager()
+              .deleteImageFavorite(selectedImageFavorites.keys.toList());
           setState(() {
             multiSelectMode = false;
             selectedImageFavorites.clear();
@@ -242,7 +218,7 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
       });
     }
 
-    void addSelected(ImageFavoritePro i) {
+    void addSelected(ImageFavorite i) {
       if (selectedImageFavorites[i] == null) {
         selectedImageFavorites[i] = true;
       } else {
@@ -289,10 +265,6 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
                 message: "Sort".tl,
                 child: IconButton(
                   icon: const Icon(Icons.sort),
-                  color: timeFilterSelect != TimeFilterEnum.all.value ||
-                          numFilterSelect != numFilterList[0]
-                      ? Theme.of(context).colorScheme.inversePrimary
-                      : null,
                   onPressed: sort,
                 ),
               ),
@@ -352,26 +324,30 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
                 border: InputBorder.none,
               ),
               onChanged: (v) {
-                _debouncer.run(() {
+                Future.delayed(Duration(milliseconds: 500), () {
                   keyword = _textEditingController.text;
                   update();
-                }, Duration(milliseconds: 500));
+                });
               },
             ),
           ),
         SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-          return ImageFavoritesItem(
-            isRefreshComicList: isRefreshComicList,
-            imageFavoritesComic: curImageFavoritesComicList[index],
-            selectedImageFavorites: selectedImageFavorites,
-            addSelected: addSelected,
-            multiSelectMode: multiSelectMode,
-            finalImageFavoritesComicList: curImageFavoritesComicList,
-            setRefreshComicList: setRefreshComicList,
-            imageFavoritesCompute: imageFavoritesCompute,
-          );
-        }, childCount: curImageFavoritesComicList.length)),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              return _ImageFavoritesItem(
+                isRefreshComicList: isRefreshComicList,
+                imageFavoritesComic: comics[index],
+                selectedImageFavorites: selectedImageFavorites,
+                addSelected: addSelected,
+                multiSelectMode: multiSelectMode,
+                finalImageFavoritesComicList: comics,
+                setRefreshComicList: setRefreshComicList,
+                imageFavoritesCompute: imageFavoritesCompute,
+              );
+            },
+            childCount: comics.length,
+          ),
+        ),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
     );
@@ -415,7 +391,6 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
           initSortType: sortType,
           initTimeFilterSelect: timeFilterSelect,
           initNumFilterSelect: numFilterSelect,
-          finalTimeList: finalTimeList,
           updateDialogConfig: updateDialogConfig,
         );
       },
@@ -424,19 +399,19 @@ class ImageFavoritesPageState extends State<ImageFavoritesPage> {
 }
 
 class ImageFavoritesDialog extends StatefulWidget {
-  ImageFavoritesDialog({
+  const ImageFavoritesDialog({
     super.key,
     required this.initSortType,
     required this.initTimeFilterSelect,
     required this.initNumFilterSelect,
-    required this.finalTimeList,
     required this.updateDialogConfig,
   });
-  String initSortType;
-  String initTimeFilterSelect;
-  String initNumFilterSelect;
-  final List<String> finalTimeList;
+
+  final ImageFavoriteSortType initSortType;
+  final TimeFilterEnum initTimeFilterSelect;
+  final int initNumFilterSelect;
   final Function updateDialogConfig;
+
   @override
   State<ImageFavoritesDialog> createState() => ImageFavoritesDialogState();
 }
@@ -446,6 +421,10 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
   late TabController controller;
   List<String> optionTypes = ['Sort', 'Filter'];
   int tabIndex = 0;
+  late var sortType = widget.initSortType;
+  late var timeFilter = widget.initTimeFilterSelect;
+  late var numFilter = widget.initNumFilterSelect;
+
   void handleTabIndex() {
     if (mounted) {
       setState(() {
@@ -474,15 +453,11 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
   @override
   Widget build(BuildContext context) {
     Widget tabBar = Material(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: FilledTabBar(
-          key: PageStorageKey(optionTypes),
-          tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
-          controller: controller,
-        ),
+      borderRadius: BorderRadius.circular(8),
+      child: FilledTabBar(
+        key: PageStorageKey(optionTypes),
+        tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
+        controller: controller,
       ),
     ).paddingTop(context.padding.top);
     return ContentDialog(
@@ -490,21 +465,15 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
         tabBar,
         tabIndex == 0
             ? Column(
-                children: [
-                  ImageFavoriteSortType.title,
-                  ImageFavoriteSortType.timeAsc,
-                  ImageFavoriteSortType.timeDesc,
-                  ImageFavoriteSortType.maxFavorites,
-                  ImageFavoriteSortType.favoritesCompareComicPages,
-                ]
+                children: ImageFavoriteSortType.values
                     .map(
-                      (e) => RadioListTile<String>(
+                      (e) => RadioListTile<ImageFavoriteSortType>(
                         title: Text(e.value.tl),
-                        value: e.value,
-                        groupValue: widget.initSortType,
+                        value: e,
+                        groupValue: sortType,
                         onChanged: (v) {
                           setState(() {
-                            widget.initSortType = v!;
+                            sortType = v!;
                           });
                         },
                       ),
@@ -516,13 +485,13 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
                   ListTile(
                     title: Text("Time Filter".tl),
                     trailing: Select(
-                      current: widget.initTimeFilterSelect,
-                      values: widget.finalTimeList,
+                      current: timeFilter.value,
+                      values:
+                          TimeFilterEnum.values.map((e) => e.value).toList(),
                       minWidth: 64,
                       onTap: (index) {
                         setState(() {
-                          widget.initTimeFilterSelect =
-                              widget.finalTimeList[index];
+                          timeFilter = TimeFilterEnum.values[index];
                         });
                       },
                     ),
@@ -530,12 +499,12 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
                   ListTile(
                     title: Text("Image Favorites Greater Than".tl),
                     trailing: Select(
-                      current: widget.initNumFilterSelect,
-                      values: numFilterList,
+                      current: numFilter.toString(),
+                      values: numFilterList.map((e) => e.toString()).toList(),
                       minWidth: 64,
                       onTap: (index) {
                         setState(() {
-                          widget.initNumFilterSelect = numFilterList[index];
+                          numFilter = numFilterList[index];
                         });
                       },
                     ),
@@ -546,17 +515,14 @@ class ImageFavoritesDialogState extends State<ImageFavoritesDialog>
       actions: [
         FilledButton(
           onPressed: () {
-            appdata.implicitData["image_favorites_sort"] = widget.initSortType;
-            appdata.implicitData["image_favorites_time_filter"] =
-                widget.initTimeFilterSelect;
-            appdata.implicitData["image_favorites_num_filter"] =
-                widget.initNumFilterSelect;
+            appdata.implicitData["image_favorites_sort"] = sortType.value;
+            appdata.implicitData["image_favorites_time_filter"] = timeFilter.value;
+            appdata.implicitData["image_favorites_number_filter"] = numFilter;
             appdata.writeImplicitData();
             controller.removeListener(handleTabIndex);
             if (mounted) {
               Navigator.pop(context);
-              widget.updateDialogConfig(widget.initSortType,
-                  widget.initTimeFilterSelect, widget.initNumFilterSelect);
+              widget.updateDialogConfig(sortType, timeFilter, numFilter);
             }
           },
           child: Text("Confirm".tl),

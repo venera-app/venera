@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:venera/components/components.dart';
@@ -26,7 +23,6 @@ import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'local_comics_page.dart';
-part "./home_page/image_favorites.dart";
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -916,6 +912,206 @@ class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
           ),
         );
       },
+    );
+  }
+}
+
+enum ImageFavoritesComputeType {
+  tags,
+  authors,
+  comicByNum,
+  comicByPercentage,
+}
+
+class ImageFavorites extends StatefulWidget {
+  const ImageFavorites({super.key});
+
+  @override
+  State<ImageFavorites> createState() => _ImageFavoritesState();
+}
+
+class _ImageFavoritesState extends State<ImageFavorites> {
+  ImageFavoritesCompute? imageFavoritesCompute;
+  List<ImageFavorite> allImageFavoritePros = [];
+
+  void refreshImageFavorites() async {
+    try {
+      imageFavoritesCompute = null;
+      allImageFavoritePros = [];
+      for (var comic in ImageFavoriteManager().imageFavoritesComicList) {
+        allImageFavoritePros.addAll(comic.sortedImageFavorites);
+      }
+      setState(() {});
+      imageFavoritesCompute =
+      await ImageFavoriteManager().computeImageFavorites();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
+    }
+  }
+
+  @override
+  void initState() {
+    refreshImageFavorites();
+    ImageFavoriteManager().addListener(refreshImageFavorites);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ImageFavoriteManager().removeListener(refreshImageFavorites);
+    super.dispose();
+  }
+
+  Widget roundBtn(
+      TextWithCount textWithCount,
+      ImageFavoritesComputeType type,
+      ) {
+    var enableTranslate = App.locale.languageCode == 'zh';
+    var text = enableTranslate
+        ? textWithCount.text.translateTagsToCN
+        : textWithCount.text;
+    if (type == ImageFavoritesComputeType.tags) {
+      if (text.contains(':')) {
+        text = text.split(':').last;
+      }
+    }
+    if (text.length > 20) {
+      text = '${text.substring(0, 20)}...';
+    }
+    text += "(${textWithCount.count})";
+    return InkWell(
+      onTap: () {
+        context
+            .to(() => ImageFavoritesPage(initialKeyword: textWithCount.text));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(text),
+      ),
+    );
+  }
+
+  Widget listRoundBtn(
+      List<TextWithCount> list, ImageFavoritesComputeType type) {
+    return Expanded(
+      child: SizedBox(
+        height: 24,
+        child: ListView.separated(
+          separatorBuilder: (BuildContext context, int index) {
+            return SizedBox(width: 4);
+          },
+          scrollDirection: Axis.horizontal,
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            return roundBtn(list[index], type);
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            context.to(() => const ImageFavoritesPage());
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    Center(
+                      child: Text('Image Favorites'.tl, style: ts.s18),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_right),
+                  ],
+                ),
+              ).paddingHorizontal(16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Calculate your favorite from @a comics and @b images, After the parentheses are the number of pictures or the number of pictures compared to the number of comic pages"
+                        .tlParams({
+                      "a": ImageFavoriteManager().length.toString(),
+                      "b": allImageFavoritePros.length
+                    }),
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                  if (imageFavoritesCompute != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          "Author: ".tl,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        listRoundBtn(imageFavoritesCompute!.authors,
+                            ImageFavoritesComputeType.authors)
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          "Tags: ".tl,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        listRoundBtn(imageFavoritesCompute!.tags,
+                            ImageFavoritesComputeType.tags)
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          "Comics(number): ".tl,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        listRoundBtn(imageFavoritesCompute!.comicByNum,
+                            ImageFavoritesComputeType.comicByNum)
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          "Comics(percentage): ".tl,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        listRoundBtn(imageFavoritesCompute!.comicByPercentage,
+                            ImageFavoritesComputeType.comicByPercentage)
+                      ],
+                    ),
+                  ],
+                ],
+              ).paddingHorizontal(16).paddingBottom(16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

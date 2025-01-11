@@ -20,6 +20,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -30,6 +31,7 @@ import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'package:venera/utils/volume.dart';
 import 'package:window_manager/window_manager.dart';
@@ -58,12 +60,15 @@ class Reader extends StatefulWidget {
     required this.history,
     this.initialPage,
     this.initialChapter,
-    required this.comicDetails,
+    required this.author,
+    required this.tags,
   });
 
   final ComicType type;
 
-  final Object comicDetails;
+  final String author;
+
+  final List<String> tags;
 
   final String cid;
 
@@ -98,8 +103,6 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   ComicType get type => widget.type;
 
   String get cid => widget.cid;
-
-  Object get comicDetails => widget.comicDetails;
 
   String get eid => widget.chapters?.keys.elementAt(chapter - 1) ?? '0';
 

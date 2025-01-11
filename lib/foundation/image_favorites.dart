@@ -1,36 +1,26 @@
 part of "history.dart";
 
 class ImageFavorite {
+  final String eid;
+  final String id; // 漫画id
+  final int ep;
+  final String epName;
+  final String sourceKey;
   String imageKey;
-
   int page;
-
-  // 是否是自动收藏的, 仅用于第一页
   bool? isAutoFavorite;
 
   ImageFavorite(
     this.page,
     this.imageKey,
     this.isAutoFavorite,
-  );
-}
-
-class ImageFavoritePro extends ImageFavorite {
-  final String eid;
-  final String id; // 漫画id
-  final int ep;
-  final String epName;
-  final String sourceKey;
-  ImageFavoritePro(
-    super.page,
-    super.imageKey,
-    super.isAutoFavorite,
     this.eid,
     this.id,
     this.ep,
     this.sourceKey,
     this.epName,
   );
+
   Map<String, dynamic> toJson() {
     return {
       'page': page,
@@ -44,23 +34,41 @@ class ImageFavoritePro extends ImageFavorite {
     };
   }
 
-  ImageFavoritePro.fromJson(Map<String, dynamic> json)
-      : this(
-            json['page'],
-            json['imageKey'],
-            json['isAutoFavorite'],
-            json['eid'],
-            json['id'],
-            json['ep'],
-            json['sourceKey'],
-            json['epName']);
-  // 复制构造函数
-  ImageFavoritePro.copy(ImageFavoritePro other)
-      : this(other.page, other.imageKey, other.isAutoFavorite, other.eid,
-            other.id, other.ep, other.sourceKey, other.epName);
+  ImageFavorite.fromJson(Map<String, dynamic> json)
+      : page = json['page'],
+        imageKey = json['imageKey'],
+        isAutoFavorite = json['isAutoFavorite'],
+        eid = json['eid'],
+        id = json['id'],
+        ep = json['ep'],
+        sourceKey = json['sourceKey'],
+        epName = json['epName'];
+
+  ImageFavorite copyWith({
+    int? page,
+    String? imageKey,
+    bool? isAutoFavorite,
+    String? eid,
+    String? id,
+    int? ep,
+    String? sourceKey,
+    String? epName,
+  }) {
+    return ImageFavorite(
+      page ?? this.page,
+      imageKey ?? this.imageKey,
+      isAutoFavorite ?? this.isAutoFavorite,
+      eid ?? this.eid,
+      id ?? this.id,
+      ep ?? this.ep,
+      sourceKey ?? this.sourceKey,
+      epName ?? this.epName,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
-    return other is ImageFavoritePro &&
+    return other is ImageFavorite &&
         other.id == id &&
         other.sourceKey == sourceKey &&
         other.page == page &&
@@ -78,30 +86,11 @@ class ImageFavoritesEp {
   final int ep;
   int maxPage;
   String epName;
-  List<ImageFavoritePro> imageFavorites;
-
-  // 避免使用常量
-  static int firstPage = 1;
+  List<ImageFavorite> imageFavorites;
 
   ImageFavoritesEp(
       this.eid, this.ep, this.imageFavorites, this.epName, this.maxPage);
-  Map<String, dynamic> toJson() {
-    return {
-      'eid': eid,
-      'ep': ep,
-      'imageFavorites': imageFavorites,
-      'epName': epName,
-      'maxPage': maxPage,
-    };
-  }
 
-  ImageFavoritesEp.fromJson(Map<String, dynamic> json)
-      : eid = json['eid'],
-        ep = json['ep'],
-        imageFavorites = List<ImageFavoritePro>.from(
-            json['imageFavorites'].map((e) => ImageFavoritePro.fromJson(e))),
-        epName = json['epName'],
-        maxPage = json['maxPage'];
   // 是否有封面
   bool get isHasFirstPage {
     return imageFavorites[0].page == firstPage;
@@ -111,17 +100,16 @@ class ImageFavoritesEp {
   bool get isHasImageKey {
     return imageFavorites.every((e) => e.imageKey != "");
   }
-}
 
-// 从漫画详情中获取到的信息
-class ImageFavoritesSomething {
-  String author;
-  String subTitle;
-  List<String> tags;
-  List<String> translatedTags;
-  String epName;
-  ImageFavoritesSomething(
-      this.author, this.tags, this.translatedTags, this.epName, this.subTitle);
+  Map<String, dynamic> toJson() {
+    return {
+      'eid': eid,
+      'ep': ep,
+      'maxPage': maxPage,
+      'epName': epName,
+      'imageFavorites': imageFavorites.map((e) => e.toJson()).toList(),
+    };
+  }
 }
 
 class ImageFavoritesComic {
@@ -130,6 +118,7 @@ class ImageFavoritesComic {
   String subTitle;
   String author;
   final String sourceKey;
+
   // 不一定是真的这本漫画的所有页数, 如果是多章节的时候
   int maxPage;
   List<String> tags;
@@ -139,46 +128,19 @@ class ImageFavoritesComic {
   final Map<String, dynamic> other;
 
   ImageFavoritesComic(
-      this.id,
-      this.imageFavoritesEp,
-      this.title,
-      this.sourceKey,
-      this.tags,
-      this.translatedTags,
-      this.time,
-      this.author,
-      this.other,
-      this.subTitle,
-      this.maxPage);
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'subTitle': subTitle,
-      'author': author,
-      'tags': tags,
-      'translatedTags': translatedTags,
-      'time': time.millisecondsSinceEpoch,
-      'maxPage': maxPage,
-      'sourceKey': sourceKey,
-      'imageFavoritesEp': imageFavoritesEp,
-      'other': other,
-    };
-  }
+    this.id,
+    this.imageFavoritesEp,
+    this.title,
+    this.sourceKey,
+    this.tags,
+    this.translatedTags,
+    this.time,
+    this.author,
+    this.other,
+    this.subTitle,
+    this.maxPage,
+  );
 
-  ImageFavoritesComic.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        title = json['title'],
-        subTitle = json['subTitle'],
-        author = json['author'],
-        tags = List<String>.from(json['tags']),
-        translatedTags = List<String>.from(json['translatedTags']),
-        time = DateTime.fromMillisecondsSinceEpoch(json['time']),
-        maxPage = json['maxPage'],
-        sourceKey = json['sourceKey'],
-        imageFavoritesEp = List<ImageFavoritesEp>.from(
-            json['imageFavoritesEp'].map((e) => ImageFavoritesEp.fromJson(e))),
-        other = json['other'];
   // 是否都有imageKey
   bool get isAllHasImageKey {
     return imageFavoritesEp
@@ -198,8 +160,8 @@ class ImageFavoritesComic {
     return imageFavoritesEp.every((e) => e.isHasFirstPage);
   }
 
-  List<ImageFavoritePro> get sortedImageFavoritePros {
-    List<ImageFavoritePro> temp = [];
+  List<ImageFavorite> get sortedImageFavorites {
+    List<ImageFavorite> temp = [];
     for (var e in imageFavoritesEp) {
       for (var i in e.imageFavorites) {
         temp.add(i);
@@ -208,68 +170,38 @@ class ImageFavoritesComic {
     return temp;
   }
 
-  static List<String> tagsToTranslated(List<String> tags) {
-    var translatedTags = <String>[];
-    for (var tag in tags) {
-      var translated = tag.translateTagsToCN;
-      if (translated != tag) {
-        translatedTags.add(translated);
-      }
-    }
-    return translatedTags;
+  @override
+  bool operator ==(Object other) {
+    return other is ImageFavoritesComic &&
+        other.id == id &&
+        other.sourceKey == sourceKey;
   }
 
-  static ImageFavoritesSomething getSomethingFromComicDetails(
-      ComicDetails comicDetails, int ep) {
-    List<String> tags = [];
-    String author = "";
-    try {
-      if (comicDetails.tags['Artists'] != null) {
-        author = comicDetails.tags['Artists']!.first;
-      }
-      if (comicDetails.tags['artist'] != null) {
-        author = comicDetails.tags['artist']!.first;
-      }
-      if (comicDetails.tags['作者'] != null) {
-        author = comicDetails.tags['作者']!.first;
-      }
-      if (comicDetails.tags['Author'] != null) {
-        author = comicDetails.tags['Author']!.first;
-      }
-      // ignore: empty_catches
-    } catch (e) {}
-    String epName =
-        comicDetails.chapters?.values.elementAtOrNull(ep - 1) ?? "E$ep";
-    tags = comicDetails.tags.values.fold(
-        <String>[], (previousValue, element) => [...previousValue, ...element]);
-    var translatedTags = tagsToTranslated(tags);
-    String subTitle = comicDetails.subTitle ?? "";
-    return ImageFavoritesSomething(
-        author, tags, translatedTags, epName, subTitle);
-  }
+  @override
+  int get hashCode => Object.hash(id, sourceKey);
 }
 
 class ImageFavoriteManager with ChangeNotifier {
-  static Database get _db => HistoryManager()._db;
-  static ImageFavoriteManager? cache;
-  final Debouncer _debouncer = Debouncer();
-  static List<ImageFavoritesComic> imageFavoritesComicList = getAll(null);
-  ImageFavoriteManager.create();
-  static bool hasInit = false;
-  factory ImageFavoriteManager() {
-    return cache == null ? (cache = ImageFavoriteManager.create()) : cache!;
-  }
+  Database get _db => HistoryManager()._db;
+  late List<ImageFavoritesComic> imageFavoritesComicList = getAll(null);
+
+  static ImageFavoriteManager? _cache;
+
+  ImageFavoriteManager._();
+
+  factory ImageFavoriteManager() => (_cache ??= ImageFavoriteManager._());
+
   void updateValue() {
     // 立刻触发, 让阅读界面可以看到图片收藏的图标状态更新了
     imageFavoritesComicList = getAll(null);
     // 避免从pica导入的时候, 疯狂触发更新
-    _debouncer.run(() {
+    Future.delayed(const Duration(seconds: 4), () {
       notifyListeners();
-    }, Duration(seconds: 4));
+    });
   }
 
   /// 检查表image_favorites是否存在, 不存在则创建
-  static void init() {
+  void init() {
     _db.execute("CREATE TABLE IF NOT EXISTS image_favorites ("
         "id TEXT,"
         "title TEXT NOT NULL,"
@@ -284,11 +216,10 @@ class ImageFavoriteManager with ChangeNotifier {
         "other TEXT NOT NULL,"
         "PRIMARY KEY (id,source_key)"
         ");");
-    hasInit = true;
   }
 
   // 做排序和去重的操作
-  static void addOrUpdateOrDelete(ImageFavoritesComic favorite) {
+  void addOrUpdateOrDelete(ImageFavoritesComic favorite) {
     // 没有章节了就删掉
     if (favorite.imageFavoritesEp.isEmpty) {
       _db.execute("""
@@ -313,7 +244,7 @@ class ImageFavoriteManager with ChangeNotifier {
       for (var e in tempImageFavoritesEp) {
         List<Map> finalImageFavorites = [];
         int epIndex = tempImageFavoritesEp.indexOf(e);
-        for (ImageFavoritePro j in e.imageFavorites) {
+        for (ImageFavorite j in e.imageFavorites) {
           int index =
               finalImageFavorites.indexWhere((i) => i["page"] == j.page);
           if (index == -1 && j.page > 0) {
@@ -355,13 +286,8 @@ class ImageFavoriteManager with ChangeNotifier {
     ImageFavoriteManager().updateValue();
   }
 
-  static ImageFavoritesComic? findFromComicList(
-      List<ImageFavoritesComic> tempList,
-      String id,
-      String sourceKey,
-      String eid,
-      int page,
-      int ep) {
+  ImageFavoritesComic? findFromComicList(List<ImageFavoritesComic> tempList,
+      String id, String sourceKey, String eid, int page, int ep) {
     ImageFavoritesComic? temp = tempList
         .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
     if (temp == null) {
@@ -383,14 +309,13 @@ class ImageFavoriteManager with ChangeNotifier {
     }
   }
 
-  static bool isHas(String id, String sourceKey, String eid, int page, int ep) {
+  bool has(String id, String sourceKey, String eid, int page, int ep) {
     return findFromComicList(
             imageFavoritesComicList, id, sourceKey, eid, page, ep) !=
         null;
   }
 
-  static List<ImageFavoritesComic> getAll(String? keyword) {
-    if (!hasInit) return [];
+  List<ImageFavoritesComic> getAll([String? keyword]) {
     var res = [];
     if (keyword == null || keyword == "") {
       res = _db.select("select * from image_favorites;");
@@ -409,12 +334,12 @@ class ImageFavoriteManager with ChangeNotifier {
     }
     try {
       return res.map((e) {
-        dynamic tempImageFavoritesEp = jsonDecode(e["image_favorites_ep"]);
+        var tempImageFavoritesEp = jsonDecode(e["image_favorites_ep"]);
         List<ImageFavoritesEp> finalImageFavoritesEp = [];
         tempImageFavoritesEp.forEach((i) {
-          List<ImageFavoritePro> temp = [];
+          List<ImageFavorite> temp = [];
           i["imageFavorites"].forEach((j) {
-            temp.add(ImageFavoritePro(
+            temp.add(ImageFavorite(
                 j["page"],
                 j["imageKey"],
                 j["isAutoFavorite"],
@@ -447,20 +372,18 @@ class ImageFavoriteManager with ChangeNotifier {
     }
   }
 
-  static void deleteImageFavoritePro(
-      List<ImageFavoritePro> imageFavoriteProList) {
+  void deleteImageFavorite(List<ImageFavorite> imageFavoriteList) {
     for (var e in imageFavoritesComicList) {
       // 找到同一个漫画中的需要删除的具体图片
-      List<ImageFavoritePro> filterImageFavoritesPro =
-          imageFavoriteProList.where((i) {
+      List<ImageFavorite> filterImageFavorites =
+          imageFavoriteList.where((i) {
         return i.id == e.id && i.sourceKey == e.sourceKey;
       }).toList();
-      if (filterImageFavoritesPro.isNotEmpty) {
+      if (filterImageFavorites.isNotEmpty) {
         e.imageFavoritesEp = e.imageFavoritesEp.where((i) {
           // 去掉匹配到的具体图片
           i.imageFavorites = i.imageFavorites.where((j) {
-            ImageFavoritePro? temp =
-                filterImageFavoritesPro.firstWhereOrNull((k) {
+            ImageFavorite? temp = filterImageFavorites.firstWhereOrNull((k) {
               return k.page == j.page && k.ep == j.ep;
             });
             // 如果没有匹配到, 说明不是这个章节和page, 就留着
@@ -479,7 +402,7 @@ class ImageFavoriteManager with ChangeNotifier {
     ImageFavoriteManager().updateValue();
   }
 
-  static List<String> get earliestTimeToNow {
+  List<String> get earliestTimeToNow {
     var res = _db.select("select MIN(time) from image_favorites;");
     if (res.first.values.first == null) {
       return [];
@@ -496,13 +419,151 @@ class ImageFavoriteManager with ChangeNotifier {
     return yearsList;
   }
 
-  static int get length {
-    if (!hasInit) return 0;
+  int get length {
     var res = _db.select("select count(*) from image_favorites;");
     return res.first.values.first! as int;
   }
 
-  static List<ImageFavoritesComic> search(String keyword) {
+  List<ImageFavoritesComic> search(String keyword) {
+    if (keyword == "") {
+      return [];
+    }
     return getAll(keyword);
   }
+
+  Future<ImageFavoritesCompute> computeImageFavorites() {
+    return compute(
+      _computeImageFavorites,
+      imageFavoritesComicList,
+    );
+  }
+
+  static ImageFavoritesCompute _computeImageFavorites(
+      List<ImageFavoritesComic> comics) {
+    // 去掉这些没有意义的标签
+    const List<String> exceptTags = [
+      '連載中',
+      '',
+      'translated',
+      'chinese',
+      'sole male',
+      'sole female',
+      'original',
+      'doujinshi',
+      'manga',
+      'multi-work series',
+      'mosaic censorship',
+      'dilf',
+      'bbm',
+      'uncensored',
+      'full censorship'
+    ];
+
+    Map<String, int> tagCount = {};
+    Map<String, int> authorCount = {};
+    Map<ImageFavoritesComic, int> comicImageCount = {};
+    Map<ImageFavoritesComic, int> comicMaxPages = {};
+
+    for (var comic in comics) {
+      for (var tag in comic.tags) {
+        String finalTag = tag;
+        tagCount[finalTag] = (tagCount[finalTag] ?? 0) + 1;
+      }
+
+      if (comic.author != "") {
+        String finalAuthor = comic.author;
+        authorCount[finalAuthor] = (authorCount[finalAuthor] ?? 0) +
+            comic.sortedImageFavorites.length;
+      }
+      // 小于10页的漫画不统计
+      if (comic.maxPageFromEp < 10) {
+        continue;
+      }
+      comicImageCount[comic] =
+          (comicImageCount[comic] ?? 0) + comic.sortedImageFavorites.length;
+      comicMaxPages[comic] = (comicMaxPages[comic] ?? 0) + comic.maxPageFromEp;
+    }
+
+    // 按数量排序标签
+    List<String> sortedTags = tagCount.keys.toList()
+      ..sort((a, b) => tagCount[b]!.compareTo(tagCount[a]!));
+
+    // 按数量排序作者
+    List<String> sortedAuthors = authorCount.keys.toList()
+      ..sort((a, b) => authorCount[b]!.compareTo(authorCount[a]!));
+
+    // 按收藏数量排序漫画
+    List<MapEntry<ImageFavoritesComic, int>> sortedComicsByNum =
+        comicImageCount.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+    // 按收藏比例排序漫画
+    List<MapEntry<ImageFavoritesComic, int>> sortedComicsByPercentage =
+        comicImageCount.entries.toList()
+          ..sort((a, b) {
+            double percentageA =
+                comicImageCount[a.key]! / comicMaxPages[a.key]!;
+            double percentageB =
+                comicImageCount[b.key]! / comicMaxPages[b.key]!;
+            return percentageB.compareTo(percentageA);
+          });
+
+    validateTag(String tag) {
+      if (tag.startsWith("Category:")) {
+        return false;
+      }
+      return !exceptTags.contains(tag.toLowerCase()) && !tag.isNum;
+    }
+
+    return ImageFavoritesCompute(
+      sortedTags
+          .where(validateTag)
+          .map((tag) => TextWithCount(tag, tagCount[tag]!))
+          .toList(),
+      sortedAuthors
+          .map((author) => TextWithCount(author, authorCount[author]!))
+          .toList(),
+      sortedComicsByNum
+          .map((comic) => TextWithCount(comic.key.title, comic.value))
+          .toList(),
+      sortedComicsByPercentage
+          .map((comic) => TextWithCount(comic.key.title, comic.value))
+          .toList(),
+    );
+  }
+
+  ImageFavoritesComic? find(String id, String sourceKey) {
+    return imageFavoritesComicList.firstWhereOrNull(
+      (comic) => comic.id == id && comic.sourceKey == sourceKey,
+    );
+  }
+}
+
+class TextWithCount {
+  final String text;
+  final int count;
+
+  const TextWithCount(this.text, this.count);
+}
+
+class ImageFavoritesCompute {
+  /// 基于收藏的标签数排序
+  final List<TextWithCount> tags;
+
+  /// 基于收藏的作者数排序
+  final List<TextWithCount> authors;
+
+  /// 基于喜欢的图片数排序
+  final List<TextWithCount> comicByNum;
+
+  // 基于图片数比上总页数排序
+  final List<TextWithCount> comicByPercentage;
+
+  /// 计算后的图片收藏数据
+  const ImageFavoritesCompute(
+    this.tags,
+    this.authors,
+    this.comicByNum,
+    this.comicByPercentage,
+  );
 }

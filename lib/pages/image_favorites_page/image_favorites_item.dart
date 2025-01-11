@@ -1,8 +1,7 @@
 part of 'image_favorites_page.dart';
 
-class ImageFavoritesItem extends StatefulWidget {
-  const ImageFavoritesItem({
-    super.key,
+class _ImageFavoritesItem extends StatefulWidget {
+  const _ImageFavoritesItem({
     required this.imageFavoritesComic,
     required this.selectedImageFavorites,
     required this.addSelected,
@@ -12,20 +11,23 @@ class ImageFavoritesItem extends StatefulWidget {
     required this.setRefreshComicList,
     this.imageFavoritesCompute,
   });
+
   final ImageFavoritesComic imageFavoritesComic;
-  final Function(ImageFavoritePro) addSelected;
+  final Function(ImageFavorite) addSelected;
   final Map<ImageFavorite, bool> selectedImageFavorites;
   final List<ImageFavoritesComic> finalImageFavoritesComicList;
   final bool multiSelectMode;
   final List<LoadingImageFavoritesComicRes> isRefreshComicList;
   final Function(LoadingImageFavoritesComicRes) setRefreshComicList;
   final ImageFavoritesCompute? imageFavoritesCompute;
+
   @override
-  State<ImageFavoritesItem> createState() => ImageFavoritesItemState();
+  State<_ImageFavoritesItem> createState() => _ImageFavoritesItemState();
 }
 
-class ImageFavoritesItemState extends State<ImageFavoritesItem> {
+class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
   bool isImageKeyLoading = false;
+
   // 刷新 imageKey 失败的场景再刷新一次, 再次失败了就不重试了
   bool hasRefreshImageKeyOnErr = false;
   late LoadingImageFavoritesComicRes loadingImageFavoritesComicRes;
@@ -64,15 +66,18 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
         return;
       }
       if (!comicInfoRes.error) {
-        ImageFavoritesSomething something =
-            ImageFavoritesComic.getSomethingFromComicDetails(
-                comicInfoRes.data, imageFavoritesEp.ep);
         // 刷新一下值, 保存最新的
-        widget.imageFavoritesComic.author = something.author;
-        widget.imageFavoritesComic.subTitle = something.subTitle;
-        widget.imageFavoritesComic.tags = something.tags;
-        widget.imageFavoritesComic.translatedTags = something.translatedTags;
-        imageFavoritesEp.epName = something.epName;
+        widget.imageFavoritesComic.author =
+            comicInfoRes.data.findAuthor() ?? "";
+        widget.imageFavoritesComic.subTitle = comicInfoRes.data.subTitle ?? '';
+        widget.imageFavoritesComic.tags = comicInfoRes.data.plainTags;
+        widget.imageFavoritesComic.translatedTags = widget
+            .imageFavoritesComic.tags
+            .map((e) => e.translateTagsToCN)
+            .toList();
+        imageFavoritesEp.epName = comicInfoRes.data.chapters?.values
+                .elementAtOrNull(imageFavoritesEp.ep - 1) ??
+            "";
       } else {
         return;
       }
@@ -103,17 +108,17 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
       imageFavoritesEp.maxPage = images.length;
       // 塞一个封面进去
       if (!imageFavoritesEp.isHasFirstPage) {
-        ImageFavoritePro copy =
-            ImageFavoritePro.copy(imageFavoritesEp.imageFavorites[0]);
-        copy.page = ImageFavoritesEp.firstPage;
-        copy.isAutoFavorite = true;
+        ImageFavorite copy = imageFavoritesEp.imageFavorites[0].copyWith(
+          page: firstPage,
+          isAutoFavorite: true,
+        );
         imageFavoritesEp.imageFavorites.insert(0, copy);
       }
       // 统一刷一下最新的imageKey
       for (var ele in imageFavoritesEp.imageFavorites) {
         ele.imageKey = images[ele.page - 1];
       }
-      ImageFavoriteManager.addOrUpdateOrDelete(widget.imageFavoritesComic);
+      ImageFavoriteManager().addOrUpdateOrDelete(widget.imageFavoritesComic);
       if (mounted) {
         setState(() {});
       }
@@ -148,16 +153,17 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                 e.id == widget.imageFavoritesComic.id &&
                 e.sourceKey == widget.imageFavoritesComic.sourceKey) ??
         LoadingImageFavoritesComicRes(
-            isLoaded: false,
-            isInvalid: false,
-            id: widget.imageFavoritesComic.id,
-            sourceKey: widget.imageFavoritesComic.sourceKey);
+          isLoaded: false,
+          isInvalid: false,
+          id: widget.imageFavoritesComic.id,
+          sourceKey: widget.imageFavoritesComic.sourceKey,
+        );
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    int count = widget.imageFavoritesComic.sortedImageFavoritePros.length;
+    int count = widget.imageFavoritesComic.sortedImageFavorites.length;
     if (!widget.imageFavoritesComic.isAllHasImageKey ||
         !widget.imageFavoritesComic.isAllHasFirstPage) {
       for (var e in widget.imageFavoritesComic.imageFavoritesEp) {
@@ -168,10 +174,16 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
     String time =
         DateFormat('yyyy-MM-dd HH:mm').format(widget.imageFavoritesComic.time);
     List<String> hotTags = [];
-    for (ImageFavoritesTextWithCount e
-        in widget.imageFavoritesCompute?.tags ?? []) {
-      if (widget.imageFavoritesComic.tags.contains(e.text)) {
-        hotTags.add(e.text);
+    for (var textWithCount in widget.imageFavoritesCompute?.tags ?? <TextWithCount>[]) {
+      if (widget.imageFavoritesComic.tags.contains(textWithCount.text)) {
+        var enableTranslate = App.locale.languageCode == 'zh';
+        var text = enableTranslate
+            ? textWithCount.text.translateTagsToCN
+            : textWithCount.text;
+        if (text.contains(':')) {
+          text = text.split(':').last;
+        }
+        hotTags.add(text);
       }
       if (hotTags.length == 5) {
         break;
@@ -197,7 +209,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
         onTap: () {
           if (widget.multiSelectMode) {
             for (var ele
-                in widget.imageFavoritesComic.sortedImageFavoritePros) {
+                in widget.imageFavoritesComic.sortedImageFavorites) {
               widget.addSelected(ele);
             }
           } else {
@@ -206,7 +218,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
           }
         },
         onLongPress: () {
-          for (var ele in widget.imageFavoritesComic.sortedImageFavoritePros) {
+          for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
             widget.addSelected(ele);
           }
         },
@@ -252,8 +264,8 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        ImageFavoritePro curImageFavorite = widget
-                            .imageFavoritesComic.sortedImageFavoritePros[index];
+                        ImageFavorite curImageFavorite = widget
+                            .imageFavoritesComic.sortedImageFavorites[index];
                         ImageFavoritesEp curImageFavoritesEp = widget
                             .imageFavoritesComic.imageFavoritesEp
                             .firstWhere((e) {
@@ -263,7 +275,7 @@ class ImageFavoritesItemState extends State<ImageFavoritesItem> {
                             widget.selectedImageFavorites[curImageFavorite] ??
                                 false;
                         int curPage = curImageFavorite.page;
-                        String pageText = curPage == ImageFavoritesEp.firstPage
+                        String pageText = curPage == firstPage
                             ? '@a Cover'
                                 .tlParams({"a": curImageFavorite.epName})
                             : curPage.toString();

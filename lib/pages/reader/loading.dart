@@ -33,7 +33,8 @@ class _ReaderWithLoadingState
       history: data.history,
       initialChapter: widget.initialEp ?? data.history.ep,
       initialPage: widget.initialPage ?? data.history.page,
-      comicDetails: data.comicDetails,
+      author: data.author,
+      tags: data.tags,
     );
   }
 
@@ -54,17 +55,19 @@ class _ReaderWithLoadingState
       }
       return Res(
         ReaderProps(
-            type: ComicType.fromKey(widget.sourceKey),
-            cid: widget.id,
-            name: localComic.title,
-            chapters: localComic.chapters,
-            history: history ??
-                History.fromModel(
-                  model: localComic,
-                  ep: 0,
-                  page: 0,
-                ),
-            comicDetails: localComic),
+          type: ComicType.fromKey(widget.sourceKey),
+          cid: widget.id,
+          name: localComic.title,
+          chapters: localComic.chapters,
+          history: history ??
+              History.fromModel(
+                model: localComic,
+                ep: 0,
+                page: 0,
+              ),
+          author: localComic.subtitle,
+          tags: localComic.tags,
+        ),
       );
     } else {
       var comic = await comicSource.loadComicInfo!(widget.id);
@@ -73,17 +76,19 @@ class _ReaderWithLoadingState
       }
       return Res(
         ReaderProps(
-            type: ComicType.fromKey(widget.sourceKey),
-            cid: widget.id,
-            name: comic.data.title,
-            chapters: comic.data.chapters,
-            history: history ??
-                History.fromModel(
-                  model: comic.data,
-                  ep: 0,
-                  page: 0,
-                ),
-            comicDetails: comic.data),
+          type: ComicType.fromKey(widget.sourceKey),
+          cid: widget.id,
+          name: comic.data.title,
+          chapters: comic.data.chapters,
+          history: history ??
+              History.fromModel(
+                model: comic.data,
+                ep: 0,
+                page: 0,
+              ),
+          author: comic.data.findAuthor() ?? "",
+          tags: comic.data.plainTags,
+        ),
       );
     }
   }
@@ -99,8 +104,10 @@ class ReaderProps {
   final Map<String, String>? chapters;
 
   final History history;
-  // 缺少作者, 现在的作者都是上传者
-  final Object comicDetails;
+
+  final String author;
+
+  final List<String> tags;
 
   const ReaderProps({
     required this.type,
@@ -108,6 +115,7 @@ class ReaderProps {
     required this.name,
     required this.chapters,
     required this.history,
-    required this.comicDetails,
+    required this.author,
+    required this.tags,
   });
 }

@@ -208,7 +208,7 @@ Future<void> importPicaData(File file) async {
           );
         }
         List<ImageFavoritesComic> imageFavoritesComicList =
-            ImageFavoriteManager.imageFavoritesComicList;
+            ImageFavoriteManager().imageFavoritesComicList;
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
           String sourceKey = comic["id"].split("-")[0];
           // 换名字了, 绅士漫画
@@ -226,8 +226,8 @@ Future<void> importPicaData(File file) async {
           String epName = "";
           ImageFavoritesComic? tempComic = imageFavoritesComicList
               .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
-          ImageFavoritePro curImageFavorite =
-              ImageFavoritePro(page, "", null, "", id, ep, sourceKey, epName);
+          ImageFavorite curImageFavorite =
+              ImageFavorite(page, "", null, "", id, ep, sourceKey, epName);
           if (tempComic == null) {
             tempComic = ImageFavoritesComic(id, [], title, sourceKey, [], [],
                 DateTime.now(), "", {}, "", 1);
@@ -252,7 +252,7 @@ Future<void> importPicaData(File file) async {
           }
         }
         for (var temp in imageFavoritesComicList) {
-          ImageFavoriteManager.addOrUpdateOrDelete(temp);
+          ImageFavoriteManager().addOrUpdateOrDelete(temp);
         }
       } catch (e, stack) {
         Log.error("Import Data", "Failed to import history: $e", stack);

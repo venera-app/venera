@@ -8,21 +8,19 @@ import 'image_favorites_provider.dart' as image_provider;
 
 class ImageFavoritesProvider
     extends BaseImageProvider<image_provider.ImageFavoritesProvider> {
-  /// Image provider for normal image.
-  ///
-  /// [url] is the url of the image. Local file path is also supported.
+  /// Image provider for imageFavorites
   const ImageFavoritesProvider(this.imageFavorite);
 
-  final ImageFavoritePro imageFavorite;
+  final ImageFavorite imageFavorite;
 
   @override
   Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
-    String? imageKey = imageFavorite.imageKey;
+    String imageKey = imageFavorite.imageKey;
     String sourceKey = imageFavorite.sourceKey;
     String cid = imageFavorite.id;
     String eid = imageFavorite.eid;
     if (imageKey == "") {
-      throw "Error: imageFavorits no imageKey";
+      throw "Error: imageFavorites no imageKey";
     }
     await for (var progress
         in ImageDownloader.loadComicImage(imageKey, sourceKey, cid, eid)) {
@@ -42,7 +40,7 @@ class ImageFavoritesProvider
     return SynchronousFuture(this);
   }
 
-  static String getImageKey(ImageFavoritePro temp) {
+  static String getImageKey(ImageFavorite temp) {
     return "${temp.imageKey}@${temp.sourceKey}@${temp.id}@${temp.eid}";
   }
 
