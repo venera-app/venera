@@ -518,7 +518,8 @@ class ImageFavoriteManager with ChangeNotifier {
       if (tag.startsWith("Category:")) {
         return false;
       }
-      return !exceptTags.contains(tag.toLowerCase()) && !tag.isNum;
+      return !exceptTags.contains(tag.split(":").last.toLowerCase()) &&
+          !tag.isNum;
     }
 
     return ImageFavoritesCompute(
