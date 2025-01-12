@@ -943,7 +943,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
       }
       setState(() {});
       imageFavoritesCompute =
-      await ImageFavoriteManager().computeImageFavorites();
+          await ImageFavoriteManager().computeImageFavorites();
       if (mounted) {
         setState(() {});
       }
@@ -966,14 +966,15 @@ class _ImageFavoritesState extends State<ImageFavorites> {
   }
 
   Widget roundBtn(
-      TextWithCount textWithCount,
-      _ImageFavoritesComputeType type,
-      ) {
+    TextWithCount textWithCount,
+    _ImageFavoritesComputeType type,
+  ) {
     var enableTranslate = App.locale.languageCode == 'zh';
     var text = enableTranslate
         ? type == _ImageFavoritesComputeType.authors
-          ? TagsTranslation.translationTagWithNamespace(textWithCount.text, "artist")
-          : textWithCount.text.translateTagsToCN
+            ? TagsTranslation.translationTagWithNamespace(
+                textWithCount.text, "artist")
+            : textWithCount.text.translateTagsToCN
         : textWithCount.text;
     if (type == _ImageFavoritesComputeType.tags) {
       if (text.contains(':')) {
@@ -1046,6 +1047,32 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                     Center(
                       child: Text('Image Favorites'.tl, style: ts.s18),
                     ),
+                    const SizedBox(width: 4),
+                    Button.icon(
+                      size: 18,
+                      icon: const Icon(Icons.help_outline),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return ContentDialog(
+                              title: "Help".tl,
+                              content: Text(
+                                      "After the parentheses are the number of pictures or the number of pictures compared to the number of comic pages"
+                                          .tl)
+                                  .paddingHorizontal(16)
+                                  .fixWidth(double.infinity),
+                              actions: [
+                                Button.filled(
+                                  onPressed: context.pop,
+                                  child: Text("OK".tl),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                     const Spacer(),
                     const Icon(Icons.arrow_right),
                   ],
@@ -1055,7 +1082,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Calculate your favorite from @a comics and @b images, After the parentheses are the number of pictures or the number of pictures compared to the number of comic pages"
+                    "Calculate your favorite from @a comics and @b images"
                         .tlParams({
                       "a": ImageFavoriteManager().length.toString(),
                       "b": allImageFavoritePros.length

@@ -377,10 +377,12 @@ class ImageFavoriteManager with ChangeNotifier {
   }
 
   void deleteImageFavorite(List<ImageFavorite> imageFavoriteList) {
+    if (imageFavoriteList.isEmpty) {
+      return;
+    }
     for (var e in imageFavoritesComicList) {
       // 找到同一个漫画中的需要删除的具体图片
-      List<ImageFavorite> filterImageFavorites =
-          imageFavoriteList.where((i) {
+      List<ImageFavorite> filterImageFavorites = imageFavoriteList.where((i) {
         return i.id == e.id && i.sourceKey == e.sourceKey;
       }).toList();
       if (filterImageFavorites.isNotEmpty) {
@@ -476,8 +478,8 @@ class ImageFavoriteManager with ChangeNotifier {
 
       if (comic.author != "") {
         String finalAuthor = comic.author;
-        authorCount[finalAuthor] = (authorCount[finalAuthor] ?? 0) +
-            comic.sortedImageFavorites.length;
+        authorCount[finalAuthor] =
+            (authorCount[finalAuthor] ?? 0) + comic.sortedImageFavorites.length;
       }
       // 小于10页的漫画不统计
       if (comic.maxPageFromEp < 10) {

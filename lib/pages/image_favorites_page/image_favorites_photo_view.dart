@@ -48,7 +48,12 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
         .where((e) => e.value == true)
         .map((e) => e.key)
         .toList();
-    ImageFavoriteManager().deleteImageFavorite(tempList);
+    if (tempList.isNotEmpty) {
+      ImageFavoriteManager().deleteImageFavorite(tempList);
+      showToast(
+          message: "Delete @a images".tlParams({'a': tempList.length}),
+          context: context);
+    }
   }
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
