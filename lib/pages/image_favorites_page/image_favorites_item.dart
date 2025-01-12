@@ -17,8 +17,8 @@ class _ImageFavoritesItem extends StatefulWidget {
   final Map<ImageFavorite, bool> selectedImageFavorites;
   final List<ImageFavoritesComic> finalImageFavoritesComicList;
   final bool multiSelectMode;
-  final List<LoadingImageFavoritesComicRes> isRefreshComicList;
-  final Function(LoadingImageFavoritesComicRes) setRefreshComicList;
+  final List<_LoadingImageFavoritesComicRes> isRefreshComicList;
+  final Function(_LoadingImageFavoritesComicRes) setRefreshComicList;
   final ImageFavoritesCompute? imageFavoritesCompute;
 
   @override
@@ -30,7 +30,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
 
   // 刷新 imageKey 失败的场景再刷新一次, 再次失败了就不重试了
   bool hasRefreshImageKeyOnErr = false;
-  late LoadingImageFavoritesComicRes loadingImageFavoritesComicRes;
+  late _LoadingImageFavoritesComicRes loadingImageFavoritesComicRes;
 
   // 如果刚从pica导入(没有imageKey) 或者 imageKey 失效了, 刷新一下
   void refreshImageKey(ImageFavoritesEp imageFavoritesEp) async {
@@ -152,7 +152,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
             (e) =>
                 e.id == widget.imageFavoritesComic.id &&
                 e.sourceKey == widget.imageFavoritesComic.sourceKey) ??
-        LoadingImageFavoritesComicRes(
+        _LoadingImageFavoritesComicRes(
           isLoaded: false,
           isInvalid: false,
           id: widget.imageFavoritesComic.id,
