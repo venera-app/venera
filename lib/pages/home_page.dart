@@ -916,7 +916,7 @@ class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
   }
 }
 
-enum ImageFavoritesComputeType {
+enum _ImageFavoritesComputeType {
   tags,
   authors,
   comicByNum,
@@ -967,13 +967,15 @@ class _ImageFavoritesState extends State<ImageFavorites> {
 
   Widget roundBtn(
       TextWithCount textWithCount,
-      ImageFavoritesComputeType type,
+      _ImageFavoritesComputeType type,
       ) {
     var enableTranslate = App.locale.languageCode == 'zh';
     var text = enableTranslate
-        ? textWithCount.text.translateTagsToCN
+        ? type == _ImageFavoritesComputeType.authors
+          ? TagsTranslation.translationTagWithNamespace(textWithCount.text, "artist")
+          : textWithCount.text.translateTagsToCN
         : textWithCount.text;
-    if (type == ImageFavoritesComputeType.tags) {
+    if (type == _ImageFavoritesComputeType.tags) {
       if (text.contains(':')) {
         text = text.split(':').last;
       }
@@ -999,7 +1001,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
   }
 
   Widget listRoundBtn(
-      List<TextWithCount> list, ImageFavoritesComputeType type) {
+      List<TextWithCount> list, _ImageFavoritesComputeType type) {
     return Expanded(
       child: SizedBox(
         height: 24,
@@ -1069,7 +1071,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.authors,
-                            ImageFavoritesComputeType.authors)
+                            _ImageFavoritesComputeType.authors)
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1080,7 +1082,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.tags,
-                            ImageFavoritesComputeType.tags)
+                            _ImageFavoritesComputeType.tags)
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1091,7 +1093,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.comicByNum,
-                            ImageFavoritesComputeType.comicByNum)
+                            _ImageFavoritesComputeType.comicByNum)
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1102,7 +1104,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                           style: const TextStyle(fontSize: 13),
                         ),
                         listRoundBtn(imageFavoritesCompute!.comicByPercentage,
-                            ImageFavoritesComputeType.comicByPercentage)
+                            _ImageFavoritesComputeType.comicByPercentage)
                       ],
                     ),
                   ],
