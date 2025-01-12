@@ -60,7 +60,8 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   // 所有的图片收藏
   List<ImageFavoritesComic> comics = [];
   List<_LoadingImageFavoritesComicRes> isRefreshComicList = [];
-  String keyword = "";
+  late var controller = TextEditingController(text: widget.initialKeyword ?? "");
+  String get keyword => controller.text;
 
   // 进入关键词搜索模式
   bool searchMode = false;
@@ -139,7 +140,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   @override
   void initState() {
     if (widget.initialKeyword != null) {
-      keyword = widget.initialKeyword!;
       searchMode = true;
     }
     sortType = ImageFavoriteSortType.values.firstWhereOrNull(
@@ -288,23 +288,24 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
               child: IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () {
+                  controller.clear();
                   setState(() {
                     searchMode = false;
-                    keyword = "";
-                    update();
+                    controller.clear();
+                    updateImageFavorites();
                   });
                 },
               ),
             ),
             title: TextField(
               autofocus: true,
-              controller: TextEditingController(text: keyword),
+              controller: controller,
               decoration: InputDecoration(
                 hintText: "Search".tl,
                 border: InputBorder.none,
               ),
               onChanged: (v) {
-                keyword = v;
+                updateImageFavorites();
               },
             ),
           ),
@@ -370,11 +371,9 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
             selectedImageFavorites.clear();
           });
         } else if (searchMode) {
-          setState(() {
-            searchMode = false;
-            keyword = "";
-            update();
-          });
+          controller.clear();
+          searchMode = false;
+          updateImageFavorites();
         }
       },
       child: body,
