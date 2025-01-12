@@ -308,27 +308,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
               },
             ),
           ),
-        if (appdata.implicitData['Guide_imageFavoritesPage_DoubleTap'] != true)
-          SliverToBoxAdapter(
-            child: Row(
-              children: [
-                Text(
-                  'Double tap comic copy title, double tap image open gallery'
-                      .tl,
-                ),
-                Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.check),
-                  onPressed: () {
-                    appdata.implicitData['Guide_imageFavoritesPage_DoubleTap'] =
-                        true;
-                    appdata.writeImplicitData();
-                    update();
-                  },
-                )
-              ],
-            ).paddingHorizontal(8),
-          ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
@@ -431,7 +410,7 @@ class _ImageFavoritesDialogState extends State<_ImageFavoritesDialog> {
   @override
   void initState() {
     super.initState();
-    timeRangeType = switch(widget.initTimeFilterSelect) {
+    timeRangeType = switch (widget.initTimeFilterSelect) {
       TimeRange.all => TimeRangeType.all,
       TimeRange.lastWeek => TimeRangeType.lastWeek,
       TimeRange.lastMonth => TimeRangeType.lastMonth,
@@ -484,9 +463,8 @@ class _ImageFavoritesDialogState extends State<_ImageFavoritesDialog> {
                     title: Text("Time Filter".tl),
                     trailing: Select(
                       current: timeRangeType.value.tl,
-                      values: TimeRangeType.values
-                          .map((e) => e.value.tl)
-                          .toList(),
+                      values:
+                          TimeRangeType.values.map((e) => e.value.tl).toList(),
                       minWidth: 64,
                       onTap: (index) {
                         setState(() {
@@ -572,7 +550,7 @@ class _ImageFavoritesDialogState extends State<_ImageFavoritesDialog> {
                 duration: end!.difference(start!),
               );
             } else {
-              timeRange = switch(timeRangeType) {
+              timeRange = switch (timeRangeType) {
                 TimeRangeType.all => TimeRange.all,
                 TimeRangeType.lastWeek => TimeRange.lastWeek,
                 TimeRangeType.lastMonth => TimeRange.lastMonth,

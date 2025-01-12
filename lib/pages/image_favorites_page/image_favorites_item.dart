@@ -146,6 +146,76 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
     );
   }
 
+  void goPhotoView(ImageFavorite imageFavorite) {
+    // 双击浏览大图
+    App.mainNavigatorKey?.currentContext?.to(
+      () => ImageFavoritesPhotoView(
+        imageFavoritesComic: widget.imageFavoritesComic,
+        imageFavoritePro: imageFavorite,
+        finalImageFavoritesComicList: widget.finalImageFavoritesComicList,
+        goComicInfo: goComicInfo,
+        goReaderPage: goReaderPage,
+      ),
+    );
+  }
+
+  void copyTitle() {
+    Clipboard.setData(ClipboardData(text: widget.imageFavoritesComic.title));
+    App.rootContext.showMessage(message: 'Copy the title successfully'.tl);
+  }
+
+  void onLongPress(BuildContext context) {
+    var renderBox = context.findRenderObject() as RenderBox;
+    var size = renderBox.size;
+    var location = renderBox.localToGlobal(
+      Offset((size.width - 242) / 2, size.height / 2),
+    );
+    showMenu(location, context);
+  }
+
+  void onSecondaryTap(TapDownDetails details, BuildContext context) {
+    showMenu(details.globalPosition, context);
+  }
+
+  void showMenu(Offset location, BuildContext context) {
+    showMenuX(
+      App.rootContext,
+      location,
+      [
+        MenuEntry(
+          icon: Icons.chrome_reader_mode_outlined,
+          text: 'Details'.tl,
+          onClick: () {
+            goComicInfo(widget.imageFavoritesComic);
+          },
+        ),
+        MenuEntry(
+          icon: Icons.copy,
+          text: 'Copy Title'.tl,
+          onClick: () {
+            copyTitle();
+          },
+        ),
+        MenuEntry(
+          icon: Icons.select_all,
+          text: 'Select All'.tl,
+          onClick: () {
+            for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
+              widget.addSelected(ele);
+            }
+          },
+        ),
+        MenuEntry(
+          icon: Icons.read_more,
+          text: 'Photo View'.tl,
+          onClick: () {
+            goPhotoView(widget.imageFavoritesComic.sortedImageFavorites.first);
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     loadingImageFavoritesComicRes = widget.isRefreshComicList.firstWhereOrNull(
@@ -174,7 +244,8 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
     String time =
         DateFormat('yyyy-MM-dd HH:mm').format(widget.imageFavoritesComic.time);
     List<String> hotTags = [];
-    for (var textWithCount in widget.imageFavoritesCompute?.tags ?? <TextWithCount>[]) {
+    for (var textWithCount
+        in widget.imageFavoritesCompute?.tags ?? <TextWithCount>[]) {
       if (widget.imageFavoritesComic.tags.contains(textWithCount.text)) {
         var enableTranslate = App.locale.languageCode == 'zh';
         var text = enableTranslate
@@ -200,26 +271,19 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
+        onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
+        onLongPress: () => onLongPress(context),
         onDoubleTap: () {
-          Clipboard.setData(
-              ClipboardData(text: widget.imageFavoritesComic.title));
-          showToast(
-              message: "Copy the title successfully".tl, context: context);
+          copyTitle();
         },
         onTap: () {
           if (widget.multiSelectMode) {
-            for (var ele
-                in widget.imageFavoritesComic.sortedImageFavorites) {
+            for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
               widget.addSelected(ele);
             }
           } else {
             // 单击跳转漫画详情
             goComicInfo(widget.imageFavoritesComic);
-          }
-        },
-        onLongPress: () {
-          for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
-            widget.addSelected(ele);
           }
         },
         child: Column(
@@ -281,17 +345,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
                             : curPage.toString();
                         return InkWell(
                           onDoubleTap: () {
-                            // 双击浏览大图
-                            App.mainNavigatorKey?.currentContext?.to(
-                              () => ImageFavoritesPhotoView(
-                                imageFavoritesComic: widget.imageFavoritesComic,
-                                imageFavoritePro: curImageFavorite,
-                                finalImageFavoritesComicList:
-                                    widget.finalImageFavoritesComicList,
-                                goComicInfo: goComicInfo,
-                                goReaderPage: goReaderPage,
-                              ),
-                            );
+                            goPhotoView(curImageFavorite);
                           },
                           onTap: () {
                             // 单击去阅读页面, 跳转到当前点击的page
