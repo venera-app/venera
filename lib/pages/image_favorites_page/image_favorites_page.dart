@@ -305,7 +305,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
               ),
               onChanged: (v) {
                 keyword = v;
-                update();
               },
             ),
           ),
