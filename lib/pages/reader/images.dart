@@ -264,7 +264,7 @@ class _GalleryModeState extends State<_GalleryMode>
   @override
   void handleDoubleTap(Offset location) {
     if (appdata.settings['quickCollectImage'] == 'DoubleTap') {
-      context.readerScaffold.imageFavoritesAction();
+      context.readerScaffold.addImageFavorite();
       return;
     }
     var controller = photoViewControllers[reader.page]!;
@@ -569,7 +569,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   @override
   void handleDoubleTap(Offset location) {
     if (appdata.settings['quickCollectImage'] == 'DoubleTap') {
-      context.readerScaffold.imageFavoritesAction();
+      context.readerScaffold.addImageFavorite();
       return;
     }
     double target;

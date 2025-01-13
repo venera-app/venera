@@ -20,8 +20,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   static const _kTapToTurnPagePercent = 0.3;
 
-  _DragListener? dragListener;
-  _DragListener? dragListenerForImageFavorites;
+  final _dragListeners = <_DragListener>[];
 
   int fingers = 0;
 
@@ -46,8 +45,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
         _lastTapMoveDistance = Offset.zero;
         _tapGestureRecognizer.addPointer(event);
         if (_dragInProgress) {
-          dragListener?.onEnd?.call();
-          dragListenerForImageFavorites?.onEnd?.call();
+          for (var dragListener in _dragListeners) {
+            dragListener.onStart?.call(event.position);
+          }
           _dragInProgress = false;
         }
         Future.delayed(_kLongPressMinTime, () {
@@ -57,11 +57,10 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
               _longPressInProgress = true;
             } else {
               _dragInProgress = true;
-              dragListener?.onStart?.call(event.position);
-              dragListenerForImageFavorites?.onStart?.call(event.position);
-              dragListener?.onMove?.call(_lastTapMoveDistance!);
-              dragListenerForImageFavorites?.onMove
-                  ?.call(_lastTapMoveDistance!);
+              for (var dragListener in _dragListeners) {
+                dragListener.onStart?.call(event.position);
+                dragListener.onMove?.call(_lastTapMoveDistance!);
+              }
             }
           }
         });
@@ -71,8 +70,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           _lastTapMoveDistance = event.delta + _lastTapMoveDistance!;
         }
         if (_dragInProgress) {
-          dragListener?.onMove?.call(event.delta);
-          dragListenerForImageFavorites?.onMove?.call(event.delta);
+          for (var dragListener in _dragListeners) {
+            dragListener.onMove?.call(event.delta);
+          }
         }
       },
       onPointerUp: (event) {
@@ -81,8 +81,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           onLongPressedUp(event.position);
         }
         if (_dragInProgress) {
-          dragListener?.onEnd?.call();
-          dragListenerForImageFavorites?.onEnd?.call();
+          for (var dragListener in _dragListeners) {
+            dragListener.onEnd?.call();
+          }
           _dragInProgress = false;
         }
         _lastTapPointer = null;
@@ -94,8 +95,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           onLongPressedUp(event.position);
         }
         if (_dragInProgress) {
-          dragListener?.onEnd?.call();
-          dragListenerForImageFavorites?.onEnd?.call();
+          for (var dragListener in _dragListeners) {
+            dragListener.onEnd?.call();
+          }
           _dragInProgress = false;
         }
         _lastTapPointer = null;
@@ -268,6 +270,14 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   void onLongPressedDown(Offset location) {
     context.reader._imageViewController?.handleLongPressDown(location);
+  }
+
+  void addDragListener(_DragListener listener) {
+    _dragListeners.add(listener);
+  }
+
+  void removeDragListener(_DragListener listener) {
+    _dragListeners.remove(listener);
   }
 }
 

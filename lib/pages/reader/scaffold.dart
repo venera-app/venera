@@ -30,6 +30,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   _ReaderGestureDetectorState? _gestureDetectorState;
 
+  _DragListener? _floatingButtonDragListener;
+
   void setFloatingButton(int value) {
     lastValue = showFloatingButtonValue;
     if (value == 0) {
@@ -38,12 +40,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         fABValue.value = 0;
         update();
       }
-      _gestureDetectorState!.dragListener = null;
+      if (_floatingButtonDragListener != null) {
+        _gestureDetectorState!.removeDragListener(_floatingButtonDragListener!);
+        _floatingButtonDragListener = null;
+      }
     }
     var readerMode = context.reader.mode;
     if (value == 1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = 1;
-      _gestureDetectorState!.dragListener = _DragListener(
+      _floatingButtonDragListener =  _DragListener(
         onMove: (offset) {
           if (readerMode == ReaderMode.continuousTopToBottom) {
             fABValue.value -= offset.dy;
@@ -63,10 +68,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           fABValue.value = 0;
         },
       );
+      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
     } else if (value == -1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = -1;
-      _gestureDetectorState!.dragListener = _DragListener(
+      _floatingButtonDragListener = _DragListener(
         onMove: (offset) {
           if (readerMode == ReaderMode.continuousTopToBottom) {
             fABValue.value += offset.dy;
@@ -86,41 +92,45 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           fABValue.value = 0;
         },
       );
+      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
     }
   }
 
-  void dragListenerHandler() async {
-    // 过一秒执行, 避免 _gestureDetectorState 还未初始化
-    await Future.delayed(Duration(milliseconds: 1000));
+  _DragListener? _imageFavoriteDragListener;
+
+  void addDragListener() async {
     if (!mounted) return;
     var readerMode = context.reader.mode;
+
     // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
-    double imageFavoritesListenDistance = 0;
-    _gestureDetectorState!.dragListenerForImageFavorites = null;
     if (appdata.settings['quickCollectImage'] == 'Swipe') {
-      _gestureDetectorState!.dragListenerForImageFavorites = _DragListener(
-        onMove: (offset) {
-          switch (readerMode) {
-            case ReaderMode.continuousTopToBottom:
-            case ReaderMode.galleryTopToBottom:
-              imageFavoritesListenDistance += offset.dx;
-              break;
-            case ReaderMode.continuousLeftToRight:
-            case ReaderMode.galleryLeftToRight:
-            case ReaderMode.galleryRightToLeft:
-            case ReaderMode.continuousRightToLeft:
-              imageFavoritesListenDistance += offset.dy;
-              break;
-          }
-        },
-        onEnd: () {
-          if (imageFavoritesListenDistance.abs() > 150) {
-            imageFavoritesAction();
-          }
-          imageFavoritesListenDistance = 0;
-        },
-      );
+      if (_imageFavoriteDragListener == null) {
+        double distance = 0;
+        _imageFavoriteDragListener = _DragListener(
+          onMove: (offset) {
+            switch (readerMode) {
+              case ReaderMode.continuousTopToBottom:
+              case ReaderMode.galleryTopToBottom:
+                distance += offset.dx;
+              case ReaderMode.continuousLeftToRight:
+              case ReaderMode.galleryLeftToRight:
+              case ReaderMode.galleryRightToLeft:
+              case ReaderMode.continuousRightToLeft:
+                distance += offset.dy;
+            }
+          },
+          onEnd: () {
+            if (distance.abs() > 150) {
+              addImageFavorite();
+            }
+            distance = 0;
+          },
+        );
+      }
+      _gestureDetectorState!.addDragListener(_imageFavoriteDragListener!);
+    } else if (_imageFavoriteDragListener != null) {
+      _gestureDetectorState!.removeDragListener(_imageFavoriteDragListener!);
     }
   }
 
@@ -136,7 +146,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     }
     super.initState();
-    dragListenerHandler();
+    addDragListener();
   }
 
   @override
@@ -249,7 +259,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
-  void imageFavoritesAction() {
+  void addImageFavorite() {
     try {
       if (context.reader.images![0].contains('file://')) {
         showToast(
@@ -421,7 +431,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 child: IconButton(
                     icon: Icon(
                         isLiked() ? Icons.favorite : Icons.favorite_border),
-                    onPressed: imageFavoritesAction),
+                    onPressed: addImageFavorite),
               ),
               if (App.isWindows)
                 Tooltip(
@@ -730,7 +740,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             }
           }
           if (key == "quickCollectImage") {
-            dragListenerHandler();
+            addDragListener();
           }
           context.reader.update();
         },
