@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
@@ -36,12 +38,12 @@ class ImageFavoritesPage extends StatefulWidget {
 
 class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   late ImageFavoriteSortType sortType;
-  ImageFavoritesCompute? imageFavoritesCompute;
   late TimeRange timeFilterSelect;
   late int numFilterSelect;
 
   // 所有的图片收藏
   List<ImageFavoritesComic> comics = [];
+
   late var controller = TextEditingController(text: widget.initialKeyword ?? "");
   String get keyword => controller.text;
 
@@ -52,7 +54,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
 
   // 多选的时候选中的图片
   Map<ImageFavorite, bool> selectedImageFavorites = {};
-  late List<ImageFavorite> imageFavoritePros;
+  late List<ImageFavorite> imageFavorites;
 
   void update() {
     if (mounted) {
@@ -61,13 +63,11 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   }
 
   void updateImageFavorites() async {
-    imageFavoritePros = [];
+    imageFavorites = [];
     for (var e in ImageFavoriteManager().imageFavoritesComicList) {
-      imageFavoritePros.addAll(e.sortedImageFavorites);
+      imageFavorites.addAll(e.sortedImageFavorites);
     }
     sortImageFavorites();
-    imageFavoritesCompute =
-        await ImageFavoriteManager().computeImageFavorites();
     update();
   }
 
@@ -150,7 +150,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   var scrollController = ScrollController();
 
   void selectAll() {
-    for (var ele in imageFavoritePros) {
+    for (var ele in imageFavorites) {
       selectedImageFavorites[ele] = true;
     }
     update();
@@ -246,8 +246,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
                 },
               ),
             ),
-            title: Text(
-                "Selected @c ".tlParams({"c": selectedImageFavorites.length})),
+            title: Text(selectedImageFavorites.length.toString()),
             actions: selectActions,
           )
         else if (searchMode)
@@ -287,7 +286,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
                 addSelected: addSelected,
                 multiSelectMode: multiSelectMode,
                 finalImageFavoritesComicList: comics,
-                imageFavoritesCompute: imageFavoritesCompute,
               );
             },
             childCount: comics.length,

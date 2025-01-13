@@ -7,7 +7,6 @@ class _ImageFavoritesItem extends StatefulWidget {
     required this.addSelected,
     required this.multiSelectMode,
     required this.finalImageFavoritesComicList,
-    this.imageFavoritesCompute,
   });
 
   final ImageFavoritesComic imageFavoritesComic;
@@ -15,13 +14,14 @@ class _ImageFavoritesItem extends StatefulWidget {
   final Map<ImageFavorite, bool> selectedImageFavorites;
   final List<ImageFavoritesComic> finalImageFavoritesComicList;
   final bool multiSelectMode;
-  final ImageFavoritesCompute? imageFavoritesCompute;
 
   @override
   State<_ImageFavoritesItem> createState() => _ImageFavoritesItemState();
 }
 
 class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
+  late final imageFavorites = widget.imageFavoritesComic.sortedImageFavorites;
+
   void goComicInfo(ImageFavoritesComic comic) {
     App.mainNavigatorKey?.currentContext?.to(() => ComicPage(
           id: comic.id,
@@ -30,7 +30,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
   }
 
   void goReaderPage(ImageFavoritesComic comic, int ep, int page) {
-    App.mainNavigatorKey?.currentContext?.to(
+    App.rootContext.to(
       () => ReaderWithLoading(
         id: comic.id,
         sourceKey: comic.sourceKey,
@@ -41,16 +41,11 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
   }
 
   void goPhotoView(ImageFavorite imageFavorite) {
-    // 双击浏览大图
-    App.mainNavigatorKey?.currentContext?.to(
-      () => ImageFavoritesPhotoView(
-        imageFavoritesComic: widget.imageFavoritesComic,
-        imageFavoritePro: imageFavorite,
-        finalImageFavoritesComicList: widget.finalImageFavoritesComicList,
-        goComicInfo: goComicInfo,
-        goReaderPage: goReaderPage,
-      ),
-    );
+    Navigator.of(App.rootContext).push(MaterialPageRoute(
+        builder: (context) => ImageFavoritesPhotoView(
+              comic: widget.imageFavoritesComic,
+              imageFavorite: imageFavorite,
+            )));
   }
 
   void copyTitle() {
@@ -58,7 +53,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
     App.rootContext.showMessage(message: 'Copy the title successfully'.tl);
   }
 
-  void onLongPress(BuildContext context) {
+  void onLongPress() {
     var renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
     var location = renderBox.localToGlobal(
@@ -67,7 +62,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
     showMenu(location, context);
   }
 
-  void onSecondaryTap(TapDownDetails details, BuildContext context) {
+  void onSecondaryTap(TapDownDetails details) {
     showMenu(details.globalPosition, context);
   }
 
@@ -112,27 +107,6 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
 
   @override
   Widget build(BuildContext context) {
-    var enableTranslate = App.locale.languageCode == 'zh';
-    String time =
-        DateFormat('yyyy-MM-dd HH:mm').format(widget.imageFavoritesComic.time);
-    List<String> hotTags = [];
-    for (var textWithCount
-        in widget.imageFavoritesCompute?.tags ?? <TextWithCount>[]) {
-      if (widget.imageFavoritesComic.tags.contains(textWithCount.text)) {
-        var enableTranslate = App.locale.languageCode == 'zh';
-        var text = enableTranslate
-            ? textWithCount.text.translateTagsToCN
-            : textWithCount.text;
-        if (text.contains(':')) {
-          text = text.split(':').last;
-        }
-        hotTags.add(text);
-      }
-      if (hotTags.length == 5) {
-        break;
-      }
-    }
-    var imageFavorites = widget.imageFavoritesComic.sortedImageFavorites;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
@@ -144,11 +118,8 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
-        onLongPress: () => onLongPress(context),
-        onDoubleTap: () {
-          copyTitle();
-        },
+        onSecondaryTapDown: onSecondaryTap,
+        onLongPress: onLongPress,
         onTap: () {
           if (widget.multiSelectMode) {
             for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
@@ -162,134 +133,158 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 56,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.imageFavoritesComic.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.0,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                        "${imageFavorites.length}/${widget.imageFavoritesComic.maxPageFromEp}",
-                        style: ts.s12),
-                  ),
-                ],
-              ),
-            ).paddingHorizontal(16),
+            buildTop(),
             SizedBox(
               height: 145,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  var imageFavorite = imageFavorites[index];
-                  bool isSelected =
-                      widget.selectedImageFavorites[imageFavorite] ?? false;
-                  int curPage = imageFavorite.page;
-                  String pageText = curPage == firstPage
-                      ? '@a Cover'.tlParams({"a": imageFavorite.epName})
-                      : curPage.toString();
-                  return InkWell(
-                    onDoubleTap: () {
-                      goPhotoView(imageFavorite);
-                    },
-                    onTap: () {
-                      // 单击去阅读页面, 跳转到当前点击的page
-                      if (widget.multiSelectMode) {
-                        widget.addSelected(imageFavorite);
-                      } else {
-                        goReaderPage(widget.imageFavoritesComic,
-                            imageFavorite.ep, curPage);
-                      }
-                    },
-                    onLongPress: () {
-                      widget.addSelected(imageFavorite);
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                        width: 98,
-                        height: 128,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Column(
-                          children: [
-                            Container(
-                                height: 128,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .secondaryContainer,
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: AnimatedImage(
-                                  image: ImageFavoritesProvider(imageFavorite),
-                                  width: 96,
-                                  height: 128,
-                                  fit: BoxFit.cover,
-                                  filterQuality: FilterQuality.medium,
-                                )),
-                            Text(
-                              pageText,
-                              style: ts.s10,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          ],
-                        )),
-                  ).paddingHorizontal(4);
-                },
+                itemBuilder: buildItem,
                 itemCount: imageFavorites.length,
               ),
             ).paddingHorizontal(8),
-            Row(
-              children: [
-                Text(
-                  "${"Collection time".tl}:$time | ${widget.imageFavoritesComic.sourceKey}",
-                  textAlign: TextAlign.left,
-                  style: const TextStyle(
-                    fontSize: 12.0,
-                  ),
-                ).paddingRight(8),
-                if (hotTags.isNotEmpty)
-                  Expanded(
-                    child: Text(
-                      hotTags
-                          .map((e) => enableTranslate ? e.translateTagsToCN : e)
-                          .join(" "),
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-              ],
-            ).paddingHorizontal(8).paddingBottom(8),
+            buildBottom(),
           ],
         ),
       ),
     );
+  }
+
+  Widget buildItem(BuildContext context, int index) {
+    var image = imageFavorites[index];
+    bool isSelected = widget.selectedImageFavorites[image] ?? false;
+    int curPage = image.page;
+    String pageText = curPage == firstPage
+        ? '@a Cover'.tlParams({"a": image.epName})
+        : curPage.toString();
+
+    return InkWell(
+      onTap: () {
+        // 单击去阅读页面, 跳转到当前点击的page
+        if (widget.multiSelectMode) {
+          widget.addSelected(image);
+        } else {
+          goReaderPage(widget.imageFavoritesComic, image.ep, curPage);
+        }
+      },
+      onLongPress: () {
+        goPhotoView(image);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 98,
+        height: 128,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : null,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          children: [
+            Container(
+              height: 128,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context).colorScheme.secondaryContainer,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Hero(
+                tag: "${image.sourceKey}${image.ep}${image.page}",
+                child: AnimatedImage(
+                  image: ImageFavoritesProvider(image),
+                  width: 96,
+                  height: 128,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+            ),
+            Text(
+              pageText,
+              style: ts.s10,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
+          ],
+        ),
+      ),
+    ).paddingHorizontal(4);
+  }
+
+  Widget buildTop() {
+    return SizedBox(
+      height: 46,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.imageFavoritesComic.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16.0,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+                "${imageFavorites.length}/${widget.imageFavoritesComic.maxPageFromEp}",
+                style: ts.s12),
+          ),
+        ],
+      ),
+    ).paddingHorizontal(16);
+  }
+
+  Widget buildBottom() {
+    var enableTranslate = App.locale.languageCode == 'zh';
+    String time =
+        DateFormat('yyyy-MM-dd').format(widget.imageFavoritesComic.time);
+    List<String> tags = [];
+    for (var tag in widget.imageFavoritesComic.tags) {
+      var text = enableTranslate ? tag.translateTagsToCN : tag;
+      if (text.contains(':')) {
+        text = text.split(':').last;
+      }
+      tags.add(text);
+      if (tags.length == 5) {
+        break;
+      }
+    }
+    var comicSource = ComicSource.find(widget.imageFavoritesComic.sourceKey);
+    return Row(
+      children: [
+        Text(
+          "$time | ${comicSource?.name ?? "Unknown"}",
+          textAlign: TextAlign.left,
+          style: const TextStyle(
+            fontSize: 12.0,
+          ),
+        ).paddingRight(8),
+        if (tags.isNotEmpty)
+          Expanded(
+            child: Text(
+              tags
+                  .map((e) => enableTranslate ? e.translateTagsToCN : e)
+                  .join(" "),
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 12.0,
+                overflow: TextOverflow.ellipsis,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          )
+      ],
+    ).paddingHorizontal(8).paddingBottom(8);
   }
 }
