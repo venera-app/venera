@@ -380,6 +380,9 @@ class ImageFavoriteManager with ChangeNotifier {
     if (imageFavoriteList.isEmpty) {
       return;
     }
+    for (var i in imageFavoriteList) {
+      ImageFavoritesProvider.deleteFromCache(i);
+    }
     for (var e in imageFavoritesComicList) {
       // 找到同一个漫画中的需要删除的具体图片
       List<ImageFavorite> filterImageFavorites = imageFavoriteList.where((i) {

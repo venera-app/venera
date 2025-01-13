@@ -36,6 +36,8 @@ class LocalComic with HistoryMixin implements Comic {
   /// chapter id is the name of the directory in `LocalManager.path/$directory`
   final Map<String, String>? chapters;
 
+  bool get hasChapters => chapters != null;
+
   /// relative path to the cover image
   @override
   final String cover;
@@ -387,7 +389,7 @@ class LocalManager with ChangeNotifier {
     }
     var comic = find(id, type) ?? (throw "Comic Not Found");
     var directory = Directory(comic.baseDir);
-    if (comic.chapters != null) {
+    if (comic.hasChapters) {
       var cid =
           ep is int ? comic.chapters!.keys.elementAt(ep - 1) : (ep as String);
       directory = Directory(FilePath.join(directory.path, cid));

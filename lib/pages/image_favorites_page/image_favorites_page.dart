@@ -9,13 +9,9 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
-import 'package:venera/foundation/cache_manager.dart';
-import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
-import 'package:venera/foundation/log.dart';
-import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/image_favorites_page/type.dart';
 import 'package:venera/pages/reader/reader.dart';
@@ -28,19 +24,6 @@ import 'package:venera/utils/translations.dart';
 part "image_favorites_item.dart";
 
 part "image_favorites_photo_view.dart";
-
-class _LoadingImageFavoritesComicRes {
-  bool isLoaded;
-  bool isInvalid;
-  String id;
-  String sourceKey;
-
-  _LoadingImageFavoritesComicRes(
-      {required this.isLoaded,
-      required this.isInvalid,
-      required this.id,
-      required this.sourceKey});
-}
 
 class ImageFavoritesPage extends StatefulWidget {
   const ImageFavoritesPage({super.key, this.initialKeyword});
@@ -59,7 +42,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
 
   // 所有的图片收藏
   List<ImageFavoritesComic> comics = [];
-  List<_LoadingImageFavoritesComicRes> isRefreshComicList = [];
   late var controller = TextEditingController(text: widget.initialKeyword ?? "");
   String get keyword => controller.text;
 
@@ -71,19 +53,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   // 多选的时候选中的图片
   Map<ImageFavorite, bool> selectedImageFavorites = {};
   late List<ImageFavorite> imageFavoritePros;
-
-  // 避免重复请求
-  void setRefreshComicList(_LoadingImageFavoritesComicRes res) {
-    _LoadingImageFavoritesComicRes? tempRes =
-        isRefreshComicList.firstWhereOrNull(
-            (e) => e.id == res.id && e.sourceKey == res.sourceKey);
-    if (tempRes == null) {
-      isRefreshComicList.add(res);
-    } else {
-      tempRes.isLoaded = res.isLoaded;
-      tempRes.isInvalid = res.isInvalid;
-    }
-  }
 
   void update() {
     if (mounted) {
@@ -313,13 +282,11 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
           delegate: SliverChildBuilderDelegate(
             (context, index) {
               return _ImageFavoritesItem(
-                isRefreshComicList: isRefreshComicList,
                 imageFavoritesComic: comics[index],
                 selectedImageFavorites: selectedImageFavorites,
                 addSelected: addSelected,
                 multiSelectMode: multiSelectMode,
                 finalImageFavoritesComicList: comics,
-                setRefreshComicList: setRefreshComicList,
                 imageFavoritesCompute: imageFavoritesCompute,
               );
             },

@@ -73,9 +73,8 @@ class ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
   }
 
   Future<Uint8List?> _getCurrentImageData(ImageFavorite temp) async {
-    return (await CacheManager()
-            .findCache(ImageFavoritesProvider.getImageKey(temp)))!
-        .readAsBytes();
+    var imageProvider = ImageFavoritesProvider(temp);
+    return await imageProvider.load(null);
   }
 
   @override
