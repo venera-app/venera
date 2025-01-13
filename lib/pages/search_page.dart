@@ -228,6 +228,10 @@ class _SearchPageState extends State<SearchPage> {
                 onChanged: (value) {
                   setState(() {
                     aggregatedSearch = value ?? false;
+                    if (!aggregatedSearch &&
+                        appdata.settings['defaultSearchTarget'] == "_aggregated_") {
+                      searchTarget = sources.first.key;
+                    }
                   });
                 },
               ),
