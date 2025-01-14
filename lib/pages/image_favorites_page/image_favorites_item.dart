@@ -213,35 +213,32 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
   }
 
   Widget buildTop() {
-    return SizedBox(
-      height: 46,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              widget.imageFavoritesComic.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16.0,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            widget.imageFavoritesComic.title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 16.0,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-                "${imageFavorites.length}/${widget.imageFavoritesComic.maxPageFromEp}",
-                style: ts.s12),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
-      ),
-    ).paddingHorizontal(16);
+          child: Text(
+              "${imageFavorites.length}/${widget.imageFavoritesComic.maxPageFromEp}",
+              style: ts.s12),
+        ),
+      ],
+    ).paddingHorizontal(16).paddingVertical(8);
   }
 
   Widget buildBottom() {

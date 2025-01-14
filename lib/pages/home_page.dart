@@ -1118,7 +1118,7 @@ class __ChartLineState extends State<_ChartLine>
   Widget build(BuildContext context) {
     var text = widget.text;
     var enableTranslation =
-        App.locale.countryCode == 'cn' && widget.enableTranslation;
+        App.locale.countryCode == 'CN' && widget.enableTranslation;
     if (enableTranslation) {
       text = text.translateTagsToCN;
     }
