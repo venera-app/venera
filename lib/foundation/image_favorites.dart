@@ -160,14 +160,10 @@ class ImageFavoritesComic {
     return imageFavoritesEp.every((e) => e.isHasFirstPage);
   }
 
-  List<ImageFavorite> get sortedImageFavorites {
-    List<ImageFavorite> temp = [];
+  Iterable<ImageFavorite> get images sync*{
     for (var e in imageFavoritesEp) {
-      for (var i in e.imageFavorites) {
-        temp.add(i);
-      }
+      yield* e.imageFavorites;
     }
-    return temp;
   }
 
   @override
@@ -316,27 +312,15 @@ class ImageFavoriteManager with ChangeNotifier {
   }
 
   bool has(String id, String sourceKey, String eid, int page, int ep) {
-    var res = _db.select(
-      """
-    select * from image_favorites
-    where id == ? and source_key == ?;
-    """,
-      [id, sourceKey],
-    );
-    if (res.isEmpty) {
+    var comic = find(id, sourceKey);
+    if (comic == null) {
       return false;
     }
-    var tempImageFavoritesEp = jsonDecode(res.first["image_favorites_ep"]);
-    for (var e in tempImageFavoritesEp) {
-      if (e["ep"] == ep.toString() && e["eid"] == eid) {
-        for (var i in e["imageFavorites"]) {
-          if (i["page"] == page) {
-            return true;
-          }
-        }
-      }
+    var epIndex = comic.imageFavoritesEp.where((e) => e.eid == eid).firstOrNull;
+    if (epIndex == null) {
+      return false;
     }
-    return false;
+    return epIndex.imageFavorites.any((e) => e.page == page && e.ep == ep);
   }
 
   List<ImageFavoritesComic> getAll([String? keyword]) {
@@ -462,14 +446,14 @@ class ImageFavoriteManager with ChangeNotifier {
       if (comic.author != "") {
         String finalAuthor = comic.author;
         authorCount[finalAuthor] =
-            (authorCount[finalAuthor] ?? 0) + comic.sortedImageFavorites.length;
+            (authorCount[finalAuthor] ?? 0) + comic.images.length;
       }
       // 小于10页的漫画不统计
       if (comic.maxPageFromEp < 10) {
         continue;
       }
       comicImageCount[comic] =
-          (comicImageCount[comic] ?? 0) + comic.sortedImageFavorites.length;
+          (comicImageCount[comic] ?? 0) + comic.images.length;
       comicMaxPages[comic] = (comicMaxPages[comic] ?? 0) + comic.maxPageFromEp;
     }
 

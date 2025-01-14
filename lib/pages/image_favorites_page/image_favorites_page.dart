@@ -79,7 +79,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
         isFilter = timeFilterSelect.contains(ele.time);
       }
       if (numFilterSelect != numFilterList[0]) {
-        isFilter = ele.sortedImageFavorites.length > numFilterSelect;
+        isFilter = ele.images.length > numFilterSelect;
       }
       return isFilter;
     }).toList();
@@ -92,12 +92,12 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
       case ImageFavoriteSortType.timeDesc:
         comics.sort((a, b) => b.time.compareTo(a.time));
       case ImageFavoriteSortType.maxFavorites:
-        comics.sort((a, b) => b.sortedImageFavorites.length
-            .compareTo(a.sortedImageFavorites.length));
+        comics.sort((a, b) => b.images.length
+            .compareTo(a.images.length));
       case ImageFavoriteSortType.favoritesCompareComicPages:
         comics.sort((a, b) {
-          double tempA = a.sortedImageFavorites.length / a.maxPageFromEp;
-          double tempB = b.sortedImageFavorites.length / b.maxPageFromEp;
+          double tempA = a.images.length / a.maxPageFromEp;
+          double tempB = b.images.length / b.maxPageFromEp;
           return tempB.compareTo(tempA);
         });
     }
@@ -148,7 +148,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
 
   void selectAll() {
     for (var c in comics) {
-      for (var i in c.sortedImageFavorites) {
+      for (var i in c.images) {
         selectedImageFavorites[i] = true;
       }
     }

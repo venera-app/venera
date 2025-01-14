@@ -20,7 +20,7 @@ class _ImageFavoritesItem extends StatefulWidget {
 }
 
 class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
-  late final imageFavorites = widget.imageFavoritesComic.sortedImageFavorites;
+  late final imageFavorites = widget.imageFavoritesComic.images.toList();
 
   void goComicInfo(ImageFavoritesComic comic) {
     App.mainNavigatorKey?.currentContext?.to(() => ComicPage(
@@ -89,7 +89,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
           icon: Icons.select_all,
           text: 'Select All'.tl,
           onClick: () {
-            for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
+            for (var ele in widget.imageFavoritesComic.images) {
               widget.addSelected(ele);
             }
           },
@@ -98,7 +98,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
           icon: Icons.read_more,
           text: 'Photo View'.tl,
           onClick: () {
-            goPhotoView(widget.imageFavoritesComic.sortedImageFavorites.first);
+            goPhotoView(widget.imageFavoritesComic.images.first);
           },
         ),
       ],
@@ -122,7 +122,7 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
         onLongPress: onLongPress,
         onTap: () {
           if (widget.multiSelectMode) {
-            for (var ele in widget.imageFavoritesComic.sortedImageFavorites) {
+            for (var ele in widget.imageFavoritesComic.images) {
               widget.addSelected(ele);
             }
           } else {
