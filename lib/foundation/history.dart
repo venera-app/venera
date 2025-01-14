@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -14,6 +16,7 @@ import 'package:venera/utils/translations.dart';
 
 import 'app.dart';
 import 'consts.dart';
+
 part "image_favorites.dart";
 
 typedef HistoryType = ComicType;
@@ -209,7 +212,12 @@ class HistoryManager with ChangeNotifier {
 
   Map<String, bool>? _cachedHistory;
 
+  bool isInitialized = false;
+
   Future<void> init() async {
+    if (isInitialized) {
+      return;
+    }
     _db = sqlite3.open("${App.dataPath}/history.db");
 
     _db.execute("""
@@ -229,6 +237,7 @@ class HistoryManager with ChangeNotifier {
 
     notifyListeners();
     ImageFavoriteManager().init();
+    isInitialized = true;
   }
 
   /// add history. if exists, update time.

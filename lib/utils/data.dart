@@ -208,7 +208,7 @@ Future<void> importPicaData(File file) async {
           );
         }
         List<ImageFavoritesComic> imageFavoritesComicList =
-            ImageFavoriteManager().imageFavoritesComicList;
+            ImageFavoriteManager().comics;
         for (var comic in db.select("SELECT * FROM image_favorites;")) {
           String sourceKey = comic["id"].split("-")[0];
           // 换名字了, 绅士漫画
@@ -252,7 +252,10 @@ Future<void> importPicaData(File file) async {
           }
         }
         for (var temp in imageFavoritesComicList) {
-          ImageFavoriteManager().addOrUpdateOrDelete(temp);
+          ImageFavoriteManager().addOrUpdateOrDelete(
+            temp,
+            temp == imageFavoritesComicList.last,
+          );
         }
       } catch (e, stack) {
         Log.error("Import Data", "Failed to import history: $e", stack);

@@ -916,13 +916,6 @@ class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
   }
 }
 
-enum _ImageFavoritesComputeType {
-  tags,
-  authors,
-  comicByNum,
-  comicByPercentage,
-}
-
 class ImageFavorites extends StatefulWidget {
   const ImageFavorites({super.key});
 
@@ -931,19 +924,14 @@ class ImageFavorites extends StatefulWidget {
 }
 
 class _ImageFavoritesState extends State<ImageFavorites> {
-  ImageFavoritesCompute? imageFavoritesCompute;
-  List<ImageFavorite> allImageFavoritePros = [];
+  ImageFavoritesComputed? imageFavoritesCompute;
+
+  int displayType = 0;
 
   void refreshImageFavorites() async {
     try {
-      imageFavoritesCompute = null;
-      allImageFavoritePros = [];
-      for (var comic in ImageFavoriteManager().imageFavoritesComicList) {
-        allImageFavoritePros.addAll(comic.sortedImageFavorites);
-      }
-      setState(() {});
       imageFavoritesCompute =
-          await ImageFavoriteManager().computeImageFavorites();
+          await ImageFavoriteManager.computeImageFavorites();
       if (mounted) {
         setState(() {});
       }
@@ -965,63 +953,10 @@ class _ImageFavoritesState extends State<ImageFavorites> {
     super.dispose();
   }
 
-  Widget roundBtn(
-    TextWithCount textWithCount,
-    _ImageFavoritesComputeType type,
-  ) {
-    var enableTranslate = App.locale.languageCode == 'zh';
-    var text = enableTranslate
-        ? type == _ImageFavoritesComputeType.authors
-            ? TagsTranslation.translationTagWithNamespace(
-                textWithCount.text, "artist")
-            : textWithCount.text.translateTagsToCN
-        : textWithCount.text;
-    if (type == _ImageFavoritesComputeType.tags) {
-      if (text.contains(':')) {
-        text = text.split(':').last;
-      }
-    }
-    if (text.length > 20) {
-      text = '${text.substring(0, 20)}...';
-    }
-    text += "(${textWithCount.count})";
-    return InkWell(
-      onTap: () {
-        context
-            .to(() => ImageFavoritesPage(initialKeyword: textWithCount.text));
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(text),
-      ),
-    );
-  }
-
-  Widget listRoundBtn(
-      List<TextWithCount> list, _ImageFavoritesComputeType type) {
-    return Expanded(
-      child: SizedBox(
-        height: 24,
-        child: ListView.separated(
-          separatorBuilder: (BuildContext context, int index) {
-            return SizedBox(width: 4);
-          },
-          scrollDirection: Axis.horizontal,
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            return roundBtn(list[index], type);
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    bool hasData =
+        imageFavoritesCompute != null && !imageFavoritesCompute!.isEmpty;
     return SliverToBoxAdapter(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -1047,100 +982,191 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                     Center(
                       child: Text('Image Favorites'.tl, style: ts.s18),
                     ),
-                    const SizedBox(width: 4),
-                    Button.icon(
-                      size: 18,
-                      icon: const Icon(Icons.help_outline),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return ContentDialog(
-                              title: "Help".tl,
-                              content: Text(
-                                      "After the parentheses are the number of pictures or the number of pictures compared to the number of comic pages"
-                                          .tl)
-                                  .paddingHorizontal(16)
-                                  .fixWidth(double.infinity),
-                              actions: [
-                                Button.filled(
-                                  onPressed: context.pop,
-                                  child: Text("OK".tl),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
                     const Spacer(),
                     const Icon(Icons.arrow_right),
                   ],
                 ),
               ).paddingHorizontal(16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Calculate your favorite from @a comics and @b images"
-                        .tlParams({
-                      "a": ImageFavoriteManager().length.toString(),
-                      "b": allImageFavoritePros.length
-                    }),
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                  if (imageFavoritesCompute != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          "Author: ".tl,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        listRoundBtn(imageFavoritesCompute!.authors,
-                            _ImageFavoritesComputeType.authors)
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          "Tags: ".tl,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        listRoundBtn(imageFavoritesCompute!.tags,
-                            _ImageFavoritesComputeType.tags)
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          "Comics(number): ".tl,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        listRoundBtn(imageFavoritesCompute!.comicByNum,
-                            _ImageFavoritesComputeType.comicByNum)
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          "Comics(percentage): ".tl,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        listRoundBtn(imageFavoritesCompute!.comicByPercentage,
-                            _ImageFavoritesComputeType.comicByPercentage)
-                      ],
-                    ),
+              if (hasData)
+                Row(
+                  children: [
+                    const Spacer(),
+                    buildTypeButton(0, "Tags".tl),
+                    const Spacer(),
+                    buildTypeButton(1, "Authors".tl),
+                    const Spacer(),
+                    buildTypeButton(2, "Comics".tl),
+                    const Spacer(),
                   ],
-                ],
-              ).paddingHorizontal(16).paddingBottom(16),
+                ),
+              if (hasData) const SizedBox(height: 8),
+              if (hasData)
+                buildChart(switch (displayType) {
+                  0 => imageFavoritesCompute!.tags,
+                  1 => imageFavoritesCompute!.authors,
+                  2 => imageFavoritesCompute!.comics,
+                  _ => [],
+                })
+                    .paddingHorizontal(16)
+                    .paddingBottom(16),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget buildTypeButton(int type, String text) {
+    const radius = 24.0;
+    return InkWell(
+      borderRadius: BorderRadius.circular(radius),
+      onTap: () async {
+        setState(() {
+          displayType = type;
+        });
+        await Future.delayed(const Duration(milliseconds: 20));
+        var scrollController = ScrollControllerProvider.of(context);
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.ease,
+        );
+      },
+      child: AnimatedContainer(
+        width: 104,
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color:
+              displayType == type ? context.colorScheme.primaryContainer : null,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        duration: const Duration(milliseconds: 200),
+        child: Center(
+          child: Text(
+            text,
+            style: ts.s16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildChart(List<TextWithCount> data) {
+    if (data.isEmpty) {
+      return const SizedBox();
+    }
+    var maxCount = data.map((e) => e.count).reduce((a, b) => a > b ? a : b);
+    return Column(
+      key: ValueKey(displayType),
+      children: data.map((e) {
+        return _ChartLine(
+          text: e.text,
+          count: e.count,
+          maxCount: maxCount,
+          enableTranslation: displayType != 2,
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _ChartLine extends StatefulWidget {
+  const _ChartLine({
+    required this.text,
+    required this.count,
+    required this.maxCount,
+    required this.enableTranslation,
+  });
+
+  final String text;
+
+  final int count;
+
+  final int maxCount;
+
+  final bool enableTranslation;
+
+  @override
+  State<_ChartLine> createState() => __ChartLineState();
+}
+
+class __ChartLineState extends State<_ChartLine>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      value: 0,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var text = widget.text;
+    var enableTranslation =
+        App.locale.countryCode == 'cn' && widget.enableTranslation;
+    if (enableTranslation) {
+      text = text.translateTagsToCN;
+    }
+    if (widget.enableTranslation && text.contains(':')) {
+      text = text.split(':').last;
+    }
+    return Row(
+      children: [
+        Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ).fixWidth(context.width > 600 ? 120 : 80),
+        const SizedBox(width: 8),
+        Expanded(
+          child: LayoutBuilder(builder: (context, constrains) {
+            var width = constrains.maxWidth * widget.count / widget.maxCount;
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Container(
+                  width: width * _controller.value,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: LinearGradient(
+                      colors: context.isDarkMode
+                          ? [
+                              Colors.blue.shade800,
+                              Colors.blue.shade500,
+                            ]
+                          : [
+                              Colors.blue.shade300,
+                              Colors.blue.shade600,
+                            ],
+                    ),
+                  ),
+                ).toAlign(Alignment.centerLeft);
+              },
+            );
+          }),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          widget.count.toString(),
+          style: ts.s12,
+        ).fixWidth(context.width > 600 ? 60 : 30),
+      ],
+    ).fixHeight(24);
   }
 }

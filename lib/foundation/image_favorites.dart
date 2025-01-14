@@ -179,30 +179,53 @@ class ImageFavoritesComic {
 
   @override
   int get hashCode => Object.hash(id, sourceKey);
+
+  factory ImageFavoritesComic.fromRow(Row r) {
+    var tempImageFavoritesEp = jsonDecode(r["image_favorites_ep"]);
+    List<ImageFavoritesEp> finalImageFavoritesEp = [];
+    tempImageFavoritesEp.forEach((i) {
+      List<ImageFavorite> temp = [];
+      i["imageFavorites"].forEach((j) {
+        temp.add(ImageFavorite(
+          j["page"],
+          j["imageKey"],
+          j["isAutoFavorite"],
+          i["eid"],
+          r["id"],
+          i["ep"],
+          r["source_key"],
+          i["epName"],
+        ));
+      });
+      finalImageFavoritesEp.add(ImageFavoritesEp(
+          i["eid"], i["ep"], temp, i["epName"], i["maxPage"] ?? 1));
+    });
+    return ImageFavoritesComic(
+      r["id"],
+      finalImageFavoritesEp,
+      r["title"],
+      r["source_key"],
+      r["tags"].split(","),
+      r["translated_tags"].split(","),
+      DateTime.fromMillisecondsSinceEpoch(r["time"]),
+      r["author"],
+      jsonDecode(r["other"]),
+      r["sub_title"],
+      r["max_page"],
+    );
+  }
 }
 
 class ImageFavoriteManager with ChangeNotifier {
   Database get _db => HistoryManager()._db;
-  late List<ImageFavoritesComic> imageFavoritesComicList = getAll(null);
+
+  List<ImageFavoritesComic> get comics => getAll();
 
   static ImageFavoriteManager? _cache;
 
   ImageFavoriteManager._();
 
   factory ImageFavoriteManager() => (_cache ??= ImageFavoriteManager._());
-
-  Timer? updateTimer;
-
-  void updateValue() {
-    // 立刻触发, 让阅读界面可以看到图片收藏的图标状态更新了
-    imageFavoritesComicList = getAll();
-    // 避免从pica导入的时候, 疯狂触发更新
-    updateTimer?.cancel();
-    updateTimer = Timer(const Duration(seconds: 4), () {
-      notifyListeners();
-      updateTimer = null;
-    });
-  }
 
   /// 检查表image_favorites是否存在, 不存在则创建
   void init() {
@@ -223,7 +246,7 @@ class ImageFavoriteManager with ChangeNotifier {
   }
 
   // 做排序和去重的操作
-  void addOrUpdateOrDelete(ImageFavoritesComic favorite) {
+  void addOrUpdateOrDelete(ImageFavoritesComic favorite, [bool notify = true]) {
     // 没有章节了就删掉
     if (favorite.imageFavoritesEp.isEmpty) {
       _db.execute("""
@@ -287,145 +310,90 @@ class ImageFavoriteManager with ChangeNotifier {
         jsonEncode(favorite.other)
       ]);
     }
-    ImageFavoriteManager().updateValue();
-  }
-
-  ImageFavoritesComic? findFromComicList(List<ImageFavoritesComic> tempList,
-      String id, String sourceKey, String eid, int page, int ep) {
-    ImageFavoritesComic? temp = tempList
-        .firstWhereOrNull((e) => e.id == id && e.sourceKey == sourceKey);
-    if (temp == null) {
-      return null;
-    } else {
-      ImageFavoritesEp? tempEp = temp.imageFavoritesEp.firstWhereOrNull((e) {
-        return e.ep == ep;
-      });
-      if (tempEp == null) {
-        return null;
-      } else {
-        ImageFavorite? tempFavorite =
-            tempEp.imageFavorites.firstWhereOrNull((e) => e.page == page);
-        if (tempFavorite != null) {
-          return temp;
-        }
-        return null;
-      }
+    if (notify) {
+      notifyListeners();
     }
   }
 
   bool has(String id, String sourceKey, String eid, int page, int ep) {
-    return findFromComicList(
-            imageFavoritesComicList, id, sourceKey, eid, page, ep) !=
-        null;
+    var res = _db.select(
+      """
+    select * from image_favorites
+    where id == ? and source_key == ?;
+    """,
+      [id, sourceKey],
+    );
+    if (res.isEmpty) {
+      return false;
+    }
+    var tempImageFavoritesEp = jsonDecode(res.first["image_favorites_ep"]);
+    for (var e in tempImageFavoritesEp) {
+      if (e["ep"] == ep.toString() && e["eid"] == eid) {
+        for (var i in e["imageFavorites"]) {
+          if (i["page"] == page) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   List<ImageFavoritesComic> getAll([String? keyword]) {
-    var res = [];
+    ResultSet res;
     if (keyword == null || keyword == "") {
       res = _db.select("select * from image_favorites;");
     } else {
       res = _db.select(
         """
     select * from image_favorites
-    WHERE LOWER(title) LIKE LOWER(?)
-    OR LOWER(sub_title) LIKE LOWER(?)
+    WHERE title LIKE ?
+    OR sub_title LIKE ?
     OR LOWER(tags) LIKE LOWER(?)
     OR LOWER(translated_tags) LIKE LOWER(?)
-    OR LOWER(author) LIKE LOWER(?);
+    OR author LIKE ?;
     """,
         ['%$keyword%', '%$keyword%', '%$keyword%', '%$keyword%', '%$keyword%'],
       );
     }
     try {
-      return res.map((e) {
-        var tempImageFavoritesEp = jsonDecode(e["image_favorites_ep"]);
-        List<ImageFavoritesEp> finalImageFavoritesEp = [];
-        tempImageFavoritesEp.forEach((i) {
-          List<ImageFavorite> temp = [];
-          i["imageFavorites"].forEach((j) {
-            temp.add(ImageFavorite(
-                j["page"],
-                j["imageKey"],
-                j["isAutoFavorite"],
-                i["eid"],
-                e["id"],
-                i["ep"],
-                e["source_key"],
-                i["epName"]));
-          });
-          finalImageFavoritesEp.add(ImageFavoritesEp(
-              i["eid"], i["ep"], temp, i["epName"], i["maxPage"] ?? 1));
-        });
-        return ImageFavoritesComic(
-          e["id"],
-          finalImageFavoritesEp,
-          e["title"],
-          e["source_key"],
-          e["tags"].split(","),
-          e["translated_tags"].split(","),
-          DateTime.fromMillisecondsSinceEpoch(e["time"]),
-          e["author"],
-          jsonDecode(e["other"]),
-          e["sub_title"],
-          e["max_page"],
-        );
-      }).toList();
+      return res.map((e) => ImageFavoritesComic.fromRow(e)).toList();
     } catch (e, stackTrace) {
       Log.error("Unhandled Exception", e.toString(), stackTrace);
       return [];
     }
   }
 
-  void deleteImageFavorite(List<ImageFavorite> imageFavoriteList) {
+  void deleteImageFavorite(Iterable<ImageFavorite> imageFavoriteList) {
     if (imageFavoriteList.isEmpty) {
       return;
     }
     for (var i in imageFavoriteList) {
       ImageFavoritesProvider.deleteFromCache(i);
     }
-    for (var e in imageFavoritesComicList) {
-      // 找到同一个漫画中的需要删除的具体图片
-      List<ImageFavorite> filterImageFavorites = imageFavoriteList.where((i) {
-        return i.id == e.id && i.sourceKey == e.sourceKey;
-      }).toList();
-      if (filterImageFavorites.isNotEmpty) {
-        e.imageFavoritesEp = e.imageFavoritesEp.where((i) {
-          // 去掉匹配到的具体图片
-          i.imageFavorites = i.imageFavorites.where((j) {
-            ImageFavorite? temp = filterImageFavorites.firstWhereOrNull((k) {
-              return k.page == j.page && k.ep == j.ep;
-            });
-            // 如果没有匹配到, 说明不是这个章节和page, 就留着
-            return temp == null;
-          }).toList();
-          // 如果一张图片都没了, 或者只有一张自动收藏的firstPage, 就去掉这个章节
-          if (i.imageFavorites.length == 1 &&
-              i.imageFavorites.first.isAutoFavorite == true) {
-            return false;
-          }
-          return i.imageFavorites.isNotEmpty;
-        }).toList();
-        addOrUpdateOrDelete(e);
+    var comics = <ImageFavoritesComic>{};
+    for (var i in imageFavoriteList) {
+      var comic = comics
+              .where((c) => c.id == i.id && c.sourceKey == i.sourceKey)
+              .firstOrNull ??
+          find(i.id, i.sourceKey);
+      if (comic == null) {
+        continue;
       }
+      var ep = comic.imageFavoritesEp.firstWhereOrNull((e) => e.ep == i.ep);
+      if (ep == null) {
+        continue;
+      }
+      ep.imageFavorites.remove(i);
+      if (ep.imageFavorites.isEmpty) {
+        comic.imageFavoritesEp.remove(ep);
+      }
+      comics.add(comic);
     }
-    ImageFavoriteManager().updateValue();
-  }
-
-  List<String> get earliestTimeToNow {
-    var res = _db.select("select MIN(time) from image_favorites;");
-    if (res.first.values.first == null) {
-      return [];
+    for (var i in comics) {
+      addOrUpdateOrDelete(i, false);
     }
-    int earliestYear =
-        DateTime.fromMillisecondsSinceEpoch(res.first.values.first! as int)
-            .year;
-    DateTime now = DateTime.now();
-    int currentYear = now.year;
-    List<String> yearsList = [];
-    for (int year = earliestYear; year <= currentYear; year++) {
-      yearsList.add(year.toString());
-    }
-    return yearsList;
+    notifyListeners();
   }
 
   int get length {
@@ -440,15 +408,27 @@ class ImageFavoriteManager with ChangeNotifier {
     return getAll(keyword);
   }
 
-  Future<ImageFavoritesCompute> computeImageFavorites() {
-    return compute(
-      _computeImageFavorites,
-      imageFavoritesComicList,
-    );
+  static Future<ImageFavoritesComputed> computeImageFavorites() {
+    var token = ServicesBinding.rootIsolateToken!;
+    var count = ImageFavoriteManager().length;
+    if (count == 0) {
+      return Future.value(ImageFavoritesComputed([], [], []));
+    } else if (count > 100) {
+      return Isolate.run(() async {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+        await App.init();
+        await HistoryManager().init();
+        return _computeImageFavorites();
+      });
+    } else {
+      return Future.value(_computeImageFavorites());
+    }
   }
 
-  static ImageFavoritesCompute _computeImageFavorites(
-      List<ImageFavoritesComic> comics) {
+  static ImageFavoritesComputed _computeImageFavorites() {
+    const maxLength = 6;
+
+    var comics = ImageFavoriteManager().getAll();
     // 去掉这些没有意义的标签
     const List<String> exceptTags = [
       '連載中',
@@ -506,17 +486,6 @@ class ImageFavoriteManager with ChangeNotifier {
         comicImageCount.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
 
-    // 按收藏比例排序漫画
-    List<MapEntry<ImageFavoritesComic, int>> sortedComicsByPercentage =
-        comicImageCount.entries.toList()
-          ..sort((a, b) {
-            double percentageA =
-                comicImageCount[a.key]! / comicMaxPages[a.key]!;
-            double percentageB =
-                comicImageCount[b.key]! / comicMaxPages[b.key]!;
-            return percentageB.compareTo(percentageA);
-          });
-
     validateTag(String tag) {
       if (tag.startsWith("Category:")) {
         return false;
@@ -525,27 +494,32 @@ class ImageFavoriteManager with ChangeNotifier {
           !tag.isNum;
     }
 
-    return ImageFavoritesCompute(
+    return ImageFavoritesComputed(
       sortedTags
           .where(validateTag)
           .map((tag) => TextWithCount(tag, tagCount[tag]!))
+          .take(maxLength)
           .toList(),
       sortedAuthors
           .map((author) => TextWithCount(author, authorCount[author]!))
+          .take(maxLength)
           .toList(),
       sortedComicsByNum
           .map((comic) => TextWithCount(comic.key.title, comic.value))
-          .toList(),
-      sortedComicsByPercentage
-          .map((comic) => TextWithCount(comic.key.title, comic.value))
+          .take(maxLength)
           .toList(),
     );
   }
 
   ImageFavoritesComic? find(String id, String sourceKey) {
-    return imageFavoritesComicList.firstWhereOrNull(
-      (comic) => comic.id == id && comic.sourceKey == sourceKey,
-    );
+    var row = _db.select("""
+    select * from image_favorites
+    where id == ? and source_key == ?;
+    """, [id, sourceKey]);
+    if (row.isEmpty) {
+      return null;
+    }
+    return ImageFavoritesComic.fromRow(row.first);
   }
 }
 
@@ -556,7 +530,7 @@ class TextWithCount {
   const TextWithCount(this.text, this.count);
 }
 
-class ImageFavoritesCompute {
+class ImageFavoritesComputed {
   /// 基于收藏的标签数排序
   final List<TextWithCount> tags;
 
@@ -564,16 +538,14 @@ class ImageFavoritesCompute {
   final List<TextWithCount> authors;
 
   /// 基于喜欢的图片数排序
-  final List<TextWithCount> comicByNum;
-
-  // 基于图片数比上总页数排序
-  final List<TextWithCount> comicByPercentage;
+  final List<TextWithCount> comics;
 
   /// 计算后的图片收藏数据
-  const ImageFavoritesCompute(
+  const ImageFavoritesComputed(
     this.tags,
     this.authors,
-    this.comicByNum,
-    this.comicByPercentage,
+    this.comics,
   );
+
+  bool get isEmpty => tags.isEmpty && authors.isEmpty && comics.isEmpty;
 }

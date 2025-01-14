@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +41,9 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   // 所有的图片收藏
   List<ImageFavoritesComic> comics = [];
 
-  late var controller = TextEditingController(text: widget.initialKeyword ?? "");
+  late var controller =
+      TextEditingController(text: widget.initialKeyword ?? "");
+
   String get keyword => controller.text;
 
   // 进入关键词搜索模式
@@ -54,7 +53,6 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
 
   // 多选的时候选中的图片
   Map<ImageFavorite, bool> selectedImageFavorites = {};
-  late List<ImageFavorite> imageFavorites;
 
   void update() {
     if (mounted) {
@@ -63,10 +61,9 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   }
 
   void updateImageFavorites() async {
-    imageFavorites = [];
-    for (var e in ImageFavoriteManager().imageFavoritesComicList) {
-      imageFavorites.addAll(e.sortedImageFavorites);
-    }
+    comics = searchMode
+        ? ImageFavoriteManager().search(keyword)
+        : ImageFavoriteManager().getAll();
     sortImageFavorites();
     update();
   }
@@ -137,7 +134,7 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
         text: "Delete".tl,
         onClick: () {
           ImageFavoriteManager()
-              .deleteImageFavorite(selectedImageFavorites.keys.toList());
+              .deleteImageFavorite(selectedImageFavorites.keys);
           setState(() {
             multiSelectMode = false;
             selectedImageFavorites.clear();
@@ -150,8 +147,10 @@ class _ImageFavoritesPageState extends State<ImageFavoritesPage> {
   var scrollController = ScrollController();
 
   void selectAll() {
-    for (var ele in imageFavorites) {
-      selectedImageFavorites[ele] = true;
+    for (var c in comics) {
+      for (var i in c.sortedImageFavorites) {
+        selectedImageFavorites[i] = true;
+      }
     }
     update();
   }

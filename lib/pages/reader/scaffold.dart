@@ -146,7 +146,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     }
     super.initState();
-    addDragListener();
+    Future.delayed(const Duration(milliseconds: 200), addDragListener);
   }
 
   @override
