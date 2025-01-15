@@ -69,7 +69,7 @@ dependencies:
       ref: 7637b8b67d0a831f3cd7e702b8173e300880d32e
   pdf: ^3.11.1
   dynamic_color: ^1.7.0
-  shimmer: ^3.0.0
+  shimmer_animation: ^2.1.0
   flutter_memory_info: ^0.0.1
   syntax_highlight: ^0.4.0
   text_scroll: ^0.2.0

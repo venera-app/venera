@@ -1,5 +1,27 @@
 part of 'components.dart';
 
+ImageProvider? _findImageProvider(Comic comic) {
+  ImageProvider image;
+  if (comic is LocalComic) {
+    image = LocalComicImageProvider(comic);
+  } else if (comic is History) {
+    image = HistoryImageProvider(comic);
+  } else if (comic.sourceKey == 'local') {
+    var localComic = LocalManager().find(comic.id, ComicType.local);
+    if (localComic == null) {
+      return null;
+    }
+    image = FileImage(localComic.coverFile);
+  } else {
+    image = CachedImageProvider(
+      comic.cover,
+      sourceKey: comic.sourceKey,
+      cid: comic.id,
+    );
+  }
+  return image;
+}
+
 class ComicTile extends StatelessWidget {
   const ComicTile(
       {super.key,
@@ -27,8 +49,14 @@ class ComicTile extends StatelessWidget {
       onTap!();
       return;
     }
-    App.mainNavigatorKey?.currentContext
-        ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+    App.mainNavigatorKey?.currentContext?.to(
+      () => ComicPage(
+        id: comic.id,
+        sourceKey: comic.sourceKey,
+        cover: comic.cover,
+        title: comic.title,
+      ),
+    );
   }
 
   void _onLongPressed(context) {
@@ -61,8 +89,14 @@ class ComicTile extends StatelessWidget {
           icon: Icons.chrome_reader_mode_outlined,
           text: 'Details'.tl,
           onClick: () {
-            App.mainNavigatorKey?.currentContext
-                ?.to(() => ComicPage(id: comic.id, sourceKey: comic.sourceKey));
+            App.mainNavigatorKey?.currentContext?.to(
+              () => ComicPage(
+                id: comic.id,
+                sourceKey: comic.sourceKey,
+                cover: comic.cover,
+                title: comic.title,
+              ),
+            );
           },
         ),
         MenuEntry(
@@ -161,23 +195,9 @@ class ComicTile extends StatelessWidget {
   }
 
   Widget buildImage(BuildContext context) {
-    ImageProvider image;
-    if (comic is LocalComic) {
-      image = LocalComicImageProvider(comic as LocalComic);
-    } else if (comic is History) {
-      image = HistoryImageProvider(comic as History);
-    } else if (comic.sourceKey == 'local') {
-      var localComic = LocalManager().find(comic.id, ComicType.local);
-      if (localComic == null) {
-        return const SizedBox();
-      }
-      image = FileImage(localComic.coverFile);
-    } else {
-      image = CachedImageProvider(
-        comic.cover,
-        sourceKey: comic.sourceKey,
-        cid: comic.id,
-      );
+    var image = _findImageProvider(comic);
+    if (image == null) {
+      return const SizedBox();
     }
     return AnimatedImage(
       image: image,
@@ -199,15 +219,25 @@ class ComicTile extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
             child: Row(
               children: [
-                Container(
-                  width: height * 0.68,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
+                Hero(
+                  tag: "cover${comic.id}${comic.sourceKey}",
+                  child: Container(
+                    width: height * 0.68,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.colorScheme.outlineVariant,
+                          blurRadius: 1,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: buildImage(context),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: buildImage(context),
                 ),
                 SizedBox.fromSize(
                   size: const Size(16, 5),
@@ -248,20 +278,23 @@ class ComicTile extends StatelessWidget {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.toOpacity(0.2),
-                              blurRadius: 2,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                      child: Hero(
+                        tag: "cover${comic.id}${comic.sourceKey}",
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.toOpacity(0.2),
+                                blurRadius: 2,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: buildImage(context),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: buildImage(context),
                       ),
                     ),
                     Align(
@@ -1400,7 +1433,7 @@ class _RatingWidgetState extends State<RatingWidget> {
     }
     if (full < widget.count) {
       children.add(ClipRect(
-        clipper: SMClipper(rating: star() * widget.size),
+        clipper: _SMClipper(rating: star() * widget.size),
         child: Icon(
           Icons.star,
           size: widget.size,
@@ -1449,10 +1482,10 @@ class _RatingWidgetState extends State<RatingWidget> {
   }
 }
 
-class SMClipper extends CustomClipper<Rect> {
+class _SMClipper extends CustomClipper<Rect> {
   final double rating;
 
-  SMClipper({required this.rating});
+  _SMClipper({required this.rating});
 
   @override
   Rect getClip(Size size) {
@@ -1460,7 +1493,52 @@ class SMClipper extends CustomClipper<Rect> {
   }
 
   @override
-  bool shouldReclip(SMClipper oldClipper) {
+  bool shouldReclip(_SMClipper oldClipper) {
     return rating != oldClipper.rating;
+  }
+}
+
+class SimpleComicTile extends StatelessWidget {
+  const SimpleComicTile({super.key, required this.comic, this.onTap});
+
+  final Comic comic;
+
+  final void Function()? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    var image = _findImageProvider(comic);
+
+    var child = image == null
+        ? const SizedBox()
+        : AnimatedImage(
+            image: image,
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+          );
+
+    return AnimatedTapRegion(
+      borderRadius: 8,
+      onTap: onTap ?? () {
+        context.to(
+          () => ComicPage(
+            id: comic.id,
+            sourceKey: comic.sourceKey,
+          ),
+        );
+      },
+      child: Container(
+        width: 92,
+        height: 114,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
+    );
   }
 }

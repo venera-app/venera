@@ -200,15 +200,17 @@ class NaviPaneState extends State<NaviPane>
   }
 
   Widget buildMainView() {
-    return Navigator(
-      observers: [widget.observer],
-      key: widget.navigatorKey,
-      onGenerateRoute: (settings) => AppPageRoute(
-        preventRebuild: false,
-        isRootRoute: true,
-        builder: (context) {
-          return _NaviMainView(state: this);
-        },
+    return HeroControllerScope(
+      controller: MaterialApp.createMaterialHeroController(),
+      child: Navigator(
+        observers: [widget.observer],
+        key: widget.navigatorKey,
+        onGenerateRoute: (settings) => AppPageRoute(
+          preventRebuild: false,
+          builder: (context) {
+            return _NaviMainView(state: this);
+          },
+        ),
       ),
     );
   }
@@ -362,16 +364,14 @@ class _SideNaviWidget extends StatelessWidget {
           color: enabled ? colorScheme.primaryContainer : null,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: showTitle ? Row(
-          children: [
-            icon,
-            const SizedBox(width: 12),
-            Text(entry.label)
-          ],
-        ) : Align(
-          alignment: Alignment.centerLeft,
-          child: icon,
-        ),
+        child: showTitle
+            ? Row(
+                children: [icon, const SizedBox(width: 12), Text(entry.label)],
+              )
+            : Align(
+                alignment: Alignment.centerLeft,
+                child: icon,
+              ),
       ),
     ).paddingVertical(4);
   }
@@ -395,16 +395,14 @@ class _PaneActionWidget extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         height: 38,
-        child: showTitle ? Row(
-          children: [
-            icon,
-            const SizedBox(width: 12),
-            Text(entry.label)
-          ],
-        ) : Align(
-          alignment: Alignment.centerLeft,
-          child: icon,
-        ),
+        child: showTitle
+            ? Row(
+                children: [icon, const SizedBox(width: 12), Text(entry.label)],
+              )
+            : Align(
+                alignment: Alignment.centerLeft,
+                child: icon,
+              ),
       ),
     ).paddingVertical(4);
   }

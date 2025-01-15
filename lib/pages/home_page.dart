@@ -6,8 +6,6 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
-import 'package:venera/foundation/image_provider/history_image_provider.dart';
-import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/accounts_page.dart';
@@ -267,8 +265,8 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      return AnimatedTapRegion(
-                        borderRadius: 8,
+                      return SimpleComicTile(
+                        comic: history[index],
                         onTap: () {
                           context.to(
                             () => ComicPage(
@@ -277,25 +275,7 @@ class _HistoryState extends State<_History> {
                             ),
                           );
                         },
-                        child: Container(
-                          width: 92,
-                          height: 114,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: AnimatedImage(
-                            image: HistoryImageProvider(history[index]),
-                            width: 96,
-                            height: 128,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                          ),
-                        ),
-                      ).paddingHorizontal(8);
+                      ).paddingHorizontal(8).paddingVertical(2);
                     },
                   ),
                 ).paddingHorizontal(8).paddingBottom(16),
@@ -388,32 +368,8 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      return AnimatedTapRegion(
-                        onTap: () {
-                          local[index].read();
-                        },
-                        borderRadius: 8,
-                        child: Container(
-                          width: 92,
-                          height: 114,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: AnimatedImage(
-                            image: LocalComicImageProvider(
-                              local[index],
-                            ),
-                            width: 96,
-                            height: 128,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                          ),
-                        ),
-                      ).paddingHorizontal(8);
+                      return SimpleComicTile(comic: local[index])
+                          .paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8),

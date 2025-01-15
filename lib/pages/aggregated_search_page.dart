@@ -1,13 +1,10 @@
 import "package:flutter/material.dart";
-import "package:shimmer/shimmer.dart";
+import 'package:shimmer_animation/shimmer_animation.dart';
 import "package:venera/components/components.dart";
 import "package:venera/foundation/app.dart";
 import "package:venera/foundation/comic_source/comic_source.dart";
-import "package:venera/foundation/image_provider/cached_image.dart";
 import "package:venera/pages/search_result_page.dart";
 import "package:venera/utils/translations.dart";
-
-import "comic_page.dart";
 
 class AggregatedSearchPage extends StatefulWidget {
   const AggregatedSearchPage({super.key, required this.keyword});
@@ -73,9 +70,9 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
     with AutomaticKeepAliveClientMixin {
   bool isLoading = true;
 
-  static const _kComicHeight = 144.0;
+  static const _kComicHeight = 132.0;
 
-  get _comicWidth => _kComicHeight * 0.72;
+  get _comicWidth => _kComicHeight * 0.7;
 
   static const _kLeftPadding = 16.0;
 
@@ -123,28 +120,9 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
   }
 
   Widget buildComic(Comic c) {
-    return AnimatedTapRegion(
-      borderRadius: 8,
-      onTap: () {
-        context.to(() => ComicPage(
-          id: c.id,
-          sourceKey: c.sourceKey,
-        ));
-      },
-      child: Container(
-        height: _kComicHeight,
-        width: _comicWidth,
-        decoration: BoxDecoration(
-          color: context.colorScheme.surfaceContainerLow,
-        ),
-        child: AnimatedImage(
-          width: _comicWidth,
-          height: _kComicHeight,
-          fit: BoxFit.cover,
-          image: CachedImageProvider(c.cover),
-        ),
-      ),
-    ).paddingLeft(_kLeftPadding);
+    return SimpleComicTile(comic: c)
+        .paddingLeft(_kLeftPadding)
+        .paddingBottom(2);
   }
 
   @override
@@ -169,10 +147,7 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
             SizedBox(
               height: _kComicHeight,
               width: double.infinity,
-              child: Shimmer.fromColors(
-                baseColor: context.colorScheme.surfaceContainerLow,
-                highlightColor: context.colorScheme.surfaceContainer,
-                direction: ShimmerDirection.ltr,
+              child: Shimmer(
                 child: LayoutBuilder(builder: (context, constrains) {
                   var itemWidth = _comicWidth + _kLeftPadding;
                   var items = (constrains.maxWidth / itemWidth).ceil();

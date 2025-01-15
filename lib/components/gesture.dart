@@ -41,39 +41,44 @@ class AnimatedTapRegion extends StatefulWidget {
 }
 
 class _AnimatedTapRegionState extends State<AnimatedTapRegion> {
-  bool isScaled = false;
-
   bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) {
-        isHovered = true;
-        if (!isScaled) {
-          Future.delayed(const Duration(milliseconds: 100), () {
-            if (isHovered) {
-              setState(() => isScaled = true);
-            }
-          });
-        }
+        setState(() {
+          isHovered = true;
+        });
       },
       onExit: (_) {
-        isHovered = false;
-        if(isScaled) {
-          setState(() => isScaled = false);
-        }
+        setState(() {
+          isHovered = false;
+        });
       },
       child: GestureDetector(
         onTap: widget.onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          clipBehavior: Clip.antiAlias,
-          child: AnimatedScale(
-            duration: _fastAnimationDuration,
-            scale: isScaled ? 1.1 : 1,
-            child: widget.child,
+        child: AnimatedContainer(
+          duration: _fastAnimationDuration,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            boxShadow: isHovered
+                ? [
+                    BoxShadow(
+                      color: context.colorScheme.outline,
+                      blurRadius: 2,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: context.colorScheme.outlineVariant,
+                      blurRadius: 1,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
           ),
+          child: widget.child,
         ),
       ),
     );
