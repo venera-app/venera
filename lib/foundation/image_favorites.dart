@@ -410,7 +410,7 @@ class ImageFavoriteManager with ChangeNotifier {
   }
 
   static ImageFavoritesComputed _computeImageFavorites() {
-    const maxLength = 6;
+    const maxLength = 20;
 
     var comics = ImageFavoriteManager().getAll();
     // 去掉这些没有意义的标签

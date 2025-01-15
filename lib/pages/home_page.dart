@@ -1033,8 +1033,8 @@ class _ImageFavoritesState extends State<ImageFavorites> {
         );
       },
       child: AnimatedContainer(
-        width: 104,
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        width: 96,
+        padding: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           color:
               displayType == type ? context.colorScheme.primaryContainer : null,
@@ -1060,16 +1060,26 @@ class _ImageFavoritesState extends State<ImageFavorites> {
       return const SizedBox();
     }
     var maxCount = data.map((e) => e.count).reduce((a, b) => a > b ? a : b);
-    return Column(
-      key: ValueKey(displayType),
-      children: data.map((e) {
-        return _ChartLine(
-          text: e.text,
-          count: e.count,
-          maxCount: maxCount,
-          enableTranslation: displayType != 2,
-        );
-      }).toList(),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: 164,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          key: ValueKey(displayType),
+          children: data.map((e) {
+            return _ChartLine(
+              text: e.text,
+              count: e.count,
+              maxCount: maxCount,
+              enableTranslation: displayType != 2,
+              onTap: (text) {
+                context.to(() => ImageFavoritesPage(initialKeyword: text));
+              },
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 }
@@ -1080,6 +1090,7 @@ class _ChartLine extends StatefulWidget {
     required this.count,
     required this.maxCount,
     required this.enableTranslation,
+    this.onTap,
   });
 
   final String text;
@@ -1089,6 +1100,8 @@ class _ChartLine extends StatefulWidget {
   final int maxCount;
 
   final bool enableTranslation;
+
+  final void Function(String text)? onTap;
 
   @override
   State<_ChartLine> createState() => __ChartLineState();
@@ -1127,11 +1140,21 @@ class __ChartLineState extends State<_ChartLine>
     }
     return Row(
       children: [
-        Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ).fixWidth(context.width > 600 ? 120 : 80),
+        InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: () {
+            widget.onTap?.call(widget.text);
+          },
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+              .paddingHorizontal(4)
+              .toAlign(Alignment.centerLeft)
+              .fixWidth(context.width > 600 ? 120 : 80)
+              .fixHeight(double.infinity),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: LayoutBuilder(builder: (context, constrains) {
@@ -1141,7 +1164,7 @@ class __ChartLineState extends State<_ChartLine>
               builder: (context, child) {
                 return Container(
                   width: width * _controller.value,
-                  height: 16,
+                  height: 18,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(2),
                     gradient: LinearGradient(
@@ -1167,6 +1190,6 @@ class __ChartLineState extends State<_ChartLine>
           style: ts.s12,
         ).fixWidth(context.width > 600 ? 60 : 30),
       ],
-    ).fixHeight(24);
+    ).fixHeight(28);
   }
 }
