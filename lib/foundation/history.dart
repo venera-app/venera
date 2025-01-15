@@ -337,6 +337,7 @@ class HistoryManager with ChangeNotifier {
   }
 
   void close() {
+    isInitialized = false;
     _db.dispose();
   }
 }
