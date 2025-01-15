@@ -22,7 +22,7 @@ class LocalFavoriteImageProvider
   static void delete(String id, int intKey) {
     var fileName = (id + intKey.toString()).hashCode.toString();
     var file = File(FilePath.join(App.dataPath, 'favorite_cover', fileName));
-    if(file.existsSync()) {
+    if (file.existsSync()) {
       file.delete();
     }
   }
@@ -42,7 +42,7 @@ class LocalFavoriteImageProvider
         cumulativeBytesLoaded: progress.currentBytes,
         expectedTotalBytes: progress.totalBytes,
       ));
-      if(progress.imageBytes != null) {
+      if (progress.imageBytes != null) {
         var data = progress.imageBytes!;
         await file.writeAsBytes(data);
         return data;
@@ -52,7 +52,8 @@ class LocalFavoriteImageProvider
   }
 
   @override
-  Future<LocalFavoriteImageProvider> obtainKey(ImageConfiguration configuration) {
+  Future<LocalFavoriteImageProvider> obtainKey(
+      ImageConfiguration configuration) {
     return SynchronousFuture(this);
   }
 

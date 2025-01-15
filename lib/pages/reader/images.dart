@@ -263,6 +263,10 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleDoubleTap(Offset location) {
+    if (appdata.settings['quickCollectImage'] == 'DoubleTap') {
+      context.readerScaffold.addImageFavorite();
+      return;
+    }
     var controller = photoViewControllers[reader.page]!;
     controller.onDoubleClick?.call();
   }
@@ -461,7 +465,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
     widget = Listener(
       onPointerDown: (event) {
         fingers++;
-        if(fingers > 1 && !disableScroll) {
+        if (fingers > 1 && !disableScroll) {
           setState(() {
             disableScroll = true;
           });
@@ -475,7 +479,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       },
       onPointerUp: (event) {
         fingers--;
-        if(fingers <= 1 && disableScroll) {
+        if (fingers <= 1 && disableScroll) {
           setState(() {
             disableScroll = false;
           });
@@ -564,6 +568,10 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleDoubleTap(Offset location) {
+    if (appdata.settings['quickCollectImage'] == 'DoubleTap') {
+      context.readerScaffold.addImageFavorite();
+      return;
+    }
     double target;
     if (photoViewController.scale !=
         photoViewController.getInitialScale?.call()) {

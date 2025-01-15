@@ -145,6 +145,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                     ep: 0,
                     page: 0,
                   ),
+              author: localComic.subTitle ?? '',
+              tags: localComic.tags,
             );
           });
           App.mainNavigatorKey!.currentContext!.pop();
@@ -663,6 +665,8 @@ abstract mixin class _ComicPageActions {
         initialChapter: ep,
         initialPage: page,
         history: History.fromModel(model: comic, ep: 0, page: 0),
+        author: comic.findAuthor() ?? '',
+        tags: comic.plainTags,
       ),
     );
   }

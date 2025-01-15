@@ -143,6 +143,7 @@ class _Settings with ChangeNotifier {
     'quickFavorite': null,
     'enableTurnPageByVolumeKey': true,
     'enableClockAndBatteryInfoInReader': true,
+    'quickCollectImage': 'No', // No, DoubleTap, Swipe
     'authorizationRequired': false,
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,

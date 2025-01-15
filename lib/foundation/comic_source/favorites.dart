@@ -10,6 +10,10 @@ class FavoriteData {
 
   final bool multiFolder;
 
+  // 这个收藏时间新旧顺序, 是为了最小成本同步远端的收藏, 只拉取远程最新收藏的漫画, 就不需要全拉取一遍了
+  // 如果为 null, 当做从新到旧
+  final bool? isOldToNewSort;
+
   final Future<Res<List<Comic>>> Function(int page, [String? folder])?
       loadComic;
 
@@ -44,6 +48,7 @@ class FavoriteData {
     this.addFolder,
     this.allFavoritesId,
     this.addOrDelFavorite,
+    this.isOldToNewSort,
   });
 }
 

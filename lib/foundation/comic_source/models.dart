@@ -73,7 +73,8 @@ class Comic {
     this.sourceKey,
     this.maxPage,
     this.language,
-  ): favoriteId = null, stars = null;
+  )   : favoriteId = null,
+        stars = null;
 
   Map<String, dynamic> toJson() {
     return {
@@ -231,6 +232,34 @@ class ComicDetails with HistoryMixin {
   String get id => comicId;
 
   ComicType get comicType => ComicType(sourceKey.hashCode);
+
+  /// Convert tags map to plain list
+  List<String> get plainTags {
+    var res = <String>[];
+    tags.forEach((key, value) {
+      res.addAll(value.map((e) => "$key:$e"));
+    });
+    return res;
+  }
+
+  /// Find the first author tag
+  String? findAuthor() {
+    var authorNamespaces = [
+      "author",
+      "authors",
+      "artist",
+      "artists",
+      "作者",
+      "画师"
+    ];
+    for (var entry in tags.entries) {
+      if (authorNamespaces.contains(entry.key.toLowerCase()) &&
+          entry.value.isNotEmpty) {
+        return entry.value.first;
+      }
+    }
+    return null;
+  }
 }
 
 class ArchiveInfo {

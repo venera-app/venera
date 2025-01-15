@@ -5,6 +5,7 @@ void showToast({
   required BuildContext context,
   Widget? icon,
   Widget? trailing,
+  int? seconds,
 }) {
   var newEntry = OverlayEntry(
       builder: (context) => _ToastOverlay(
@@ -17,7 +18,7 @@ void showToast({
 
   state?.addOverlay(newEntry);
 
-  Timer(const Duration(seconds: 2), () => state?.remove(newEntry));
+  Timer(Duration(seconds: seconds ?? 2), () => state?.remove(newEntry));
 }
 
 class _ToastOverlay extends StatelessWidget {
@@ -48,7 +49,8 @@ class _ToastOverlay extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onInverseSurface),
             child: IntrinsicWidth(
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                 constraints: BoxConstraints(
                   maxWidth: context.width - 32,
                 ),
@@ -241,13 +243,13 @@ LoadingDialogController showLoadingDialog(BuildContext context,
 class ContentDialog extends StatelessWidget {
   const ContentDialog({
     super.key,
-    required this.title,
+    this.title, // 如果不传 title 将不会展示
     required this.content,
     this.dismissible = true,
     this.actions = const [],
   });
 
-  final String title;
+  final String? title;
 
   final Widget content;
 
@@ -261,14 +263,16 @@ class ContentDialog extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Appbar(
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: dismissible ? context.pop : null,
-          ),
-          title: Text(title),
-          backgroundColor: Colors.transparent,
-        ),
+        title != null
+            ? Appbar(
+                leading: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: dismissible ? context.pop : null,
+                ),
+                title: Text(title!),
+                backgroundColor: Colors.transparent,
+              )
+            : const SizedBox.shrink(),
         this.content,
         const SizedBox(height: 16),
         Row(
@@ -360,7 +364,7 @@ Future<void> showInputDialog({
                   } else {
                     result = futureOr;
                   }
-                  if(result == null) {
+                  if (result == null) {
                     context.pop();
                   } else {
                     setState(() => error = result.toString());

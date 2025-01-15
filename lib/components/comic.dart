@@ -726,7 +726,14 @@ class _SliverGridComicsState extends State<SliverGridComics> {
         comics.add(comic);
       }
     }
+    HistoryManager().addListener(update);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    HistoryManager().removeListener(update);
+    super.dispose();
   }
 
   void update() {

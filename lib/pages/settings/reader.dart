@@ -116,6 +116,21 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("enableClockAndBatteryInfoInReader");
           },
         ).toSliver(),
+        SelectSetting(
+          title: "Quick collect image".tl,
+          settingKey: "quickCollectImage",
+          optionTranslation: {
+            "No": "Not enable".tl,
+            "DoubleTap": "Double Tap".tl,
+            "Swipe": "Swipe".tl,
+          },
+          onChanged: () {
+            widget.onChanged?.call("quickCollectImage");
+          },
+          help:
+              "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"
+                  .tl,
+        ).toSliver(),
         _PopupWindowSetting(
           title: "Custom Image Processing".tl,
           builder: () => _CustomImageProcessing(),

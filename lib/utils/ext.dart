@@ -95,6 +95,8 @@ extension StringExt on String{
   bool get isURL => _isURL();
 
   bool get isNum => double.tryParse(this) != null;
+
+  bool get isInt => int.tryParse(this) != null;
 }
 
 abstract class ListOrNull{
