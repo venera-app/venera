@@ -487,6 +487,36 @@ let Network = {
 };
 
 /**
+ * [fetch] function for sending HTTP requests. Same api as the browser fetch.
+ * @param url {string}
+ * @param options {{method: string, headers: Object, body: any}}
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {}, arrayBuffer: (function(): Promise<ArrayBuffer>), text: (function(): Promise<string>), json: (function(): Promise<any>)}>}
+ */
+async function fetch(url, options) {
+    let method = 'GET';
+    let headers = {};
+    let data = null;
+
+    if (options) {
+        method = options.method || method;
+        headers = options.headers || headers;
+        data = options.body || data;
+    }
+
+    let result = await Network.fetchBytes(method, url, headers, data);
+
+    return {
+        ok: result.status >= 200 && result.status < 300,
+        status: result.status,
+        statusText: '',
+        headers: result.headers,
+        arrayBuffer: async () => result.body,
+        text: async () => Convert.decodeUtf8(result.body),
+        json: async () => JSON.parse(Convert.decodeUtf8(result.body)),
+    }
+}
+
+/**
  * HtmlDocument class for parsing HTML and querying elements.
  */
 class HtmlDocument {
