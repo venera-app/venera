@@ -1241,9 +1241,11 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     } else {
       error = res.errorMessage;
     }
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
