@@ -42,6 +42,9 @@ class NetworkCacheManager implements Interceptor {
   static const _maxCacheSize = 10 * 1024 * 1024;
 
   void setCache(NetworkCache cache) {
+    if (_cache.containsKey(cache.uri)) {
+      size -= _cache[cache.uri]!.size;
+    }
     while (size > _maxCacheSize) {
       size -= _cache.values.first.size;
       _cache.remove(_cache.keys.first);
@@ -94,7 +97,7 @@ class NetworkCacheManager implements Interceptor {
     var time = DateTime.now();
     var diff = time.difference(cache.time);
     if (options.headers['cache-time'] == 'long' &&
-        diff < const Duration(hours: 2)) {
+        diff < const Duration(hours: 6)) {
       return handler.resolve(Response(
         requestOptions: options,
         data: cache.data,
@@ -110,7 +113,7 @@ class NetworkCacheManager implements Interceptor {
           ..set('venera-cache', 'true'),
         statusCode: 200,
       ));
-    } else if (diff < const Duration(hours: 1)) {
+    } else if (diff < const Duration(hours: 2)) {
       var o = options.copyWith(
         method: "HEAD",
       );
@@ -132,15 +135,42 @@ class NetworkCacheManager implements Interceptor {
   }
 
   static bool compareHeaders(Map<String, dynamic> a, Map<String, dynamic> b) {
-    a.remove('cache-time');
-    a.remove('prevent-parallel');
-    b.remove('cache-time');
-    b.remove('prevent-parallel');
+    const shouldIgnore = [
+      'cache-time',
+      'prevent-parallel',
+      'date',
+      'x-varnish',
+      'cf-ray',
+      'connection',
+      'vary',
+      'content-encoding',
+      'report-to',
+      'server-timing',
+      'token',
+      'set-cookie',
+      'cf-cache-status',
+      'cf-request-id',
+      'cf-ray',
+      'authorization',
+    ];
+    for (var key in shouldIgnore) {
+      a.remove(key);
+      b.remove(key);
+    }
     if (a.length != b.length) {
       return false;
     }
     for (var key in a.keys) {
-      if (a[key] != b[key]) {
+      if (a[key] is List && b[key] is List) {
+        if (a[key].length != b[key].length) {
+          return false;
+        }
+        for (var i = 0; i < a[key].length; i++) {
+          if (a[key][i] != b[key][i]) {
+            return false;
+          }
+        }
+      } else if (a[key] != b[key]) {
         return false;
       }
     }
@@ -161,7 +191,7 @@ class NetworkCacheManager implements Interceptor {
       var cache = NetworkCache(
         uri: response.requestOptions.uri,
         requestHeaders: response.requestOptions.headers,
-        responseHeaders: response.headers.map,
+        responseHeaders: Map.from(response.headers.map),
         data: response.data,
         time: DateTime.now(),
         size: size,
