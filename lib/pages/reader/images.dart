@@ -673,6 +673,7 @@ ImageProvider _createImageProviderFromKey(
     reader.type.comicSource?.key,
     reader.cid,
     reader.eid,
+    reader.page,
   );
 }
 

@@ -1,5 +1,4 @@
 import 'dart:async' show Future, StreamController;
-import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,30 +28,36 @@ class ImageFavoritesProvider
   String get eid => imageFavorite.eid;
 
   @override
-  Future<Uint8List> load(StreamController<ImageChunkEvent>? chunkEvents) async {
+  Future<Uint8List> load(
+    StreamController<ImageChunkEvent>? chunkEvents,
+    void Function()? checkStop,
+  ) async {
     var imageKey = imageFavorite.imageKey;
     var localImage = await getImageFromLocal();
+    checkStop?.call();
     if (localImage != null) {
       return localImage;
     }
     var cacheImage = await readFromCache();
+    checkStop?.call();
     if (cacheImage != null) {
       return cacheImage;
     }
     var gotImageKey = false;
     if (imageKey == "") {
       imageKey = await getImageKey();
+      checkStop?.call();
       gotImageKey = true;
     }
     Uint8List image;
     try {
-      image = await getImageFromNetwork(imageKey, chunkEvents);
+      image = await getImageFromNetwork(imageKey, chunkEvents, checkStop);
     } catch (e) {
       if (gotImageKey) {
         rethrow;
       } else {
         imageKey = await getImageKey();
-        image = await getImageFromNetwork(imageKey, chunkEvents);
+        image = await getImageFromNetwork(imageKey, chunkEvents, checkStop);
       }
     }
     await writeToCache(image);
@@ -106,9 +111,13 @@ class ImageFavoritesProvider
   }
 
   Future<Uint8List> getImageFromNetwork(
-      String imageKey, StreamController<ImageChunkEvent>? chunkEvents) async {
+    String imageKey,
+    StreamController<ImageChunkEvent>? chunkEvents,
+    void Function()? checkStop,
+  ) async {
     await for (var progress
         in ImageDownloader.loadComicImage(imageKey, sourceKey, cid, eid)) {
+      checkStop?.call();
       if (chunkEvents != null) {
         chunkEvents.add(ImageChunkEvent(
           cumulativeBytesLoaded: progress.currentBytes,

@@ -224,7 +224,7 @@ class _ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
           onClick: () async {
             var temp = images[currentPage];
             var imageProvider = ImageFavoritesProvider(temp);
-            var data = await imageProvider.load(null);
+            var data = await imageProvider.load(null, null);
             var fileType = detectFileType(data);
             var fileName = "${currentPage + 1}.${fileType.ext}";
             await saveFile(filename: fileName, data: data);

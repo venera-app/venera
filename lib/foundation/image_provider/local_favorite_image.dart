@@ -1,4 +1,4 @@
-import 'dart:async' show Future, StreamController;
+import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/app.dart';
@@ -28,7 +28,7 @@ class LocalFavoriteImageProvider
   }
 
   @override
-  Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+  Future<Uint8List> load(chunkEvents, checkStop) async {
     var sourceKey = ComicSource.fromIntKey(intKey)?.key;
     var fileName = key.hashCode.toString();
     var file = File(FilePath.join(App.dataPath, 'favorite_cover', fileName));
@@ -37,7 +37,9 @@ class LocalFavoriteImageProvider
     } else {
       await file.create(recursive: true);
     }
+    checkStop();
     await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey)) {
+      checkStop();
       chunkEvents.add(ImageChunkEvent(
         cumulativeBytesLoaded: progress.currentBytes,
         expectedTotalBytes: progress.totalBytes,

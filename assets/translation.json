@@ -310,7 +310,11 @@
     "Check for updates on startup": "启动时检查更新",
     "Start Time": "开始时间",
     "End Time": "结束时间",
-    "Custom": "自定义"
+    "Custom": "自定义",
+    "Reset": "重置",
+    "Tags": "标签",
+    "Authors": "作者",
+    "Comics": "漫画"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -623,6 +627,10 @@
     "Check for updates on startup": "啟動時檢查更新",
     "Start Time": "開始時間",
     "End Time": "結束時間",
-    "Custom": "自定義"
+    "Custom": "自定義",
+    "Reset": "重置",
+    "Tags": "標籤",
+    "Authors": "作者",
+    "Comics": "漫畫"
   }
 }

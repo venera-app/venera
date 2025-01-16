@@ -149,7 +149,7 @@ class _Settings with ChangeNotifier {
     'enableDnsOverrides': false,
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
-    'customImageProcessing': _defaultCustomImageProcessing,
+    'customImageProcessing': defaultCustomImageProcessing,
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
   };
@@ -169,15 +169,20 @@ class _Settings with ChangeNotifier {
   }
 }
 
-const _defaultCustomImageProcessing = '''
+const defaultCustomImageProcessing = '''
 /**
  * Process an image
- * @param image {ArayBuffer} - The image to process
+ * @param image {ArrayBuffer} - The image to process
  * @param cid {string} - The comic ID
  * @param eid {string} - The episode ID
- * @returns {Promise<ArrayBuffer>} - The processed image
+ * @param page {number} - The page number
+ * @param sourceKey {string} - The source key
+ * @returns {Promise<ArrayBuffer> | {image: Promise<ArrayBuffer>, onCancel: () => void}} - The processed image
  */
-async function processImage(image, cid, eid) {
+function processImage(image, cid, eid, page, sourceKey) {
+    let image = new Promise((resolve, reject) => {
+        resolve(image);
+    });
     return image;
 }
 ''';

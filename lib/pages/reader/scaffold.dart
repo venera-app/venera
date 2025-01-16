@@ -650,6 +650,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                     reader.type.comicSource!.key,
                     reader.cid,
                     reader.eid,
+                    reader.page,
                   );
                 }
                 return InkWell(

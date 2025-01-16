@@ -1,4 +1,4 @@
-import 'dart:async' show Future, StreamController;
+import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_qjs/flutter_qjs.dart';
@@ -12,7 +12,7 @@ import 'package:venera/foundation/appdata.dart';
 class ReaderImageProvider
     extends BaseImageProvider<image_provider.ReaderImageProvider> {
   /// Image provider for normal image.
-  const ReaderImageProvider(this.imageKey, this.sourceKey, this.cid, this.eid);
+  const ReaderImageProvider(this.imageKey, this.sourceKey, this.cid, this.eid, this.page);
 
   final String imageKey;
 
@@ -22,8 +22,10 @@ class ReaderImageProvider
 
   final String eid;
 
+  final int page;
+
   @override
-  Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+  Future<Uint8List> load(chunkEvents, checkStop) async {
     Uint8List? imageBytes;
     if (imageKey.startsWith('file://')) {
       var file = File(imageKey);
@@ -35,6 +37,7 @@ class ReaderImageProvider
     } else {
       await for (var event
         in ImageDownloader.loadComicImage(imageKey, sourceKey, cid, eid)) {
+        checkStop();
         chunkEvents.add(ImageChunkEvent(
           cumulativeBytesLoaded: event.currentBytes,
           expectedTotalBytes: event.totalBytes,
@@ -60,14 +63,57 @@ class ReaderImageProvider
         })()
       ''');
       if (func is JSInvokable) {
-        var result = await func.invoke([imageBytes, cid, eid]);
-        func.free();
+        var result = func.invoke([imageBytes, cid, eid, page, sourceKey]);
         if (result is Uint8List) {
-          return result;
+          imageBytes = result;
+        } else if (result is Future) {
+          var futureResult = await result;
+          if (futureResult is Uint8List) {
+            imageBytes = futureResult;
+          }
+        } else if (result is Map) {
+          var image = result['image'];
+          if (image is Uint8List) {
+            imageBytes = image;
+          } else if (image is Future) {
+            JSInvokable? onCancel;
+            if (result['onCancel'] is JSInvokable) {
+              onCancel = result['onCancel'];
+            }
+            if (onCancel == null) {
+              var futureImage = await image;
+              if (futureImage is Uint8List) {
+                imageBytes = futureImage;
+              }
+            } else {
+              dynamic futureImage;
+              image.then((value) {
+                futureImage = value;
+                futureImage ??= Uint8List(0);
+              });
+              while (futureImage == null) {
+                try {
+                  checkStop();
+                }
+                catch(e) {
+                  onCancel.invoke([]);
+                  onCancel.free();
+                  func.free();
+                  rethrow;
+                }
+                await Future.delayed(Duration(milliseconds: 50));
+              }
+              if (futureImage is Uint8List) {
+                imageBytes = futureImage;
+              }
+            }
+            onCancel?.free();
+          }
         }
+        func.free();
       }
     }
-    return imageBytes;
+    return imageBytes!;
   }
 
   @override
