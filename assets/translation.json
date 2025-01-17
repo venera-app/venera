@@ -154,8 +154,8 @@
     "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目录包含一个名为'cover.*'的文件，它将被用作封面图片。否则将使用第一张图片。",
     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目录名称将被用作漫画标题。章节目录的名称将被用作章节标题。\n",
     "Export as cbz": "导出为cbz",
-    "Select a cbz/zip file." : "选择一个cbz/zip文件",
-    "A cbz file" : "一个cbz文件",
+    "Select an archive file (cbz, zip, 7z, cb7)" : "选择一个归档文件 (cbz, zip, 7z, cb7)",
+    "An archive file" : "一个归档文件",
     "Fullscreen": "全屏",
     "Exit": "退出",
     "View more": "查看更多",
@@ -297,8 +297,8 @@
     "End": "末尾",
     "None": "无",
     "View Detail": "查看详情",
-    "Select a directory which contains multiple cbz/zip files." : "选择一个包含多个cbz/zip文件的目录",
-    "Multiple cbz files" : "多个cbz文件",
+    "Select a directory which contains multiple archive files." : "选择一个包含多个归档文件的目录",
+    "Multiple archive files" : "多个归档文件",
     "No valid comics found" : "未找到有效的漫画",
     "Enable DNS Overrides": "启用DNS覆写",
     "DNS Overrides": "DNS覆写",
@@ -314,7 +314,8 @@
     "Reset": "重置",
     "Tags": "标签",
     "Authors": "作者",
-    "Comics": "漫画"
+    "Comics": "漫画",
+    "Imported @a comics": "已导入 @a 本漫画"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -470,8 +471,8 @@
     "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目錄包含一個名為'cover.*'的文件，它將被用作封面圖片。否則將使用第一張圖片。",
     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目錄名稱將被用作漫畫標題。章節目錄的名稱將被用作章節標題。\n",
     "Export as cbz": "匯出為cbz",
-    "Select a cbz/zip file." : "選擇一個cbz/zip文件",
-    "A cbz file" : "一個cbz文件",
+    "Select an archive file (cbz, zip, 7z, cb7)" : "選擇一個歸檔文件 (cbz, zip, 7z, cb7)",
+    "An archive file" : "一個歸檔文件",
     "Fullscreen": "全螢幕",
     "Exit": "退出",
     "View more": "查看更多",
@@ -614,8 +615,8 @@
     "End": "末尾",
     "None": "無",
     "View Detail": "查看詳情",
-    "Select a directory which contains multiple cbz/zip files." : "選擇一個包含多個cbz/zip文件的目錄",
-    "Multiple cbz files" : "多個cbz文件",
+    "Select a directory which contains multiple archive files." : "選擇一個包含多個歸檔文件的目錄",
+    "Multiple archive files" : "多個歸檔文件",
     "No valid comics found" : "未找到有效的漫畫",
     "Enable DNS Overrides": "啟用DNS覆寫",
     "DNS Overrides": "DNS覆寫",
@@ -631,6 +632,7 @@
     "Reset": "重置",
     "Tags": "標籤",
     "Authors": "作者",
-    "Comics": "漫畫"
+    "Comics": "漫畫",
+    "Imported @a comics": "已匯入 @a 部漫畫"
   }
 }

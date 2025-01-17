@@ -73,6 +73,10 @@ dependencies:
   flutter_memory_info: ^0.0.1
   syntax_highlight: ^0.4.0
   text_scroll: ^0.2.0
+  flutter_7zip:
+    git:
+      url: https://github.com/wgh136/flutter_7zip
+      ref: 841ef5f77e5fdfd79e3eb2fa07ece4d46787285b
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,10 @@
 import 'dart:convert';
-
+import 'package:flutter_7zip/flutter_7zip.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:zip_flutter/zip_flutter.dart';
 
@@ -57,12 +58,33 @@ class ComicChapter {
   ComicChapter({required this.title, required this.start, required this.end});
 }
 
+/// Comic Book Archive. Currently supports CBZ, ZIP and 7Z formats.
 abstract class CBZ {
+  static Future<FileType> checkType(File file) async {
+    var header = <int>[];
+    await for (var bytes in file.openRead()) {
+      header.addAll(bytes);
+      if (header.length >= 32) break;
+    }
+    return detectFileType(header);
+  }
+
+  static Future<void> extractArchive(File file, Directory out) async {
+    var fileType = await checkType(file);
+    if (fileType.mime == 'application/zip') {
+      await ZipFile.openAndExtractAsync(file.path, out.path, 4);
+    } else if (fileType.mime == "application/x-7z-compressed") {
+      await SZArchive.extractIsolates(file.path, out.path, 4);
+    } else {
+      throw Exception('Unsupported archive type');
+    }
+  }
+
   static Future<LocalComic> import(File file) async {
     var cache = Directory(FilePath.join(App.cachePath, 'cbz_import'));
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
-    await ZipFile.openAndExtractAsync(file.path, cache.path, 4);
+    await extractArchive(file, cache);
     var metaDataFile = File(FilePath.join(cache.path, 'metadata.json'));
     ComicMetaData? metaData;
     if (metaDataFile.existsSync()) {
@@ -72,7 +94,7 @@ abstract class CBZ {
       } catch (_) {}
     }
     metaData ??= ComicMetaData(
-      title: file.name.replaceLast('.cbz', ''),
+      title: file.name.substring(0, file.name.lastIndexOf('.')),
       author: "",
       tags: [],
     );
@@ -86,6 +108,7 @@ abstract class CBZ {
       return !['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'].contains(ext);
     });
     if(files.isEmpty) {
+      cache.deleteSync(recursive: true);
       throw Exception('No images found in the archive');
     }
     files.sort((a, b) => a.path.compareTo(b.path));

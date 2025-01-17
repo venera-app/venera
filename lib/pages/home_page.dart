@@ -453,15 +453,15 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     String info = [
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
-      "Select a cbz/zip file.".tl,
-      "Select a directory which contains multiple cbz/zip files.".tl,
+      "Select an archive file (cbz, zip, 7z, cb7)".tl,
+      "Select a directory which contains multiple archive files.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
       "Single Comic".tl,
       "Multiple Comics".tl,
-      "A cbz file".tl,
-      "Multiple cbz files".tl,
+      "An archive file".tl,
+      "Multiple archive files".tl,
       "EhViewer downloads".tl
     ];
 
@@ -493,7 +493,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                     },
                   );
                 }),
-                if (type != 3)
+                if (type != 4)
                   ListTile(
                     title: Text("Add to favorites".tl),
                     trailing: Select(
@@ -507,7 +507,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                       },
                     ),
                   ).paddingHorizontal(8),
-                if (!App.isIOS && !App.isMacOS)
+                if (!App.isIOS && !App.isMacOS && type != 2 && type != 3)
                   CheckboxListTile(
                       enabled: true,
                       title: Text("Copy to app local path".tl),
