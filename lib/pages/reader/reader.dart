@@ -21,6 +21,7 @@ import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -165,6 +166,9 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       handleVolumeEvent();
     }
     setImageCacheSize();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      LocalFavoritesManager().onRead(cid, type);
+    });
     super.initState();
   }
 

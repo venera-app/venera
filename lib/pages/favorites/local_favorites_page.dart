@@ -50,7 +50,14 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
     networkSource = a;
     networkFolder = b;
+    LocalFavoritesManager().addListener(updateComics);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    LocalFavoritesManager().removeListener(updateComics);
   }
 
   void selectAll() {
@@ -383,6 +390,35 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           menuBuilder: (c) {
             return [
               MenuEntry(
+                icon: Icons.delete,
+                text: "Delete".tl,
+                onClick: () {
+                  LocalFavoritesManager().deleteComicWithId(
+                    widget.folder,
+                    c.id,
+                    (c as FavoriteItem).type,
+                  );
+                },
+              ),
+              MenuEntry(
+                icon: Icons.check,
+                text: "Select".tl,
+                onClick: () {
+                  setState(() {
+                    if (!multiSelectMode) {
+                      multiSelectMode = true;
+                    }
+                    if (selectedComics.containsKey(c as FavoriteItem)) {
+                      selectedComics.remove(c);
+                      _checkExitSelectMode();
+                    } else {
+                      selectedComics[c] = true;
+                    }
+                    lastSelectedIndex = comics.indexOf(c);
+                  });
+                },
+              ),
+              MenuEntry(
                 icon: Icons.download,
                 text: "Download".tl,
                 onClick: () {
@@ -657,7 +693,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         (c as FavoriteItem).type,
       );
     }
-    updateComics();
     _cancel();
   }
 }
