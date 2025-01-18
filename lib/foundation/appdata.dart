@@ -85,6 +85,7 @@ class _Appdata {
     "proxy",
     "authorizationRequired",
     "customImageProcessing",
+    "webdav",
   ];
 
   /// Sync data from another device
