@@ -20,7 +20,7 @@ class ImportComic {
   const ImportComic({this.selectedFolder, this.copyToLocal = true});
 
   Future<bool> cbz() async {
-    var file = await selectFile(ext: ['cbz', 'zip']);
+    var file = await selectFile(ext: ['cbz', 'zip', '7z', 'cb7']);
     Map<String?, List<LocalComic>> imported = {};
     if (file == null) {
       return false;
@@ -42,7 +42,8 @@ class ImportComic {
     var dir = await picker.pickDirectory(directAccess: true);
     if (dir != null) {
       var files = (await dir.list().toList()).whereType<File>().toList();
-      files.removeWhere((e) => e.extension != 'cbz' && e.extension != 'zip');
+      const supportedExtensions = ['cbz', 'zip', '7z', 'cb7'];
+      files.removeWhere((e) => !supportedExtensions.contains(e.extension));
       Map<String?, List<LocalComic>> imported = {};
       var controller = showLoadingDialog(App.rootContext, allowCancel: false);
       var comics = <LocalComic>[];

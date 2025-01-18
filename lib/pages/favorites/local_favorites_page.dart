@@ -50,7 +50,14 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
     networkSource = a;
     networkFolder = b;
+    LocalFavoritesManager().addListener(updateComics);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    LocalFavoritesManager().removeListener(updateComics);
   }
 
   void selectAll() {
@@ -136,17 +143,17 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   message: "Sync".tl,
                   child: Flyout(
                     flyoutBuilder: (context) {
-                      var sourceName = ComicSource.find(networkSource!)?.name ??
-                          networkSource!;
-                      var text = "The folder is Linked to @source".tlParams({
-                        "source": sourceName,
-                      });
-                      if (networkFolder != null && networkFolder!.isNotEmpty) {
-                        text += "\n${"Source Folder".tl}: $networkFolder";
-                      }
+                      final GlobalKey<_SelectUpdatePageNumState>
+                          selectUpdatePageNumKey =
+                          GlobalKey<_SelectUpdatePageNumState>();
+                      var updatePageWidget = _SelectUpdatePageNum(
+                        networkSource: networkSource!,
+                        networkFolder: networkFolder,
+                        key: selectUpdatePageNumKey,
+                      );
                       return FlyoutContent(
                         title: "Sync".tl,
-                        content: Text(text),
+                        content: updatePageWidget,
                         actions: [
                           Button.filled(
                             child: Text("Update".tl),
@@ -154,6 +161,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                               context.pop();
                               importNetworkFolder(
                                 networkSource!,
+                                selectUpdatePageNumKey
+                                    .currentState!.updatePageNum,
                                 widget.folder,
                                 networkFolder!,
                               ).then(
@@ -380,6 +389,35 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           selections: selectedComics,
           menuBuilder: (c) {
             return [
+              MenuEntry(
+                icon: Icons.delete,
+                text: "Delete".tl,
+                onClick: () {
+                  LocalFavoritesManager().deleteComicWithId(
+                    widget.folder,
+                    c.id,
+                    (c as FavoriteItem).type,
+                  );
+                },
+              ),
+              MenuEntry(
+                icon: Icons.check,
+                text: "Select".tl,
+                onClick: () {
+                  setState(() {
+                    if (!multiSelectMode) {
+                      multiSelectMode = true;
+                    }
+                    if (selectedComics.containsKey(c as FavoriteItem)) {
+                      selectedComics.remove(c);
+                      _checkExitSelectMode();
+                    } else {
+                      selectedComics[c] = true;
+                    }
+                    lastSelectedIndex = comics.indexOf(c);
+                  });
+                },
+              ),
               MenuEntry(
                 icon: Icons.download,
                 text: "Download".tl,
@@ -655,7 +693,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         (c as FavoriteItem).type,
       );
     }
-    updateComics();
     _cancel();
   }
 }
@@ -741,6 +778,17 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.swap_vert),
+            onPressed: () {
+              setState(() {
+                comics = comics.reversed.toList();
+                changed = true;
+                showToast(
+                    message: "Reversed successfully".tl, context: context);
+              });
+            },
+          ),
         ],
       ),
       body: ReorderableBuilder<FavoriteItem>(
@@ -773,6 +821,79 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
         },
         children: tiles,
       ),
+    );
+  }
+}
+
+class _SelectUpdatePageNum extends StatefulWidget {
+  const _SelectUpdatePageNum({
+    required this.networkSource,
+    this.networkFolder,
+    super.key,
+  });
+
+  final String? networkFolder;
+  final String networkSource;
+
+  @override
+  State<_SelectUpdatePageNum> createState() => _SelectUpdatePageNumState();
+}
+
+class _SelectUpdatePageNumState extends State<_SelectUpdatePageNum> {
+  int updatePageNum = 9999999;
+
+  String get _allPageText => 'All'.tl;
+
+  List<String> get pageNumList =>
+      ['1', '2', '3', '5', '10', '20', '50', '100', '200', _allPageText];
+
+  @override
+  void initState() {
+    updatePageNum =
+        appdata.implicitData["local_favorites_update_page_num"] ?? 9999999;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var source = ComicSource.find(widget.networkSource);
+    var sourceName = source?.name ?? widget.networkSource;
+    var text = "The folder is Linked to @source".tlParams({
+      "source": sourceName,
+    });
+    if (widget.networkFolder != null && widget.networkFolder!.isNotEmpty) {
+      text += "\n${"Source Folder".tl}: ${widget.networkFolder}";
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [Text(text)],
+        ),
+        Row(
+          children: [
+            Text("Update the page number by the latest collection".tl),
+            Spacer(),
+            Select(
+              current: updatePageNum.toString() == '9999999'
+                  ? _allPageText
+                  : updatePageNum.toString(),
+              values: pageNumList,
+              minWidth: 48,
+              onTap: (index) {
+                setState(() {
+                  updatePageNum = int.parse(pageNumList[index] == _allPageText
+                      ? '9999999'
+                      : pageNumList[index]);
+                  appdata.implicitData["local_favorites_update_page_num"] =
+                      updatePageNum;
+                  appdata.writeImplicitData();
+                });
+              },
+            )
+          ],
+        ),
+      ],
     );
   }
 }

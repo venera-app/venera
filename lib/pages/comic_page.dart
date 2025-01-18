@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
@@ -26,11 +27,21 @@ import 'dart:math' as math;
 import 'comments_page.dart';
 
 class ComicPage extends StatefulWidget {
-  const ComicPage({super.key, required this.id, required this.sourceKey});
+  const ComicPage({
+    super.key,
+    required this.id,
+    required this.sourceKey,
+    this.cover,
+    this.title,
+  });
 
   final String id;
 
   final String sourceKey;
+
+  final String? cover;
+
+  final String? title;
 
   @override
   State<ComicPage> createState() => _ComicPageState();
@@ -55,13 +66,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   @override
   Widget buildLoading() {
-    return Column(
-      children: [
-        const Appbar(title: Text("")),
-        Expanded(
-          child: super.buildLoading(),
-        ),
-      ],
+    return _ComicPageLoadingPlaceHolder(
+      cover: widget.cover,
+      title: widget.title,
+      sourceKey: widget.sourceKey,
+      cid: widget.id,
     );
   }
 
@@ -145,6 +154,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                     ep: 0,
                     page: 0,
                   ),
+              author: localComic.subTitle ?? '',
+              tags: localComic.tags,
             );
           });
           App.mainNavigatorKey!.currentContext!.pop();
@@ -199,21 +210,32 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(width: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: context.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          height: 144,
-          width: 144 * 0.72,
-          clipBehavior: Clip.antiAlias,
-          child: AnimatedImage(
-            image: CachedImageProvider(
-              comic.cover,
-              sourceKey: comic.sourceKey,
+        Hero(
+          tag: "cover${comic.id}${comic.sourceKey}",
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: context.colorScheme.outlineVariant,
+                  blurRadius: 1,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
-            width: double.infinity,
-            height: double.infinity,
+            height: 144,
+            width: 144 * 0.72,
+            clipBehavior: Clip.antiAlias,
+            child: AnimatedImage(
+              image: CachedImageProvider(
+                widget.cover ?? comic.cover,
+                sourceKey: comic.sourceKey,
+                cid: comic.id,
+              ),
+              width: double.infinity,
+              height: double.infinity,
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -663,6 +685,8 @@ abstract mixin class _ComicPageActions {
         initialChapter: ep,
         initialPage: page,
         history: History.fromModel(model: comic, ep: 0, page: 0),
+        author: comic.findAuthor() ?? '',
+        tags: comic.plainTags,
       ),
     );
   }
@@ -1217,9 +1241,11 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
     } else {
       error = res.errorMessage;
     }
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -1938,6 +1964,127 @@ class _CommentWidget extends StatelessWidget {
           if (comment.time != null)
             Text(comment.time!, style: ts.s12).toAlign(Alignment.centerLeft),
         ],
+      ),
+    );
+  }
+}
+
+class _ComicPageLoadingPlaceHolder extends StatelessWidget {
+  const _ComicPageLoadingPlaceHolder({
+    this.cover,
+    this.title,
+    required this.sourceKey,
+    required this.cid,
+  });
+
+  final String? cover;
+
+  final String? title;
+
+  final String sourceKey;
+
+  final String cid;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget buildContainer(double? width, double? height,
+        {Color? color, double? radius}) {
+      return Container(
+        height: height,
+        width: width,
+        decoration: BoxDecoration(
+          color: color ?? context.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(radius ?? 4),
+        ),
+      );
+    }
+
+    return Shimmer(
+      child: Column(
+        children: [
+          Appbar(title: Text(""), backgroundColor: context.colorScheme.surface),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 16),
+              buildImage(context),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (title != null)
+                      Text(title ?? "", style: ts.s18)
+                    else
+                      buildContainer(200, 25),
+                    const SizedBox(height: 8),
+                    buildContainer(80, 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (context.width < changePoint)
+            Row(
+              children: [
+                Expanded(
+                  child: buildContainer(null, 36, radius: 18),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: buildContainer(null, 36, radius: 18),
+                ),
+              ],
+            ).paddingHorizontal(16),
+          const Divider(),
+          const SizedBox(height: 8),
+          Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+            ).fixHeight(24).fixWidth(24),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget buildImage(BuildContext context) {
+    Widget child;
+    if (cover != null) {
+      child = AnimatedImage(
+        image: CachedImageProvider(
+          cover!,
+          sourceKey: sourceKey,
+          cid: cid,
+        ),
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+      );
+    } else {
+      child = const SizedBox();
+    }
+
+    return Hero(
+      tag: "cover$cid$sourceKey",
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: context.colorScheme.outlineVariant,
+              blurRadius: 1,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        height: 144,
+        width: 144 * 0.72,
+        clipBehavior: Clip.antiAlias,
+        child: child,
       ),
     );
   }

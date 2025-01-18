@@ -5,11 +5,17 @@ class ReaderWithLoading extends StatefulWidget {
     super.key,
     required this.id,
     required this.sourceKey,
+    this.initialEp,
+    this.initialPage,
   });
 
   final String id;
 
   final String sourceKey;
+
+  final int? initialEp;
+
+  final int? initialPage;
 
   @override
   State<ReaderWithLoading> createState() => _ReaderWithLoadingState();
@@ -25,8 +31,10 @@ class _ReaderWithLoadingState
       name: data.name,
       chapters: data.chapters,
       history: data.history,
-      initialChapter: data.history.ep,
-      initialPage: data.history.page,
+      initialChapter: widget.initialEp ?? data.history.ep,
+      initialPage: widget.initialPage ?? data.history.page,
+      author: data.author,
+      tags: data.tags,
     );
   }
 
@@ -57,6 +65,8 @@ class _ReaderWithLoadingState
                 ep: 0,
                 page: 0,
               ),
+          author: localComic.subtitle,
+          tags: localComic.tags,
         ),
       );
     } else {
@@ -76,6 +86,8 @@ class _ReaderWithLoadingState
                 ep: 0,
                 page: 0,
               ),
+          author: comic.data.findAuthor() ?? "",
+          tags: comic.data.plainTags,
         ),
       );
     }
@@ -93,11 +105,17 @@ class ReaderProps {
 
   final History history;
 
+  final String author;
+
+  final List<String> tags;
+
   const ReaderProps({
     required this.type,
     required this.cid,
     required this.name,
     required this.chapters,
     required this.history,
+    required this.author,
+    required this.tags,
   });
 }

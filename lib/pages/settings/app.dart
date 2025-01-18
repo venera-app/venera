@@ -107,15 +107,16 @@ class _AppSettingsState extends State<AppSettings> {
           actionTitle: 'Export'.tl,
         ).toSliver(),
         _CallbackSetting(
-          title: "Import App Data".tl,
+          title: "Import App Data (Please restart after success)".tl,
           callback: () async {
             var controller = showLoadingDialog(context);
             var file = await selectFile(ext: ['venera', 'picadata']);
             if (file != null) {
-              var cacheFile = File(FilePath.join(App.cachePath, "import_data_temp"));
+              var cacheFile =
+                  File(FilePath.join(App.cachePath, "import_data_temp"));
               await file.saveTo(cacheFile.path);
               try {
-                if(file.name.endsWith('picadata')) {
+                if (file.name.endsWith('picadata')) {
                   await importPicaData(cacheFile);
                 } else {
                   await importAppData(cacheFile);
@@ -123,8 +124,7 @@ class _AppSettingsState extends State<AppSettings> {
               } catch (e, s) {
                 Log.error("Import data", e.toString(), s);
                 context.showMessage(message: "Failed to import data".tl);
-              }
-              finally {
+              } finally {
                 cacheFile.deleteIgnoreError();
               }
             }

@@ -21,8 +21,17 @@ class FileType {
   }
 }
 
+final _resolver = MimeTypeResolver()
+  // zip
+  ..addMagicNumber([0x50, 0x4B], 'application/zip')
+  // 7z
+  ..addMagicNumber([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C], 'application/x-7z-compressed')
+  // rar
+  ..addMagicNumber([0x52, 0x61, 0x72, 0x21, 0x1A, 0x07], 'application/vnd.rar')
+;
+
 FileType detectFileType(List<int> data) {
-  var mime = lookupMimeType('no-file', headerBytes: data);
+  var mime = _resolver.lookup('no-file', headerBytes: data);
   var ext = mime == null ? '' : extensionFromMime(mime);
   if(ext == 'jpe') {
     ext = 'jpg';

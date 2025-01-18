@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_qjs/flutter_qjs.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/history.dart';
@@ -136,6 +137,8 @@ class ComicSource {
     notifyListeners();
   }
 
+  static final availableUpdates = <String, String>{};
+
   static bool get isEmpty => _sources.isEmpty;
 
   /// Name of this source.
@@ -201,7 +204,7 @@ class ComicSource {
 
   final LikeCommentFunc? likeCommentFunc;
 
-  final Map<String, dynamic>? settings;
+  final Map<String, Map<String, dynamic>>? settings;
 
   final Map<String, Map<String, String>>? translations;
 

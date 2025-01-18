@@ -1,4 +1,4 @@
-import 'dart:async' show Future, StreamController;
+import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/network/images.dart';
@@ -26,9 +26,10 @@ class CachedImageProvider
   static const _kMaxLoadingCount = 8;
 
   @override
-  Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+  Future<Uint8List> load(chunkEvents, checkStop) async {
     while(loadingCount > _kMaxLoadingCount) {
       await Future.delayed(const Duration(milliseconds: 100));
+      checkStop();
     }
     loadingCount++;
     try {
@@ -37,6 +38,7 @@ class CachedImageProvider
         return file.readAsBytes();
       }
       await for (var progress in ImageDownloader.loadThumbnail(url, sourceKey, cid)) {
+        checkStop();
         chunkEvents.add(ImageChunkEvent(
           cumulativeBytesLoaded: progress.currentBytes,
           expectedTotalBytes: progress.totalBytes,

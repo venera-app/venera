@@ -11,6 +11,7 @@ import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/local.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/comic_page.dart';
@@ -35,7 +36,7 @@ class FavoritesPage extends StatefulWidget {
   State<FavoritesPage> createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage>  {
+class _FavoritesPageState extends State<FavoritesPage> {
   String? folder;
 
   bool isNetwork = false;
@@ -58,7 +59,7 @@ class _FavoritesPageState extends State<FavoritesPage>  {
   @override
   void initState() {
     var data = appdata.implicitData['favoriteFolder'];
-    if(data != null){
+    if (data != null) {
       folder = data['name'];
       isNetwork = data['isNetwork'] ?? false;
     }
@@ -101,7 +102,7 @@ class _FavoritesPageState extends State<FavoritesPage>  {
           alignment: Alignment.centerLeft,
           child: Material(
             child: SizedBox(
-              width: min(300, context.width-16),
+              width: min(300, context.width - 16),
               child: _LeftBar(
                 withAppbar: true,
                 favPage: this,
@@ -153,14 +154,16 @@ class _FavoritesPageState extends State<FavoritesPage>  {
       );
     }
     if (!isNetwork) {
-      return _LocalFavoritesPage(folder: folder!, key: PageStorageKey("local_$folder"));
+      return _LocalFavoritesPage(
+          folder: folder!, key: PageStorageKey("local_$folder"));
     } else {
       var favoriteData = getFavoriteDataOrNull(folder!);
       if (favoriteData == null) {
         folder = null;
         return buildBody();
       } else {
-        return NetworkFavoritePage(favoriteData, key: PageStorageKey("network_$folder"));
+        return NetworkFavoritePage(favoriteData,
+            key: PageStorageKey("network_$folder"));
       }
     }
   }

@@ -36,6 +36,8 @@ class LocalComic with HistoryMixin implements Comic {
   /// chapter id is the name of the directory in `LocalManager.path/$directory`
   final Map<String, String>? chapters;
 
+  bool get hasChapters => chapters != null;
+
   /// relative path to the cover image
   @override
   final String cover;
@@ -119,6 +121,8 @@ class LocalComic with HistoryMixin implements Comic {
               ep: 0,
               page: 0,
             ),
+        author: subtitle,
+        tags: tags,
       ),
     );
   }
@@ -266,7 +270,7 @@ class LocalManager with ChangeNotifier {
   String findValidId(ComicType type) {
     final res = _db.select(
       '''
-      SELECT id FROM comics WHERE comic_type = ? 
+      SELECT id FROM comics WHERE comic_type = ?
       ORDER BY CAST(id AS INTEGER) DESC
       LIMIT 1;
       ''',
@@ -318,8 +322,8 @@ class LocalManager with ChangeNotifier {
   List<LocalComic> getComics(LocalSortType sortType) {
     var res = _db.select('''
       SELECT * FROM comics
-      ORDER BY 
-        ${sortType.value == 'name' ? 'title' : 'created_at'} 
+      ORDER BY
+        ${sortType.value == 'name' ? 'title' : 'created_at'}
         ${sortType.value == 'time_asc' ? 'ASC' : 'DESC'}
       ;
     ''');
@@ -361,7 +365,7 @@ class LocalManager with ChangeNotifier {
 
   LocalComic? findByName(String name) {
     final res = _db.select('''
-      SELECT * FROM comics 
+      SELECT * FROM comics
       WHERE title = ? OR directory = ?;
     ''', [name, name]);
     if (res.isEmpty) {
@@ -385,7 +389,7 @@ class LocalManager with ChangeNotifier {
     }
     var comic = find(id, type) ?? (throw "Comic Not Found");
     var directory = Directory(comic.baseDir);
-    if (comic.chapters != null) {
+    if (comic.hasChapters) {
       var cid =
           ep is int ? comic.chapters!.keys.elementAt(ep - 1) : (ep as String);
       directory = Directory(FilePath.join(directory.path, cid));

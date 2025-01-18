@@ -36,6 +36,8 @@ extension Navigation on BuildContext {
 
   Brightness get brightness => Theme.of(this).brightness;
 
+  bool get isDarkMode => brightness == Brightness.dark;
+
   void showMessage({required String message}) {
     showToast(message: message, context: this);
   }

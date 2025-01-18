@@ -102,13 +102,36 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
               duration: _fastAnimationDuration, curve: Curves.linear);
         }
       },
-      child: widget.builder(
-        context,
-        _controller,
-        _isMouseScroll
-            ? const NeverScrollableScrollPhysics()
-            : const BouncingScrollPhysics(),
+      child: ScrollControllerProvider._(
+        controller: _controller,
+        child: widget.builder(
+          context,
+          _controller,
+          _isMouseScroll
+              ? const NeverScrollableScrollPhysics()
+              : const BouncingScrollPhysics(),
+        ),
       ),
     );
+  }
+}
+
+class ScrollControllerProvider extends InheritedWidget {
+  const ScrollControllerProvider._({
+    required this.controller,
+    required super.child,
+  });
+
+  final ScrollController controller;
+
+  static ScrollController of(BuildContext context) {
+    final ScrollControllerProvider? provider =
+        context.dependOnInheritedWidgetOfExactType<ScrollControllerProvider>();
+    return provider!.controller;
+  }
+
+  @override
+  bool updateShouldNotify(ScrollControllerProvider oldWidget) {
+    return oldWidget.controller != controller;
   }
 }

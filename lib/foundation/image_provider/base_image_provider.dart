@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/cache_manager.dart';
+import 'package:venera/foundation/log.dart';
 
 abstract class BaseImageProvider<T extends BaseImageProvider<T>>
     extends ImageProvider<T> {
@@ -77,7 +78,13 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
 
       while (data == null && !stop) {
         try {
-          data = await load(chunkEvents);
+          data = await load(chunkEvents, () {
+            if (stop) {
+              throw const _ImageLoadingStopException();
+            }
+          });
+        } on _ImageLoadingStopException {
+          rethrow;
         } catch (e) {
           if (e.toString().contains("Invalid Status Code: 404")) {
             rethrow;
@@ -99,7 +106,7 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
       }
 
       if (stop) {
-        throw Exception("Image loading is stopped");
+        throw const _ImageLoadingStopException();
       }
 
       if (data!.isEmpty) {
@@ -126,17 +133,23 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
         }
         rethrow;
       }
-    } catch (e) {
+    } on _ImageLoadingStopException {
+      rethrow;
+    } catch (e, s) {
       scheduleMicrotask(() {
         PaintingBinding.instance.imageCache.evict(key);
       });
+      Log.error("Image Loading", e, s);
       rethrow;
     } finally {
       chunkEvents.close();
     }
   }
 
-  Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents);
+  Future<Uint8List> load(
+    StreamController<ImageChunkEvent> chunkEvents,
+    void Function() checkStop,
+  );
 
   String get key;
 
@@ -157,3 +170,7 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
 }
 
 typedef FileDecoderCallback = Future<ui.Codec> Function(Uint8List);
+
+class _ImageLoadingStopException implements Exception {
+  const _ImageLoadingStopException();
+}

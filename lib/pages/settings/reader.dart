@@ -116,9 +116,25 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("enableClockAndBatteryInfoInReader");
           },
         ).toSliver(),
-        _PopupWindowSetting(
+        SelectSetting(
+          title: "Quick collect image".tl,
+          settingKey: "quickCollectImage",
+          optionTranslation: {
+            "No": "Not enable".tl,
+            "DoubleTap": "Double Tap".tl,
+            "Swipe": "Swipe".tl,
+          },
+          onChanged: () {
+            widget.onChanged?.call("quickCollectImage");
+          },
+          help:
+              "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"
+                  .tl,
+        ).toSliver(),
+        _CallbackSetting(
           title: "Custom Image Processing".tl,
-          builder: () => _CustomImageProcessing(),
+          callback: () => context.to(() => _CustomImageProcessing()),
+          actionTitle: "Edit".tl,
         ).toSliver(),
       ],
     );
@@ -148,10 +164,25 @@ class __CustomImageProcessingState extends State<_CustomImageProcessing> {
     super.dispose();
   }
 
+  int resetKey = 0;
+
   @override
   Widget build(BuildContext context) {
-    return PopUpWidgetScaffold(
-      title: "Custom Image Processing".tl,
+    return Scaffold(
+      appBar: Appbar(
+        title: Text("Custom Image Processing".tl),
+        actions: [
+          TextButton(
+            onPressed: () {
+              current = defaultCustomImageProcessing;
+              appdata.settings['customImageProcessing'] = current;
+              resetKey++;
+              setState(() {});
+            },
+            child: Text("Reset".tl),
+          )
+        ],
+      ),
       body: Column(
         children: [
           _SwitchSetting(
@@ -167,6 +198,7 @@ class __CustomImageProcessingState extends State<_CustomImageProcessing> {
               ),
               child: SizedBox.expand(
                 child: CodeEditor(
+                  key: ValueKey(resetKey),
                   initialValue: appdata.settings['customImageProcessing'],
                   onChanged: (value) {
                     current = value;

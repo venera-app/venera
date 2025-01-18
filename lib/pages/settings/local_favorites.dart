@@ -33,7 +33,9 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
         SelectSetting(
           title: "Quick Favorite".tl,
           settingKey: "quickFavorite",
-          help: "Long press on the favorite button to quickly add to this folder".tl,
+          help:
+              "Long press on the favorite button to quickly add to this folder"
+                  .tl,
           optionTranslation: {
             for (var e in LocalFavoritesManager().folderNames) e: e
           },
@@ -44,7 +46,8 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
             var controller = showLoadingDialog(context);
             var count = await LocalFavoritesManager().removeInvalid();
             controller.close();
-            context.showMessage(message: "Deleted @a favorite items".tlParams({'a': count}));
+            context.showMessage(
+                message: "Deleted @a favorite items".tlParams({'a': count}));
           },
           actionTitle: 'Delete'.tl,
         ).toSliver(),

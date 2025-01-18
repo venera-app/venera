@@ -6,17 +6,18 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
-import 'package:venera/foundation/image_provider/history_image_provider.dart';
-import 'package:venera/foundation/image_provider/local_comic_image.dart';
 import 'package:venera/foundation/local.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/accounts_page.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
 import 'package:venera/pages/history_page.dart';
+import 'package:venera/pages/image_favorites_page/image_favorites_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/import_comic.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'local_comics_page.dart';
@@ -35,6 +36,7 @@ class HomePage extends StatelessWidget {
         const _Local(),
         const _ComicSourceWidget(),
         const _AccountsWidget(),
+        const ImageFavorites(),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
     );
@@ -83,7 +85,8 @@ class _SyncDataWidget extends StatefulWidget {
   State<_SyncDataWidget> createState() => _SyncDataWidgetState();
 }
 
-class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObserver {
+class _SyncDataWidgetState extends State<_SyncDataWidget>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -93,7 +96,7 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   }
 
   void update() {
-    if(mounted) {
+    if (mounted) {
       setState(() {});
     }
   }
@@ -110,8 +113,8 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if(state == AppLifecycleState.resumed) {
-      if(DateTime.now().difference(lastCheck) > const Duration(minutes: 10)) {
+    if (state == AppLifecycleState.resumed) {
+      if (DateTime.now().difference(lastCheck) > const Duration(minutes: 10)) {
         lastCheck = DateTime.now();
         DataSync().downloadData();
       }
@@ -121,7 +124,7 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if(!DataSync().isEnabled) {
+    if (!DataSync().isEnabled) {
       child = const SliverPadding(padding: EdgeInsets.zero);
     } else if (DataSync().isUploading || DataSync().isDownloading) {
       child = SliverToBoxAdapter(
@@ -159,17 +162,15 @@ class _SyncDataWidgetState extends State<_SyncDataWidget> with WidgetsBindingObs
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.cloud_upload_outlined),
-                  onPressed: () async {
-                    DataSync().uploadData();
-                  }
-                ),
+                    icon: const Icon(Icons.cloud_upload_outlined),
+                    onPressed: () async {
+                      DataSync().uploadData();
+                    }),
                 IconButton(
-                  icon: const Icon(Icons.cloud_download_outlined),
-                  onPressed: () async {
-                    DataSync().downloadData();
-                  }
-                ),
+                    icon: const Icon(Icons.cloud_download_outlined),
+                    onPressed: () async {
+                      DataSync().downloadData();
+                    }),
               ],
             ),
           ),
@@ -264,8 +265,8 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      return AnimatedTapRegion(
-                        borderRadius: 8,
+                      return SimpleComicTile(
+                        comic: history[index],
                         onTap: () {
                           context.to(
                             () => ComicPage(
@@ -274,25 +275,7 @@ class _HistoryState extends State<_History> {
                             ),
                           );
                         },
-                        child: Container(
-                          width: 92,
-                          height: 114,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: AnimatedImage(
-                            image: HistoryImageProvider(history[index]),
-                            width: 96,
-                            height: 128,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                          ),
-                        ),
-                      ).paddingHorizontal(8);
+                      ).paddingHorizontal(8).paddingVertical(2);
                     },
                   ),
                 ).paddingHorizontal(8).paddingBottom(16),
@@ -385,32 +368,8 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      return AnimatedTapRegion(
-                        onTap: () {
-                          local[index].read();
-                        },
-                        borderRadius: 8,
-                        child: Container(
-                          width: 92,
-                          height: 114,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: AnimatedImage(
-                            image: LocalComicImageProvider(
-                              local[index],
-                            ),
-                            width: 96,
-                            height: 128,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                          ),
-                        ),
-                      ).paddingHorizontal(8);
+                      return SimpleComicTile(comic: local[index])
+                          .paddingHorizontal(8);
                     },
                   ),
                 ).paddingHorizontal(8),
@@ -494,15 +453,15 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
     String info = [
       "Select a directory which contains the comic files.".tl,
       "Select a directory which contains the comic directories.".tl,
-      "Select a cbz/zip file.".tl,
-      "Select a directory which contains multiple cbz/zip files.".tl,
+      "Select an archive file (cbz, zip, 7z, cb7)".tl,
+      "Select a directory which contains multiple archive files.".tl,
       "Select an EhViewer database and a download folder.".tl
     ][type];
     List<String> importMethods = [
       "Single Comic".tl,
       "Multiple Comics".tl,
-      "A cbz file".tl,
-      "Multiple cbz files".tl,
+      "An archive file".tl,
+      "Multiple archive files".tl,
       "EhViewer downloads".tl
     ];
 
@@ -518,50 +477,50 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
               ),
             )
           : Column(
-            key: key,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(width: 600),
-              ...List.generate(importMethods.length, (index) {
-                return RadioListTile(
-                  title: Text(importMethods[index]),
-                  value: index,
-                  groupValue: type,
-                  onChanged: (value) {
-                    setState(() {
-                      type = value as int;
-                    });
-                  },
-                );
-              }),
-              if(type != 3)
-                ListTile(
-                  title: Text("Add to favorites".tl),
-                  trailing: Select(
-                    current: selectedFolder,
-                    values: folders,
-                    minWidth: 112,
-                    onTap: (v) {
+              key: key,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(width: 600),
+                ...List.generate(importMethods.length, (index) {
+                  return RadioListTile(
+                    title: Text(importMethods[index]),
+                    value: index,
+                    groupValue: type,
+                    onChanged: (value) {
                       setState(() {
-                        selectedFolder = folders[v];
+                        type = value as int;
                       });
                     },
-                  ),
-                ).paddingHorizontal(8),
-              if(!App.isIOS && !App.isMacOS)
-                CheckboxListTile(
-                  enabled: true,
-                  title: Text("Copy to app local path".tl),
-                  value: copyToLocalFolder,
-                  onChanged:(v) {
-                    setState(() {
-                      copyToLocalFolder = !copyToLocalFolder;
-                    });
-                  }).paddingHorizontal(8),
-              const SizedBox(height: 8),
-              Text(info).paddingHorizontal(24),
-            ],
-          ),
+                  );
+                }),
+                if (type != 4)
+                  ListTile(
+                    title: Text("Add to favorites".tl),
+                    trailing: Select(
+                      current: selectedFolder,
+                      values: folders,
+                      minWidth: 112,
+                      onTap: (v) {
+                        setState(() {
+                          selectedFolder = folders[v];
+                        });
+                      },
+                    ),
+                  ).paddingHorizontal(8),
+                if (!App.isIOS && !App.isMacOS && type != 2 && type != 3)
+                  CheckboxListTile(
+                      enabled: true,
+                      title: Text("Copy to app local path".tl),
+                      value: copyToLocalFolder,
+                      onChanged: (v) {
+                        setState(() {
+                          copyToLocalFolder = !copyToLocalFolder;
+                        });
+                      }).paddingHorizontal(8),
+                const SizedBox(height: 8),
+                Text(info).paddingHorizontal(24),
+              ],
+            ),
       actions: [
         Button.text(
           child: Row(
@@ -591,7 +550,9 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 help +=
                     "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n"
                         .tl;
-                help +="If you import an EhViewer's database, program will automatically create folders according to the download label in that database.".tl;
+                help +=
+                    "If you import an EhViewer's database, program will automatically create folders according to the download label in that database."
+                        .tl;
                 return ContentDialog(
                   title: "Help".tl,
                   content: Text(help).paddingHorizontal(16),
@@ -624,9 +585,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       loading = true;
     });
     var importer = ImportComic(
-        selectedFolder: selectedFolder,
-        copyToLocal: copyToLocalFolder);
-    var result = switch(type) {
+        selectedFolder: selectedFolder, copyToLocal: copyToLocalFolder);
+    var result = switch (type) {
       0 => await importer.directory(true),
       1 => await importer.directory(false),
       2 => await importer.cbz(),
@@ -634,7 +594,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
       4 => await importer.ehViewer(),
       int() => true,
     };
-    if(result) {
+    if (result) {
       context.pop();
     } else {
       setState(() {
@@ -736,6 +696,30 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                     }).toList(),
                   ).paddingHorizontal(16).paddingBottom(16),
                 ),
+              if (ComicSource.availableUpdates.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: context.colorScheme.outlineVariant,
+                      width: 0.6,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.update, color: context.colorScheme.primary, size: 20,),
+                      const SizedBox(width: 8),
+                      Text("@c updates".tlParams({
+                        'c': ComicSource.availableUpdates.length,
+                      }), style: ts.withColor(context.colorScheme.primary),),
+                    ],
+                  ),
+                ).toAlign(Alignment.centerLeft).paddingHorizontal(16).paddingBottom(8),
             ],
           ),
         ),
@@ -909,5 +893,283 @@ class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
         );
       },
     );
+  }
+}
+
+class ImageFavorites extends StatefulWidget {
+  const ImageFavorites({super.key});
+
+  @override
+  State<ImageFavorites> createState() => _ImageFavoritesState();
+}
+
+class _ImageFavoritesState extends State<ImageFavorites> {
+  ImageFavoritesComputed? imageFavoritesCompute;
+
+  int displayType = 0;
+
+  void refreshImageFavorites() async {
+    try {
+      imageFavoritesCompute =
+          await ImageFavoriteManager.computeImageFavorites();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e, stackTrace) {
+      Log.error("Unhandled Exception", e.toString(), stackTrace);
+    }
+  }
+
+  @override
+  void initState() {
+    refreshImageFavorites();
+    ImageFavoriteManager().addListener(refreshImageFavorites);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ImageFavoriteManager().removeListener(refreshImageFavorites);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool hasData =
+        imageFavoritesCompute != null && !imageFavoritesCompute!.isEmpty;
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            context.to(() => const ImageFavoritesPage());
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    Center(
+                      child: Text('Image Favorites'.tl, style: ts.s18),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_right),
+                  ],
+                ),
+              ).paddingHorizontal(16),
+              if (hasData)
+                Row(
+                  children: [
+                    const Spacer(),
+                    buildTypeButton(0, "Tags".tl),
+                    const Spacer(),
+                    buildTypeButton(1, "Authors".tl),
+                    const Spacer(),
+                    buildTypeButton(2, "Comics".tl),
+                    const Spacer(),
+                  ],
+                ),
+              if (hasData) const SizedBox(height: 8),
+              if (hasData)
+                buildChart(switch (displayType) {
+                  0 => imageFavoritesCompute!.tags,
+                  1 => imageFavoritesCompute!.authors,
+                  2 => imageFavoritesCompute!.comics,
+                  _ => [],
+                })
+                    .paddingHorizontal(16)
+                    .paddingBottom(16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTypeButton(int type, String text) {
+    const radius = 24.0;
+    return InkWell(
+      borderRadius: BorderRadius.circular(radius),
+      onTap: () async {
+        setState(() {
+          displayType = type;
+        });
+        await Future.delayed(const Duration(milliseconds: 20));
+        var scrollController = ScrollControllerProvider.of(context);
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.ease,
+        );
+      },
+      child: AnimatedContainer(
+        width: 96,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color:
+              displayType == type ? context.colorScheme.primaryContainer : null,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        duration: const Duration(milliseconds: 200),
+        child: Center(
+          child: Text(
+            text,
+            style: ts.s16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildChart(List<TextWithCount> data) {
+    if (data.isEmpty) {
+      return const SizedBox();
+    }
+    var maxCount = data.map((e) => e.count).reduce((a, b) => a > b ? a : b);
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: 164,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          key: ValueKey(displayType),
+          children: data.map((e) {
+            return _ChartLine(
+              text: e.text,
+              count: e.count,
+              maxCount: maxCount,
+              enableTranslation: displayType != 2,
+              onTap: (text) {
+                context.to(() => ImageFavoritesPage(initialKeyword: text));
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartLine extends StatefulWidget {
+  const _ChartLine({
+    required this.text,
+    required this.count,
+    required this.maxCount,
+    required this.enableTranslation,
+    this.onTap,
+  });
+
+  final String text;
+
+  final int count;
+
+  final int maxCount;
+
+  final bool enableTranslation;
+
+  final void Function(String text)? onTap;
+
+  @override
+  State<_ChartLine> createState() => __ChartLineState();
+}
+
+class __ChartLineState extends State<_ChartLine>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      value: 0,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var text = widget.text;
+    var enableTranslation =
+        App.locale.countryCode == 'CN' && widget.enableTranslation;
+    if (enableTranslation) {
+      text = text.translateTagsToCN;
+    }
+    if (widget.enableTranslation && text.contains(':')) {
+      text = text.split(':').last;
+    }
+    return Row(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: () {
+            widget.onTap?.call(widget.text);
+          },
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+              .paddingHorizontal(4)
+              .toAlign(Alignment.centerLeft)
+              .fixWidth(context.width > 600 ? 120 : 80)
+              .fixHeight(double.infinity),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: LayoutBuilder(builder: (context, constrains) {
+            var width = constrains.maxWidth * widget.count / widget.maxCount;
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Container(
+                  width: width * _controller.value,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: LinearGradient(
+                      colors: context.isDarkMode
+                          ? [
+                              Colors.blue.shade800,
+                              Colors.blue.shade500,
+                            ]
+                          : [
+                              Colors.blue.shade300,
+                              Colors.blue.shade600,
+                            ],
+                    ),
+                  ),
+                ).toAlign(Alignment.centerLeft);
+              },
+            );
+          }),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          widget.count.toString(),
+          style: ts.s12,
+        ).fixWidth(context.width > 600 ? 60 : 30),
+      ],
+    ).fixHeight(28);
   }
 }

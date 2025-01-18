@@ -594,7 +594,10 @@ class LocalFavoritesManager with ChangeNotifier {
     notifyListeners();
   }
 
-  void onReadEnd(String id, ComicType type) async {
+  void onRead(String id, ComicType type) async {
+    if (appdata.settings['moveFavoriteAfterRead'] == "none") {
+      return;
+    }
     _modifiedAfterLastCache = true;
     for (final folder in folderNames) {
       var rows = _db.select("""

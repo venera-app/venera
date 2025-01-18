@@ -18,8 +18,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   bool get isOpen => _isOpen;
 
-  bool get isReversed => context.reader.mode == ReaderMode.galleryRightToLeft ||
-                       context.reader.mode == ReaderMode.continuousRightToLeft;
+  bool get isReversed =>
+      context.reader.mode == ReaderMode.galleryRightToLeft ||
+      context.reader.mode == ReaderMode.continuousRightToLeft;
 
   int showFloatingButtonValue = 0;
 
@@ -29,6 +30,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   _ReaderGestureDetectorState? _gestureDetectorState;
 
+  _DragListener? _floatingButtonDragListener;
+
   void setFloatingButton(int value) {
     lastValue = showFloatingButtonValue;
     if (value == 0) {
@@ -37,12 +40,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         fABValue.value = 0;
         update();
       }
-      _gestureDetectorState!.dragListener = null;
+      if (_floatingButtonDragListener != null) {
+        _gestureDetectorState!.removeDragListener(_floatingButtonDragListener!);
+        _floatingButtonDragListener = null;
+      }
     }
     var readerMode = context.reader.mode;
     if (value == 1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = 1;
-      _gestureDetectorState!.dragListener = _DragListener(
+      _floatingButtonDragListener =  _DragListener(
         onMove: (offset) {
           if (readerMode == ReaderMode.continuousTopToBottom) {
             fABValue.value -= offset.dy;
@@ -62,10 +68,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           fABValue.value = 0;
         },
       );
+      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
     } else if (value == -1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = -1;
-      _gestureDetectorState!.dragListener = _DragListener(
+      _floatingButtonDragListener = _DragListener(
         onMove: (offset) {
           if (readerMode == ReaderMode.continuousTopToBottom) {
             fABValue.value += offset.dy;
@@ -85,7 +92,45 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           fABValue.value = 0;
         },
       );
+      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
+    }
+  }
+
+  _DragListener? _imageFavoriteDragListener;
+
+  void addDragListener() async {
+    if (!mounted) return;
+    var readerMode = context.reader.mode;
+
+    // 横向阅读的时候, 如果纵向滑就触发收藏, 纵向阅读的时候, 如果横向滑动就触发收藏
+    if (appdata.settings['quickCollectImage'] == 'Swipe') {
+      if (_imageFavoriteDragListener == null) {
+        double distance = 0;
+        _imageFavoriteDragListener = _DragListener(
+          onMove: (offset) {
+            switch (readerMode) {
+              case ReaderMode.continuousTopToBottom:
+              case ReaderMode.galleryTopToBottom:
+                distance += offset.dx;
+              case ReaderMode.continuousLeftToRight:
+              case ReaderMode.galleryLeftToRight:
+              case ReaderMode.galleryRightToLeft:
+              case ReaderMode.continuousRightToLeft:
+                distance += offset.dy;
+            }
+          },
+          onEnd: () {
+            if (distance.abs() > 150) {
+              addImageFavorite();
+            }
+            distance = 0;
+          },
+        );
+      }
+      _gestureDetectorState!.addDragListener(_imageFavoriteDragListener!);
+    } else if (_imageFavoriteDragListener != null) {
+      _gestureDetectorState!.removeDragListener(_imageFavoriteDragListener!);
     }
   }
 
@@ -101,6 +146,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     }
     super.initState();
+    Future.delayed(const Duration(milliseconds: 200), addDragListener);
   }
 
   @override
@@ -203,6 +249,123 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
+  bool isLiked() {
+    return ImageFavoriteManager().has(
+      context.reader.cid,
+      context.reader.type.sourceKey,
+      context.reader.eid,
+      context.reader.page,
+      context.reader.chapter,
+    );
+  }
+
+  void addImageFavorite() {
+    try {
+      if (context.reader.images![0].contains('file://')) {
+        showToast(
+            message: "Local comic collection is not supported at present".tl,
+            context: context);
+        return;
+      }
+      String id = context.reader.cid;
+      int ep = context.reader.chapter;
+      String eid = context.reader.eid;
+      String title = context.reader.history!.title;
+      String subTitle = context.reader.history!.subtitle;
+      int maxPage = context.reader.images!.length;
+      int page = context.reader.page;
+      String sourceKey = context.reader.type.sourceKey;
+      String imageKey = context.reader.images![page - 1];
+      List<String> tags = context.reader.widget.tags;
+      String author = context.reader.widget.author;
+
+      var epName = context.reader.widget.chapters?.values
+              .elementAtOrNull(context.reader.chapter - 1) ??
+          "E${context.reader.chapter}";
+      var translatedTags = tags.map((e) => e.translateTagsToCN).toList();
+
+      if (isLiked()) {
+        if (page == firstPage) {
+          showToast(
+            message: "The cover cannot be uncollected here".tl,
+            context: context,
+          );
+          return;
+        }
+        ImageFavoriteManager().deleteImageFavorite([
+          ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName)
+        ]);
+        showToast(
+          message: "Uncollected the image".tl,
+          context: context,
+          seconds: 1,
+        );
+      } else {
+        var imageFavoritesComic = ImageFavoriteManager().find(id, sourceKey) ??
+            ImageFavoritesComic(
+              id,
+              [],
+              title,
+              sourceKey,
+              tags,
+              translatedTags,
+              DateTime.now(),
+              author,
+              {},
+              subTitle,
+              maxPage,
+            );
+        ImageFavorite imageFavorite =
+            ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName);
+        ImageFavoritesEp? imageFavoritesEp =
+            imageFavoritesComic.imageFavoritesEp.firstWhereOrNull((e) {
+          return e.ep == ep;
+        });
+        if (imageFavoritesEp == null) {
+          if (page != firstPage) {
+            var copy = imageFavorite.copyWith(
+              page: firstPage,
+              isAutoFavorite: true,
+              imageKey: context.reader.images![0],
+            );
+            // 不是第一页的话, 自动塞一个封面进去
+            imageFavoritesEp = ImageFavoritesEp(
+                eid, ep, [copy, imageFavorite], epName, maxPage);
+          } else {
+            imageFavoritesEp =
+                ImageFavoritesEp(eid, ep, [imageFavorite], epName, maxPage);
+          }
+          imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
+        } else {
+          if (imageFavoritesEp.eid != eid) {
+            // 空字符串说明是从pica导入的, 那我们就手动刷一遍保证一致
+            if (imageFavoritesEp.eid == "") {
+              imageFavoritesEp.eid == eid;
+            } else {
+              // 避免多章节漫画源的章节顺序发生变化, 如果情况比较多, 做一个以eid为准更新ep的功能
+              showToast(
+                message:
+                    "The chapter order of the comic may have changed, temporarily not supported for collection"
+                        .tl,
+                context: context,
+              );
+              return;
+            }
+          }
+          imageFavoritesEp.imageFavorites.add(imageFavorite);
+        }
+
+        ImageFavoriteManager().addOrUpdateOrDelete(imageFavoritesComic);
+        showToast(
+            message: "Successfully collected".tl, context: context, seconds: 1);
+      }
+      update();
+    } catch (e, stackTrace) {
+      Log.error("Image Favorite", e, stackTrace);
+      showToast(message: e.toString(), context: context, seconds: 1);
+    }
+  }
+
   Widget buildBottom() {
     var text = "E${context.reader.chapter} : P${context.reader.page}";
     if (context.reader.widget.chapters == null) {
@@ -233,13 +396,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 child: buildSlider(),
               ),
               IconButton.filledTonal(
-                onPressed: () => !isReversed
-                    ? context.reader.chapter < context.reader.maxChapter
-                        ? context.reader.toNextChapter()
-                        : context.reader.toPage(context.reader.maxPage)
-                  : context.reader.chapter > 1
-                        ? context.reader.toPrevChapter()
-                        : context.reader.toPage(1),
+                  onPressed: () => !isReversed
+                      ? context.reader.chapter < context.reader.maxChapter
+                          ? context.reader.toNextChapter()
+                          : context.reader.toPage(context.reader.maxPage)
+                      : context.reader.chapter > 1
+                          ? context.reader.toPrevChapter()
+                          : context.reader.toPage(1),
                   icon: const Icon(Icons.last_page)),
               const SizedBox(
                 width: 8,
@@ -263,6 +426,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 ),
               ),
               const Spacer(),
+              Tooltip(
+                message: "Collect the image".tl,
+                child: IconButton(
+                    icon: Icon(
+                        isLiked() ? Icons.favorite : Icons.favorite_border),
+                    onPressed: addImageFavorite),
+              ),
               if (App.isWindows)
                 Tooltip(
                   message: "${"Full Screen".tl}(F12)",
@@ -358,12 +528,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       child: Container(
         decoration: BoxDecoration(
           color: context.colorScheme.surface.toOpacity(0.82),
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.toOpacity(0.5),
-              width: 0.5,
-            ),
-          ),
+          border: isOpen
+              ? Border(
+                  top: BorderSide(
+                    color: Colors.grey.toOpacity(0.5),
+                    width: 0.5,
+                  ),
+                )
+              : null,
         ),
         padding: EdgeInsets.only(bottom: context.padding.bottom),
         child: child,
@@ -478,6 +650,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                     reader.type.comicSource!.key,
                     reader.cid,
                     reader.eid,
+                    reader.page,
                   );
                 }
                 return InkWell(
@@ -559,7 +732,6 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         onChanged: (key) {
           if (key == "readerMode") {
             context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
-            App.rootContext.pop();
           }
           if (key == "enableTurnPageByVolumeKey") {
             if (appdata.settings[key]) {
@@ -567,6 +739,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             } else {
               context.reader.stopVolumeEvent();
             }
+          }
+          if (key == "quickCollectImage") {
+            addDragListener();
           }
           context.reader.update();
         },

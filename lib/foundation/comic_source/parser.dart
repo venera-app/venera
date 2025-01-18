@@ -1,5 +1,6 @@
 part of 'comic_source.dart';
 
+/// return true if ver1 > ver2
 bool compareSemVer(String ver1, String ver2) {
   ver1 = ver1.replaceFirst("-", ".");
   ver2 = ver2.replaceFirst("-", ".");
@@ -193,7 +194,7 @@ class ComicSourceParser {
       login = (account, pwd) async {
         try {
           await JsEngine().runCode("""
-          ComicSource.sources.$_key.account.login(${jsonEncode(account)}, 
+          ComicSource.sources.$_key.account.login(${jsonEncode(account)},
           ${jsonEncode(pwd)})
         """);
           var source = ComicSource.find(_key!)!;
@@ -502,9 +503,9 @@ class ComicSourceParser {
       try {
         var res = await JsEngine().runCode("""
           ComicSource.sources.$_key.categoryComics.load(
-            ${jsonEncode(category)}, 
-            ${jsonEncode(param)}, 
-            ${jsonEncode(options)}, 
+            ${jsonEncode(category)},
+            ${jsonEncode(param)},
+            ${jsonEncode(options)},
             ${jsonEncode(page)}
           )
         """);
@@ -618,6 +619,7 @@ class ComicSourceParser {
     if (!_checkExists("favorites")) return null;
 
     final bool multiFolder = _getValue("favorites.multiFolder");
+    final bool? isOldToNewSort = _getValue("favorites.isOldToNewSort");
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async {
       if (!ComicSource.find(_key!)!.isLogged) {
@@ -770,6 +772,7 @@ class ComicSourceParser {
       addFolder: addFolder,
       deleteFolder: deleteFolder,
       addOrDelFavorite: addOrDelFavFunc,
+      isOldToNewSort: isOldToNewSort,
     );
   }
 
@@ -920,8 +923,30 @@ class ComicSourceParser {
     };
   }
 
-  Map<String, dynamic> _parseSettings() {
-    return _getValue("settings") ?? {};
+  Map<String, Map<String, dynamic>> _parseSettings() {
+    var value = _getValue("settings");
+    if (value is Map) {
+      var newMap = <String, Map<String, dynamic>>{};
+      for (var e in value.entries) {
+        if (e.key is! String) {
+          continue;
+        }
+        var v = <String, dynamic>{};
+        for (var e2 in e.value.entries) {
+          if (e2.key is! String) {
+            continue;
+          }
+          var v2 = e2.value;
+          if (v2 is JSInvokable) {
+            v2 = JSAutoFreeFunction(v2);
+          }
+          v[e2.key] = v2;
+        }
+        newMap[e.key] = v;
+      }
+      return newMap;
+    }
+    return {};
   }
 
   RegExp? _parseIdMatch() {

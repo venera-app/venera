@@ -1,4 +1,4 @@
-import 'dart:async' show Future, StreamController;
+import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/local.dart';
@@ -16,7 +16,7 @@ class LocalComicImageProvider
   final LocalComic comic;
 
   @override
-  Future<Uint8List> load(StreamController<ImageChunkEvent> chunkEvents) async {
+  Future<Uint8List> load(chunkEvents, checkStop) async {
     File? file = comic.coverFile;
     if(! await file.exists()) {
       file = null;
@@ -49,6 +49,7 @@ class LocalComicImageProvider
     if(file == null) {
       throw "Error: Cover not found.";
     }
+    checkStop();
     var data = await file.readAsBytes();
     if(data.isEmpty) {
       throw "Exception: Empty file(${file.path}).";

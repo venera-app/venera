@@ -37,9 +37,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   void checkUpdates() async {
-    if (!appdata.settings['checkUpdateOnStart']) {
-      return;
-    }
     var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
     var now = DateTime.now().millisecondsSinceEpoch;
     if (now - lastCheck < 24 * 60 * 60 * 1000) {
@@ -47,9 +44,11 @@ class _MainPageState extends State<MainPage> {
     }
     appdata.implicitData['lastCheckUpdate'] = now;
     appdata.writeImplicitData();
-    await Future.delayed(const Duration(milliseconds: 300));
-    await checkUpdateUi(false);
-    await ComicSourcePage.checkComicSourceUpdate(true);
+    ComicSourcePage.checkComicSourceUpdate();
+    if (appdata.settings['checkUpdateOnStart']) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      await checkUpdateUi(false);
+    }
   }
 
   @override
