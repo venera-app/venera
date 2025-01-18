@@ -8,7 +8,6 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/utils/ext.dart';
-import 'package:venera/utils/image.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -54,9 +53,6 @@ class _ComicSourcePageState extends State<ComicSourcePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar(
-        title: Text('Comic Source'.tl),
-      ),
       body: const _Body(),
     );
   }
@@ -92,6 +88,10 @@ class _BodyState extends State<_Body> {
   Widget build(BuildContext context) {
     return SmoothCustomScrollView(
       slivers: [
+        SliverAppbar(
+          title: Text('Comic Source'.tl),
+          style: AppbarStyle.shadow,
+        ),
         buildCard(context),
         for (var source in ComicSource.all()) buildSource(context, source),
         SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
@@ -708,8 +708,7 @@ class _CallbackSettingState extends State<_CallbackSetting> {
       });
       try {
         await result;
-      }
-      finally {
+      } finally {
         setState(() {
           isLoading = false;
         });

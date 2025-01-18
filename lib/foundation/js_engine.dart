@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html;
 import 'package:html/dom.dart' as dom;
@@ -19,7 +20,9 @@ import 'package:pointycastle/block/modes/cbc.dart';
 import 'package:pointycastle/block/modes/cfb.dart';
 import 'package:pointycastle/block/modes/ecb.dart';
 import 'package:pointycastle/block/modes/ofb.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:uuid/uuid.dart';
+import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
@@ -39,7 +42,7 @@ class JavaScriptRuntimeException implements Exception {
   }
 }
 
-class JsEngine with _JSEngineApi {
+class JsEngine with _JSEngineApi, _JsUiApi {
   factory JsEngine() => _cache ?? (_cache = JsEngine._create());
 
   static JsEngine? _cache;
@@ -93,91 +96,67 @@ class JsEngine with _JSEngineApi {
         String method = message["method"] as String;
         switch (method) {
           case "log":
-            {
-              String level = message["level"];
-              Log.addLog(
-                  switch (level) {
-                    "error" => LogLevel.error,
-                    "warning" => LogLevel.warning,
-                    "info" => LogLevel.info,
-                    _ => LogLevel.warning
-                  },
-                  message["title"],
-                  message["content"].toString());
-            }
+            String level = message["level"];
+            Log.addLog(
+                switch (level) {
+                  "error" => LogLevel.error,
+                  "warning" => LogLevel.warning,
+                  "info" => LogLevel.info,
+                  _ => LogLevel.warning
+                },
+                message["title"],
+                message["content"].toString());
           case 'load_data':
-            {
-              String key = message["key"];
-              String dataKey = message["data_key"];
-              return ComicSource.find(key)?.data[dataKey];
-            }
+            String key = message["key"];
+            String dataKey = message["data_key"];
+            return ComicSource.find(key)?.data[dataKey];
           case 'save_data':
-            {
-              String key = message["key"];
-              String dataKey = message["data_key"];
-              if (dataKey == 'setting') {
-                throw "setting is not allowed to be saved";
-              }
-              var data = message["data"];
-              var source = ComicSource.find(key)!;
-              source.data[dataKey] = data;
-              source.saveData();
+            String key = message["key"];
+            String dataKey = message["data_key"];
+            if (dataKey == 'setting') {
+              throw "setting is not allowed to be saved";
             }
+            var data = message["data"];
+            var source = ComicSource.find(key)!;
+            source.data[dataKey] = data;
+            source.saveData();
           case 'delete_data':
-            {
-              String key = message["key"];
-              String dataKey = message["data_key"];
-              var source = ComicSource.find(key);
-              source?.data.remove(dataKey);
-              source?.saveData();
-            }
+            String key = message["key"];
+            String dataKey = message["data_key"];
+            var source = ComicSource.find(key);
+            source?.data.remove(dataKey);
+            source?.saveData();
           case 'http':
-            {
-              return _http(Map.from(message));
-            }
+            return _http(Map.from(message));
           case 'html':
-            {
-              return handleHtmlCallback(Map.from(message));
-            }
+            return handleHtmlCallback(Map.from(message));
           case 'convert':
-            {
-              return _convert(Map.from(message));
-            }
+            return _convert(Map.from(message));
           case "random":
-            {
-              return _random(
-                message["min"] ?? 0,
-                message["max"] ?? 1,
-                message["type"],
-              );
-            }
+            return _random(
+              message["min"] ?? 0,
+              message["max"] ?? 1,
+              message["type"],
+            );
           case "cookie":
-            {
-              return handleCookieCallback(Map.from(message));
-            }
+            return handleCookieCallback(Map.from(message));
           case "uuid":
-            {
-              return const Uuid().v1();
-            }
+            return const Uuid().v1();
           case "load_setting":
-            {
-              String key = message["key"];
-              String settingKey = message["setting_key"];
-              var source = ComicSource.find(key)!;
-              return source.data["settings"]?[settingKey] ??
-                  source.settings?[settingKey]!['default'] ??
-                  (throw "Setting not found: $settingKey");
-            }
+            String key = message["key"];
+            String settingKey = message["setting_key"];
+            var source = ComicSource.find(key)!;
+            return source.data["settings"]?[settingKey] ??
+                source.settings?[settingKey]!['default'] ??
+                (throw "Setting not found: $settingKey");
           case "isLogged":
-            {
-              return ComicSource.find(message["key"])!.isLogged;
-            }
-            // temporary solution for [setTimeout] function
-            // TODO: implement [setTimeout] in quickjs project
+            return ComicSource.find(message["key"])!.isLogged;
+          // temporary solution for [setTimeout] function
+          // TODO: implement [setTimeout] in quickjs project
           case "delay":
-            {
-              return Future.delayed(Duration(milliseconds: message["time"]));
-            }
+            return Future.delayed(Duration(milliseconds: message["time"]));
+          case "UI":
+            handleUIMessage(Map.from(message));
         }
       }
       return null;
@@ -710,4 +689,46 @@ class JSAutoFreeFunction {
   static final finalizer = Finalizer<JSInvokable>((func) {
     func.free();
   });
+}
+
+mixin class _JsUiApi {
+  void handleUIMessage(Map<String, dynamic> message) {
+    switch (message['function']) {
+      case 'showMessage':
+        var m = message['message'];
+        if (m.toString().isNotEmpty) {
+          App.rootContext.showMessage(message: m.toString());
+        }
+      case 'showDialog':
+        _showDialog(message);
+      case 'launchUrl':
+        var url = message['url'];
+        if (url.toString().isNotEmpty) {
+          launchUrlString(url.toString());
+        }
+    }
+  }
+
+  void _showDialog(Map<String, dynamic> message) {
+    var title = message['title'];
+    var content = message['content'];
+    var actions = <String, JSAutoFreeFunction>{};
+    for (var action in message['actions']) {
+      actions[action['text']] = JSAutoFreeFunction(action['callback']);
+    }
+    showDialog(context: App.rootContext, builder: (context) {
+      return ContentDialog(
+        title: title,
+        content: Text(content).paddingHorizontal(16),
+        actions: actions.entries.map((entry) {
+          return TextButton(
+            onPressed: () {
+              entry.value.call([]);
+            },
+            child: Text(entry.key),
+          );
+        }).toList(),
+      );
+    });
+  }
 }
