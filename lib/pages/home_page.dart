@@ -696,6 +696,30 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                     }).toList(),
                   ).paddingHorizontal(16).paddingBottom(16),
                 ),
+              if (ComicSource.availableUpdates.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: context.colorScheme.outlineVariant,
+                      width: 0.6,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.update, color: context.colorScheme.primary, size: 20,),
+                      const SizedBox(width: 8),
+                      Text("@c updates".tlParams({
+                        'c': ComicSource.availableUpdates.length,
+                      }), style: ts.withColor(context.colorScheme.primary),),
+                    ],
+                  ),
+                ).toAlign(Alignment.centerLeft).paddingHorizontal(16).paddingBottom(8),
             ],
           ),
         ),

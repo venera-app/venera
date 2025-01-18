@@ -315,7 +315,10 @@
     "Tags": "标签",
     "Authors": "作者",
     "Comics": "漫画",
-    "Imported @a comics": "已导入 @a 本漫画"
+    "Imported @a comics": "已导入 @a 本漫画",
+    "New Version": "新版本",
+    "@c updates": "@c 项更新",
+    "No updates": "无更新"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -633,6 +636,9 @@
     "Tags": "標籤",
     "Authors": "作者",
     "Comics": "漫畫",
-    "Imported @a comics": "已匯入 @a 部漫畫"
+    "Imported @a comics": "已匯入 @a 部漫畫",
+    "New Version": "新版本",
+    "@c updates": "@c 項更新",
+    "No updates": "無更新"
   }
 }

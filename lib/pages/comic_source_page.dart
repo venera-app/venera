@@ -14,17 +14,15 @@ import 'package:venera/utils/translations.dart';
 class ComicSourcePage extends StatefulWidget {
   const ComicSourcePage({super.key});
 
-  static Future<void> checkComicSourceUpdate([bool implicit = false]) async {
+  static Future<int> checkComicSourceUpdate() async {
     if (ComicSource.all().isEmpty) {
-      return;
+      return 0;
     }
-    var controller = implicit ? null : showLoadingDialog(App.rootContext);
     var dio = AppDio();
     var res = await dio.get<String>(
         "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
     if (res.statusCode != 200) {
-      App.rootContext.showMessage(message: "Network error".tl);
-      return;
+      return -1;
     }
     var list = jsonDecode(res.data!) as List;
     var versions = <String, String>{};
@@ -34,34 +32,17 @@ class ComicSourcePage extends StatefulWidget {
     var shouldUpdate = <String>[];
     for (var source in ComicSource.all()) {
       if (versions.containsKey(source.key) &&
-          versions[source.key] != source.version) {
+          compareSemVer(versions[source.key]!, source.version)) {
         shouldUpdate.add(source.key);
       }
     }
-    controller?.close();
-    if (shouldUpdate.isEmpty) {
-      if (!implicit) {
-        App.rootContext.showMessage(message: "No Update Available".tl);
+    if (shouldUpdate.isNotEmpty) {
+      for (var key in shouldUpdate) {
+        ComicSource.availableUpdates[key] = versions[key]!;
       }
-      return;
+      ComicSource.notifyListeners();
     }
-    var msg = "";
-    for (var key in shouldUpdate) {
-      msg += "${ComicSource.find(key)?.name}: v${versions[key]}\n";
-    }
-    msg = msg.trim();
-    await showConfirmDialog(
-      context: App.rootContext,
-      title: "Updates Available".tl,
-      content: msg,
-      confirmText: "Update",
-      onConfirm: () async {
-        for (var key in shouldUpdate) {
-          var source = ComicSource.find(key);
-          await _BodyState.update(source!);
-        }
-      },
-    );
+    return shouldUpdate.length;
   }
 
   @override
@@ -90,6 +71,22 @@ class _Body extends StatefulWidget {
 class _BodyState extends State<_Body> {
   var url = "";
 
+  void updateUI() {
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ComicSource.addListener(updateUI);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    ComicSource.removeListener(updateUI);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SmoothCustomScrollView(
@@ -102,12 +99,36 @@ class _BodyState extends State<_Body> {
   }
 
   Widget buildSource(BuildContext context, ComicSource source) {
+    var newVersion = ComicSource.availableUpdates[source.key];
+    bool hasUpdate =
+        newVersion != null && compareSemVer(newVersion, source.version);
     return SliverToBoxAdapter(
       child: Column(
         children: [
           const Divider(),
           ListTile(
-            title: Text(source.name),
+            title: Row(
+              children: [
+                Text(source.name),
+                const SizedBox(width: 6),
+                if (hasUpdate)
+                  Tooltip(
+                    message: newVersion,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "New Version".tl,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  )
+              ],
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -299,6 +320,9 @@ class _BodyState extends State<_Body> {
       controller.close();
       await ComicSourceParser().parse(res.data!, source.filePath);
       await File(source.filePath).writeAsString(res.data!);
+      if (ComicSource.availableUpdates.containsKey(source.key)) {
+        ComicSource.availableUpdates.remove(source.key);
+      }
     } catch (e) {
       if (cancel) return;
       App.rootContext.showMessage(message: e.toString());
@@ -368,10 +392,7 @@ class _BodyState extends State<_Body> {
             ),
             ListTile(
               title: Text("Check updates".tl),
-              trailing: buildButton(
-                onPressed: () => ComicSourcePage.checkComicSourceUpdate(false),
-                child: Text("Check".tl),
-              ),
+              trailing: _CheckUpdatesButton(),
             ),
             const SizedBox(height: 8),
           ],
@@ -617,5 +638,42 @@ class __EditFilePageState extends State<_EditFilePage> {
         ],
       ),
     );
+  }
+}
+
+class _CheckUpdatesButton extends StatefulWidget {
+  const _CheckUpdatesButton();
+
+  @override
+  State<_CheckUpdatesButton> createState() => _CheckUpdatesButtonState();
+}
+
+class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
+  bool isLoading = false;
+
+  void check() async {
+    setState(() {
+      isLoading = true;
+    });
+    var count = await ComicSourcePage.checkComicSourceUpdate();
+    if (count == -1) {
+      context.showMessage(message: "Network error".tl);
+    } else if (count == 0) {
+      context.showMessage(message: "No updates".tl);
+    } else {
+      context.showMessage(message: "@c updates".tlParams({"c": count}));
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Button.normal(
+      onPressed: check,
+      isLoading: isLoading,
+      child: Text("Check".tl),
+    ).fixHeight(32);
   }
 }

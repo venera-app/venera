@@ -307,8 +307,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "841ef5f77e5fdfd79e3eb2fa07ece4d46787285b"
-      resolved-ref: "841ef5f77e5fdfd79e3eb2fa07ece4d46787285b"
+      ref: b33344797f1d2469339e0e1b75f5f954f1da224c
+      resolved-ref: b33344797f1d2469339e0e1b75f5f954f1da224c
       url: "https://github.com/wgh136/flutter_7zip"
     source: git
     version: "0.0.1"

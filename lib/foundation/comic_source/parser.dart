@@ -1,5 +1,6 @@
 part of 'comic_source.dart';
 
+/// return true if ver1 > ver2
 bool compareSemVer(String ver1, String ver2) {
   ver1 = ver1.replaceFirst("-", ".");
   ver2 = ver2.replaceFirst("-", ".");
