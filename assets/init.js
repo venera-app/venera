@@ -4,6 +4,13 @@ Venera JavaScript Library
 This library provides a set of APIs for interacting with the Venera app.
 */
 
+function setTimeout(callback, delay) {
+    sendMessage({
+        method: 'delay',
+        time: delay,
+    }).then(callback);
+}
+
 /// encode, decode, hash, decrypt
 let Convert = {
     /**

@@ -172,6 +172,12 @@ class JsEngine with _JSEngineApi {
             {
               return ComicSource.find(message["key"])!.isLogged;
             }
+            // temporary solution for [setTimeout] function
+            // TODO: implement [setTimeout] in quickjs project
+          case "delay":
+            {
+              return Future.delayed(Duration(milliseconds: message["time"]));
+            }
         }
       }
       return null;

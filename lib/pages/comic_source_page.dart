@@ -8,6 +8,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/image.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -705,10 +706,14 @@ class _CallbackSettingState extends State<_CallbackSetting> {
       setState(() {
         isLoading = true;
       });
-      await result;
-      setState(() {
-        isLoading = false;
-      });
+      try {
+        await result;
+      }
+      finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
