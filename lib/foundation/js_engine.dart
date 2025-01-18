@@ -165,7 +165,7 @@ class JsEngine with _JSEngineApi {
               String settingKey = message["setting_key"];
               var source = ComicSource.find(key)!;
               return source.data["settings"]?[settingKey] ??
-                  source.settings?[settingKey]['default'] ??
+                  source.settings?[settingKey]!['default'] ??
                   (throw "Setting not found: $settingKey");
             }
           case "isLogged":
@@ -687,4 +687,21 @@ class DocumentWrapper {
     elements.add(res);
     return elements.length - 1;
   }
+}
+
+class JSAutoFreeFunction {
+  final JSInvokable func;
+
+  /// Automatically free the function when it's not used anymore
+  JSAutoFreeFunction(this.func) {
+    finalizer.attach(this, func);
+  }
+
+  dynamic call(List<dynamic> args) {
+    return func(args);
+  }
+
+  static final finalizer = Finalizer<JSInvokable>((func) {
+    func.free();
+  });
 }

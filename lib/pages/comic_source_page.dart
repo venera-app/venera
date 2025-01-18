@@ -244,6 +244,8 @@ class _BodyState extends State<_Body> {
               },
             ),
           );
+        } else if (type == "callback") {
+          yield _CallbackSetting(setting: item);
         }
       } catch (e, s) {
         Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
@@ -675,5 +677,50 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
       isLoading: isLoading,
       child: Text("Check".tl),
     ).fixHeight(32);
+  }
+}
+
+class _CallbackSetting extends StatefulWidget {
+  const _CallbackSetting({required this.setting});
+
+  final MapEntry<String, Map<String, dynamic>> setting;
+
+  @override
+  State<_CallbackSetting> createState() => _CallbackSettingState();
+}
+
+class _CallbackSettingState extends State<_CallbackSetting> {
+  String get key => widget.setting.key;
+
+  String get buttonText => widget.setting.value['buttonText'] ?? "Click";
+
+  String get title => widget.setting.value['title'] ?? key;
+
+  bool isLoading = false;
+
+  Future<void> onClick() async {
+    var func = widget.setting.value['callback'];
+    var result = func([]);
+    if (result is Future) {
+      setState(() {
+        isLoading = true;
+      });
+      await result;
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(title.ts(key)),
+      trailing: Button.normal(
+        onPressed: onClick,
+        isLoading: isLoading,
+        child: Text(buttonText.ts(key)),
+      ).fixHeight(32),
+    );
   }
 }
