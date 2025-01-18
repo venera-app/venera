@@ -76,7 +76,7 @@ dependencies:
   flutter_7zip:
     git:
       url: https://github.com/wgh136/flutter_7zip
-      ref: 841ef5f77e5fdfd79e3eb2fa07ece4d46787285b
+      ref: b33344797f1d2469339e0e1b75f5f954f1da224c
 
 dev_dependencies:
   flutter_test:
