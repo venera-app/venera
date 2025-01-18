@@ -714,6 +714,8 @@ mixin class _JsUiApi {
     var content = message['content'];
     var actions = <String, JSAutoFreeFunction>{};
     for (var action in message['actions']) {
+      // [message] will be released after the method call, causing the action to be invalid, so we need to duplicate it
+      (action['callback'] as JSInvokable).dup();
       actions[action['text']] = JSAutoFreeFunction(action['callback']);
     }
     showDialog(context: App.rootContext, builder: (context) {
@@ -724,6 +726,7 @@ mixin class _JsUiApi {
           return TextButton(
             onPressed: () {
               entry.value.call([]);
+              context.pop();
             },
             child: Text(entry.key),
           );

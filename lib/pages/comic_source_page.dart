@@ -246,7 +246,7 @@ class _BodyState extends State<_Body> {
             ),
           );
         } else if (type == "callback") {
-          yield _CallbackSetting(setting: item);
+          yield _CallbackSetting(setting: item, sourceKey: source.key);
         }
       } catch (e, s) {
         Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
@@ -682,9 +682,11 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
 }
 
 class _CallbackSetting extends StatefulWidget {
-  const _CallbackSetting({required this.setting});
+  const _CallbackSetting({required this.setting, required this.sourceKey});
 
   final MapEntry<String, Map<String, dynamic>> setting;
+
+  final String sourceKey;
 
   @override
   State<_CallbackSetting> createState() => _CallbackSettingState();
@@ -719,11 +721,11 @@ class _CallbackSettingState extends State<_CallbackSetting> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title.ts(key)),
+      title: Text(title.ts(widget.sourceKey)),
       trailing: Button.normal(
         onPressed: onClick,
         isLoading: isLoading,
-        child: Text(buttonText.ts(key)),
+        child: Text(buttonText.ts(widget.sourceKey)),
       ).fixHeight(32),
     );
   }
