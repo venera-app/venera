@@ -250,13 +250,16 @@ class _DNSOverrides extends StatefulWidget {
 }
 
 class __DNSOverridesState extends State<_DNSOverrides> {
-  var overrides = <(String, String)>[];
+  var overrides = <(TextEditingController, TextEditingController)>[];
 
   @override
   void initState() {
     for (var entry in (appdata.settings['dnsOverrides'] as Map).entries) {
       if (entry.key is String && entry.value is String) {
-        overrides.add((entry.key, entry.value));
+        overrides.add((
+          TextEditingController(text: entry.key),
+          TextEditingController(text: entry.value)
+        ));
       }
     }
     super.initState();
@@ -266,7 +269,7 @@ class __DNSOverridesState extends State<_DNSOverrides> {
   void dispose() {
     var map = <String, String>{};
     for (var entry in overrides) {
-      map[entry.$1] = entry.$2;
+      map[entry.$1.text] = entry.$2.text;
     }
     appdata.settings['dnsOverrides'] = map;
     appdata.saveData();
@@ -300,7 +303,8 @@ class __DNSOverridesState extends State<_DNSOverrides> {
             TextButton.icon(
               onPressed: () {
                 setState(() {
-                  overrides.add(('', ''));
+                  overrides
+                      .add((TextEditingController(), TextEditingController()));
                 });
               },
               icon: const Icon(Icons.add),
@@ -315,6 +319,7 @@ class __DNSOverridesState extends State<_DNSOverrides> {
   Widget buildOverride(int index) {
     var entry = overrides[index];
     return Container(
+      key: ValueKey(index),
       height: 48,
       margin: EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
@@ -338,10 +343,7 @@ class __DNSOverridesState extends State<_DNSOverrides> {
                 border: InputBorder.none,
                 hintText: "Domain".tl,
               ),
-              controller: TextEditingController(text: entry.$1),
-              onChanged: (v) {
-                overrides[index] = (v, entry.$2);
-              },
+              controller: entry.$1,
             ).paddingHorizontal(8),
           ),
           Container(
@@ -354,10 +356,7 @@ class __DNSOverridesState extends State<_DNSOverrides> {
                 border: InputBorder.none,
                 hintText: "IP".tl,
               ),
-              controller: TextEditingController(text: entry.$2),
-              onChanged: (v) {
-                overrides[index] = (entry.$1, v);
-              },
+              controller: entry.$2,
             ).paddingHorizontal(8),
           ),
           Container(
