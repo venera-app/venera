@@ -1276,5 +1276,20 @@ let UI = {
             function: 'cancelLoading',
             id: id
         })
+    },
+
+    /**
+     * Show an input dialog
+     * @param title {string}
+     * @param validator {(string) => string | null | undefined} - A function that validates the input. If the function returns a string, the dialog will show the error message.
+     * @returns {string | null} - The input value. If the dialog is canceled, return null.
+     */
+    showInputDialog: (title, validator) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showInputDialog',
+            title: title,
+            validator: validator
+        })
     }
 }

@@ -677,6 +677,7 @@ class JSAutoFreeFunction {
 
   /// Automatically free the function when it's not used anymore
   JSAutoFreeFunction(this.func) {
+    func.dup();
     finalizer.attach(this, func);
   }
 
@@ -685,6 +686,6 @@ class JSAutoFreeFunction {
   }
 
   static final finalizer = Finalizer<JSInvokable>((func) {
-    func.free();
+    func.destroy();
   });
 }

@@ -34,6 +34,12 @@ mixin class JsUiApi {
         if (id is int) {
           cancelLoading(id);
         }
+      case 'showInputDialog':
+        var title = message['title'];
+        var validator = message['validator'];
+        if (title is! String) return;
+        if (validator != null && validator is! JSInvokable) return;
+        return _showInputDialog(title, validator);
     }
   }
 
@@ -47,8 +53,6 @@ mixin class JsUiApi {
         continue;
       }
       var callback = action['callback'] as JSInvokable;
-      // [message] will be released after the method call, causing the action to be invalid, so we need to duplicate it
-      callback.dup();
       var text = action['text'].toString();
       var style = (action['style'] ?? 'text').toString();
       actions.add(_JSCallbackButton(
@@ -84,15 +88,16 @@ mixin class JsUiApi {
   }
 
   int showLoading(JSInvokable? onCancel) {
-    onCancel?.dup();
     var func = onCancel == null ? null : JSAutoFreeFunction(onCancel);
     var controller = showLoadingDialog(
       App.rootContext,
       barrierDismissible: onCancel != null,
       allowCancel: onCancel != null,
-      onCancel: onCancel == null ? null : () {
-        func?.call([]);
-      },
+      onCancel: onCancel == null
+          ? null
+          : () {
+              func?.call([]);
+            },
     );
     var i = 0;
     while (_loadingDialogControllers.containsKey(i)) {
@@ -105,6 +110,29 @@ mixin class JsUiApi {
   void cancelLoading(int id) {
     var controller = _loadingDialogControllers.remove(id);
     controller?.close();
+  }
+
+  Future<String?> _showInputDialog(String title, JSInvokable? validator) async {
+    String? result;
+    var func = validator == null ? null : JSAutoFreeFunction(validator);
+    await showInputDialog(
+      context: App.rootContext,
+      title: title,
+      onConfirm: (v) {
+        if (func != null) {
+          var res = func.call([v]);
+          if (res != null) {
+            return res.toString();
+          } else {
+            result = v;
+          }
+        } else {
+          result = v;
+        }
+        return null;
+      },
+    );
+    return result;
   }
 }
 
