@@ -1205,6 +1205,10 @@ class Image {
     }
 }
 
+/**
+ * UI related apis
+ * @since 1.2.0
+ */
 let UI = {
     /**
      * Show a message
@@ -1222,7 +1226,8 @@ let UI = {
      * Show a dialog. Any action will close the dialog.
      * @param title {string}
      * @param content {string}
-     * @param actions {{text:string, callback: () => void}[]}
+     * @param actions {{text:string, callback: () => void | Promise<void>, style: "text"|"filled"|"danger"}[]} - If callback returns a promise, the button will show a loading indicator until the promise is resolved.
+     * @since 1.2.1
      */
     showDialog: (title, content, actions) => {
         sendMessage({
@@ -1245,4 +1250,31 @@ let UI = {
             url: url,
         })
     },
+
+    /**
+     * Show a loading dialog.
+     * @param onCancel {() => void | null | undefined} - Called when the loading dialog is canceled. If [onCancel] is null, the dialog cannot be canceled by the user.
+     * @returns {number} - A number that can be used to cancel the loading dialog.
+     * @since 1.2.1
+     */
+    showLoading: (onCancel) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showLoading',
+            onCancel: onCancel
+        })
+    },
+
+    /**
+     * Cancel a loading dialog.
+     * @param id {number} - returned by [showLoading]
+     * @since 1.2.1
+     */
+    cancelLoading: (id) => {
+        sendMessage({
+            method: 'UI',
+            function: 'cancelLoading',
+            id: id
+        })
+    }
 }
