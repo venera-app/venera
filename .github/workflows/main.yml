@@ -86,6 +86,10 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: '17'
+      - name: Setup Rust
+        run: |
+          rustup update
+          rustup default stable
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
