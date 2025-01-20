@@ -417,8 +417,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "67496e2158380a8a715254bfca4899fe9b718968"
-      resolved-ref: "67496e2158380a8a715254bfca4899fe9b718968"
+      ref: "4ca22a459139dec6c036ad4de078ddfe9093a570"
+      resolved-ref: "4ca22a459139dec6c036ad4de078ddfe9093a570"
       url: "https://github.com/wgh136/flutter_qjs"
     source: git
     version: "0.3.7"

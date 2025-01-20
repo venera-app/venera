@@ -21,7 +21,7 @@ dependencies:
   flutter_qjs:
     git:
       url: https://github.com/wgh136/flutter_qjs
-      ref: 67496e2158380a8a715254bfca4899fe9b718968
+      ref: 4ca22a459139dec6c036ad4de078ddfe9093a570
   crypto: ^3.0.6
   dio: ^5.7.0
   html: ^0.15.5
