@@ -313,7 +313,8 @@
     "Imported @a comics": "已导入 @a 本漫画",
     "New Version": "新版本",
     "@c updates": "@c 项更新",
-    "No updates": "无更新"
+    "No updates": "无更新",
+    "Set comic source list url": "设置漫画源列表URL"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -629,6 +630,7 @@
     "Imported @a comics": "已匯入 @a 部漫畫",
     "New Version": "新版本",
     "@c updates": "@c 項更新",
-    "No updates": "無更新"
+    "No updates": "無更新",
+    "Set comic source list url": "設置漫畫源列表URL"
   }
 }

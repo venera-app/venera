@@ -469,8 +469,7 @@ class _ComicSourceListState extends State<_ComicSourceList> {
 
   void load() async {
     var dio = AppDio();
-    var res = await dio.get<String>(
-        "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
+    var res = await dio.get<String>(appdata.settings['comicSourceListUrl']);
     if (res.statusCode != 200) {
       context.showMessage(message: "Network error".tl);
       return;
@@ -485,6 +484,27 @@ class _ComicSourceListState extends State<_ComicSourceList> {
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "Comic Source".tl,
+      tailing: [
+        IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () async {
+            await showInputDialog(
+              context: context,
+              title: "Set comic source list url".tl,
+              initialValue: appdata.settings['comicSourceListUrl'],
+              onConfirm: (value) {
+                appdata.settings['comicSourceListUrl'] = value;
+                appdata.saveData();
+                setState(() {
+                  loading = true;
+                  json = null;
+                });
+                return null;
+              },
+            );
+          },
+        )
+      ],
       body: buildBody(),
     );
   }
