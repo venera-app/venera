@@ -7,17 +7,9 @@ However, the comic files must be in a specific format.
 
 ## Comic Directory
 
-A directory considered as a comic directory only if it follows the following two types of structure:
+A directory considered as a comic directory only if it follows one of the following two types of structure:
 
-The file name can be anything, but the extension must be a valid image extension.
-
-The page order is determined by the file name. App will sort the files by name and display them in that order.
-
-Cover image is optional. 
-If there is a file named `cover.[ext]` in the directory, it will be considered as the cover image.
-Otherwise, the first image will be considered as the cover image.
-
-### Without Chapter
+**Without Chapter**
 
 ```
 comic_directory
@@ -28,7 +20,7 @@ comic_directory
 ├── ...
 ```
 
-### With Chapter
+**With Chapter**
 
 ```
 comic_directory
@@ -45,6 +37,16 @@ comic_directory
 │   ├── ...
 ├── ...
 ```
+
+The file name can be anything, but the extension must be a valid image extension.
+
+The page order is determined by the file name. App will sort the files by name and display them in that order.
+
+Cover image is optional. 
+If there is a file named `cover.[ext]` in the directory, it will be considered as the cover image.
+Otherwise, the first image will be considered as the cover image.
+
+The name of directory will be used as comic title. And the name of chapter directory will be used as chapter title.
 
 ## Archive
 
