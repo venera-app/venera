@@ -1227,6 +1227,7 @@ let UI = {
      * @param title {string}
      * @param content {string}
      * @param actions {{text:string, callback: () => void | Promise<void>, style: "text"|"filled"|"danger"}[]} - If callback returns a promise, the button will show a loading indicator until the promise is resolved.
+     * @returns {Promise<void>} - Resolved when the dialog is closed.
      * @since 1.2.1
      */
     showDialog: (title, content, actions) => {
@@ -1282,7 +1283,7 @@ let UI = {
      * Show an input dialog
      * @param title {string}
      * @param validator {(string) => string | null | undefined} - A function that validates the input. If the function returns a string, the dialog will show the error message.
-     * @returns {string | null} - The input value. If the dialog is canceled, return null.
+     * @returns {Promise<string | null>} - The input value. If the dialog is canceled, return null.
      */
     showInputDialog: (title, validator) => {
         return sendMessage({
@@ -1298,7 +1299,7 @@ let UI = {
      * @param title {string}
      * @param options {string[]}
      * @param initialIndex {number?}
-     * @returns {number | null} - The selected index. If the dialog is canceled, return null.
+     * @returns {Promise<number | null>} - The selected index. If the dialog is canceled, return null.
      */
     showSelectDialog: (title, options, initialIndex) => {
         return sendMessage({

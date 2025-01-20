@@ -17,7 +17,7 @@ mixin class JsUiApi {
           App.rootContext.showMessage(message: m.toString());
         }
       case 'showDialog':
-        _showDialog(message);
+        return _showDialog(message);
       case 'launchUrl':
         var url = message['url'];
         if (url.toString().isNotEmpty) {
@@ -55,7 +55,7 @@ mixin class JsUiApi {
     }
   }
 
-  void _showDialog(Map<String, dynamic> message) {
+  Future<void> _showDialog(Map<String, dynamic> message) {
     BuildContext? dialogContext;
     var title = message['title'];
     var content = message['content'];
@@ -84,7 +84,7 @@ mixin class JsUiApi {
         child: Text('OK'),
       ));
     }
-    showDialog(
+    return showDialog(
       context: App.rootContext,
       builder: (context) {
         dialogContext = context;
