@@ -402,3 +402,59 @@ void showInfoDialog({
     },
   );
 }
+
+Future<int?> showSelectDialog({
+  required String title,
+  required List<String> options,
+  int? initialIndex,
+}) async {
+  int? current = initialIndex;
+
+  await showDialog(
+    context: App.rootContext,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return ContentDialog(
+            title: title,
+            content: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Select(
+                    current: current == null ? "" : options[current!],
+                    values: options,
+                    minWidth: 156,
+                    onTap: (i) {
+                      setState(() {
+                        current = i;
+                      });
+                    },
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  current = null;
+                  context.pop();
+                },
+                child: Text('Cancel'.tl),
+              ),
+              FilledButton(
+                onPressed: current == null
+                    ? null
+                    : context.pop,
+                child: Text('Confirm'.tl),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  return current;
+}

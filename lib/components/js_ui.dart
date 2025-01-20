@@ -28,11 +28,11 @@ mixin class JsUiApi {
         if (onCancel != null && onCancel is! JSInvokable) {
           return;
         }
-        return showLoading(onCancel);
+        return _showLoading(onCancel);
       case 'cancelLoading':
         var id = message['id'];
         if (id is int) {
-          cancelLoading(id);
+          _cancelLoading(id);
         }
       case 'showInputDialog':
         var title = message['title'];
@@ -40,6 +40,18 @@ mixin class JsUiApi {
         if (title is! String) return;
         if (validator != null && validator is! JSInvokable) return;
         return _showInputDialog(title, validator);
+      case 'showSelectDialog':
+        var title = message['title'];
+        var options = message['options'];
+        var initialIndex = message['initialIndex'];
+        if (title is! String) return;
+        if (options is! List) return;
+        if (initialIndex != null && initialIndex is! int) return;
+        return _showSelectDialog(
+          title,
+          options.whereType<String>().toList(),
+          initialIndex,
+        );
     }
   }
 
@@ -87,7 +99,7 @@ mixin class JsUiApi {
     });
   }
 
-  int showLoading(JSInvokable? onCancel) {
+  int _showLoading(JSInvokable? onCancel) {
     var func = onCancel == null ? null : JSAutoFreeFunction(onCancel);
     var controller = showLoadingDialog(
       App.rootContext,
@@ -107,7 +119,7 @@ mixin class JsUiApi {
     return i;
   }
 
-  void cancelLoading(int id) {
+  void _cancelLoading(int id) {
     var controller = _loadingDialogControllers.remove(id);
     controller?.close();
   }
@@ -133,6 +145,25 @@ mixin class JsUiApi {
       },
     );
     return result;
+  }
+
+  Future<int?> _showSelectDialog(
+    String title,
+    List<String> options,
+    int? initialIndex,
+  ) {
+    if (options.isEmpty) {
+      return Future.value(null);
+    }
+    if (initialIndex != null &&
+        (initialIndex >= options.length || initialIndex < 0)) {
+      initialIndex = null;
+    }
+    return showSelectDialog(
+      title: title,
+      options: options,
+      initialIndex: initialIndex,
+    );
   }
 }
 

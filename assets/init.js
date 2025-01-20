@@ -1291,5 +1291,22 @@ let UI = {
             title: title,
             validator: validator
         })
+    },
+
+    /**
+     * Show a select dialog
+     * @param title {string}
+     * @param options {string[]}
+     * @param initialIndex {number?}
+     * @returns {number | null} - The selected index. If the dialog is canceled, return null.
+     */
+    showSelectDialog: (title, options, initialIndex) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showSelectDialog',
+            title: title,
+            options: options,
+            initialIndex: initialIndex
+        })
     }
 }
