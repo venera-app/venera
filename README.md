@@ -31,7 +31,7 @@ A comic reader that support reading local and network comics.
 
 ## Create a new comic source
 
-See [venera-configs](https://github.com/venera-app/venera-configs)
+See [Comic Source](doc/comic_source.md)
 
 ## Thanks
 
