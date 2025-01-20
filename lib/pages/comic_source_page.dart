@@ -419,7 +419,7 @@ class _BodyState extends State<_Body> {
   }
 
   void help() {
-    launchUrlString("https://github.com/venera-app/venera-configs");
+    launchUrlString("https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
   }
 
   Future<void> handleAddSource(String url) async {
