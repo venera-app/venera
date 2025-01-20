@@ -155,6 +155,10 @@ class JsEngine with _JSEngineApi, JsUiApi {
             return Future.delayed(Duration(milliseconds: message["time"]));
           case "UI":
             return handleUIMessage(Map.from(message));
+          case "getLocale":
+            return "${App.locale.languageCode}-${App.locale.countryCode}";
+          case "getPlatform":
+            return Platform.operatingSystem;
         }
       }
       return null;

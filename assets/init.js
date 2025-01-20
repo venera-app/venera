@@ -1310,3 +1310,37 @@ let UI = {
         })
     }
 }
+
+/**
+ * App related apis
+ * @since 1.2.1
+ */
+let APP = {
+    /**
+     * Get the app version
+     * @returns {string} - The app version
+     */
+    get version() {
+        return appVersion // defined in the engine
+    },
+
+    /**
+     * Get current app locale
+     * @returns {string} - The app locale, in the format of [languageCode]_[countryCode]
+     */
+    get locale() {
+        return sendMessage({
+            method: 'getLocale'
+        })
+    },
+
+    /**
+     * Get current running platform
+     * @returns {string} - The platform name, "android", "ios", "windows", "macos", "linux"
+     */
+    get platform() {
+        return sendMessage({
+            method: 'getPlatform'
+        })
+    }
+}
