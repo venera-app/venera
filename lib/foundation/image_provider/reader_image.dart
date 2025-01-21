@@ -63,7 +63,8 @@ class ReaderImageProvider
         })()
       ''');
       if (func is JSInvokable) {
-        var result = func.invoke([imageBytes, cid, eid, page, sourceKey]);
+        var autoFreeFunc = JSAutoFreeFunction(func);
+        var result = autoFreeFunc([imageBytes, cid, eid, page, sourceKey]);
         if (result is Uint8List) {
           imageBytes = result;
         } else if (result is Future) {
@@ -76,9 +77,9 @@ class ReaderImageProvider
           if (image is Uint8List) {
             imageBytes = image;
           } else if (image is Future) {
-            JSInvokable? onCancel;
+            JSAutoFreeFunction? onCancel;
             if (result['onCancel'] is JSInvokable) {
-              onCancel = result['onCancel'];
+              onCancel = JSAutoFreeFunction(result['onCancel']);
             }
             if (onCancel == null) {
               var futureImage = await image;
@@ -96,9 +97,7 @@ class ReaderImageProvider
                   checkStop();
                 }
                 catch(e) {
-                  onCancel.invoke([]);
-                  onCancel.free();
-                  func.free();
+                  onCancel([]);
                   rethrow;
                 }
                 await Future.delayed(Duration(milliseconds: 50));
@@ -107,10 +106,8 @@ class ReaderImageProvider
                 imageBytes = futureImage;
               }
             }
-            onCancel?.free();
           }
         }
-        func.free();
       }
     }
     return imageBytes!;

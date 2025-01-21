@@ -135,6 +135,8 @@ class NetworkCacheManager implements Interceptor {
   }
 
   static bool compareHeaders(Map<String, dynamic> a, Map<String, dynamic> b) {
+    a = Map.from(a);
+    b = Map.from(b);
     const shouldIgnore = [
       'cache-time',
       'prevent-parallel',

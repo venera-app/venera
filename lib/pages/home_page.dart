@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -535,38 +536,7 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
             ],
           ),
           onPressed: () {
-            showDialog(
-              context: context,
-              barrierColor: Colors.black.toOpacity(0.2),
-              builder: (context) {
-                var help = '';
-                help +=
-                    '${"A directory is considered as a comic only if it matches one of the following conditions:".tl}\n';
-                help += '${'1. The directory only contains image files.'.tl}\n';
-                help +=
-                    '${'2. The directory contains directories which contain image files. Each directory is considered as a chapter.'.tl}\n\n';
-                help +=
-                    '${"If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used.".tl}\n\n';
-                help +=
-                    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n"
-                        .tl;
-                help +=
-                    "If you import an EhViewer's database, program will automatically create folders according to the download label in that database."
-                        .tl;
-                return ContentDialog(
-                  title: "Help".tl,
-                  content: Text(help).paddingHorizontal(16),
-                  actions: [
-                    Button.filled(
-                      child: Text("OK".tl),
-                      onPressed: () {
-                        context.pop();
-                      },
-                    ),
-                  ],
-                );
-              },
-            );
+            launchUrlString("https://github.com/venera-app/venera/blob/master/doc/import_comic.md");
           },
         ).fixWidth(90).paddingRight(8),
         Button.filled(

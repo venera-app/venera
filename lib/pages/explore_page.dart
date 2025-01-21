@@ -124,18 +124,7 @@ class _ExplorePageState extends State<ExplorePage>
     }
     return NetworkError(
       message: msg,
-      retry: () {
-        setState(() {
-          pages = ComicSource.all()
-              .map((e) => e.explorePages)
-              .expand((e) => e.map((e) => e.title))
-              .toList();
-          controller = TabController(
-            length: pages.length,
-            vsync: this,
-          );
-        });
-      },
+      retry: onSettingsChanged,
       withAppbar: false,
     );
   }

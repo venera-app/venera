@@ -148,11 +148,6 @@
     "Size in MB": "大小（MB）",
     "Select a directory which contains the comic directories." : "选择一个包含漫画文件夹的目录",
     "Help": "帮助",
-    "A directory is considered as a comic only if it matches one of the following conditions:" : "只有当目录满足以下条件之一时，才被视为漫画：",
-    "1. The directory only contains image files." : "1. 目录只包含图片文件。",
-    "2. The directory contains directories which contain image files. Each directory is considered as a chapter." : "2. 目录包含多个包含图片文件的目录。每个目录被视为一个章节。",
-    "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目录包含一个名为'cover.*'的文件，它将被用作封面图片。否则将使用第一张图片。",
-    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目录名称将被用作漫画标题。章节目录的名称将被用作章节标题。\n",
     "Export as cbz": "导出为cbz",
     "Select an archive file (cbz, zip, 7z, cb7)" : "选择一个归档文件 (cbz, zip, 7z, cb7)",
     "An archive file" : "一个归档文件",
@@ -318,7 +313,8 @@
     "Imported @a comics": "已导入 @a 本漫画",
     "New Version": "新版本",
     "@c updates": "@c 项更新",
-    "No updates": "无更新"
+    "No updates": "无更新",
+    "Set comic source list url": "设置漫画源列表URL"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -468,11 +464,6 @@
     "Size in MB": "大小（MB）",
     "Select a directory which contains the comic directories." : "選擇一個包含漫畫文件夾的目錄",
     "Help": "幫助",
-    "A directory is considered as a comic only if it matches one of the following conditions:" : "只有當目錄滿足以下條件之一時，才被視為漫畫：",
-    "1. The directory only contains image files." : "1. 目錄只包含圖片文件。",
-    "2. The directory contains directories which contain image files. Each directory is considered as a chapter." : "2. 目錄包含多個包含圖片文件的目錄。每個目錄被視為一個章節。",
-    "If the directory contains a file named 'cover.*', it will be used as the cover image. Otherwise the first image will be used." : "如果目錄包含一個名為'cover.*'的文件，它將被用作封面圖片。否則將使用第一張圖片。",
-    "The directory name will be used as the comic title. And the name of chapter directories will be used as the chapter titles.\n" : "目錄名稱將被用作漫畫標題。章節目錄的名稱將被用作章節標題。\n",
     "Export as cbz": "匯出為cbz",
     "Select an archive file (cbz, zip, 7z, cb7)" : "選擇一個歸檔文件 (cbz, zip, 7z, cb7)",
     "An archive file" : "一個歸檔文件",
@@ -639,6 +630,7 @@
     "Imported @a comics": "已匯入 @a 部漫畫",
     "New Version": "新版本",
     "@c updates": "@c 項更新",
-    "No updates": "無更新"
+    "No updates": "無更新",
+    "Set comic source list url": "設置漫畫源列表URL"
   }
 }

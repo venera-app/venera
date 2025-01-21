@@ -1205,6 +1205,10 @@ class Image {
     }
 }
 
+/**
+ * UI related apis
+ * @since 1.2.0
+ */
 let UI = {
     /**
      * Show a message
@@ -1222,7 +1226,9 @@ let UI = {
      * Show a dialog. Any action will close the dialog.
      * @param title {string}
      * @param content {string}
-     * @param actions {{text:string, callback: () => void}[]}
+     * @param actions {{text:string, callback: () => void | Promise<void>, style: "text"|"filled"|"danger"}[]} - If callback returns a promise, the button will show a loading indicator until the promise is resolved.
+     * @returns {Promise<void>} - Resolved when the dialog is closed.
+     * @since 1.2.1
      */
     showDialog: (title, content, actions) => {
         sendMessage({
@@ -1245,4 +1251,97 @@ let UI = {
             url: url,
         })
     },
+
+    /**
+     * Show a loading dialog.
+     * @param onCancel {() => void | null | undefined} - Called when the loading dialog is canceled. If [onCancel] is null, the dialog cannot be canceled by the user.
+     * @returns {number} - A number that can be used to cancel the loading dialog.
+     * @since 1.2.1
+     */
+    showLoading: (onCancel) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showLoading',
+            onCancel: onCancel
+        })
+    },
+
+    /**
+     * Cancel a loading dialog.
+     * @param id {number} - returned by [showLoading]
+     * @since 1.2.1
+     */
+    cancelLoading: (id) => {
+        sendMessage({
+            method: 'UI',
+            function: 'cancelLoading',
+            id: id
+        })
+    },
+
+    /**
+     * Show an input dialog
+     * @param title {string}
+     * @param validator {(string) => string | null | undefined} - A function that validates the input. If the function returns a string, the dialog will show the error message.
+     * @returns {Promise<string | null>} - The input value. If the dialog is canceled, return null.
+     */
+    showInputDialog: (title, validator) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showInputDialog',
+            title: title,
+            validator: validator
+        })
+    },
+
+    /**
+     * Show a select dialog
+     * @param title {string}
+     * @param options {string[]}
+     * @param initialIndex {number?}
+     * @returns {Promise<number | null>} - The selected index. If the dialog is canceled, return null.
+     */
+    showSelectDialog: (title, options, initialIndex) => {
+        return sendMessage({
+            method: 'UI',
+            function: 'showSelectDialog',
+            title: title,
+            options: options,
+            initialIndex: initialIndex
+        })
+    }
+}
+
+/**
+ * App related apis
+ * @since 1.2.1
+ */
+let APP = {
+    /**
+     * Get the app version
+     * @returns {string} - The app version
+     */
+    get version() {
+        return appVersion // defined in the engine
+    },
+
+    /**
+     * Get current app locale
+     * @returns {string} - The app locale, in the format of [languageCode]_[countryCode]
+     */
+    get locale() {
+        return sendMessage({
+            method: 'getLocale'
+        })
+    },
+
+    /**
+     * Get current running platform
+     * @returns {string} - The platform name, "android", "ios", "windows", "macos", "linux"
+     */
+    get platform() {
+        return sendMessage({
+            method: 'getPlatform'
+        })
+    }
 }

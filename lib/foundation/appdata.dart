@@ -90,13 +90,15 @@ class _Appdata {
 
   /// Sync data from another device
   void syncData(Map<String, dynamic> data) {
-    for (var key in data.keys) {
-      if (_disableSync.contains(key)) {
-        continue;
+    if (data['settings'] is Map) {
+      var settings = data['settings'] as Map<String, dynamic>;
+      for (var key in settings.keys) {
+        if (!_disableSync.contains(key)) {
+          this.settings[key] = settings[key];
+        }
       }
-      settings[key] = data[key];
     }
-    searchHistory = List.from(data['searchHistory']);
+    searchHistory = List.from(data['searchHistory'] ?? []);
     saveData();
   }
 
@@ -153,6 +155,7 @@ class _Settings with ChangeNotifier {
     'customImageProcessing': defaultCustomImageProcessing,
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
+    'comicSourceListUrl': "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json",
   };
 
   operator [](String key) {

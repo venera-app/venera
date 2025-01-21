@@ -246,7 +246,7 @@ class _BodyState extends State<_Body> {
             ),
           );
         } else if (type == "callback") {
-          yield _CallbackSetting(setting: item);
+          yield _CallbackSetting(setting: item, sourceKey: source.key);
         }
       } catch (e, s) {
         Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
@@ -419,7 +419,7 @@ class _BodyState extends State<_Body> {
   }
 
   void help() {
-    launchUrlString("https://github.com/venera-app/venera-configs");
+    launchUrlString("https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
   }
 
   Future<void> handleAddSource(String url) async {
@@ -469,8 +469,7 @@ class _ComicSourceListState extends State<_ComicSourceList> {
 
   void load() async {
     var dio = AppDio();
-    var res = await dio.get<String>(
-        "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
+    var res = await dio.get<String>(appdata.settings['comicSourceListUrl']);
     if (res.statusCode != 200) {
       context.showMessage(message: "Network error".tl);
       return;
@@ -485,6 +484,27 @@ class _ComicSourceListState extends State<_ComicSourceList> {
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "Comic Source".tl,
+      tailing: [
+        IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () async {
+            await showInputDialog(
+              context: context,
+              title: "Set comic source list url".tl,
+              initialValue: appdata.settings['comicSourceListUrl'],
+              onConfirm: (value) {
+                appdata.settings['comicSourceListUrl'] = value;
+                appdata.saveData();
+                setState(() {
+                  loading = true;
+                  json = null;
+                });
+                return null;
+              },
+            );
+          },
+        )
+      ],
       body: buildBody(),
     );
   }
@@ -682,9 +702,11 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
 }
 
 class _CallbackSetting extends StatefulWidget {
-  const _CallbackSetting({required this.setting});
+  const _CallbackSetting({required this.setting, required this.sourceKey});
 
   final MapEntry<String, Map<String, dynamic>> setting;
+
+  final String sourceKey;
 
   @override
   State<_CallbackSetting> createState() => _CallbackSettingState();
@@ -719,11 +741,11 @@ class _CallbackSettingState extends State<_CallbackSetting> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title.ts(key)),
+      title: Text(title.ts(widget.sourceKey)),
       trailing: Button.normal(
         onPressed: onClick,
         isLoading: isLoading,
-        child: Text(buttonText.ts(key)),
+        child: Text(buttonText.ts(widget.sourceKey)),
       ).fixHeight(32),
     );
   }
