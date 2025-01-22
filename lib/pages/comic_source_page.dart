@@ -298,10 +298,10 @@ class _BodyState extends State<_Body> {
         //
       }
     }
-    context.to(() => _EditFilePage(source.filePath)).then((value) async {
+    context.to(() => _EditFilePage(source.filePath, () async {
       await ComicSource.reload();
       setState(() {});
-    });
+    }));
   }
 
   static Future<void> update(ComicSource source) async {
@@ -617,9 +617,11 @@ void _addAllPagesWithComicSource(ComicSource source) {
 }
 
 class _EditFilePage extends StatefulWidget {
-  const _EditFilePage(this.path);
+  const _EditFilePage(this.path, this.onExit);
 
   final String path;
+
+  final void Function() onExit;
 
   @override
   State<_EditFilePage> createState() => __EditFilePageState();
@@ -637,6 +639,7 @@ class __EditFilePageState extends State<_EditFilePage> {
   @override
   void dispose() {
     File(widget.path).writeAsStringSync(current);
+    widget.onExit();
     super.dispose();
   }
 
