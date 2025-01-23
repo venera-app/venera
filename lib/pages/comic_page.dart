@@ -1299,14 +1299,16 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
                       child: InkWell(
                         onTap: () => state.read(null, index + 1),
                         borderRadius:
-                            const BorderRadius.all(Radius.circular(16)),
+                            const BorderRadius.all(Radius.circular(8)),
                         child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(16)),
+                          foregroundDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Theme.of(context).colorScheme.outline,
                             ),
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           width: double.infinity,
                           height: double.infinity,
@@ -1335,7 +1337,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
           ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
-            childAspectRatio: 0.7,
+            childAspectRatio: 0.68,
           ),
         ),
         if (error != null)
