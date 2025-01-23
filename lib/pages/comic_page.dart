@@ -1283,7 +1283,9 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
                       y2 = double.parse(r.split('-')[1]);
                     }
                   }
-                } finally {}
+                } catch (_) {
+                  // ignore
+                }
                 part = ImagePart(x1: x1, y1: y1, x2: x2, y2: y2);
               }
               return Padding(
@@ -1308,19 +1310,16 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
                           ),
                           width: double.infinity,
                           height: double.infinity,
-                          child: ClipRRect(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(16)),
-                            child: AnimatedImage(
-                              image: CachedImageProvider(
-                                url,
-                                sourceKey: state.widget.sourceKey,
-                              ),
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              part: part,
+                          clipBehavior: Clip.antiAlias,
+                          child: AnimatedImage(
+                            image: CachedImageProvider(
+                              url,
+                              sourceKey: state.widget.sourceKey,
                             ),
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            part: part,
                           ),
                         ),
                       ),
@@ -1336,7 +1335,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
           ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
-            childAspectRatio: 0.65,
+            childAspectRatio: 0.7,
           ),
         ),
         if (error != null)
