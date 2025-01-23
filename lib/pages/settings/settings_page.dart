@@ -229,7 +229,10 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
                     child: child,
                   );
                 },
-                child: buildRight(),
+                child: Material(
+                  key: ValueKey(currentPage),
+                  child: buildRight(),
+                ),
               ),
             ),
           )
