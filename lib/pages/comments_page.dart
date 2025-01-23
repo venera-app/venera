@@ -529,6 +529,7 @@ class _Tag {
       'u' => style.underline,
       's' => style.lineThrough,
       'a' => style.withColor(context.colorScheme.primary),
+      'strong' => style.bold,
       'span' => () {
           if (attributes.containsKey('style')) {
             var s = attributes['style']!;
@@ -670,7 +671,7 @@ class _RichCommentContentState extends State<RichCommentContent> {
                 attributes[attrSplits[0]] = attrSplits[1].replaceAll('"', '');
               }
             }
-            const acceptedTags = ['img', 'a', 'b', 'i', 'u', 's', 'br', 'span'];
+            const acceptedTags = ['img', 'a', 'b', 'i', 'u', 's', 'br', 'span', 'strong'];
             if (acceptedTags.contains(tagName)) {
               writeBuffer();
               if (tagName == 'img') {
