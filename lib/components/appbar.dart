@@ -1,12 +1,14 @@
 part of 'components.dart';
 
 class Appbar extends StatefulWidget implements PreferredSizeWidget {
-  const Appbar(
-      {required this.title,
-      this.leading,
-      this.actions,
-      this.backgroundColor,
-      super.key});
+  const Appbar({
+    required this.title,
+    this.leading,
+    this.actions,
+    this.backgroundColor,
+    this.style = AppbarStyle.blur,
+    super.key,
+  });
 
   final Widget title;
 
@@ -15,6 +17,8 @@ class Appbar extends StatefulWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
 
   final Color? backgroundColor;
+
+  final AppbarStyle style;
 
   @override
   State<Appbar> createState() => _AppbarState();
@@ -108,10 +112,18 @@ class _AppbarState extends State<Appbar> {
         ],
       ).paddingTop(context.padding.top),
     );
-    return BlurEffect(
-      blur: _scrolledUnder ? 15 : 0,
-      child: content,
-    );
+    if (widget.style == AppbarStyle.shadow) {
+      return Material(
+        color: context.colorScheme.surface,
+        elevation: _scrolledUnder ? 2 : 0,
+        child: content,
+      );
+    } else {
+      return BlurEffect(
+        blur: _scrolledUnder ? 15 : 0,
+        child: content,
+      );
+    }
   }
 }
 
@@ -256,18 +268,18 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class FilledTabBar extends StatefulWidget {
-  const FilledTabBar({super.key, this.controller, required this.tabs});
+class AppTabBar extends StatefulWidget {
+  const AppTabBar({super.key, this.controller, required this.tabs});
 
   final TabController? controller;
 
   final List<Tab> tabs;
 
   @override
-  State<FilledTabBar> createState() => _FilledTabBarState();
+  State<AppTabBar> createState() => _AppTabBarState();
 }
 
-class _FilledTabBarState extends State<FilledTabBar> {
+class _AppTabBarState extends State<AppTabBar> {
   late TabController _controller;
 
   late List<GlobalKey> keys;
@@ -315,7 +327,7 @@ class _FilledTabBarState extends State<FilledTabBar> {
   }
 
   @override
-  void didUpdateWidget(covariant FilledTabBar oldWidget) {
+  void didUpdateWidget(covariant AppTabBar oldWidget) {
     if (widget.controller != oldWidget.controller) {
       _controller = widget.controller ?? DefaultTabController.of(context);
       _controller.animation!.addListener(onTabChanged);
@@ -544,7 +556,7 @@ class _IndicatorPainter extends CustomPainter {
 
     var rect = Rect.fromLTWH(
       tabLeft + padding.left + horizontalPadding,
-      _FilledTabBarState._kTabHeight - 3.6,
+      _AppTabBarState._kTabHeight - 3.6,
       tabRight - tabLeft - padding.horizontal - horizontalPadding * 2,
       3,
     );

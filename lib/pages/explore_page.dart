@@ -137,7 +137,7 @@ class _ExplorePageState extends State<ExplorePage>
     }
 
     Widget tabBar = Material(
-      child: FilledTabBar(
+      child: AppTabBar(
         key: PageStorageKey(pages.toString()),
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,

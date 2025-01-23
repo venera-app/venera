@@ -58,26 +58,12 @@ class _AnimatedTapRegionState extends State<AnimatedTapRegion> {
       },
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
+        child: AnimatedPhysicalModel(
           duration: _fastAnimationDuration,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            boxShadow: isHovered
-                ? [
-                    BoxShadow(
-                      color: context.colorScheme.outline,
-                      blurRadius: 2,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: context.colorScheme.outlineVariant,
-                      blurRadius: 1,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-          ),
+          elevation: isHovered ? 3 : 1,
+          color: context.colorScheme.surface,
+          shadowColor: context.colorScheme.shadow,
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           child: widget.child,
         ),
       ),

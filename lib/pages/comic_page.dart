@@ -2000,6 +2000,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
     }
 
     return Shimmer(
+      color: context.isDarkMode ? Colors.grey.shade700 : Colors.white,
       child: Column(
         children: [
           Appbar(title: Text(""), backgroundColor: context.colorScheme.surface),

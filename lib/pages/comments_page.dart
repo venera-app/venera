@@ -73,6 +73,7 @@ class _CommentsPageState extends State<CommentsPage> {
       resizeToAvoidBottomInset: false,
       appBar: Appbar(
         title: Text("Comments".tl),
+        style: AppbarStyle.shadow,
       ),
       body: buildBody(context),
     );
