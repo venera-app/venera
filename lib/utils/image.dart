@@ -26,7 +26,7 @@ class Image {
     var codec = await ui.instantiateImageCodec(data);
     var frame = await codec.getNextFrame();
     codec.dispose();
-    var info = await frame.image.toByteData();
+    var info = await frame.image.toByteData(format: ui.ImageByteFormat.rawStraightRgba);
     if (info == null) {
       throw Exception('Failed to decode image');
     }
@@ -37,6 +37,14 @@ class Image {
     );
     frame.image.dispose();
     return image;
+  }
+
+  int getPixelAtIndex(int index) {
+    if (index < 0 || index >= _data.length) {
+      throw ArgumentError(
+          'Invalid argument: index must be in the range of [0, ${_data.length}).');
+    }
+    return _data[index];
   }
 
   Image copyRange(int x, int y, int width, int height) {

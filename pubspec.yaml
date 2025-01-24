@@ -12,8 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
   path_provider: any
-  flutter_localizations:
-    sdk: flutter
   intl: ^0.19.0
   window_manager: ^0.4.3
   sqlite3: ^2.4.7
@@ -25,7 +23,7 @@ dependencies:
   crypto: ^3.0.6
   dio: ^5.7.0
   html: ^0.15.5
-  pointycastle: any
+  pointycastle: ^3.9.1
   url_launcher: ^6.3.0
   path: ^1.9.0
   photo_view:
@@ -40,7 +38,6 @@ dependencies:
       ref: 09e756b1f1b04e6298318d99ec20a787fb360f59
       path: packages/scrollable_positioned_list
   flutter_reorderable_grid_view: ^5.4.0
-  yaml: any
   uuid: ^4.5.1
   desktop_webview_window:
     git:
@@ -51,7 +48,7 @@ dependencies:
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
-  zip_flutter: ^0.0.8
+  zip_flutter: ^0.0.9
   lodepng_flutter:
     git:
       url: https://github.com/venera-app/lodepng_flutter
@@ -67,7 +64,6 @@ dependencies:
     git: 
       url: https://github.com/pkuislm/flutter_saf.git
       ref: 7637b8b67d0a831f3cd7e702b8173e300880d32e
-  pdf: ^3.11.1
   dynamic_color: ^1.7.0
   shimmer_animation: ^2.1.0
   flutter_memory_info: ^0.0.1

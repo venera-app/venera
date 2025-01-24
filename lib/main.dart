@@ -3,7 +3,6 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/auth_page.dart';
@@ -197,11 +196,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           'dark' => ThemeMode.dark,
           _ => ThemeMode.system
         },
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
         locale: () {
           var lang = appdata.settings['language'];
           if (lang == 'system') {
