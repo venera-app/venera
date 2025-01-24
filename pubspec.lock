@@ -977,14 +977,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.3"
-  text_scroll:
-    dependency: "direct main"
-    description:
-      name: text_scroll
-      sha256: "7869d86a6fdd725dee56bdd150216a99f0372b82fbfcac319214dbd5f36e1908"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0"
   typed_data:
     dependency: transitive
     description:
