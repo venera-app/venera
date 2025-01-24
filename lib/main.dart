@@ -196,23 +196,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           'dark' => ThemeMode.dark,
           _ => ThemeMode.system
         },
-        locale: () {
-          var lang = appdata.settings['language'];
-          if (lang == 'system') {
-            return null;
-          }
-          return switch (lang) {
-            'zh-CN' => const Locale('zh', 'CN'),
-            'zh-TW' => const Locale('zh', 'TW'),
-            'en-US' => const Locale('en'),
-            _ => null
-          };
-        }(),
-        supportedLocales: const [
-          Locale('en'),
-          Locale('zh', 'CN'),
-          Locale('zh', 'TW'),
-        ],
         builder: (context, widget) {
           ErrorWidget.builder = (details) {
             Log.error("Unhandled Exception",

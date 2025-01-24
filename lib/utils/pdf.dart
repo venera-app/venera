@@ -394,10 +394,10 @@ class PdfGenerator {
     var height = image.height;
     data = Uint8List(width * height * 3);
     for (var i = 0; i < width * height; i++) {
-      var pixel = image.getPixelAtIndex(i); // RGBA
-      data[i * 3] = pixel & 0xFF; // R
-      data[i * 3 + 1] = (pixel >> 8) & 0xFF; // G
-      data[i * 3 + 2] = (pixel >> 16) & 0xFF; // B
+      var pixel = image.getPixelAtIndex(i);
+      data[i * 3] = pixel.r;
+      data[i * 3 + 1] = pixel.g;
+      data[i * 3 + 2] = pixel.b;
     }
     data = tdeflCompressData(data, true, true, 9);
     return (width: width, height: height, data: data);

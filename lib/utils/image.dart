@@ -39,12 +39,12 @@ class Image {
     return image;
   }
 
-  int getPixelAtIndex(int index) {
+  Color getPixelAtIndex(int index) {
     if (index < 0 || index >= _data.length) {
       throw ArgumentError(
           'Invalid argument: index must be in the range of [0, ${_data.length}).');
     }
-    return _data[index];
+    return Color.fromValue(_data[index]);
   }
 
   Image copyRange(int x, int y, int width, int height) {
@@ -184,11 +184,11 @@ class Color {
 
   Color.fromValue(this.value);
 
-  int get r => (value >> 16) & 0xFF;
+  int get r => value & 0xFF;
 
   int get g => (value >> 8) & 0xFF;
 
-  int get b => value & 0xFF;
+  int get b => (value >> 16) & 0xFF;
 
   int get a => (value >> 24) & 0xFF;
 }
