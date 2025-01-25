@@ -98,8 +98,17 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
             _controller.position.maxScrollExtent,
           );
           if (_futurePosition == old) return;
-          _controller.animateTo(_futurePosition!,
-              duration: _fastAnimationDuration, curve: Curves.linear);
+          var target = _futurePosition!;
+          _controller.animateTo(
+            _futurePosition!,
+            duration: _fastAnimationDuration,
+            curve: Curves.linear,
+          ).then((_) {
+            var current = _controller.position.pixels;
+            if (current == target && current == _futurePosition) {
+              _futurePosition = null;
+            }
+          });
         }
       },
       child: ScrollControllerProvider._(
