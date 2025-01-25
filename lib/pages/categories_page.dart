@@ -3,80 +3,119 @@ import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/pages/ranking_page.dart';
 import 'package:venera/pages/search_result_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'category_comics_page.dart';
 
-class CategoriesPage extends StatelessWidget {
+class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
 
   @override
+  State<CategoriesPage> createState() => _CategoriesPageState();
+}
+
+class _CategoriesPageState extends State<CategoriesPage> {
+  var categories = <String>[];
+
+  void onSettingsChanged() {
+    var categories =
+        List.from(appdata.settings["categories"]).whereType<String>().toList();
+    var allCategories = ComicSource.all()
+        .map((e) => e.categoryData?.key)
+        .where((element) => element != null)
+        .map((e) => e!)
+        .toList();
+    categories =
+        categories.where((element) => allCategories.contains(element)).toList();
+    if (!categories.isEqualsTo(this.categories)) {
+      setState(() {
+        this.categories = categories;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    var categories =
+        List.from(appdata.settings["categories"]).whereType<String>().toList();
+    var allCategories = ComicSource.all()
+        .map((e) => e.categoryData?.key)
+        .where((element) => element != null)
+        .map((e) => e!)
+        .toList();
+    this.categories =
+        categories.where((element) => allCategories.contains(element)).toList();
+    appdata.settings.addListener(onSettingsChanged);
+  }
+
+  void addPage() {
+    showPopUpWidget(App.rootContext, setCategoryPagesWidget());
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    appdata.settings.removeListener(onSettingsChanged);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StateBuilder<SimpleController>(
-      tag: "category",
-      init: SimpleController(),
-      builder: (controller) {
-        var categories = List.from(appdata.settings["categories"]);
-        var allCategories = ComicSource.all()
-            .map((e) => e.categoryData?.key)
-            .where((element) => element != null)
-            .map((e) => e!)
-            .toList();
-        categories = categories
-            .where((element) => allCategories.contains(element))
-            .toList();
+    if (categories.isEmpty) {
+      var msg = "No Category Pages".tl;
+      msg += '\n';
+      if (ComicSource.isEmpty) {
+        msg += "Add a comic source in home page".tl;
+      } else {
+        msg += "Please check your settings".tl;
+      }
+      return NetworkError(
+        message: msg,
+        retry: () {
+          setState(() {});
+        },
+        withAppbar: false,
+      );
+    }
 
-        if(categories.isEmpty) {
-          var msg = "No Category Pages".tl;
-          msg += '\n';
-          if(ComicSource.isEmpty) {
-            msg += "Add a comic source in home page".tl;
-          } else {
-            msg += "Please check your settings".tl;
-          }
-          return NetworkError(
-            message: msg,
-            retry: () {
-              controller.update();
-            },
-            withAppbar: false,
-          );
-        }
-
-        return Material(
-          child: DefaultTabController(
-            length: categories.length,
-            key: Key(categories.toString()),
-            child: Column(
-              children: [
-                AppTabBar(
-                  key: PageStorageKey(categories.toString()),
-                  tabs: categories.map((e) {
-                    String title = e;
-                    try {
-                      title = getCategoryDataWithKey(e).title;
-                    } catch (e) {
-                      //
-                    }
-                    return Tab(
-                      text: title,
-                      key: Key(e),
-                    );
-                  }).toList(),
-                ).paddingTop(context.padding.top),
-                Expanded(
-                  child: TabBarView(
-                      children:
-                          categories.map((e) => _CategoryPage(e)).toList()),
-                )
-              ],
-            ),
-          ),
-        );
-      },
+    return Material(
+      child: DefaultTabController(
+        length: categories.length,
+        key: Key(categories.toString()),
+        child: Column(
+          children: [
+            AppTabBar(
+              key: PageStorageKey(categories.toString()),
+              tabs: categories.map((e) {
+                String title = e;
+                try {
+                  title = getCategoryDataWithKey(e).title;
+                } catch (e) {
+                  //
+                }
+                return Tab(
+                  text: title,
+                  key: Key(e),
+                );
+              }).toList(),
+              actionButton: TabActionButton(
+                icon: const Icon(Icons.add),
+                text: "Add".tl,
+                onPressed: addPage,
+              ),
+            ).paddingTop(context.padding.top),
+            Expanded(
+              child: TabBarView(
+                children: categories.map((e) => _CategoryPage(e)).toList(),
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 }

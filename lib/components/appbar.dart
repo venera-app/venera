@@ -269,11 +269,18 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class AppTabBar extends StatefulWidget {
-  const AppTabBar({super.key, this.controller, required this.tabs});
+  const AppTabBar({
+    super.key,
+    this.controller,
+    required this.tabs,
+    this.actionButton,
+  });
 
   final TabController? controller;
 
   final List<Tab> tabs;
+
+  final Widget? actionButton;
 
   @override
   State<AppTabBar> createState() => _AppTabBarState();
@@ -378,25 +385,27 @@ class _AppTabBarState extends State<AppTabBar> {
             painter: painter,
             child: _TabRow(
               callback: _tabLayoutCallback,
-              children: List.generate(widget.tabs.length, buildTab),
+              children: List.generate(widget.tabs.length, buildTab)
+                ..addIfNotNull(widget.actionButton?.padding(tabPadding)),
             ),
           ).paddingHorizontal(4),
         );
       },
     );
     return Container(
-        key: tabBarKey,
-        height: _kTabHeight,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: context.colorScheme.outlineVariant,
-              width: 0.6,
-            ),
+      key: tabBarKey,
+      height: _kTabHeight,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: context.colorScheme.outlineVariant,
+            width: 0.6,
           ),
         ),
-        child: widget.tabs.isEmpty ? const SizedBox() : child);
+      ),
+      child: widget.tabs.isEmpty ? const SizedBox() : child,
+    );
   }
 
   int? previousIndex;
@@ -632,7 +641,6 @@ class _TabViewBodyState extends State<TabViewBody> {
     return widget.children[_currentIndex];
   }
 }
-
 
 class SearchBarController {
   _SearchBarMixin? _state;
@@ -902,6 +910,45 @@ class _SearchBarState extends State<AppSearchBar> with _SearchBarMixin {
           if (widget.action != null) widget.action!,
           const SizedBox(width: 8),
         ],
+      ),
+    );
+  }
+}
+
+class TabActionButton extends StatelessWidget {
+  const TabActionButton({
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.onPressed,
+  });
+
+  final Icon icon;
+
+  final String text;
+
+  final void Function() onPressed;
+
+  static const _kTabHeight = 46.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        height: _kTabHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: IconTheme(
+          data: IconThemeData(size: 20, color: context.colorScheme.primary),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 8),
+              Text(text, style: ts.withColor(context.colorScheme.primary)),
+            ],
+          ),
+        ),
       ),
     );
   }

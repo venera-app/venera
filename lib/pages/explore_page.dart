@@ -6,6 +6,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/pages/search_result_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -54,6 +55,10 @@ class _ExplorePageState extends State<ExplorePage>
           .control!()['toTop']
           ?.call();
     }
+  }
+
+  void addPage() {
+    showPopUpWidget(App.rootContext, setExplorePagesWidget());
   }
 
   NaviPaneState? naviPane;
@@ -141,6 +146,11 @@ class _ExplorePageState extends State<ExplorePage>
         key: PageStorageKey(pages.toString()),
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,
+        actionButton: TabActionButton(
+          icon: const Icon(Icons.add),
+          text: "Add".tl,
+          onPressed: addPage,
+        ),
       ),
     ).paddingTop(context.padding.top);
 
