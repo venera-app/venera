@@ -624,10 +624,14 @@ class RichCommentContent extends StatefulWidget {
 class _RichCommentContentState extends State<RichCommentContent> {
   var textSpan = <InlineSpan>[];
   var images = <_CommentImage>[];
+  bool isRendered = false;
 
   @override
   void didChangeDependencies() {
-    render();
+    if (!isRendered) {
+      render();
+      isRendered = true;
+    }
     super.didChangeDependencies();
   }
 
