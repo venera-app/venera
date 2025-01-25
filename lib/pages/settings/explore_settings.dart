@@ -108,8 +108,9 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
     return PopUpWidgetScaffold(
       title: "Keyword blocking".tl,
       tailing: [
-        IconButton(
+        TextButton.icon(
           icon: const Icon(Icons.add),
+          label: Text("Add".tl),
           onPressed: add,
         ),
       ],
@@ -135,7 +136,6 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
   void add() {
     showDialog(
       context: App.rootContext,
-      barrierColor: Colors.black.toOpacity(0.1),
       builder: (context) {
         var controller = TextEditingController();
         String? error;
@@ -186,7 +186,7 @@ Widget setExplorePagesWidget() {
   var pages = <String, String>{};
   for (var c in ComicSource.all()) {
     for (var page in c.explorePages) {
-      pages[page.title] = page.title;
+      pages[page.title] = page.title.ts(c.key);
     }
   }
   return _MultiPagesFilter(

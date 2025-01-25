@@ -314,7 +314,10 @@
     "New Version": "新版本",
     "@c updates": "@c 项更新",
     "No updates": "无更新",
-    "Set comic source list url": "设置漫画源列表URL"
+    "Set comic source list url": "设置漫画源列表URL",
+    "Deselect All": "取消全选",
+    "Add keyword": "添加关键词",
+    "Keyword": "关键词"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -631,6 +634,9 @@
     "New Version": "新版本",
     "@c updates": "@c 項更新",
     "No updates": "無更新",
-    "Set comic source list url": "設置漫畫源列表URL"
+    "Set comic source list url": "設置漫畫源列表URL",
+    "Deselect All": "取消全選",
+    "Add keyword": "添加關鍵詞",
+    "Keyword": "關鍵詞"
   }
 }

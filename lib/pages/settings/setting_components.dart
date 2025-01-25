@@ -376,6 +376,14 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    Future.microtask(() {
+      updateSetting();
+    });
+  }
+
   var reorderWidgetKey = UniqueKey();
   var scrollController = ScrollController();
   final _key = GlobalKey();
@@ -404,7 +412,6 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
         setState(() {
           keys = List.from(reorderFunc(keys));
         });
-        updateSetting();
       },
       children: tiles,
       builder: (children) {
@@ -424,7 +431,11 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
       title: widget.title,
       tailing: [
         if (keys.length < widget.pages.length)
-          IconButton(onPressed: showAddDialog, icon: const Icon(Icons.add))
+          TextButton.icon(
+            label: Text("Add".tl),
+            icon: const Icon(Icons.add),
+            onPressed: showAddDialog,
+          )
       ],
       body: view,
     );
@@ -438,9 +449,8 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
             setState(() {
               keys.remove(key);
             });
-            updateSetting();
           },
-          icon: const Icon(Icons.delete)),
+          icon: const Icon(Icons.delete_outline)),
     );
 
     return ListTile(
@@ -463,30 +473,68 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
         canAdd[key] = value;
       }
     });
+    var selected = <String>[];
     showDialog(
       context: context,
       builder: (context) {
-        return ContentDialog(
-          title: "Add".tl,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: canAdd.entries
-                .map(
-                  (e) => ListTile(
-                    title: Text(e.value),
-                    key: Key(e.key),
-                    onTap: () {
-                      context.pop();
-                      setState(() {
-                        keys.add(e.key);
-                      });
-                      updateSetting();
-                    },
-                  ),
+        return StatefulBuilder(builder: (context, setState) {
+          return ContentDialog(
+            title: "Add".tl,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: canAdd.entries
+                  .map(
+                    (e) => CheckboxListTile(
+                      value: selected.contains(e.key),
+                      title: Text(e.value),
+                      key: Key(e.key),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value!) {
+                            selected.add(e.key);
+                          } else {
+                            selected.remove(e.key);
+                          }
+                        });
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+            actions: [
+              if (selected.length < canAdd.length)
+                TextButton(
+                  child: Text("Select All".tl),
+                  onPressed: () {
+                    setState(() {
+                      selected = canAdd.keys.toList();
+                    });
+                  },
                 )
-                .toList(),
-          ),
-        );
+              else
+                TextButton(
+                  child: Text("Deselect All".tl),
+                  onPressed: () {
+                    setState(() {
+                      selected.clear();
+                    });
+                  },
+                ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: selected.isNotEmpty
+                    ? () {
+                        this.setState(() {
+                          keys.addAll(selected);
+                        });
+                        Navigator.pop(context);
+                      }
+                    : null,
+                child: Text("Add".tl),
+              ),
+            ],
+          );
+        });
       },
     );
   }
