@@ -274,6 +274,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  flex_seed_scheme:
+    dependency: "direct main"
+    description:
+      name: flex_seed_scheme
+      sha256: d3ba3c5c92d2d79d45e94b4c6c71d01fac3c15017da1545880c53864da5dfeb0
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.5.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -368,6 +376,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+  flutter_localizations:
+    dependency: "direct main"
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_memory_info:
     dependency: "direct main"
     description:

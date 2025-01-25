@@ -72,6 +72,9 @@ dependencies:
     git:
       url: https://github.com/wgh136/flutter_7zip
       ref: b33344797f1d2469339e0e1b75f5f954f1da224c
+  flex_seed_scheme: ^3.5.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
