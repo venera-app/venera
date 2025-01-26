@@ -48,7 +48,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     var readerMode = context.reader.mode;
     if (value == 1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = 1;
-      _floatingButtonDragListener =  _DragListener(
+      _floatingButtonDragListener = _DragListener(
         onMove: (offset) {
           if (readerMode == ReaderMode.continuousTopToBottom) {
             fABValue.value -= offset.dy;
@@ -845,6 +845,7 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
   late int _batteryLevel = 100;
   Timer? _timer;
   bool _hasBattery = false;
+  BatteryState state = BatteryState.unknown;
 
   @override
   void initState() {
@@ -856,29 +857,23 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
   void _checkBatteryAvailability() async {
     try {
       _batteryLevel = await _battery.batteryLevel;
-      if (_batteryLevel != -1) {
+      state = await _battery.batteryState;
+      if (_batteryLevel > 0 && state != BatteryState.unknown) {
         setState(() {
           _hasBattery = true;
-          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-            _battery.batteryLevel.then((level) => {
-                  if (_batteryLevel != level)
-                    {
-                      setState(() {
-                        _batteryLevel = level;
-                      })
-                    }
-                });
+        });
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          _battery.batteryLevel.then((level) {
+            if (_batteryLevel != level) {
+              setState(() {
+                _batteryLevel = level;
+              });
+            }
           });
         });
-      } else {
-        setState(() {
-          _hasBattery = false;
-        });
       }
-    } catch (e) {
-      setState(() {
-        _hasBattery = false;
-      });
+    } catch (_) {
+      // ignore
     }
   }
 
@@ -900,7 +895,9 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
     IconData batteryIcon;
     Color batteryColor = context.colorScheme.onSurface;
 
-    if (batteryLevel >= 96) {
+    if (state == BatteryState.charging) {
+      batteryIcon = Icons.battery_charging_full;
+    } else if (batteryLevel >= 96) {
       batteryIcon = Icons.battery_full_sharp;
     } else if (batteryLevel >= 84) {
       batteryIcon = Icons.battery_6_bar_sharp;
