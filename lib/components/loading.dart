@@ -6,6 +6,7 @@ class NetworkError extends StatelessWidget {
     required this.message,
     this.retry,
     this.withAppbar = true,
+    this.buttonText,
   });
 
   final String message;
@@ -13,6 +14,8 @@ class NetworkError extends StatelessWidget {
   final void Function()? retry;
 
   final bool withAppbar;
+
+  final String? buttonText;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +63,7 @@ class NetworkError extends StatelessWidget {
             else
               FilledButton(
                 onPressed: retry,
-                child: Text('Retry'.tl),
+                child: Text(buttonText ?? 'Retry'.tl),
               ),
         ],
       ),

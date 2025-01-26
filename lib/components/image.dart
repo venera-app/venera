@@ -277,35 +277,38 @@ class _AnimatedImageState extends State<AnimatedImage>
 
     if (_imageInfo != null) {
       if (widget.part != null) {
-        return CustomPaint(
+        result =  CustomPaint(
+          isComplex: true,
           painter: ImagePainter(
             image: _imageInfo!.image,
             part: widget.part!,
+            fit: widget.fit ?? BoxFit.cover,
           ),
           child: SizedBox(
             width: widget.width,
             height: widget.height,
           ),
         );
+      } else {
+        result = RawImage(
+          image: _imageInfo?.image,
+          width: widget.width,
+          height: widget.height,
+          debugImageLabel: _imageInfo?.debugLabel,
+          scale: _imageInfo?.scale ?? 1.0,
+          color: widget.color,
+          opacity: widget.opacity,
+          colorBlendMode: widget.colorBlendMode,
+          fit: BoxFit.cover,
+          alignment: widget.alignment,
+          repeat: widget.repeat,
+          centerSlice: widget.centerSlice,
+          matchTextDirection: widget.matchTextDirection,
+          invertColors: _invertColors,
+          isAntiAlias: widget.isAntiAlias,
+          filterQuality: widget.filterQuality,
+        );
       }
-      result = RawImage(
-        image: _imageInfo?.image,
-        width: widget.width,
-        height: widget.height,
-        debugImageLabel: _imageInfo?.debugLabel,
-        scale: _imageInfo?.scale ?? 1.0,
-        color: widget.color,
-        opacity: widget.opacity,
-        colorBlendMode: widget.colorBlendMode,
-        fit: BoxFit.cover,
-        alignment: widget.alignment,
-        repeat: widget.repeat,
-        centerSlice: widget.centerSlice,
-        matchTextDirection: widget.matchTextDirection,
-        invertColors: _invertColors,
-        isAntiAlias: widget.isAntiAlias,
-        filterQuality: widget.filterQuality,
-      );
     } else if (_lastException != null) {
       result = const Center(
         child: Icon(Icons.error),
@@ -362,10 +365,13 @@ class ImagePainter extends CustomPainter {
 
   final ImagePart part;
 
+  final BoxFit fit;
+
   /// Render a part of the image.
   const ImagePainter({
     required this.image,
     this.part = const ImagePart(),
+    this.fit = BoxFit.cover,
   });
 
   @override
@@ -377,7 +383,8 @@ class ImagePainter extends CustomPainter {
         part.y2 ?? image.height.toDouble(),
       ),
     );
-    final Rect dst = Offset.zero & size;
+    var fitted = applyBoxFit(fit, Size(src.width, src.height), size).destination;
+    var dst = Alignment.center.inscribe(fitted, Offset.zero & size);
     canvas.drawImageRect(image, src, dst, Paint());
   }
 

@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/auth_page.dart';
 import 'package:venera/pages/main_page.dart';
-import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/io.dart';
 import 'package:window_manager/window_manager.dart';
 import 'components/components.dart';
@@ -18,21 +17,11 @@ import 'foundation/appdata.dart';
 import 'init.dart';
 
 void main(List<String> args) {
-  if (runWebViewTitleBarWidget(args)) {
-    return;
-  }
+  if (runWebViewTitleBarWidget(args)) return;
   overrideIO(() {
     runZonedGuarded(() async {
-      await Rhttp.init();
       WidgetsFlutterBinding.ensureInitialized();
       await init();
-      if (App.isAndroid) {
-        handleLinks();
-      }
-      FlutterError.onError = (details) {
-        Log.error(
-            "Unhandled Exception", "${details.exception}\n${details.stack}");
-      };
       runApp(const MyApp());
       if (App.isDesktop) {
         await windowManager.ensureInitialized();
@@ -55,7 +44,7 @@ void main(List<String> args) {
         });
       }
     }, (error, stack) {
-      Log.error("Unhandled Exception", "$error\n$stack");
+      Log.error("Unhandled Exception", error, stack);
     });
   });
 }
@@ -156,50 +145,44 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       home = const MainPage();
     }
     return DynamicColorBuilder(builder: (light, dark) {
+      Color? primary, secondary, tertiary;
       if (appdata.settings['color'] != 'system' ||
           light == null ||
           dark == null) {
-        var color = translateColorSetting();
-        light = ColorScheme.fromSeed(
-          seedColor: color,
-          surface: Colors.white,
-        );
-        dark = ColorScheme.fromSeed(
-          seedColor: color,
-          brightness: Brightness.dark,
-          surface: Colors.black,
-        );
+        primary = translateColorSetting();
       } else {
-        light = ColorScheme.fromSeed(
-          seedColor: light.primary,
-          surface: Colors.white,
-        );
-        dark = ColorScheme.fromSeed(
-          seedColor: dark.primary,
-          brightness: Brightness.dark,
-          surface: Colors.black,
-        );
+        primary = light.primary;
+        secondary = light.secondary;
+        tertiary = light.tertiary;
       }
       return MaterialApp(
         home: home,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: light,
-          fontFamily: App.isWindows ? "Microsoft YaHei" : null,
+          colorScheme: SeedColorScheme.fromSeeds(
+            primaryKey: primary,
+            secondaryKey: secondary,
+            tertiaryKey: tertiary,
+            tones: FlexTones.vividBackground(Brightness.light),
+          ),
         ),
         navigatorKey: App.rootNavigatorKey,
         darkTheme: ThemeData(
-          colorScheme: dark,
-          fontFamily: App.isWindows ? "Microsoft YaHei" : null,
+          colorScheme: SeedColorScheme.fromSeeds(
+            primaryKey: primary,
+            secondaryKey: secondary,
+            tertiaryKey: tertiary,
+            brightness: Brightness.dark,
+            tones: FlexTones.vividBackground(Brightness.dark),
+          ),
         ),
         themeMode: switch (appdata.settings['theme_mode']) {
           'light' => ThemeMode.light,
           'dark' => ThemeMode.dark,
           _ => ThemeMode.system
         },
-        localizationsDelegates: const [
+        localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
         locale: () {
@@ -215,9 +198,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           };
         }(),
         supportedLocales: const [
-          Locale('en'),
           Locale('zh', 'CN'),
           Locale('zh', 'TW'),
+          Locale('en'),
         ],
         builder: (context, widget) {
           ErrorWidget.builder = (details) {

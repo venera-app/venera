@@ -73,6 +73,7 @@ class _CommentsPageState extends State<CommentsPage> {
       resizeToAvoidBottomInset: false,
       appBar: Appbar(
         title: Text("Comments".tl),
+        style: AppbarStyle.shadow,
       ),
       body: buildBody(context),
     );
@@ -529,6 +530,7 @@ class _Tag {
       'u' => style.underline,
       's' => style.lineThrough,
       'a' => style.withColor(context.colorScheme.primary),
+      'strong' => style.bold,
       'span' => () {
           if (attributes.containsKey('style')) {
             var s = attributes['style']!;
@@ -622,10 +624,14 @@ class RichCommentContent extends StatefulWidget {
 class _RichCommentContentState extends State<RichCommentContent> {
   var textSpan = <InlineSpan>[];
   var images = <_CommentImage>[];
+  bool isRendered = false;
 
   @override
   void didChangeDependencies() {
-    render();
+    if (!isRendered) {
+      render();
+      isRendered = true;
+    }
     super.didChangeDependencies();
   }
 
@@ -670,7 +676,7 @@ class _RichCommentContentState extends State<RichCommentContent> {
                 attributes[attrSplits[0]] = attrSplits[1].replaceAll('"', '');
               }
             }
-            const acceptedTags = ['img', 'a', 'b', 'i', 'u', 's', 'br', 'span'];
+            const acceptedTags = ['img', 'a', 'b', 'i', 'u', 's', 'br', 'span', 'strong'];
             if (acceptedTags.contains(tagName)) {
               writeBuffer();
               if (tagName == 'img') {

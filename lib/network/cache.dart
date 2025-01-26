@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:dio/dio.dart';
+import 'package:venera/network/app_dio.dart';
 
 class NetworkCache {
   final Uri uri;
@@ -117,7 +117,7 @@ class NetworkCacheManager implements Interceptor {
       var o = options.copyWith(
         method: "HEAD",
       );
-      var dio = Dio();
+      var dio = AppDio();
       var response = await dio.fetch(o);
       if (response.statusCode == 200 &&
           compareHeaders(cache.responseHeaders, response.headers.map)) {

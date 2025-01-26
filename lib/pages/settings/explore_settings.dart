@@ -30,35 +30,11 @@ class _ExploreSettingsState extends State<ExploreSettings> {
         ).toSliver(),
         _PopupWindowSetting(
           title: "Explore Pages".tl,
-          builder: () {
-            var pages = <String, String>{};
-            for (var c in ComicSource.all()) {
-              for (var page in c.explorePages) {
-                pages[page.title] = page.title;
-              }
-            }
-            return _MultiPagesFilter(
-              title: "Explore Pages".tl,
-              settingsIndex: "explore_pages",
-              pages: pages,
-            );
-          },
+          builder: setExplorePagesWidget,
         ).toSliver(),
         _PopupWindowSetting(
           title: "Category Pages".tl,
-          builder: () {
-            var pages = <String, String>{};
-            for (var c in ComicSource.all()) {
-              if (c.categoryData != null) {
-                pages[c.categoryData!.key] = c.categoryData!.title;
-              }
-            }
-            return _MultiPagesFilter(
-              title: "Category Pages".tl,
-              settingsIndex: "categories",
-              pages: pages,
-            );
-          },
+          builder: setCategoryPagesWidget,
         ).toSliver(),
         _PopupWindowSetting(
           title: "Network Favorite Pages".tl,
@@ -132,8 +108,9 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
     return PopUpWidgetScaffold(
       title: "Keyword blocking".tl,
       tailing: [
-        IconButton(
+        TextButton.icon(
           icon: const Icon(Icons.add),
+          label: Text("Add".tl),
           onPressed: add,
         ),
       ],
@@ -159,7 +136,6 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
   void add() {
     showDialog(
       context: App.rootContext,
-      barrierColor: Colors.black.toOpacity(0.1),
       builder: (context) {
         var controller = TextEditingController();
         String? error;
@@ -204,4 +180,32 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
       },
     );
   }
+}
+
+Widget setExplorePagesWidget() {
+  var pages = <String, String>{};
+  for (var c in ComicSource.all()) {
+    for (var page in c.explorePages) {
+      pages[page.title] = page.title.ts(c.key);
+    }
+  }
+  return _MultiPagesFilter(
+    title: "Explore Pages".tl,
+    settingsIndex: "explore_pages",
+    pages: pages,
+  );
+}
+
+Widget setCategoryPagesWidget() {
+  var pages = <String, String>{};
+  for (var c in ComicSource.all()) {
+    if (c.categoryData != null) {
+      pages[c.categoryData!.key] = c.categoryData!.title;
+    }
+  }
+  return _MultiPagesFilter(
+    title: "Category Pages".tl,
+    settingsIndex: "categories",
+    pages: pages,
+  );
 }

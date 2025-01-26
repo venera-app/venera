@@ -1283,7 +1283,9 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
                       y2 = double.parse(r.split('-')[1]);
                     }
                   }
-                } finally {}
+                } catch (_) {
+                  // ignore
+                }
                 part = ImagePart(x1: x1, y1: y1, x2: x2, y2: y2);
               }
               return Padding(
@@ -1297,30 +1299,29 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
                       child: InkWell(
                         onTap: () => state.read(null, index + 1),
                         borderRadius:
-                            const BorderRadius.all(Radius.circular(16)),
+                            const BorderRadius.all(Radius.circular(8)),
                         child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(16)),
+                          foregroundDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Theme.of(context).colorScheme.outline,
                             ),
                           ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           width: double.infinity,
                           height: double.infinity,
-                          child: ClipRRect(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(16)),
-                            child: AnimatedImage(
-                              image: CachedImageProvider(
-                                url,
-                                sourceKey: state.widget.sourceKey,
-                              ),
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              part: part,
+                          clipBehavior: Clip.antiAlias,
+                          child: AnimatedImage(
+                            image: CachedImageProvider(
+                              url,
+                              sourceKey: state.widget.sourceKey,
                             ),
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            part: part,
                           ),
                         ),
                       ),
@@ -1336,7 +1337,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
           ),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
-            childAspectRatio: 0.65,
+            childAspectRatio: 0.68,
           ),
         ),
         if (error != null)
@@ -2000,6 +2001,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
     }
 
     return Shimmer(
+      color: context.isDarkMode ? Colors.grey.shade700 : Colors.white,
       child: Column(
         children: [
           Appbar(title: Text(""), backgroundColor: context.colorScheme.surface),

@@ -391,7 +391,7 @@ class _ImageFavoritesDialogState extends State<_ImageFavoritesDialog> {
   Widget build(BuildContext context) {
     Widget tabBar = Material(
       borderRadius: BorderRadius.circular(8),
-      child: FilledTabBar(
+      child: AppTabBar(
         key: PageStorageKey(optionTypes),
         tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
       ),

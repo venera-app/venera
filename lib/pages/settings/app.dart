@@ -107,7 +107,7 @@ class _AppSettingsState extends State<AppSettings> {
           actionTitle: 'Export'.tl,
         ).toSliver(),
         _CallbackSetting(
-          title: "Import App Data (Please restart after success)".tl,
+          title: "Import App Data".tl,
           callback: () async {
             var controller = showLoadingDialog(context);
             var file = await selectFile(ext: ['venera', 'picadata']);
@@ -126,6 +126,7 @@ class _AppSettingsState extends State<AppSettings> {
                 context.showMessage(message: "Failed to import data".tl);
               } finally {
                 cacheFile.deleteIgnoreError();
+                App.forceRebuild();
               }
             }
             controller.close();

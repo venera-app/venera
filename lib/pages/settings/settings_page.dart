@@ -170,7 +170,39 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
               ),
             ),
           ),
-          Expanded(child: buildRight())
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, animation) {
+                return LayoutBuilder(
+                  builder: (context, constrains) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, _) {
+                        var width = constrains.maxWidth;
+                        var value = animation.isForwardOrCompleted
+                            ? 1 - animation.value
+                            : 1;
+                        var left = width * value;
+                        return Stack(
+                          children: [
+                            Positioned(
+                              top: 0,
+                              bottom: 0,
+                              left: left,
+                              width: width,
+                              child: child,
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+              child: buildRight(),
+            ),
+          )
         ],
       );
     } else {
@@ -179,14 +211,13 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
           Positioned.fill(child: buildLeft()),
           Positioned(
             left: offset,
-            right: 0,
+            width: MediaQuery.of(context).size.width,
             top: 0,
             bottom: 0,
             child: Listener(
               onPointerDown: handlePointerDown,
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                reverseDuration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 200),
                 switchInCurve: Curves.fastOutSlowIn,
                 switchOutCurve: Curves.fastOutSlowIn,
                 transitionBuilder: (child, animation) {
@@ -198,11 +229,10 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
                     child: child,
                   );
                 },
-                child: currentPage == -1
-                    ? const SizedBox(
-                        key: Key("1"),
-                      )
-                    : buildRight(),
+                child: Material(
+                  key: ValueKey(currentPage),
+                  child: buildRight(),
+                ),
               ),
             ),
           )
@@ -307,7 +337,7 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
   }
 
   Widget buildRight() {
-    final Widget body = switch (currentPage) {
+    return switch (currentPage) {
       -1 => const SizedBox(),
       0 => const ExploreSettings(),
       1 => const ReaderSettings(),
@@ -318,10 +348,6 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
       6 => const AboutSettings(),
       _ => throw UnimplementedError()
     };
-
-    return Material(
-      child: body,
-    );
   }
 
   var canPop = ValueNotifier(true);

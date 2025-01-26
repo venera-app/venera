@@ -19,8 +19,7 @@ class ComicSourcePage extends StatefulWidget {
       return 0;
     }
     var dio = AppDio();
-    var res = await dio.get<String>(
-        "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json");
+    var res = await dio.get<String>(appdata.settings['comicSourceListUrl']);
     if (res.statusCode != 200) {
       return -1;
     }
@@ -298,10 +297,10 @@ class _BodyState extends State<_Body> {
         //
       }
     }
-    context.to(() => _EditFilePage(source.filePath)).then((value) async {
-      await ComicSource.reload();
-      setState(() {});
-    });
+    context.to(() => _EditFilePage(source.filePath, () async {
+          await ComicSource.reload();
+          setState(() {});
+        }));
   }
 
   static Future<void> update(ComicSource source) async {
@@ -419,7 +418,8 @@ class _BodyState extends State<_Body> {
   }
 
   void help() {
-    launchUrlString("https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
+    launchUrlString(
+        "https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
   }
 
   Future<void> handleAddSource(String url) async {
@@ -521,18 +521,29 @@ class _ComicSourceListState extends State<_ComicSourceList> {
           var key = json![index]["key"];
           var action = currentKey.contains(key)
               ? const Icon(Icons.check, size: 20).paddingRight(8)
-              : Tooltip(
-                  message: "Add",
-                  child: Button.icon(
-                    color: context.colorScheme.primary,
-                    icon: const Icon(Icons.add),
-                    onPressed: () async {
-                      await widget.onAdd(
-                          "https://raw.githubusercontent.com/venera-app/venera-configs/master/${json![index]["fileName"]}");
-                      setState(() {});
-                    },
-                  ),
-                );
+              : Button.filled(
+                  child: Text("Add".tl),
+                  onPressed: () async {
+                    var fileName = json![index]["fileName"];
+                    var url = json![index]["url"];
+                    if (url == null || !(url.toString()).isURL) {
+                      var listUrl =
+                          appdata.settings['comicSourceListUrl'] as String;
+                      if (listUrl
+                          .replaceFirst("https://", "")
+                          .replaceFirst("http://", "")
+                          .contains("/")) {
+                        url =
+                            listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
+                                fileName;
+                      } else {
+                        url = '$listUrl/$fileName';
+                      }
+                    }
+                    await widget.onAdd(url);
+                    setState(() {});
+                  },
+                ).fixHeight(32);
 
           return ListTile(
             title: Text(json![index]["name"]),
@@ -617,9 +628,11 @@ void _addAllPagesWithComicSource(ComicSource source) {
 }
 
 class _EditFilePage extends StatefulWidget {
-  const _EditFilePage(this.path);
+  const _EditFilePage(this.path, this.onExit);
 
   final String path;
+
+  final void Function() onExit;
 
   @override
   State<_EditFilePage> createState() => __EditFilePageState();
@@ -637,6 +650,7 @@ class __EditFilePageState extends State<_EditFilePage> {
   @override
   void dispose() {
     File(widget.path).writeAsStringSync(current);
+    widget.onExit();
     super.dispose();
   }
 

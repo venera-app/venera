@@ -55,7 +55,7 @@ class _CodeEditorState extends State<CodeEditor> {
 
   Widget buildLineNumbers() {
     return SizedBox(
-      width: 32,
+      width: 36,
       child: Column(
         children: [
           for (var i = 1; i <= lineCount; i++)

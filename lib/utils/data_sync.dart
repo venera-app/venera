@@ -55,7 +55,7 @@ class DataSync with ChangeNotifier {
   }
 
   Future<Res<bool>> uploadData() async {
-    if(isDownloading) return const Res(true);
+    if (isDownloading) return const Res(true);
     if (haveWaitingTask) return const Res(true);
     while (isUploading) {
       haveWaitingTask = true;
@@ -109,7 +109,7 @@ class DataSync with ChangeNotifier {
         filename += '.venera';
         var files = await client.readDir('/');
         files = files.where((e) => e.name!.endsWith('.venera')).toList();
-        var old = files.firstWhereOrNull( (e) => e.name!.startsWith("$time-"));
+        var old = files.firstWhereOrNull((e) => e.name!.startsWith("$time-"));
         if (old != null) {
           await client.remove(old.name!);
         }
@@ -176,8 +176,11 @@ class DataSync with ChangeNotifier {
         var files = await client.readDir('/');
         files.sort((a, b) => b.name!.compareTo(a.name!));
         var file = files.firstWhereOrNull((e) => e.name!.endsWith('.venera'));
+        if (file == null) {
+          throw 'No data file found';
+        }
         var version =
-            file!.name!.split('-').elementAtOrNull(1)?.split('.').first;
+            file.name!.split('-').elementAtOrNull(1)?.split('.').first;
         if (version != null && int.tryParse(version) != null) {
           var currentVersion = appdata.settings['dataVersion'];
           if (currentVersion != null && int.parse(version) <= currentVersion) {
