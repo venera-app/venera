@@ -229,7 +229,7 @@
     "Clear History": "清除历史",
     "Are you sure you want to clear your history?": "确定要清除您的历史记录吗？",
     "No Explore Pages": "没有探索页面",
-    "Add a comic source in home page": "在主页添加一个漫画源",
+    "Please add some sources": "请添加一些源",
     "Please check your settings": "请检查您的设置",
     "No Category Pages": "没有分类页面",
     "Chapter @ep": "第 @ep 章",
@@ -317,7 +317,8 @@
     "Set comic source list url": "设置漫画源列表URL",
     "Deselect All": "取消全选",
     "Add keyword": "添加关键词",
-    "Keyword": "关键词"
+    "Keyword": "关键词",
+    "Manage": "管理"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -549,7 +550,7 @@
     "Clear History": "清除歷史",
     "Are you sure you want to clear your history?": "確定要清除您的歷史記錄嗎？",
     "No Explore Pages": "沒有探索頁面",
-    "Add a comic source in home page": "在主頁添加一個漫畫源",
+    "Please add some sources": "請添加一些源",
     "Please check your settings": "請檢查您的設定",
     "No Category Pages": "沒有分類頁面",
     "Chapter @ep": "第 @ep 章",
@@ -637,6 +638,7 @@
     "Set comic source list url": "設置漫畫源列表URL",
     "Deselect All": "取消全選",
     "Add keyword": "添加關鍵詞",
-    "Keyword": "關鍵詞"
+    "Keyword": "關鍵詞",
+    "Manage": "管理"
   }
 }

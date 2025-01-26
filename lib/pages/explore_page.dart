@@ -5,6 +5,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/foundation/state_controller.dart';
+import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/ext.dart';
@@ -122,15 +123,21 @@ class _ExplorePageState extends State<ExplorePage>
   Widget buildEmpty() {
     var msg = "No Explore Pages".tl;
     msg += '\n';
+    VoidCallback onTap;
     if (ComicSource.isEmpty) {
-      msg += "Add a comic source in home page".tl;
+      msg += "Please add some sources".tl;
+      onTap = () {
+        context.to(() => ComicSourcePage());
+      };
     } else {
       msg += "Please check your settings".tl;
+      onTap = addPage;
     }
     return NetworkError(
       message: msg,
-      retry: onSettingsChanged,
+      retry: onTap,
       withAppbar: false,
+      buttonText: "Manage".tl,
     );
   }
 

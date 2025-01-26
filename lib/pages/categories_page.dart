@@ -10,6 +10,7 @@ import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'category_comics_page.dart';
+import 'comic_source_page.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -63,23 +64,31 @@ class _CategoriesPageState extends State<CategoriesPage> {
     appdata.settings.removeListener(onSettingsChanged);
   }
 
+  Widget buildEmpty() {
+    var msg = "No Category Pages".tl;
+    msg += '\n';
+    VoidCallback onTap;
+    if (ComicSource.isEmpty) {
+      msg += "Please add some sources".tl;
+      onTap = () {
+        context.to(() => ComicSourcePage());
+      };
+    } else {
+      msg += "Please check your settings".tl;
+      onTap = addPage;
+    }
+    return NetworkError(
+      message: msg,
+      retry: onTap,
+      withAppbar: false,
+      buttonText: "Manage".tl,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (categories.isEmpty) {
-      var msg = "No Category Pages".tl;
-      msg += '\n';
-      if (ComicSource.isEmpty) {
-        msg += "Add a comic source in home page".tl;
-      } else {
-        msg += "Please check your settings".tl;
-      }
-      return NetworkError(
-        message: msg,
-        retry: () {
-          setState(() {});
-        },
-        withAppbar: false,
-      );
+      return buildEmpty();
     }
 
     return Material(
