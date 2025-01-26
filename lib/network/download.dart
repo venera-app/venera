@@ -487,6 +487,7 @@ Future<Res<T>> runWithRetry<T>(Future<T> Function() task,
       if (i == retry - 1) {
         return Res.error(e.toString());
       }
+      await Future.delayed(Duration(seconds: i + 1));
     }
   }
   throw UnimplementedError();
