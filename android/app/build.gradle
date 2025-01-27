@@ -83,31 +83,31 @@ android {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
             signingConfig signingConfigs.release
-            applicationVariants.all { variant ->
-                variant.outputs.all { output ->
-                    def abi = output.getFilter(com.android.build.OutputFile.ABI)
-                    if (abi != null) {
-                        outputFileName = "venera-${variant.versionName}-${abi}.apk"
-                        def abiVersionCode = project.ext.abiCodes.get(abi)
-                        if (abiVersionCode != null) {
-                            versionCodeOverride = variant.versionCode * 10 + abiVersionCode
-                        }
-                    } else {
-                        outputFileName = "venera-${variant.versionName}.apk"
-                        versionCodeOverride = variant.versionCode * 10
-                    }
-                }
-            }
         }
         debug {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
             signingConfig signingConfigs.debug
-            applicationVariants.all { variant ->
-                variant.outputs.all { output ->
-                    versionCodeOverride = variant.versionCode * 10 + 4
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def abi = output.getFilter(com.android.build.OutputFile.ABI)
+            if (variant.buildType.name == "release") {
+                if (abi != null) {
+                    outputFileName = "venera-${variant.versionName}-${abi}.apk"
+                    def abiVersionCode = project.ext.abiCodes.get(abi)
+                    if (abiVersionCode != null) {
+                        versionCodeOverride = variant.versionCode * 10 + abiVersionCode
+                    }
+                } else {
+                    outputFileName = "venera-${variant.versionName}.apk"
+                    versionCodeOverride = variant.versionCode * 10
                 }
+            } else if (variant.buildType.name == "debug") {
+                versionCodeOverride = variant.versionCode * 10 + 4
             }
         }
     }
