@@ -1,5 +1,4 @@
 # venera
-
 [![flutter](https://img.shields.io/badge/flutter-3.27.1-blue)](https://flutter.dev/)
 [![License](https://img.shields.io/github/license/venera-app/venera)](https://github.com/venera-app/venera/blob/master/LICENSE)
 [![Download](https://img.shields.io/github/v/release/venera-app/venera)](https://github.com/venera-app/venera/releases)
@@ -13,7 +12,6 @@ A comic reader that support reading local and network comics.
      height="75">](https://f-droid.org/packages/com.github.wgh136.venera/)
 
 ## Features
-
 - Read local comics
 - Use javascript to create comic sources
 - Read comics from network sources
@@ -23,14 +21,12 @@ A comic reader that support reading local and network comics.
 - Login to comment, rate, and other operations if the source supports
 
 ## Build from source
-
 1. Clone the repository
 2. Install flutter, see [flutter.dev](https://flutter.dev/docs/get-started/install)
 3. Install rust, see [rustup.rs](https://rustup.rs/)
 4. Build for your platform: e.g. `flutter build apk`
 
 ## Create a new comic source
-
 See [Comic Source](doc/comic_source.md)
 
 ## Thanks
