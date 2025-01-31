@@ -57,7 +57,9 @@ class NetworkError extends StatelessWidget {
             if (cfe != null)
               FilledButton(
                 onPressed: () => passCloudflare(
-                    CloudflareException.fromString(message)!, retry!),
+                  CloudflareException.fromString(message)!,
+                  retry!,
+                ),
                 child: Text('Verify'.tl),
               )
             else
@@ -130,7 +132,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
       if (res.success) {
         return res;
       } else {
-        if(!mounted) return res;
+        if (!mounted) return res;
         if (retry >= 3) {
           return res;
         }
@@ -188,7 +190,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
     isLoading = true;
     Future.microtask(() {
       loadDataWithRetry().then((value) async {
-        if(!mounted) return;
+        if (!mounted) return;
         if (value.success) {
           data = value.data;
           await onDataLoaded();
@@ -321,21 +323,11 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   }
 
   Widget buildError(BuildContext context, String error) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(error, maxLines: 3),
-          const SizedBox(height: 12),
-          Button.outlined(
-            onPressed: () {
-              reset();
-            },
-            child: const Text("Retry"),
-          )
-        ],
-      ),
-    ).paddingHorizontal(16);
+    return NetworkError(
+      withAppbar: false,
+      message: error,
+      retry: reset,
+    );
   }
 
   @override
