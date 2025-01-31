@@ -228,6 +228,8 @@ class _GalleryModeState extends State<_GalleryMode>
         ? Axis.vertical
         : Axis.horizontal;
 
+    bool reverse = reader.mode == ReaderMode.galleryRightToLeft;
+
     List<Widget> imageWidgets = images.map((imageKey) {
       ImageProvider imageProvider =
           _createImageProviderFromKey(imageKey, context);
@@ -238,6 +240,10 @@ class _GalleryModeState extends State<_GalleryMode>
         ),
       );
     }).toList();
+
+    if (reverse) {
+      imageWidgets = imageWidgets.reversed.toList();
+    }
 
     return axis == Axis.vertical
         ? Column(children: imageWidgets)
