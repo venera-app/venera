@@ -46,6 +46,7 @@ class _DownloadingPageState extends State<DownloadingPage> {
           i--;
 
           return _DownloadTaskTile(
+            key: ValueKey(LocalManager().downloadingTasks[i]),
             task: LocalManager().downloadingTasks[i],
           );
         },
@@ -120,7 +121,7 @@ class _DownloadingPageState extends State<DownloadingPage> {
 }
 
 class _DownloadTaskTile extends StatefulWidget {
-  const _DownloadTaskTile({required this.task});
+  const _DownloadTaskTile({required this.task, super.key});
 
   final DownloadTask task;
 
@@ -129,20 +130,33 @@ class _DownloadTaskTile extends StatefulWidget {
 }
 
 class _DownloadTaskTileState extends State<_DownloadTaskTile> {
+  late DownloadTask task;
+
   @override
   void initState() {
-    widget.task.addListener(update);
+    task = widget.task;
+    task.addListener(update);
     super.initState();
   }
 
   @override
   void dispose() {
-    widget.task.removeListener(update);
+    task.removeListener(update);
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant _DownloadTaskTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.task != widget.task) {
+      task.removeListener(update);
+      task = widget.task;
+      task.addListener(update);
+    }
+  }
+
   void update() {
-    context.findAncestorStateOfType<_DownloadingPageState>()?.update();
+    setState(() {});
   }
 
   @override
