@@ -111,9 +111,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   late _ReaderState reader;
 
-  int get totalPages => ((reader.images!.length + reader.imagesPerPage - 1) /
-          reader.imagesPerPage)
-      .ceil();
+  int get totalPages => (reader.images!.length / reader.imagesPerPage).ceil();
 
   @override
   void initState() {
