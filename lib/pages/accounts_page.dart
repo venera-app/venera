@@ -9,6 +9,7 @@ import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/pages/webview.dart';
 import 'package:venera/utils/translations.dart';
+import 'dart:io' as io;
 
 class AccountsPageLogic extends StateController {
   final _reLogin = <String, bool>{};
@@ -236,7 +237,13 @@ class _LoginPageState extends State<_LoginPage> {
                 const SizedBox(height: 24),
                 if (widget.config.loginWebsite != null)
                   TextButton(
-                    onPressed: loginWithWebview,
+                    onPressed: () {
+                      if (App.isWindows || App.isLinux) {
+                        loginWithWebview2();
+                      } else {
+                        loginWithWebview();
+                      }
+                    },
                     child: Text("Login with webview".tl),
                   ),
                 const SizedBox(height: 8),
@@ -313,8 +320,8 @@ class _LoginPageState extends State<_LoginPage> {
     bool success = false;
 
     void validate(InAppWebViewController c) async {
-      if (widget.config.checkLoginStatus != null
-          && widget.config.checkLoginStatus!(url, title)) {
+      if (widget.config.checkLoginStatus != null &&
+          widget.config.checkLoginStatus!(url, title)) {
         var cookies = (await c.getCookies(url)) ?? [];
         SingleInstanceCookieJar.instance?.saveFromResponse(
           Uri.parse(url),
@@ -345,5 +352,58 @@ class _LoginPageState extends State<_LoginPage> {
       widget.source.saveData();
       context.pop();
     }
+  }
+
+  // for windows and linux
+  void loginWithWebview2() async {
+    if (!await DesktopWebview.isAvailable()) {
+      context.showMessage(message: "Webview is not available".tl);
+    }
+
+    var url = widget.config.loginWebsite!;
+    var title = '';
+    bool success = false;
+
+    void onClose() {
+      if (success) {
+        widget.source.data['account'] = 'ok';
+        widget.source.saveData();
+        context.pop();
+      }
+    }
+
+    void validate(DesktopWebview webview) async {
+      if (widget.config.checkLoginStatus != null &&
+          widget.config.checkLoginStatus!(url, title)) {
+        var cookiesMap = await webview.getCookies(url);
+        var cookies = <io.Cookie>[];
+        cookiesMap.forEach((key, value) {
+          cookies.add(io.Cookie(key, value));
+        });
+        SingleInstanceCookieJar.instance?.saveFromResponse(
+          Uri.parse(url),
+          cookies,
+        );
+        success = true;
+        widget.config.onLoginWithWebviewSuccess?.call();
+        webview.close();
+        onClose();
+      }
+    }
+
+    var webview = DesktopWebview(
+      initialUrl: widget.config.loginWebsite!,
+      onTitleChange: (t, webview) {
+        title = t;
+        validate(webview);
+      },
+      onNavigation: (u, webview) {
+        url = u;
+        validate(webview);
+      },
+      onClose: onClose,
+    );
+
+    webview.open();
   }
 }
