@@ -303,7 +303,10 @@ class DesktopWebview {
       proxy: AppDio.proxy,
     ));
     _webview!.addOnWebMessageReceivedCallback(onMessage);
-    _webview!.setOnNavigation((s) => onNavigation?.call(s, this));
+    _webview!.setOnNavigation((s) {
+      s = s.substring(1, s.length - 1);
+      return onNavigation?.call(s, this);
+    });
     _webview!.launch(initialUrl, triggerOnUrlRequestEvent: false);
     _runTimer();
     _webview!.onClose.then((value) {

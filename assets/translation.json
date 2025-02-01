@@ -318,7 +318,10 @@
     "Deselect All": "取消全选",
     "Add keyword": "添加关键词",
     "Keyword": "关键词",
-    "Manage": "管理"
+    "Manage": "管理",
+    "Verify": "验证",
+    "Cloudflare verification required": "需要Cloudflare验证",
+    "Success": "成功"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -639,6 +642,9 @@
     "Deselect All": "取消全選",
     "Add keyword": "添加關鍵詞",
     "Keyword": "關鍵詞",
-    "Manage": "管理"
+    "Manage": "管理",
+    "Verify": "驗證",
+    "Cloudflare verification required": "需要Cloudflare驗證",
+    "Success": "成功"
   }
 }

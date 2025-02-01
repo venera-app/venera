@@ -98,8 +98,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   }
 
   @override
-  int get maxPage =>
-      ((images?.length ?? 1) + imagesPerPage - 1) ~/ imagesPerPage;
+  int get maxPage => ((images?.length ?? 1) / imagesPerPage).ceil();
 
   ComicType get type => widget.type;
 

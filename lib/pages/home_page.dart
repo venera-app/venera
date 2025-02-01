@@ -9,7 +9,6 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
-import 'package:venera/pages/accounts_page.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
@@ -36,7 +35,6 @@ class HomePage extends StatelessWidget {
         const _History(),
         const _Local(),
         const _ComicSourceWidget(),
-        const _AccountsWidget(),
         const ImageFavorites(),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
       ],
@@ -690,115 +688,6 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                     ],
                   ),
                 ).toAlign(Alignment.centerLeft).paddingHorizontal(16).paddingBottom(8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AccountsWidget extends StatefulWidget {
-  const _AccountsWidget();
-
-  @override
-  State<_AccountsWidget> createState() => _AccountsWidgetState();
-}
-
-class _AccountsWidgetState extends State<_AccountsWidget> {
-  late List<String> accounts;
-
-  void onComicSourceChange() {
-    setState(() {
-      accounts.clear();
-      for (var c in ComicSource.all()) {
-        if (c.isLogged) {
-          accounts.add(c.name);
-        }
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    accounts = [];
-    for (var c in ComicSource.all()) {
-      if (c.isLogged) {
-        accounts.add(c.name);
-      }
-    }
-    ComicSource.addListener(onComicSourceChange);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    ComicSource.removeListener(onComicSourceChange);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 0.6,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () {
-            context.to(() => const AccountsPage());
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    Center(
-                      child: Text('Accounts'.tl, style: ts.s18),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(accounts.length.toString(), style: ts.s12),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.arrow_right),
-                  ],
-                ),
-              ).paddingHorizontal(16),
-              SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  runSpacing: 8,
-                  spacing: 8,
-                  children: accounts.map((e) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(e),
-                    );
-                  }).toList(),
-                ).paddingHorizontal(16).paddingBottom(16),
-              ),
             ],
           ),
         ),

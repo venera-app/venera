@@ -59,6 +59,16 @@ abstract class DownloadTask with ChangeNotifier {
         return null;
     }
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DownloadTask &&
+        other.id == id &&
+        other.comicType == comicType;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, comicType);
 }
 
 class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
@@ -220,7 +230,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     runRecorder();
 
     if (comic == null) {
-      var res = await runWithRetry(() async {
+      _message = "Fetching comic info...";
+      notifyListeners();
+      var res = await _runWithRetry(() async {
         var r = await source.loadComicInfo!(comicId);
         if (r.error) {
           throw r.errorMessage!;
@@ -260,7 +272,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     await LocalManager().saveCurrentDownloadingTasks();
 
     if (_cover == null) {
-      var res = await runWithRetry(() async {
+      _message = "Downloading cover...";
+      notifyListeners();
+      var res = await _runWithRetry(() async {
         Uint8List? data;
         await for (var progress
             in ImageDownloader.loadThumbnail(comic!.cover, source.key)) {
@@ -272,8 +286,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           throw "Failed to download cover";
         }
         var fileType = detectFileType(data);
-        var file =
-            File(FilePath.join(path!, "cover${fileType.ext}"));
+        var file = File(FilePath.join(path!, "cover${fileType.ext}"));
         file.writeAsBytesSync(data);
         return "file://${file.path}";
       });
@@ -290,7 +303,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
 
     if (_images == null) {
       if (comic!.chapters == null) {
-        var res = await runWithRetry(() async {
+        _message = "Fetching image list...";
+        notifyListeners();
+        var res = await _runWithRetry(() async {
           var r = await source.loadComicPages!(comicId, null);
           if (r.error) {
             throw r.errorMessage!;
@@ -312,6 +327,8 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       } else {
         _images = {};
         _totalCount = 0;
+        int cpCount = 0;
+        int totalCpCount = chapters?.length ?? comic!.chapters!.length;
         for (var i in comic!.chapters!.keys) {
           if (chapters != null && !chapters!.contains(i)) {
             continue;
@@ -320,7 +337,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
             _totalCount += _images![i]!.length;
             continue;
           }
-          var res = await runWithRetry(() async {
+          _message = "Fetching image list ($cpCount/$totalCpCount)...";
+          notifyListeners();
+          var res = await _runWithRetry(() async {
             var r = await source.loadComicPages!(comicId, i);
             if (r.error) {
               throw r.errorMessage!;
@@ -458,8 +477,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       }).toList(),
       directory: Directory(path!).name,
       chapters: comic!.chapters,
-      cover:
-          File(_cover!.split("file://").last).name,
+      cover: File(_cover!.split("file://").last).name,
       comicType: ComicType(source.key.hashCode),
       downloadedChapters: chapters ?? [],
       createdAt: DateTime.now(),
@@ -478,7 +496,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   int get hashCode => Object.hash(comicId, source.key);
 }
 
-Future<Res<T>> runWithRetry<T>(Future<T> Function() task,
+Future<Res<T>> _runWithRetry<T>(Future<T> Function() task,
     {int retry = 3}) async {
   for (var i = 0; i < retry; i++) {
     try {

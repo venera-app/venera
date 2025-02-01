@@ -1,9 +1,11 @@
 import 'dart:io' as io;
 
 import 'package:dio/dio.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/webview.dart';
 import 'package:venera/utils/ext.dart';
 
@@ -58,7 +60,7 @@ class CloudflareException implements DioException {
 class CloudflareInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if(options.headers['cookie'].toString().contains('cf_clearance')) {
+    if (options.headers['cookie'].toString().contains('cf_clearance')) {
       options.headers['user-agent'] = appdata.implicitData['ua'] ?? webUA;
     }
     handler.next(options);
@@ -120,16 +122,25 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
     var webview = DesktopWebview(
       initialUrl: url,
       onTitleChange: (title, controller) async {
-        var res = await controller.evaluateJavascript(
-            "document.head.innerHTML.includes('#challenge-success-text')");
-        if (res == 'false') {
+        var head =
+            await controller.evaluateJavascript("document.head.innerHTML") ??
+                "";
+        Log.info("Cloudflare", "Checking head: $head");
+        var isChallenging = head.contains('#challenge-success-text') ||
+            head.contains("#challenge-error-text") ||
+            head.contains("#challenge-form");
+        if (!isChallenging) {
+          Log.info(
+            "Cloudflare",
+            "Cloudflare is passed due to there is no challenge css",
+          );
           var ua = controller.userAgent;
           if (ua != null) {
             appdata.implicitData['ua'] = ua;
             appdata.writeImplicitData();
           }
           var cookiesMap = await controller.getCookies(url);
-          if(cookiesMap['cf_clearance'] == null) {
+          if (cookiesMap['cf_clearance'] == null) {
             return;
           }
           saveCookies(cookiesMap);
@@ -137,30 +148,47 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
           onFinished();
         }
       },
+      onClose: onFinished,
     );
     webview.open();
   } else {
+    void check(InAppWebViewController controller) async {
+      var head = await controller.evaluateJavascript(
+          source: "document.head.innerHTML") as String;
+      Log.info("Cloudflare", "Checking head: $head");
+      var isChallenging = head.contains('#challenge-success-text') ||
+          head.contains("#challenge-error-text") ||
+          head.contains("#challenge-form");
+      if (!isChallenging) {
+        Log.info(
+          "Cloudflare",
+          "Cloudflare is passed due to there is no challenge css",
+        );
+        var ua = await controller.getUA();
+        if (ua != null) {
+          appdata.implicitData['ua'] = ua;
+          appdata.writeImplicitData();
+        }
+        var cookies = await controller.getCookies(url) ?? [];
+        if (cookies.firstWhereOrNull(
+                (element) => element.name == 'cf_clearance') ==
+            null) {
+          return;
+        }
+        SingleInstanceCookieJar.instance?.saveFromResponse(uri, cookies);
+        App.rootPop();
+      }
+    }
+
     await App.rootContext.to(
       () => AppWebview(
         initialUrl: url,
         singlePage: true,
+        onTitleChange: (title, controller) async {
+          check(controller);
+        },
         onLoadStop: (controller) async {
-          var res = await controller.platform.evaluateJavascript(
-              source:
-                  "document.head.innerHTML.includes('#challenge-success-text')");
-          if (res == false) {
-            var ua = await controller.getUA();
-            if (ua != null) {
-              appdata.implicitData['ua'] = ua;
-              appdata.writeImplicitData();
-            }
-            var cookies = await controller.getCookies(url) ?? [];
-            if(cookies.firstWhereOrNull((element) => element.name == 'cf_clearance') == null) {
-              return;
-            }
-            SingleInstanceCookieJar.instance?.saveFromResponse(uri, cookies);
-            App.rootPop();
-          }
+          check(controller);
         },
         onStarted: (controller) async {
           var ua = await controller.getUA();
