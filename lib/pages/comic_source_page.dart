@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
@@ -7,11 +9,13 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
+import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/pages/webview.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
-class ComicSourcePage extends StatefulWidget {
+class ComicSourcePage extends StatelessWidget {
   const ComicSourcePage({super.key});
 
   static Future<int> checkComicSourceUpdate() async {
@@ -44,11 +48,6 @@ class ComicSourcePage extends StatefulWidget {
     return shouldUpdate.length;
   }
 
-  @override
-  State<ComicSourcePage> createState() => _ComicSourcePageState();
-}
-
-class _ComicSourcePageState extends State<ComicSourcePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,165 +91,17 @@ class _BodyState extends State<_Body> {
           style: AppbarStyle.shadow,
         ),
         buildCard(context),
-        for (var source in ComicSource.all()) buildSource(context, source),
+        for (var source in ComicSource.all())
+          _SliverComicSource(
+            key: ValueKey(source.key),
+            source: source,
+            edit: edit,
+            update: update,
+            delete: delete,
+          ),
         SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
       ],
     );
-  }
-
-  Widget buildSource(BuildContext context, ComicSource source) {
-    var newVersion = ComicSource.availableUpdates[source.key];
-    bool hasUpdate =
-        newVersion != null && compareSemVer(newVersion, source.version);
-    return SliverToBoxAdapter(
-      child: Column(
-        children: [
-          const Divider(),
-          ListTile(
-            title: Row(
-              children: [
-                Text(source.name),
-                const SizedBox(width: 6),
-                if (hasUpdate)
-                  Tooltip(
-                    message: newVersion,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        "New Version".tl,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  )
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Tooltip(
-                  message: "Edit".tl,
-                  child: IconButton(
-                      onPressed: () => edit(source),
-                      icon: const Icon(Icons.edit_note)),
-                ),
-                Tooltip(
-                  message: "Update".tl,
-                  child: IconButton(
-                      onPressed: () => update(source),
-                      icon: const Icon(Icons.update)),
-                ),
-                Tooltip(
-                  message: "Delete".tl,
-                  child: IconButton(
-                      onPressed: () => delete(source),
-                      icon: const Icon(Icons.delete)),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            title: const Text("Version"),
-            subtitle: Text(source.version),
-          ),
-          ...buildSourceSettings(source),
-        ],
-      ),
-    );
-  }
-
-  Iterable<Widget> buildSourceSettings(ComicSource source) sync* {
-    if (source.settings == null) {
-      return;
-    } else if (source.data['settings'] == null) {
-      source.data['settings'] = {};
-    }
-    for (var item in source.settings!.entries) {
-      var key = item.key;
-      String type = item.value['type'];
-      try {
-        if (type == "select") {
-          var current = source.data['settings'][key];
-          if (current == null) {
-            var d = item.value['default'];
-            for (var option in item.value['options']) {
-              if (option['value'] == d) {
-                current = option['text'] ?? option['value'];
-                break;
-              }
-            }
-          } else {
-            current = item.value['options']
-                    .firstWhere((e) => e['value'] == current)['text'] ??
-                current;
-          }
-          yield ListTile(
-            title: Text((item.value['title'] as String).ts(source.key)),
-            trailing: Select(
-              current: (current as String).ts(source.key),
-              values: (item.value['options'] as List)
-                  .map<String>((e) =>
-                      ((e['text'] ?? e['value']) as String).ts(source.key))
-                  .toList(),
-              onTap: (i) {
-                source.data['settings'][key] =
-                    item.value['options'][i]['value'];
-                source.saveData();
-                setState(() {});
-              },
-            ),
-          );
-        } else if (type == "switch") {
-          var current = source.data['settings'][key] ?? item.value['default'];
-          yield ListTile(
-            title: Text((item.value['title'] as String).ts(source.key)),
-            trailing: Switch(
-              value: current,
-              onChanged: (v) {
-                source.data['settings'][key] = v;
-                source.saveData();
-                setState(() {});
-              },
-            ),
-          );
-        } else if (type == "input") {
-          var current =
-              source.data['settings'][key] ?? item.value['default'] ?? '';
-          yield ListTile(
-            title: Text((item.value['title'] as String).ts(source.key)),
-            subtitle:
-                Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                showInputDialog(
-                  context: context,
-                  title: (item.value['title'] as String).ts(source.key),
-                  initialValue: current,
-                  inputValidator: item.value['validator'] == null
-                      ? null
-                      : RegExp(item.value['validator']),
-                  onConfirm: (value) {
-                    source.data['settings'][key] = value;
-                    source.saveData();
-                    setState(() {});
-                    return null;
-                  },
-                );
-              },
-            ),
-          );
-        } else if (type == "callback") {
-          yield _CallbackSetting(setting: item, sourceKey: source.key);
-        }
-      } catch (e, s) {
-        Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
-      }
-    }
   }
 
   void delete(ComicSource source) {
@@ -297,10 +148,12 @@ class _BodyState extends State<_Body> {
         //
       }
     }
-    context.to(() => _EditFilePage(source.filePath, () async {
-          await ComicSource.reload();
-          setState(() {});
-        }));
+    context.to(
+      () => _EditFilePage(source.filePath, () async {
+        await ComicSource.reload();
+        setState(() {});
+      }),
+    );
   }
 
   static Future<void> update(ComicSource source) async {
@@ -762,5 +615,568 @@ class _CallbackSettingState extends State<_CallbackSetting> {
         child: Text(buttonText.ts(widget.sourceKey)),
       ).fixHeight(32),
     );
+  }
+}
+
+class _SliverComicSource extends StatefulWidget {
+  const _SliverComicSource({
+    super.key,
+    required this.source,
+    required this.edit,
+    required this.update,
+    required this.delete,
+  });
+
+  final ComicSource source;
+
+  final void Function(ComicSource source) edit;
+  final void Function(ComicSource source) update;
+  final void Function(ComicSource source) delete;
+
+  @override
+  State<_SliverComicSource> createState() => _SliverComicSourceState();
+}
+
+class _SliverComicSourceState extends State<_SliverComicSource> {
+  ComicSource get source => widget.source;
+
+  @override
+  Widget build(BuildContext context) {
+    var newVersion = ComicSource.availableUpdates[source.key];
+    bool hasUpdate =
+        newVersion != null && compareSemVer(newVersion, source.version);
+
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverPadding(padding: const EdgeInsets.only(top: 16)),
+        SliverToBoxAdapter(
+          child: ListTile(
+            title: Row(
+              children: [
+                Text(
+                  source.name,
+                  style: ts.s18,
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    source.version,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                if (hasUpdate)
+                  Tooltip(
+                    message: newVersion,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "New Version".tl,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ).paddingLeft(4)
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Tooltip(
+                  message: "Edit".tl,
+                  child: IconButton(
+                    onPressed: () => widget.edit(source),
+                    icon: const Icon(Icons.edit_note),
+                  ),
+                ),
+                Tooltip(
+                  message: "Update".tl,
+                  child: IconButton(
+                    onPressed: () => widget.update(source),
+                    icon: const Icon(Icons.update),
+                  ),
+                ),
+                Tooltip(
+                  message: "Delete".tl,
+                  child: IconButton(
+                    onPressed: () => widget.delete(source),
+                    icon: const Icon(Icons.delete),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: context.colorScheme.outlineVariant,
+                  width: 0.6,
+                ),
+              ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            children: buildSourceSettings().toList(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            children: _buildAccount().toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Iterable<Widget> buildSourceSettings() sync* {
+    if (source.settings == null) {
+      return;
+    } else if (source.data['settings'] == null) {
+      source.data['settings'] = {};
+    }
+    for (var item in source.settings!.entries) {
+      var key = item.key;
+      String type = item.value['type'];
+      try {
+        if (type == "select") {
+          var current = source.data['settings'][key];
+          if (current == null) {
+            var d = item.value['default'];
+            for (var option in item.value['options']) {
+              if (option['value'] == d) {
+                current = option['text'] ?? option['value'];
+                break;
+              }
+            }
+          } else {
+            current = item.value['options']
+                    .firstWhere((e) => e['value'] == current)['text'] ??
+                current;
+          }
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Select(
+              current: (current as String).ts(source.key),
+              values: (item.value['options'] as List)
+                  .map<String>((e) =>
+                      ((e['text'] ?? e['value']) as String).ts(source.key))
+                  .toList(),
+              onTap: (i) {
+                source.data['settings'][key] =
+                    item.value['options'][i]['value'];
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "switch") {
+          var current = source.data['settings'][key] ?? item.value['default'];
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            trailing: Switch(
+              value: current,
+              onChanged: (v) {
+                source.data['settings'][key] = v;
+                source.saveData();
+                setState(() {});
+              },
+            ),
+          );
+        } else if (type == "input") {
+          var current =
+              source.data['settings'][key] ?? item.value['default'] ?? '';
+          yield ListTile(
+            title: Text((item.value['title'] as String).ts(source.key)),
+            subtitle:
+                Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showInputDialog(
+                  context: context,
+                  title: (item.value['title'] as String).ts(source.key),
+                  initialValue: current,
+                  inputValidator: item.value['validator'] == null
+                      ? null
+                      : RegExp(item.value['validator']),
+                  onConfirm: (value) {
+                    source.data['settings'][key] = value;
+                    source.saveData();
+                    setState(() {});
+                    return null;
+                  },
+                );
+              },
+            ),
+          );
+        } else if (type == "callback") {
+          yield _CallbackSetting(setting: item, sourceKey: source.key);
+        }
+      } catch (e, s) {
+        Log.error("ComicSourcePage", "Failed to build a setting\n$e\n$s");
+      }
+    }
+  }
+
+  final _reLogin = <String, bool>{};
+
+  Iterable<Widget> _buildAccount() sync* {
+    if (source.account == null) return;
+    final bool logged = source.isLogged;
+    if (!logged) {
+      yield ListTile(
+        title: Text("Log in".tl),
+        trailing: const Icon(Icons.arrow_right),
+        onTap: () async {
+          await context.to(
+            () => _LoginPage(
+              config: source.account!,
+              source: source,
+            ),
+          );
+          source.saveData();
+          setState(() {});
+        },
+      );
+    }
+    if (logged) {
+      for (var item in source.account!.infoItems) {
+        if (item.builder != null) {
+          yield item.builder!(context);
+        } else {
+          yield ListTile(
+            title: Text(item.title.tl),
+            subtitle: item.data == null ? null : Text(item.data!()),
+            onTap: item.onTap,
+          );
+        }
+      }
+      if (source.data["account"] is List) {
+        bool loading = _reLogin[source.key] == true;
+        yield ListTile(
+          title: Text("Re-login".tl),
+          subtitle: Text("Click if login expired".tl),
+          onTap: () async {
+            if (source.data["account"] == null) {
+              context.showMessage(message: "No data".tl);
+              return;
+            }
+            setState(() {
+              _reLogin[source.key] = true;
+            });
+            final List account = source.data["account"];
+            var res = await source.account!.login!(account[0], account[1]);
+            if (res.error) {
+              context.showMessage(message: res.errorMessage!);
+            } else {
+              context.showMessage(message: "Success".tl);
+            }
+            setState(() {
+              _reLogin[source.key] = false;
+            });
+          },
+          trailing: loading
+              ? const SizedBox.square(
+                  dimension: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(Icons.refresh),
+        );
+      }
+      yield ListTile(
+        title: Text("Log out".tl),
+        onTap: () {
+          source.data["account"] = null;
+          source.account?.logout();
+          source.saveData();
+          ComicSource.notifyListeners();
+          setState(() {});
+        },
+        trailing: const Icon(Icons.logout),
+      );
+    }
+  }
+}
+
+class _LoginPage extends StatefulWidget {
+  const _LoginPage({required this.config, required this.source});
+
+  final AccountConfig config;
+
+  final ComicSource source;
+
+  @override
+  State<_LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<_LoginPage> {
+  String username = "";
+  String password = "";
+  bool loading = false;
+
+  final Map<String, String> _cookies = {};
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const Appbar(
+        title: Text(''),
+      ),
+      body: Center(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: AutofillGroup(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Login".tl, style: const TextStyle(fontSize: 24)),
+                const SizedBox(height: 32),
+                if (widget.config.cookieFields == null)
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Username".tl,
+                      border: const OutlineInputBorder(),
+                    ),
+                    enabled: widget.config.login != null,
+                    onChanged: (s) {
+                      username = s;
+                    },
+                    autofillHints: const [AutofillHints.username],
+                  ).paddingBottom(16),
+                if (widget.config.cookieFields == null)
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Password".tl,
+                      border: const OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    enabled: widget.config.login != null,
+                    onChanged: (s) {
+                      password = s;
+                    },
+                    onSubmitted: (s) => login(),
+                    autofillHints: const [AutofillHints.password],
+                  ).paddingBottom(16),
+                for (var field in widget.config.cookieFields ?? <String>[])
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: field,
+                      border: const OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    enabled: widget.config.validateCookies != null,
+                    onChanged: (s) {
+                      _cookies[field] = s;
+                    },
+                  ).paddingBottom(16),
+                if (widget.config.login == null &&
+                    widget.config.cookieFields == null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline),
+                      const SizedBox(width: 8),
+                      Text("Login with password is disabled".tl),
+                    ],
+                  )
+                else
+                  Button.filled(
+                    isLoading: loading,
+                    onPressed: login,
+                    child: Text("Continue".tl),
+                  ),
+                const SizedBox(height: 24),
+                if (widget.config.loginWebsite != null)
+                  TextButton(
+                    onPressed: () {
+                      if (App.isWindows || App.isLinux) {
+                        loginWithWebview2();
+                      } else {
+                        loginWithWebview();
+                      }
+                    },
+                    child: Text("Login with webview".tl),
+                  ),
+                const SizedBox(height: 8),
+                if (widget.config.registerWebsite != null)
+                  TextButton(
+                    onPressed: () =>
+                        launchUrlString(widget.config.registerWebsite!),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.link),
+                        const SizedBox(width: 8),
+                        Text("Create Account".tl),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void login() {
+    if (widget.config.login != null) {
+      if (username.isEmpty || password.isEmpty) {
+        showToast(
+          message: "Cannot be empty".tl,
+          icon: const Icon(Icons.error_outline),
+          context: context,
+        );
+        return;
+      }
+      setState(() {
+        loading = true;
+      });
+      widget.config.login!(username, password).then((value) {
+        if (value.error) {
+          context.showMessage(message: value.errorMessage!);
+          setState(() {
+            loading = false;
+          });
+        } else {
+          if (mounted) {
+            context.pop();
+          }
+        }
+      });
+    } else if (widget.config.validateCookies != null) {
+      setState(() {
+        loading = true;
+      });
+      var cookies =
+          widget.config.cookieFields!.map((e) => _cookies[e] ?? '').toList();
+      widget.config.validateCookies!(cookies).then((value) {
+        if (value) {
+          widget.source.data['account'] = 'ok';
+          widget.source.saveData();
+          context.pop();
+        } else {
+          context.showMessage(message: "Invalid cookies".tl);
+          setState(() {
+            loading = false;
+          });
+        }
+      });
+    }
+  }
+
+  void loginWithWebview() async {
+    var url = widget.config.loginWebsite!;
+    var title = '';
+    bool success = false;
+
+    void validate(InAppWebViewController c) async {
+      if (widget.config.checkLoginStatus != null &&
+          widget.config.checkLoginStatus!(url, title)) {
+        var cookies = (await c.getCookies(url)) ?? [];
+        SingleInstanceCookieJar.instance?.saveFromResponse(
+          Uri.parse(url),
+          cookies,
+        );
+        success = true;
+        widget.config.onLoginWithWebviewSuccess?.call();
+        App.mainNavigatorKey?.currentContext?.pop();
+      }
+    }
+
+    await context.to(
+      () => AppWebview(
+        initialUrl: widget.config.loginWebsite!,
+        onNavigation: (u, c) {
+          url = u;
+          validate(c);
+          return false;
+        },
+        onTitleChange: (t, c) {
+          title = t;
+          validate(c);
+        },
+      ),
+    );
+    if (success) {
+      widget.source.data['account'] = 'ok';
+      widget.source.saveData();
+      context.pop();
+    }
+  }
+
+  // for windows and linux
+  void loginWithWebview2() async {
+    if (!await DesktopWebview.isAvailable()) {
+      context.showMessage(message: "Webview is not available".tl);
+    }
+
+    var url = widget.config.loginWebsite!;
+    var title = '';
+    bool success = false;
+
+    void onClose() {
+      if (success) {
+        widget.source.data['account'] = 'ok';
+        widget.source.saveData();
+        context.pop();
+      }
+    }
+
+    void validate(DesktopWebview webview) async {
+      if (widget.config.checkLoginStatus != null &&
+          widget.config.checkLoginStatus!(url, title)) {
+        var cookiesMap = await webview.getCookies(url);
+        var cookies = <io.Cookie>[];
+        cookiesMap.forEach((key, value) {
+          cookies.add(io.Cookie(key, value));
+        });
+        SingleInstanceCookieJar.instance?.saveFromResponse(
+          Uri.parse(url),
+          cookies,
+        );
+        success = true;
+        widget.config.onLoginWithWebviewSuccess?.call();
+        webview.close();
+        onClose();
+      }
+    }
+
+    var webview = DesktopWebview(
+      initialUrl: widget.config.loginWebsite!,
+      onTitleChange: (t, webview) {
+        title = t;
+        validate(webview);
+      },
+      onNavigation: (u, webview) {
+        url = u;
+        validate(webview);
+      },
+      onClose: onClose,
+    );
+
+    webview.open();
   }
 }

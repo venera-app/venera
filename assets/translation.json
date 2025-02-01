@@ -320,7 +320,8 @@
     "Keyword": "关键词",
     "Manage": "管理",
     "Verify": "验证",
-    "Cloudflare verification required": "需要Cloudflare验证"
+    "Cloudflare verification required": "需要Cloudflare验证",
+    "Success": "成功"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -643,6 +644,7 @@
     "Keyword": "關鍵詞",
     "Manage": "管理",
     "Verify": "驗證",
-    "Cloudflare verification required": "需要Cloudflare驗證"
+    "Cloudflare verification required": "需要Cloudflare驗證",
+    "Success": "成功"
   }
 }
