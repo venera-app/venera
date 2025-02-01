@@ -5,6 +5,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/consts.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/webview.dart';
 import 'package:venera/utils/ext.dart';
 
@@ -121,9 +122,18 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
     var webview = DesktopWebview(
       initialUrl: url,
       onTitleChange: (title, controller) async {
-        var res = await controller.evaluateJavascript(
-            "document.head.innerHTML.includes('#challenge-success-text')");
-        if (res == 'false') {
+        var head =
+            await controller.evaluateJavascript("document.head.innerHTML") ??
+                "";
+        Log.info("Cloudflare", "Checking head: $head");
+        var isChallenging = head.contains('#challenge-success-text') ||
+            head.contains("#challenge-error-text") ||
+            head.contains("#challenge-form");
+        if (!isChallenging) {
+          Log.info(
+            "Cloudflare",
+            "Cloudflare is passed due to there is no challenge css",
+          );
           var ua = controller.userAgent;
           if (ua != null) {
             appdata.implicitData['ua'] = ua;
@@ -143,10 +153,17 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
     webview.open();
   } else {
     void check(InAppWebViewController controller) async {
-      var res = await controller.platform.evaluateJavascript(
-          source:
-              "document.head.innerHTML.includes('#challenge-success-text')");
-      if (res == false) {
+      var head = await controller.evaluateJavascript(
+          source: "document.head.innerHTML") as String;
+      Log.info("Cloudflare", "Checking head: $head");
+      var isChallenging = head.contains('#challenge-success-text') ||
+          head.contains("#challenge-error-text") ||
+          head.contains("#challenge-form");
+      if (!isChallenging) {
+        Log.info(
+          "Cloudflare",
+          "Cloudflare is passed due to there is no challenge css",
+        );
         var ua = await controller.getUA();
         if (ua != null) {
           appdata.implicitData['ua'] = ua;
