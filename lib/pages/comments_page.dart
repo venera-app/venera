@@ -42,7 +42,7 @@ class _CommentsPageState extends State<CommentsPage> {
         _error = res.errorMessage;
         _loading = false;
       });
-    } else {
+    } else if (mounted) {
       setState(() {
         _comments = res.data;
         _loading = false;

@@ -1388,42 +1388,67 @@ class _FavoritePanel extends StatefulWidget {
   State<_FavoritePanel> createState() => _FavoritePanelState();
 }
 
-class _FavoritePanelState extends State<_FavoritePanel> {
+class _FavoritePanelState extends State<_FavoritePanel>
+    with SingleTickerProviderStateMixin {
   late ComicSource comicSource;
+
+  late TabController tabController;
+
+  late bool hasNetwork;
 
   @override
   void initState() {
     comicSource = widget.type.comicSource!;
     localFolders = LocalFavoritesManager().folderNames;
     added = LocalFavoritesManager().find(widget.cid, widget.type);
+    hasNetwork = comicSource.favoriteData != null && comicSource.isLogged;
+    var initIndex = 0;
+    if (appdata.implicitData['favoritePanelIndex'] is int) {
+      initIndex = appdata.implicitData['favoritePanelIndex'];
+    }
+    initIndex = initIndex.clamp(0, hasNetwork ? 1 : 0);
+    tabController = TabController(
+      initialIndex: initIndex,
+      length: hasNetwork ? 2 : 1,
+      vsync: this,
+    );
     super.initState();
   }
 
   @override
+  void dispose() {
+    var currentIndex = tabController.index;
+    appdata.implicitData['favoritePanelIndex'] = currentIndex;
+    appdata.writeImplicitData();
+    tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    var hasNetwork = comicSource.favoriteData != null && comicSource.isLogged;
     return Scaffold(
       appBar: Appbar(
         title: Text("Favorite".tl),
       ),
-      body: DefaultTabController(
-        length: hasNetwork ? 2 : 1,
-        child: Column(
-          children: [
-            TabBar(tabs: [
+      body: Column(
+        children: [
+          TabBar(
+            controller: tabController,
+            tabs: [
               Tab(text: "Local".tl),
               if (hasNetwork) Tab(text: "Network".tl),
-            ]),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  buildLocal(),
-                  if (hasNetwork) buildNetwork(),
-                ],
-              ),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: tabController,
+              children: [
+                buildLocal(),
+                if (hasNetwork) buildNetwork(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
