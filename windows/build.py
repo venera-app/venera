@@ -29,7 +29,7 @@ file.close()
 
 if not os.path.exists("windows/ChineseSimplified.isl"):
     # download ChineseSimplified.isl
-    url = "https://raw.githubusercontent.com/kira-96/Inno-Setup-Chinese-Simplified-Translation/refs/heads/main/ChineseSimplified.isl"
+    url = "https://cdn.jsdelivr.net/gh/kira-96/Inno-Setup-Chinese-Simplified-Translation@latest/ChineseSimplified.isl"
     response = httpx.get(url)
     with open('windows/ChineseSimplified.isl', 'wb') as file:
         file.write(response.content)

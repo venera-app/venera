@@ -86,7 +86,7 @@ class _AboutSettingsState extends State<AboutSettings> {
 
 Future<bool> checkUpdate() async {
   var res = await AppDio().get(
-      "https://raw.githubusercontent.com/venera-app/venera/refs/heads/master/pubspec.yaml");
+      "https://cdn.jsdelivr.net/gh/venera-app/venera@latest/pubspec.yaml");
   if (res.statusCode == 200) {
     var data = loadYaml(res.data);
     if (data["version"] != null) {

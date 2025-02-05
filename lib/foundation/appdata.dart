@@ -155,7 +155,7 @@ class _Settings with ChangeNotifier {
     'customImageProcessing': defaultCustomImageProcessing,
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
-    'comicSourceListUrl': "https://raw.githubusercontent.com/venera-app/venera-configs/master/index.json",
+    'comicSourceListUrl': "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@latest/index.json",
   };
 
   operator [](String key) {
