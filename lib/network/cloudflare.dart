@@ -152,6 +152,7 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
     );
     webview.open();
   } else {
+    bool success = false;
     void check(InAppWebViewController controller) async {
       var head = await controller.evaluateJavascript(
           source: "document.head.innerHTML") as String;
@@ -176,7 +177,10 @@ void passCloudflare(CloudflareException e, void Function() onFinished) async {
           return;
         }
         SingleInstanceCookieJar.instance?.saveFromResponse(uri, cookies);
-        App.rootPop();
+        if (!success) {
+          App.rootPop();
+          success = true;
+        }
       }
     }
 

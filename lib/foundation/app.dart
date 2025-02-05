@@ -52,7 +52,7 @@ class _App {
   BuildContext get rootContext => rootNavigatorKey.currentContext!;
 
   void rootPop() {
-    rootNavigatorKey.currentState?.pop();
+    rootNavigatorKey.currentState?.maybePop();
   }
 
   void pop() {
