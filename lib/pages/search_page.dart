@@ -142,6 +142,8 @@ class _SearchPageState extends State<SearchPage> {
     var defaultSearchTarget = appdata.settings['defaultSearchTarget'];
     if (defaultSearchTarget == "_aggregated_") {
       aggregatedSearch = true;
+      searchTarget = ComicSource.all().where((e) => e.searchPageData != null)
+          .toList().first.key;
     } else if (defaultSearchTarget != null &&
         ComicSource.find(defaultSearchTarget) != null) {
       searchTarget = defaultSearchTarget;
