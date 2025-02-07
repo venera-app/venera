@@ -67,7 +67,7 @@ jobs:
           name: app-ios.ipa
           path: /Users/runner/work/venera/venera/build/ios/iphoneos/venera-ios.ipa
   Build_Android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -118,7 +118,7 @@ jobs:
           name: windows_build
           path: build/windows/Venera-*
   Build_Linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -147,7 +147,7 @@ jobs:
           path: build/linux/arch/
 
   Release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux]
     if: github.event_name == 'release'  # 仅在 push 事件时执行
     steps:
