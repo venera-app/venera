@@ -148,3 +148,18 @@ class SliverGridDelegateWithComics extends SliverGridDelegate {
     return false;
   }
 }
+
+class SliverLazyToBoxAdapter extends StatelessWidget {
+  /// Creates a sliver that contains a single box widget which can be lazy loaded.
+  const SliverLazyToBoxAdapter({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList.list(children: [
+      SizedBox(),
+      child,
+    ]);
+  }
+}

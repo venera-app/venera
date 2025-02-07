@@ -206,62 +206,64 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
     yield const SliverPadding(padding: EdgeInsets.only(top: 8));
 
-    yield Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(width: 16),
-        Hero(
-          tag: "cover${comic.id}${comic.sourceKey}",
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: context.colorScheme.outlineVariant,
-                  blurRadius: 1,
-                  offset: const Offset(0, 1),
+    yield SliverLazyToBoxAdapter(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(width: 16),
+          Hero(
+            tag: "cover${comic.id}${comic.sourceKey}",
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.colorScheme.outlineVariant,
+                    blurRadius: 1,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              height: 144,
+              width: 144 * 0.72,
+              clipBehavior: Clip.antiAlias,
+              child: AnimatedImage(
+                image: CachedImageProvider(
+                  widget.cover ?? comic.cover,
+                  sourceKey: comic.sourceKey,
+                  cid: comic.id,
+                ),
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SelectableText(comic.title, style: ts.s18),
+                if (comic.subTitle != null)
+                  SelectableText(comic.subTitle!, style: ts.s14)
+                      .paddingVertical(4),
+                Text(
+                  (ComicSource.find(comic.sourceKey)?.name) ?? '',
+                  style: ts.s12,
                 ),
               ],
             ),
-            height: 144,
-            width: 144 * 0.72,
-            clipBehavior: Clip.antiAlias,
-            child: AnimatedImage(
-              image: CachedImageProvider(
-                widget.cover ?? comic.cover,
-                sourceKey: comic.sourceKey,
-                cid: comic.id,
-              ),
-              width: double.infinity,
-              height: double.infinity,
-            ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SelectableText(comic.title, style: ts.s18),
-              if (comic.subTitle != null)
-                SelectableText(comic.subTitle!, style: ts.s14)
-                    .paddingVertical(4),
-              Text(
-                (ComicSource.find(comic.sourceKey)?.name) ?? '',
-                style: ts.s12,
-              ),
-            ],
-          ),
-        ),
-      ],
-    ).toSliver();
+        ],
+      ),
+    );
   }
 
   Widget buildActions() {
     bool isMobile = context.width < changePoint;
     bool hasHistory = history != null && (history!.ep > 1 || history!.page > 1);
-    return SliverToBoxAdapter(
+    return SliverLazyToBoxAdapter(
       child: Column(
         children: [
           ListView(
@@ -354,7 +356,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     if (comic.description == null || comic.description!.trim().isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
-    return SliverToBoxAdapter(
+    return SliverLazyToBoxAdapter(
       child: Column(
         children: [
           ListTile(
@@ -482,7 +484,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     bool enableTranslation =
         App.locale.languageCode == 'zh' && comicSource.enableTagsTranslate;
 
-    return SliverToBoxAdapter(
+    return SliverLazyToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1875,7 +1877,7 @@ class _CommentsPartState extends State<_CommentsPart> {
   Widget build(BuildContext context) {
     return MultiSliver(
       children: [
-        SliverToBoxAdapter(
+        SliverLazyToBoxAdapter(
           child: ListTile(
             title: Text("Comments".tl),
             trailing: Row(
