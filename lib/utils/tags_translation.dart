@@ -15,9 +15,6 @@ extension TagsTranslation on String{
   static final Map<String, Map<String, String>> _data = {};
 
   static Future<void> readData() async{
-    if(App.locale.languageCode != "zh"){
-      return;
-    }
     var fileName = App.locale.countryCode == 'TW'
         ? "assets/tags_tw.json"
         : "assets/tags.json";
