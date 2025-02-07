@@ -85,6 +85,10 @@ abstract class CBZ {
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
     await extractArchive(file, cache);
+    var f = cache.listSync();
+    if (f.length == 1 && f.first is Directory) {
+      cache = f.first as Directory;
+    }
     var metaDataFile = File(FilePath.join(cache.path, 'metadata.json'));
     ComicMetaData? metaData;
     if (metaDataFile.existsSync()) {
