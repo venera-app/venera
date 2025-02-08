@@ -168,7 +168,15 @@ Future<void> showConfirmDialog({
 }
 
 class LoadingDialogController {
-  void Function()? closeDialog;
+  double? _progress;
+
+  String? _message;
+
+  void Function()? _closeDialog;
+
+  void Function(double? value)? _serProgress;
+
+  void Function(String message)? _setMessage;
 
   bool closed = false;
 
@@ -177,63 +185,86 @@ class LoadingDialogController {
       return;
     }
     closed = true;
-    if (closeDialog == null) {
-      Future.microtask(closeDialog!);
+    if (_closeDialog == null) {
+      Future.microtask(_closeDialog!);
     } else {
-      closeDialog!();
+      _closeDialog!();
     }
+  }
+
+  void setProgress(double? value) {
+    if (closed) {
+      return;
+    }
+    _serProgress?.call(value);
+  }
+
+  void setMessage(String message) {
+    if (closed) {
+      return;
+    }
+    _setMessage?.call(message);
   }
 }
 
-LoadingDialogController showLoadingDialog(BuildContext context,
-    {void Function()? onCancel,
-    bool barrierDismissible = true,
-    bool allowCancel = true,
-    String? message,
-    String cancelButtonText = "Cancel"}) {
+LoadingDialogController showLoadingDialog(
+  BuildContext context, {
+  void Function()? onCancel,
+  bool barrierDismissible = true,
+  bool allowCancel = true,
+  String? message,
+  String cancelButtonText = "Cancel",
+  bool withProgress = false,
+}) {
   var controller = LoadingDialogController();
+  controller._message = message;
+
+  if (withProgress) {
+    controller._progress = 0;
+  }
 
   var loadingDialogRoute = DialogRoute(
-      context: context,
-      barrierDismissible: barrierDismissible,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Container(
-            width: 100,
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                const SizedBox(
-                  width: 30,
-                  height: 30,
-                  child: CircularProgressIndicator(),
-                ),
-                const SizedBox(
-                  width: 16,
-                ),
-                Text(
-                  message ?? 'Loading',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const Spacer(),
-                if (allowCancel)
-                  TextButton(
-                      onPressed: () {
-                        controller.close();
-                        onCancel?.call();
-                      },
-                      child: Text(cancelButtonText.tl))
-              ],
-            ),
-          ),
+    context: context,
+    barrierDismissible: barrierDismissible,
+    builder: (BuildContext context) {
+      return StatefulBuilder(builder: (context, setState) {
+        controller._serProgress = (value) {
+          setState(() {
+            controller._progress = value;
+          });
+        };
+        controller._setMessage = (message) {
+          setState(() {
+            controller._message = message;
+          });
+        };
+        return ContentDialog(
+          title: controller._message ?? 'Loading',
+          content: LinearProgressIndicator(
+            value: controller._progress,
+            backgroundColor: context.colorScheme.surfaceContainer,
+          ).paddingHorizontal(16).paddingVertical(16),
+          actions: [
+            FilledButton(
+              onPressed: allowCancel
+                  ? () {
+                      controller.close();
+                      onCancel?.call();
+                    }
+                  : null,
+              child: Text(cancelButtonText.tl),
+            )
+          ],
         );
       });
+    },
+  );
 
   var navigator = Navigator.of(context, rootNavigator: true);
 
   navigator.push(loadingDialogRoute).then((value) => controller.closed = true);
 
-  controller.closeDialog = () {
+  controller._closeDialog = () {
     navigator.removeRoute(loadingDialogRoute);
   };
 
@@ -444,9 +475,7 @@ Future<int?> showSelectDialog({
                 child: Text('Cancel'.tl),
               ),
               FilledButton(
-                onPressed: current == null
-                    ? null
-                    : context.pop,
+                onPressed: current == null ? null : context.pop,
                 child: Text('Confirm'.tl),
               ),
             ],

@@ -49,7 +49,7 @@ Future<void> _createPdfFromComic({
       images.add(file.path);
     }
   } else {
-    for (var chapter in comic.chapters!.keys) {
+    for (var chapter in comic.downloadedChapters) {
       var files = Directory(FilePath.join(baseDir, chapter)).listSync();
       reorderFiles(files);
       for (var file in files) {
@@ -112,10 +112,7 @@ Future<Isolate> _runIsolate(
   );
 }
 
-Future<void> createPdfFromComicIsolate({
-  required LocalComic comic,
-  required String savePath,
-}) async {
+Future<File> createPdfFromComicIsolate(LocalComic comic, String savePath) async {
   var receivePort = ReceivePort();
   SendPort? sendPort;
   Isolate? isolate;
@@ -134,7 +131,8 @@ Future<void> createPdfFromComicIsolate({
     }
   });
   isolate = await _runIsolate(comic, savePath, receivePort.sendPort);
-  return completer.future;
+  await completer.future;
+  return File(savePath);
 }
 
 class PdfGenerator {

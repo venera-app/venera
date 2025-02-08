@@ -24,7 +24,8 @@ class EpubData {
   });
 }
 
-Future<File> createEpubComic(EpubData data, String cacheDir) async {
+Future<File> createEpubComic(
+    EpubData data, String cacheDir, String outFilePath) async {
   final workingDir = Directory(FilePath.join(cacheDir, 'epub'));
   if (workingDir.existsSync()) {
     workingDir.deleteSync(recursive: true);
@@ -109,8 +110,7 @@ ${images.map((e) => '        <img src="$e" alt="$e"/>').join('\n')}
   }
 
   // content.opf
-  final contentOpf =
-      File(FilePath.join(workingDir.path, 'content.opf'));
+  final contentOpf = File(FilePath.join(workingDir.path, 'content.opf'));
   final uuid = const Uuid().v4();
   var spineStrBuilder = StringBuffer();
   for (var i = 0; i < chapterIndex; i++) {
@@ -171,16 +171,15 @@ ${navMapStrBuilder.toString()}
 </ncx>
   ''');
 
-  // zip
-  final zipPath = FilePath.join(cacheDir, '${data.title}.epub');
-  ZipFile.compressFolder(workingDir.path, zipPath);
+  ZipFile.compressFolder(workingDir.path, outFilePath);
 
   workingDir.deleteSync(recursive: true);
 
-  return File(zipPath);
+  return File(outFilePath);
 }
 
-Future<File> createEpubWithLocalComic(LocalComic comic) async {
+Future<File> createEpubWithLocalComic(
+    LocalComic comic, String outFilePath) async {
   var chapters = <String, List<File>>{};
   if (comic.chapters == null) {
     chapters[comic.title] =
@@ -188,11 +187,11 @@ Future<File> createEpubWithLocalComic(LocalComic comic) async {
             .map((e) => File(e))
             .toList();
   } else {
-    for (var chapter in comic.chapters!.keys) {
-      chapters[comic.chapters![chapter]!] = (await LocalManager()
-              .getImages(comic.id, comic.comicType, chapter))
-          .map((e) => File(e))
-          .toList();
+    for (var chapter in comic.downloadedChapters) {
+      chapters[comic.chapters![chapter]!] =
+          (await LocalManager().getImages(comic.id, comic.comicType, chapter))
+              .map((e) => File(e))
+              .toList();
     }
   }
   var data = EpubData(
@@ -205,6 +204,6 @@ Future<File> createEpubWithLocalComic(LocalComic comic) async {
   final cacheDir = App.cachePath;
 
   return Isolate.run(() => overrideIO(() async {
-        return createEpubComic(data, cacheDir);
+        return createEpubComic(data, cacheDir, outFilePath);
       }));
 }
