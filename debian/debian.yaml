@@ -2,7 +2,7 @@ flutter_app:
   command: venera
   arch: x64
   parent: /usr/local/lib
-  nonInteractive: false
+  nonInteractive: true
 
 control:
   Package: venera
