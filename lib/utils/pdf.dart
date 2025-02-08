@@ -30,14 +30,14 @@ Future<void> _createPdfFromComic({
     files.removeWhere(
         (element) => element is! File || element.path.startsWith('cover'));
     files.sort((a, b) {
-      var aName = (a as File).name;
-      var bName = (b as File).name;
+      var aName = (a as File).basenameWithoutExt;
+      var bName = (b as File).basenameWithoutExt;
       var aNumber = int.tryParse(aName);
       var bNumber = int.tryParse(bName);
       if (aNumber != null && bNumber != null) {
         return aNumber.compareTo(bNumber);
       }
-      return aName.compareTo(bName);
+      return a.name.compareTo(b.name);
     });
   }
 
