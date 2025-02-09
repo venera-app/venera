@@ -161,7 +161,8 @@ jobs:
           sudo apt-get install -y curl git unzip xz-utils zip libglu1-mesa clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
           git clone --depth 1 --branch $FLUTTER_VERSION https://github.com/flutter/flutter.git $RUNNER_TEMP/flutter
           echo "$RUNNER_TEMP/flutter/bin" >> $GITHUB_PATH
-          flutter doctor
+      - name: Install Flutter
+        run: flutter doctor
       - name: Install dependencies
         run: |
           flutter pub get
