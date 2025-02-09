@@ -20,22 +20,35 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
 
   var networkFolders = <String>[];
 
+  void findNetworkFolders() {
+    networkFolders.clear();
+    var all = ComicSource.all()
+        .where((e) => e.favoriteData != null)
+        .map((e) => e.favoriteData!.key)
+        .toList();
+    var settings = appdata.settings['favorites'] as List;
+    for (var p in settings) {
+      if (all.contains(p) && !networkFolders.contains(p)) {
+        networkFolders.add(p);
+      }
+    }
+  }
+
   @override
   void initState() {
     favPage = widget.favPage ??
         context.findAncestorStateOfType<_FavoritesPageState>()!;
     favPage.folderList = this;
     folders = LocalFavoritesManager().folderNames;
-    networkFolders = ComicSource.all()
-        .where((e) => e.favoriteData != null && e.isLogged)
-        .map((e) => e.favoriteData!.key)
-        .toList();
+    findNetworkFolders();
+    appdata.settings.addListener(updateFolders);
     super.initState();
   }
 
   @override
   void dispose() {
     super.dispose();
+    appdata.settings.removeListener(updateFolders);
   }
 
   @override
@@ -102,7 +115,8 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                               onClick: () {
                                 newFolder().then((value) {
                                   setState(() {
-                                    folders = LocalFavoritesManager().folderNames;
+                                    folders =
+                                        LocalFavoritesManager().folderNames;
                                   });
                                 });
                               },
@@ -113,7 +127,8 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                               onClick: () {
                                 sortFolders().then((value) {
                                   setState(() {
-                                    folders = LocalFavoritesManager().folderNames;
+                                    folders =
+                                        LocalFavoritesManager().folderNames;
                                   });
                                 });
                               },
@@ -143,15 +158,24 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                     ),
                     child: Row(
                       children: [
-                        const SizedBox(width: 16),
                         Icon(
                           Icons.cloud,
                           color: context.colorScheme.secondary,
                         ),
                         const SizedBox(width: 12),
                         Text("Network".tl),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.settings),
+                          onPressed: () {
+                            showPopUpWidget(
+                              App.rootContext,
+                              setFavoritesPagesWidget(),
+                            );
+                          },
+                        ),
                       ],
-                    ),
+                    ).paddingHorizontal(16),
                   );
                 }
                 index--;
@@ -241,10 +265,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
     if (!mounted) return;
     setState(() {
       folders = LocalFavoritesManager().folderNames;
-      networkFolders = ComicSource.all()
-          .where((e) => e.favoriteData != null)
-          .map((e) => e.favoriteData!.key)
-          .toList();
+      findNetworkFolders();
     });
   }
 }

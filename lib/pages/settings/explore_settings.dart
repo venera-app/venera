@@ -38,19 +38,7 @@ class _ExploreSettingsState extends State<ExploreSettings> {
         ).toSliver(),
         _PopupWindowSetting(
           title: "Network Favorite Pages".tl,
-          builder: () {
-            var pages = <String, String>{};
-            for (var c in ComicSource.all()) {
-              if (c.favoriteData != null) {
-                pages[c.favoriteData!.key] = c.favoriteData!.title;
-              }
-            }
-            return _MultiPagesFilter(
-              title: "Network Favorite Pages".tl,
-              settingsIndex: "favorites",
-              pages: pages,
-            );
-          },
+          builder: setFavoritesPagesWidget,
         ).toSliver(),
         _SwitchSetting(
           title: "Show favorite status on comic tile".tl,
@@ -206,6 +194,20 @@ Widget setCategoryPagesWidget() {
   return _MultiPagesFilter(
     title: "Category Pages".tl,
     settingsIndex: "categories",
+    pages: pages,
+  );
+}
+
+Widget setFavoritesPagesWidget() {
+  var pages = <String, String>{};
+  for (var c in ComicSource.all()) {
+    if (c.favoriteData != null) {
+      pages[c.favoriteData!.key] = c.favoriteData!.title;
+    }
+  }
+  return _MultiPagesFilter(
+    title: "Network Favorite Pages".tl,
+    settingsIndex: "favorites",
     pages: pages,
   );
 }
