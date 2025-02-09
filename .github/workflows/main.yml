@@ -8,7 +8,6 @@ on:
 jobs:
   Build_MacOS:
     runs-on: macos-15
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -40,15 +39,20 @@ jobs:
           ln -s /Applications dist/dmg_contents/Applications
           hdiutil create -volname "venera" -srcfolder dist/dmg_contents -ov -format UDZO "dist/venera.dmg"
 
+      - name: Add version to filename
+        run: |
+          APP_VERSION=$(grep "version:" pubspec.yaml | cut -d':' -f2 | tr -d ' ')
+          mkdir -p result
+          mv dist/venera.dmg result/venera-$APP_VERSION.dmg
+
       # Step 4: Attach and upload artifacts (optional)
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: venera.dmg
-          path: dist/venera.dmg
+          name: macos_build
+          path: result/
   Build_IOS:
     runs-on: macos-15
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -64,13 +68,17 @@ jobs:
           mv /Users/runner/work/venera/venera/build/ios/iphoneos/Runner.app /Users/runner/work/venera/venera/build/ios/iphoneos/Payload
           cd /Users/runner/work/venera/venera/build/ios/iphoneos/
           zip -r venera-ios.ipa Payload
+      - name: Add version to filename
+        run: |
+          APP_VERSION=$(grep "version:" pubspec.yaml | cut -d':' -f2 | tr -d ' ')
+          mkdir -p result
+          mv build/ios/iphoneos/venera-ios.ipa result/venera-ios-$APP_VERSION.ipa
       - uses: actions/upload-artifact@v4
         with:
-          name: app-ios.ipa
-          path: /Users/runner/work/venera/venera/build/ios/iphoneos/venera-ios.ipa
+          name: ios_build
+          path: result/
   Build_Android:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -101,7 +109,6 @@ jobs:
           path: build/app/outputs/apk/release
   Build_Windows:
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
       - name: install dependencies
@@ -123,7 +130,6 @@ jobs:
           path: build/windows/Venera-*
   Build_Linux:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -177,16 +183,16 @@ jobs:
 
   Release:
     runs-on: ubuntu-latest
-    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux]
+    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux, Build_Linux_ARM64]
     if: github.event_name == 'release'  # 仅在 push 事件时执行
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: venera.dmg
+          name: macos_build
           path: outputs
       - uses: actions/download-artifact@v4
         with:
-          name: app-ios.ipa
+          name: ios_build
           path: outputs
       - uses: actions/download-artifact@v4
         with:
@@ -203,6 +209,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: arch_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb_arm64_build
           path: outputs
       - uses: softprops/action-gh-release@v2
         with:
