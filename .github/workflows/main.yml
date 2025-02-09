@@ -173,7 +173,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: deb_arm64_build
-          path: build/linux/arm64/release/debian
+          path: build/linux/x64/release/debian # This is a bug related to flutter_to_debian, but it's not a big deal.
 
   Release:
     runs-on: ubuntu-latest
