@@ -323,7 +323,8 @@
     "Cloudflare verification required": "需要Cloudflare验证",
     "Success": "成功",
     "Compressing": "压缩中",
-    "Exporting": "导出中"
+    "Exporting": "导出中",
+    "Search Sources": "搜索源"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -649,6 +650,7 @@
     "Cloudflare verification required": "需要Cloudflare驗證",
     "Success": "成功",
     "Compressing": "壓縮中",
-    "Exporting": "匯出中"
+    "Exporting": "匯出中",
+    "Search Sources": "搜索源"
   }
 }

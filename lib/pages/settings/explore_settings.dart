@@ -40,6 +40,10 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           title: "Network Favorite Pages".tl,
           builder: setFavoritesPagesWidget,
         ).toSliver(),
+        _PopupWindowSetting(
+          title: "Search Sources".tl,
+          builder: setSearchSourcesWidget,
+        ).toSliver(),
         _SwitchSetting(
           title: "Show favorite status on comic tile".tl,
           settingKey: "showFavoriteStatusOnTile",
@@ -208,6 +212,20 @@ Widget setFavoritesPagesWidget() {
   return _MultiPagesFilter(
     title: "Network Favorite Pages".tl,
     settingsIndex: "favorites",
+    pages: pages,
+  );
+}
+
+Widget setSearchSourcesWidget() {
+  var pages = <String, String>{};
+  for (var c in ComicSource.all()) {
+    if (c.searchPageData != null) {
+      pages[c.key] = c.name;
+    }
+  }
+  return _MultiPagesFilter(
+    title: "Search Sources".tl,
+    settingsIndex: "searchSources",
     pages: pages,
   );
 }

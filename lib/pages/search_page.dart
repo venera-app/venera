@@ -10,12 +10,14 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/pages/aggregated_search_page.dart';
 import 'package:venera/pages/search_result_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'comic_page.dart';
+import 'comic_source_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -27,7 +29,12 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late final SearchBarController controller;
 
+  late List<String> searchSources;
+
   String searchTarget = "";
+
+  SearchPageData get currentSearchPageData =>
+      ComicSource.find(searchTarget)!.searchPageData!;
 
   bool aggregatedSearch = false;
 
@@ -139,31 +146,85 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void initState() {
+    findSearchSources();
     var defaultSearchTarget = appdata.settings['defaultSearchTarget'];
     if (defaultSearchTarget == "_aggregated_") {
       aggregatedSearch = true;
-      searchTarget = ComicSource.all().where((e) => e.searchPageData != null)
-          .toList().first.key;
     } else if (defaultSearchTarget != null &&
-        ComicSource.find(defaultSearchTarget) != null) {
+        searchSources.contains(defaultSearchTarget)) {
       searchTarget = defaultSearchTarget;
-    } else {
-      searchTarget = ComicSource.all().first.key;
     }
     controller = SearchBarController(
       onSearch: search,
     );
+    appdata.settings.addListener(updateSearchSourcesIfNeeded);
     super.initState();
   }
 
   @override
   void dispose() {
     focusNode.dispose();
+    appdata.settings.removeListener(updateSearchSourcesIfNeeded);
     super.dispose();
+  }
+
+  void findSearchSources() {
+    var all = ComicSource.all()
+        .where((e) => e.searchPageData != null)
+        .map((e) => e.key)
+        .toList();
+    var settings = appdata.settings['searchSources'] as List;
+    var sources = <String>[];
+    for (var source in settings) {
+      if (all.contains(source)) {
+        sources.add(source);
+      }
+    }
+    searchSources = sources;
+    if (!searchSources.contains(searchTarget)) {
+      searchTarget = searchSources.firstOrNull ?? "";
+    }
+  }
+
+  void updateSearchSourcesIfNeeded() {
+    var old = searchSources;
+    findSearchSources();
+    if (old.isEqualsTo(searchSources)) {
+      return;
+    }
+    setState(() {});
+  }
+
+  void manageSearchSources() {
+    showPopUpWidget(App.rootContext, setSearchSourcesWidget());
+  }
+
+  Widget buildEmpty() {
+    var msg = "No Search Sources".tl;
+    msg += '\n';
+    VoidCallback onTap;
+    if (ComicSource.isEmpty) {
+      msg += "Please add some sources".tl;
+      onTap = () {
+        context.to(() => ComicSourcePage());
+      };
+    } else {
+      msg += "Please check your settings".tl;
+      onTap = manageSearchSources;
+    }
+    return NetworkError(
+      message: msg,
+      retry: onTap,
+      withAppbar: true,
+      buttonText: "Manage".tl,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (searchSources.isEmpty) {
+      return buildEmpty();
+    }
     return Scaffold(
       body: SmoothCustomScrollView(
         slivers: buildSlivers().toList(),
@@ -192,8 +253,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget buildSearchTarget() {
-    var sources =
-        ComicSource.all().where((e) => e.searchPageData != null).toList();
+    var sources = searchSources.map((e) => ComicSource.find(e)!).toList();
     return SliverToBoxAdapter(
       child: Container(
         width: double.infinity,
@@ -205,6 +265,10 @@ class _SearchPageState extends State<SearchPage> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.search),
               title: Text("Search in".tl),
+              trailing: IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: manageSearchSources,
+              ),
             ),
             Wrap(
               spacing: 8,
@@ -231,11 +295,6 @@ class _SearchPageState extends State<SearchPage> {
                 onChanged: (value) {
                   setState(() {
                     aggregatedSearch = value ?? false;
-                    if (!aggregatedSearch &&
-                        appdata.settings['defaultSearchTarget'] ==
-                            "_aggregated_") {
-                      searchTarget = sources.first.key;
-                    }
                   });
                 },
               ),
@@ -247,9 +306,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void useDefaultOptions() {
-    final searchOptions =
-        ComicSource.find(searchTarget)!.searchPageData!.searchOptions ??
-            <SearchOptions>[];
+    final searchOptions = currentSearchPageData.searchOptions ?? [];
     options = searchOptions.map((e) => e.defaultValue).toList();
   }
 
@@ -260,9 +317,7 @@ class _SearchPageState extends State<SearchPage> {
 
     var children = <Widget>[];
 
-    final searchOptions =
-        ComicSource.find(searchTarget)!.searchPageData!.searchOptions ??
-            <SearchOptions>[];
+    final searchOptions = currentSearchPageData.searchOptions ?? [];
     if (searchOptions.length != options.length) {
       useDefaultOptions();
     }
@@ -396,7 +451,9 @@ class _SearchPageState extends State<SearchPage> {
               Text(
                 subTitle,
                 style: TextStyle(
-                    fontSize: 14, color: Theme.of(context).colorScheme.outline),
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               )
           ],
         ),

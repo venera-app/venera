@@ -126,6 +126,7 @@ class _Settings with ChangeNotifier {
     'explore_pages': [],
     'categories': [],
     'favorites': [],
+    'searchSources': null,
     'showFavoriteStatusOnTile': true,
     'showHistoryStatusOnTile': false,
     'blockedWords': [],
