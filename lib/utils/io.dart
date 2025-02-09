@@ -35,19 +35,9 @@ class FilePath {
 }
 
 extension FileSystemEntityExt on FileSystemEntity {
+  /// Get the base name of the file or directory.
   String get name {
-    var path = this.path;
-    if (path.endsWith('/') || path.endsWith('\\')) {
-      path = path.substring(0, path.length - 1);
-    }
-
-    int i = path.length - 1;
-
-    while (i >= 0 && path[i] != '\\' && path[i] != '/') {
-      i--;
-    }
-
-    return path.substring(i + 1);
+    return p.basename(path);
   }
 
   Future<void> deleteIgnoreError({bool recursive = false}) async {
@@ -82,6 +72,10 @@ extension FileExtension on File {
     var newFile = File(newPath);
     // Stream is not usable since [AndroidFile] does not support [openRead].
     await newFile.writeAsBytes(await readAsBytes());
+  }
+
+  String get basenameWithoutExt {
+    return p.basenameWithoutExtension(path);
   }
 }
 

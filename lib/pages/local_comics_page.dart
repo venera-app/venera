@@ -12,6 +12,7 @@ import 'package:venera/utils/epub.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/pdf.dart';
 import 'package:venera/utils/translations.dart';
+import 'package:zip_flutter/zip_flutter.dart';
 
 class LocalComicsPage extends StatefulWidget {
   const LocalComicsPage({super.key});
@@ -147,13 +148,13 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           text: "View Detail".tl,
           onClick: () {
             context.to(() => ComicPage(
-              id: selectedComics.keys.first.id,
-              sourceKey: selectedComics.keys.first.sourceKey,
-            ));
+                  id: selectedComics.keys.first.id,
+                  sourceKey: selectedComics.keys.first.sourceKey,
+                ));
           },
         ),
-      if (selectedComics.length == 1)
-        ...exportActions(selectedComics.keys.first),
+      if (selectedComics.isNotEmpty)
+        ...exportActions(selectedComics.keys.toList()),
     ]);
   }
 
@@ -322,7 +323,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                     });
                   },
                 ),
-                ...exportActions(c as LocalComic),
+                ...exportActions([c as LocalComic]),
               ];
             },
           ),
@@ -390,79 +391,102 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     return isDeleted;
   }
 
-  List<MenuEntry> exportActions(LocalComic c) {
+  List<MenuEntry> exportActions(List<LocalComic> comics) {
     return [
       MenuEntry(
-          icon: Icons.outbox_outlined,
-          text: "Export as cbz".tl,
-          onClick: () async {
-            var controller = showLoadingDialog(
-              context,
-              allowCancel: false,
-            );
-            try {
-              var file = await CBZ.export(c);
-              await saveFile(filename: file.name, file: file);
-              await file.delete();
-            } catch (e, s) {
-              context.showMessage(message: e.toString());
-              Log.error("CBZ Export", e, s);
-            }
-            controller.close();
-          }),
+        icon: Icons.outbox_outlined,
+        text: "Export as cbz".tl,
+        onClick: () {
+          exportComics(comics, CBZ.export, ".cbz");
+        },
+      ),
       MenuEntry(
         icon: Icons.picture_as_pdf_outlined,
         text: "Export as pdf".tl,
         onClick: () async {
-          var cache = FilePath.join(App.cachePath, 'temp.pdf');
-          var controller = showLoadingDialog(
-            context,
-            allowCancel: false,
-          );
-          try {
-            await createPdfFromComicIsolate(
-              comic: c,
-              savePath: cache,
-            );
-            await saveFile(
-              file: File(cache),
-              filename: "${c.title}.pdf",
-            );
-          } catch (e, s) {
-            Log.error("PDF Export", e, s);
-            context.showMessage(message: e.toString());
-          } finally {
-            controller.close();
-            File(cache).deleteIgnoreError();
-          }
+          exportComics(comics, createPdfFromComicIsolate, ".pdf");
         },
       ),
       MenuEntry(
         icon: Icons.import_contacts_outlined,
         text: "Export as epub".tl,
         onClick: () async {
-          var controller = showLoadingDialog(
-            context,
-            allowCancel: false,
-          );
-          File? file;
-          try {
-            file = await createEpubWithLocalComic(
-              c,
-            );
-            await saveFile(
-              file: file,
-              filename: "${c.title}.epub",
-            );
-          } catch (e, s) {
-            Log.error("EPUB Export", e, s);
-            context.showMessage(message: e.toString());
-          } finally {
-            controller.close();
-            file?.deleteIgnoreError();
-          }
+          exportComics(comics, createEpubWithLocalComic, ".epub");
         },
       )
     ];
   }
+
+  /// Export given comics to a file
+  void exportComics(
+      List<LocalComic> comics, ExportComicFunc export, String ext) async {
+    var current = 0;
+    var cacheDir = FilePath.join(App.cachePath, 'comics_export');
+    var outFile = FilePath.join(App.cachePath, 'comics_export.zip');
+    bool canceled = false;
+    if (Directory(cacheDir).existsSync()) {
+      Directory(cacheDir).deleteSync(recursive: true);
+    }
+    Directory(cacheDir).createSync();
+    var loadingController = showLoadingDialog(
+      context,
+      allowCancel: true,
+      message: "${"Exporting".tl} $current/${comics.length}",
+      withProgress: comics.length > 1,
+      onCancel: () {
+        canceled = true;
+      },
+    );
+    try {
+      var fileName = "";
+      // For each comic, export it to a file
+      for (var comic in comics) {
+        fileName = FilePath.join(cacheDir, sanitizeFileName(comic.title) + ext);
+        await export(comic, fileName);
+        current++;
+        if (comics.length > 1) {
+          loadingController
+              .setMessage("${"Exporting".tl} $current/${comics.length}");
+          loadingController.setProgress(current / comics.length);
+        }
+        if (canceled) {
+          return;
+        }
+      }
+      // For single comic, just save the file
+      if (comics.length == 1) {
+        await saveFile(
+          file: File(fileName),
+          filename: File(fileName).name,
+        );
+        Directory(cacheDir).deleteSync(recursive: true);
+        loadingController.close();
+        return;
+      }
+      // For multiple comics, compress the folder
+      loadingController.setProgress(null);
+      loadingController.setMessage("Compressing".tl);
+      await ZipFile.compressFolderAsync(cacheDir, outFile);
+      if (canceled) {
+        File(outFile).deleteIgnoreError();
+        return;
+      }
+    } catch (e, s) {
+      Log.error("Export Comics", e, s);
+      context.showMessage(message: e.toString());
+      loadingController.close();
+      return;
+    } finally {
+      Directory(cacheDir).deleteIgnoreError(recursive: true);
+    }
+    await saveFile(
+      file: File(outFile),
+      filename: "comics_export.zip",
+    );
+    loadingController.close();
+    File(outFile).deleteIgnoreError();
+  }
 }
+
+typedef ExportComicFunc = Future<File> Function(
+    LocalComic comic, String outFilePath);

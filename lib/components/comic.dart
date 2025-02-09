@@ -550,7 +550,7 @@ class _ComicDescription extends StatelessWidget {
               int cnt = (constraints.maxHeight - 22).toInt() ~/ 25;
               return Container(
                 clipBehavior: Clip.antiAlias,
-                height: 22 + cnt * 25,
+                height: 21 + cnt * 24,
                 width: double.infinity,
                 decoration: const BoxDecoration(),
                 child: Wrap(
@@ -562,31 +562,30 @@ class _ComicDescription extends StatelessWidget {
                   children: [
                     for (var s in tags!)
                       Container(
-                          height: 22,
-                          padding: const EdgeInsets.fromLTRB(3, 2, 3, 2),
-                          constraints: BoxConstraints(
-                            maxWidth: constraints.maxWidth * 0.45,
+                        height: 21,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth * 0.45,
+                        ),
+                        decoration: BoxDecoration(
+                          color: s == "Unavailable"
+                              ? context.colorScheme.errorContainer
+                              : context.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          widthFactor: 1,
+                          child: Text(
+                            enableTranslate
+                                ? TagsTranslation.translateTag(s)
+                                : s.split(':').last,
+                            style: const TextStyle(fontSize: 12),
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                          decoration: BoxDecoration(
-                            color: s == "Unavailable"
-                                ? Theme.of(context).colorScheme.errorContainer
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(8)),
-                          ),
-                          child: Center(
-                              widthFactor: 1,
-                              child: Text(
-                                enableTranslate
-                                    ? TagsTranslation.translateTag(s)
-                                    : s.split(':').last,
-                                style: const TextStyle(fontSize: 12),
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ))),
+                        ),
+                      ),
                   ],
                 ),
               ).toAlign(Alignment.topCenter);
@@ -1520,14 +1519,15 @@ class SimpleComicTile extends StatelessWidget {
 
     return AnimatedTapRegion(
       borderRadius: 8,
-      onTap: onTap ?? () {
-        context.to(
-          () => ComicPage(
-            id: comic.id,
-            sourceKey: comic.sourceKey,
-          ),
-        );
-      },
+      onTap: onTap ??
+          () {
+            context.to(
+              () => ComicPage(
+                id: comic.id,
+                sourceKey: comic.sourceKey,
+              ),
+            );
+          },
       child: Container(
         width: 92,
         height: 114,

@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import 'package:shimmer_animation/shimmer_animation.dart';
 import "package:venera/components/components.dart";
 import "package:venera/foundation/app.dart";
+import "package:venera/foundation/appdata.dart";
 import "package:venera/foundation/comic_source/comic_source.dart";
 import "package:venera/pages/search_result_page.dart";
 import "package:venera/utils/translations.dart";
@@ -24,7 +25,18 @@ class _AggregatedSearchPageState extends State<AggregatedSearchPage> {
 
   @override
   void initState() {
-    sources = ComicSource.all().where((e) => e.searchPageData != null).toList();
+    var all = ComicSource.all()
+        .where((e) => e.searchPageData != null)
+        .map((e) => e.key)
+        .toList();
+    var settings = appdata.settings['searchSources'] as List;
+    var sources = <String>[];
+    for (var source in settings) {
+      if (all.contains(source)) {
+        sources.add(source);
+      }
+    }
+    this.sources = sources.map((e) => ComicSource.find(e)!).toList();
     _keyword = widget.keyword;
     controller = SearchBarController(
       currentText: widget.keyword,

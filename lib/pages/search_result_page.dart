@@ -116,13 +116,13 @@ class _SearchResultPageState extends State<SearchResultPage> {
   @override
   void initState() {
     sourceKey = widget.sourceKey;
+    text = checkAutoLanguage(widget.text);
     controller = SearchBarController(
-      currentText: checkAutoLanguage(widget.text),
+      currentText: text,
       onSearch: search,
     );
     options = widget.options ?? const [];
     validateOptions();
-    text = widget.text;
     appdata.addSearchHistory(text);
     suggestionsController = _SuggestionsController(controller);
     super.initState();

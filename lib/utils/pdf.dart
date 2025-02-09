@@ -30,14 +30,14 @@ Future<void> _createPdfFromComic({
     files.removeWhere(
         (element) => element is! File || element.path.startsWith('cover'));
     files.sort((a, b) {
-      var aName = (a as File).name;
-      var bName = (b as File).name;
+      var aName = (a as File).basenameWithoutExt;
+      var bName = (b as File).basenameWithoutExt;
       var aNumber = int.tryParse(aName);
       var bNumber = int.tryParse(bName);
       if (aNumber != null && bNumber != null) {
         return aNumber.compareTo(bNumber);
       }
-      return aName.compareTo(bName);
+      return a.name.compareTo(b.name);
     });
   }
 
@@ -49,7 +49,7 @@ Future<void> _createPdfFromComic({
       images.add(file.path);
     }
   } else {
-    for (var chapter in comic.chapters!.keys) {
+    for (var chapter in comic.downloadedChapters) {
       var files = Directory(FilePath.join(baseDir, chapter)).listSync();
       reorderFiles(files);
       for (var file in files) {
@@ -112,10 +112,7 @@ Future<Isolate> _runIsolate(
   );
 }
 
-Future<void> createPdfFromComicIsolate({
-  required LocalComic comic,
-  required String savePath,
-}) async {
+Future<File> createPdfFromComicIsolate(LocalComic comic, String savePath) async {
   var receivePort = ReceivePort();
   SendPort? sendPort;
   Isolate? isolate;
@@ -134,7 +131,8 @@ Future<void> createPdfFromComicIsolate({
     }
   });
   isolate = await _runIsolate(comic, savePath, receivePort.sendPort);
-  return completer.future;
+  await completer.future;
+  return File(savePath);
 }
 
 class PdfGenerator {

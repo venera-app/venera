@@ -10,7 +10,7 @@ export "widget_utils.dart";
 export "context.dart";
 
 class _App {
-  final version = "1.2.3";
+  final version = "1.2.4";
 
   bool get isAndroid => Platform.isAndroid;
 
@@ -52,7 +52,7 @@ class _App {
   BuildContext get rootContext => rootNavigatorKey.currentContext!;
 
   void rootPop() {
-    rootNavigatorKey.currentState?.pop();
+    rootNavigatorKey.currentState?.maybePop();
   }
 
   void pop() {

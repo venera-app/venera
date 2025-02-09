@@ -85,6 +85,10 @@ abstract class CBZ {
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
     await extractArchive(file, cache);
+    var f = cache.listSync();
+    if (f.length == 1 && f.first is Directory) {
+      cache = f.first as Directory;
+    }
     var metaDataFile = File(FilePath.join(cache.path, 'metadata.json'));
     ComicMetaData? metaData;
     if (metaDataFile.existsSync()) {
@@ -171,7 +175,7 @@ abstract class CBZ {
     return comic;
   }
 
-  static Future<File> export(LocalComic comic) async {
+  static Future<File> export(LocalComic comic, String outFilePath) async {
     var cache = Directory(FilePath.join(App.cachePath, 'cbz_export'));
     if (cache.existsSync()) cache.deleteSync(recursive: true);
     cache.createSync();
@@ -230,7 +234,7 @@ abstract class CBZ {
         ).toJson(),
       ),
     );
-    var cbz = File(FilePath.join(App.cachePath, sanitizeFileName('${comic.title}.cbz')));
+    var cbz = File(outFilePath);
     if (cbz.existsSync()) cbz.deleteSync();
     await _compress(cache.path, cbz.path);
     cache.deleteSync(recursive: true);

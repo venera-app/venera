@@ -42,11 +42,16 @@ Future<void> init() async {
   await ComicSource.init().wait();
   await LocalManager().init().wait();
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
+  if (appdata.settings['searchSources'] == null) {
+    appdata.settings['searchSources'] = ComicSource.all()
+        .where((e) => e.searchPageData != null)
+        .map((e) => e.key)
+        .toList();
+  }
   if (App.isAndroid) {
     handleLinks();
   }
   FlutterError.onError = (details) {
-    Log.error(
-        "Unhandled Exception", "${details.exception}\n${details.stack}");
+    Log.error("Unhandled Exception", "${details.exception}\n${details.stack}");
   };
 }

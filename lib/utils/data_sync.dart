@@ -118,6 +118,7 @@ class DataSync with ChangeNotifier {
           await client.remove(files.first.name!);
         }
         await client.write(filename, await data.readAsBytes());
+        data.deleteIgnoreError();
         Log.info("Upload Data", "Data uploaded successfully");
         return const Res(true);
       } catch (e, s) {

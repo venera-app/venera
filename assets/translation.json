@@ -321,7 +321,10 @@
     "Manage": "管理",
     "Verify": "验证",
     "Cloudflare verification required": "需要Cloudflare验证",
-    "Success": "成功"
+    "Success": "成功",
+    "Compressing": "压缩中",
+    "Exporting": "导出中",
+    "Search Sources": "搜索源"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -645,6 +648,9 @@
     "Manage": "管理",
     "Verify": "驗證",
     "Cloudflare verification required": "需要Cloudflare驗證",
-    "Success": "成功"
+    "Success": "成功",
+    "Compressing": "壓縮中",
+    "Exporting": "匯出中",
+    "Search Sources": "搜索源"
   }
 }

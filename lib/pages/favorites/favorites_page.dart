@@ -16,6 +16,7 @@ import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/comic_page.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
