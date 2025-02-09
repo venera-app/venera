@@ -187,7 +187,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
             suggestionsController.remove();
           }
 
-          var previousOptions = options;
+          var previousOptions = List<String>.from(options);
           var previousSourceKey = sourceKey;
           await showDialog(
             context: context,
@@ -196,7 +196,8 @@ class _SearchResultPageState extends State<SearchResultPage> {
               return _SearchSettingsDialog(state: this);
             },
           );
-          if (previousOptions != options || previousSourceKey != sourceKey) {
+          if (!previousOptions.isEqualsTo(options) ||
+              previousSourceKey != sourceKey) {
             text = checkAutoLanguage(controller.text);
             controller.currentText = text;
             setState(() {});
