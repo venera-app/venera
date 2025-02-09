@@ -3,10 +3,35 @@
 
 #define MyAppName "Venera"
 #define MyAppVersion "{{version}}"
-#define MyAppPublisher "wgh136"
+#define MyAppPublisher "nyne"
 #define MyAppURL "https://github.com/venera-app/venera"
 #define MyAppExeName "venera.exe"
 #define RootPath "{{root_path}}"
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  OldVersionPath, ShortcutPath: string;
+begin
+  if CurStep = ssInstall then
+  begin
+    OldVersionPath := 'C:\Program Files (x86)\Venera';
+    if DirExists(OldVersionPath) then
+    begin
+      DelTree(OldVersionPath, True, True, True);
+      ShortcutPath := GetEnv('USERPROFILE') + '\Desktop\Venera.lnk';
+      if FileExists(ShortcutPath) then
+      begin
+        DeleteFile(ShortcutPath);
+      end;
+      ShortcutPath := 'C:\Users\Public\Desktop\Venera.lnk';
+      if FileExists(ShortcutPath) then
+      begin
+        DeleteFile(ShortcutPath);
+      end;
+    end;
+  end;
+end;
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -30,6 +55,8 @@ SetupIconFile={#RootPath}\windows\runner\resources\app_icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
