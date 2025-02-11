@@ -742,7 +742,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
 
   @override
   void didUpdateWidget(covariant SliverGridComics oldWidget) {
-    if (oldWidget.comics != widget.comics) {
+    if (oldWidget.comics.isEqualsTo(widget.comics)) {
       comics.clear();
       for (var comic in widget.comics) {
         if (isBlocked(comic) == null) {
