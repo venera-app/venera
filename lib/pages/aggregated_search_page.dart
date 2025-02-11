@@ -58,7 +58,11 @@ class _AggregatedSearchPageState extends State<AggregatedSearchPage> {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final source = sources[index];
-            return _SliverSearchResult(source: source, keyword: _keyword);
+            return _SliverSearchResult(
+              key: ValueKey(source.key),
+              source: source,
+              keyword: _keyword,
+            );
           },
           childCount: sources.length,
         ),
@@ -68,7 +72,11 @@ class _AggregatedSearchPageState extends State<AggregatedSearchPage> {
 }
 
 class _SliverSearchResult extends StatefulWidget {
-  const _SliverSearchResult({required this.source, required this.keyword});
+  const _SliverSearchResult({
+    required this.source,
+    required this.keyword,
+    super.key,
+  });
 
   final ComicSource source;
 
@@ -90,6 +98,8 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
 
   List<Comic>? comics;
 
+  String? error;
+
   void load() async {
     final data = widget.source.searchPageData!;
     var options =
@@ -101,12 +111,22 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
           comics = res.data;
           isLoading = false;
         });
+      } else {
+        setState(() {
+          error = res.errorMessage ?? "Unknown error".tl;
+          isLoading = false;
+        });
       }
     } else if (data.loadNext != null) {
       var res = await data.loadNext!(widget.keyword, null, options);
       if (!res.error) {
         setState(() {
           comics = res.data;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = res.errorMessage ?? "Unknown error".tl;
           isLoading = false;
         });
       }
@@ -139,6 +159,9 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
 
   @override
   Widget build(BuildContext context) {
+    if (error != null && error!.startsWith("CloudflareException")) {
+      error = "Cloudflare verification required".tl;
+    }
     super.build(context);
     return InkWell(
       onTap: () {
@@ -181,7 +204,7 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
                 }),
               ),
             )
-          else if (comics == null || comics!.isEmpty)
+          else if (error != null || comics == null || comics!.isEmpty)
             SizedBox(
               height: _kComicHeight,
               child: Column(
@@ -190,7 +213,13 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
                     children: [
                       const Icon(Icons.error_outline),
                       const SizedBox(width: 8),
-                      Text("No search results found".tl),
+                      Expanded(
+                        child: Text(
+                          error ?? "No search results found".tl,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
                     ],
                   ),
                   const Spacer(),
