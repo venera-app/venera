@@ -496,7 +496,7 @@ let Network = {
 /**
  * [fetch] function for sending HTTP requests. Same api as the browser fetch.
  * @param url {string}
- * @param options {{method: string, headers: Object, body: any}}
+ * @param [options] {{method?: string, headers?: Object, body?: any}}
  * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {}, arrayBuffer: (function(): Promise<ArrayBuffer>), text: (function(): Promise<string>), json: (function(): Promise<any>)}>}
  * @since 1.2.0
  */
@@ -921,7 +921,7 @@ function Comic({id, title, subtitle, subTitle, cover, tags, description, maxPage
  * @param description {string?}
  * @param tags {Map<string, string[]> | {} | null | undefined}
  * @param chapters {Map<string, string> | {} | null | undefined} - key: chapter id, value: chapter title
- * @param isFavorite {boolean | null | undefined} - favorite status. If the comic source supports multiple folders, this field should be null
+ * @param isFavorite {boolean | null | undefined} - favorite status.
  * @param subId {string?} - a param which is passed to comments api
  * @param thumbnails {string[]?} - for multiple page thumbnails, set this to null, and use `loadThumbnails` api to load thumbnails
  * @param recommend {Comic[]?} - related comics
@@ -1084,6 +1084,19 @@ class ComicSource {
             method: 'isLogged',
             key: this.key,
         });
+    }
+
+    translation = {}
+
+    /**
+     * Translate given string with the current locale using the translation object.
+     * @param key {string}
+     * @returns {string}
+     * @since 1.2.5
+     */
+    translate(key) {
+        let locale = APP.locale;
+        return this.translation[locale]?.[key] ?? key;
     }
 
     init() { }
