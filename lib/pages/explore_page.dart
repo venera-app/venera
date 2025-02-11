@@ -37,7 +37,7 @@ class _ExplorePageState extends State<ExplorePage>
         .expand((e) => e.map((e) => e.title))
         .toList();
     explorePages = explorePages.where((e) => all.contains(e)).toList();
-    if (!pages.isEqualsTo(explorePages)) {
+    if (!pages.isEqualTo(explorePages)) {
       setState(() {
         pages = explorePages;
         controller = TabController(
