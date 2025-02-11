@@ -330,7 +330,8 @@
     "Not added": "未添加",
     "Create a folder": "新建收藏夹",
     "Created successfully": "创建成功",
-    "name": "名称"
+    "name": "名称",
+    "Reverse tap to turn Pages": "反转点击翻页"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -663,6 +664,7 @@
     "Not added": "未添加",
     "Create a folder": "新建收藏夾",
     "Created successfully": "創建成功",
-    "name": "名稱"
+    "name": "名稱",
+    "Reverse tap to turn Pages": "反轉點擊翻頁"
   }
 }

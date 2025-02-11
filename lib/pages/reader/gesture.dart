@@ -191,31 +191,37 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           isBottom = true;
         }
         bool isCenter = false;
+        var prev = context.reader.toPrevPage;
+        var next = context.reader.toNextPage;
+        if (appdata.settings['reverseTapToTurnPages']) {
+          prev = context.reader.toNextPage;
+          next = context.reader.toPrevPage;
+        }
         switch (context.reader.mode) {
           case ReaderMode.galleryLeftToRight:
           case ReaderMode.continuousLeftToRight:
             if (isLeft) {
-              context.reader.toPrevPage();
+              prev();
             } else if (isRight) {
-              context.reader.toNextPage();
+              next();
             } else {
               isCenter = true;
             }
           case ReaderMode.galleryRightToLeft:
           case ReaderMode.continuousRightToLeft:
             if (isLeft) {
-              context.reader.toNextPage();
+              next();
             } else if (isRight) {
-              context.reader.toPrevPage();
+              prev();
             } else {
               isCenter = true;
             }
           case ReaderMode.galleryTopToBottom:
           case ReaderMode.continuousTopToBottom:
             if (isTop) {
-              context.reader.toPrevPage();
+              prev();
             } else if (isBottom) {
-              context.reader.toNextPage();
+              next();
             } else {
               isCenter = true;
             }

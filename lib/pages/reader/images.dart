@@ -700,10 +700,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
   @override
   bool handleOnTap(Offset location) {
     if (delayedIsScrolling) {
-      print('isScrolling');
       return true;
     }
-    print('isNotScrolling');
     return false;
   }
 }

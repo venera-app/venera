@@ -23,6 +23,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           },
         ).toSliver(),
         _SwitchSetting(
+          title: "Reverse tap to turn Pages".tl,
+          settingKey: "reverseTapToTurnPages",
+          onChanged: () {
+            widget.onChanged?.call("reverseTapToTurnPages");
+          },
+        ).toSliver(),
+        _SwitchSetting(
           title: "Page animation".tl,
           settingKey: "enablePageAnimation",
           onChanged: () {
