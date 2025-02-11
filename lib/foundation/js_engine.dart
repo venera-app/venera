@@ -156,7 +156,7 @@ class JsEngine with _JSEngineApi, JsUiApi {
           case "UI":
             return handleUIMessage(Map.from(message));
           case "getLocale":
-            return "${App.locale.languageCode}-${App.locale.countryCode}";
+            return "${App.locale.languageCode}_${App.locale.countryCode}";
           case "getPlatform":
             return Platform.operatingSystem;
         }
