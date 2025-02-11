@@ -620,6 +620,7 @@ class ComicSourceParser {
 
     final bool multiFolder = _getValue("favorites.multiFolder");
     final bool? isOldToNewSort = _getValue("favorites.isOldToNewSort");
+    final bool? singleFolderForSingleComic = _getValue("favorites.singleFolderForSingleComic");
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async {
       if (!ComicSource.find(_key!)!.isLogged) {
@@ -773,6 +774,7 @@ class ComicSourceParser {
       deleteFolder: deleteFolder,
       addOrDelFavorite: addOrDelFavFunc,
       isOldToNewSort: isOldToNewSort,
+      singleFolderForSingleComic: singleFolderForSingleComic ?? false,
     );
   }
 

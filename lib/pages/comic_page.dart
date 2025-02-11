@@ -614,8 +614,10 @@ abstract mixin class _ComicPageActions {
     update();
   }
 
+  /// whether the comic is added to local favorite
   bool isAddToLocalFav = false;
 
+  /// whether the comic is favorite on the server
   bool isFavorite = false;
 
   FavoriteItem _toFavoriteItem() {
@@ -1672,6 +1674,42 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
   }
 
   Widget buildMultiFolder() {
+    if (widget.isFavorite == true &&
+        widget.comicSource.favoriteData!.singleFolderForSingleComic) {
+      return Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Text("Added to favorites".tl),
+            ),
+          ),
+          Center(
+            child: Button.filled(
+              isLoading: isLoading,
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
+                var res = await widget.comicSource.favoriteData!
+                    .addOrDelFavorite!(widget.cid, '', false, null);
+                if (res.success) {
+                  widget.onFavorite(false);
+                  context.pop();
+                  App.rootContext.showMessage(message: "Removed".tl);
+                } else {
+                  setState(() {
+                    isLoading = false;
+                  });
+                  context.showMessage(message: res.errorMessage!);
+                }
+              },
+              child: Text("Remove".tl),
+            ).paddingVertical(8),
+          ),
+        ],
+      );
+    }
     if (isLoadingFolders) {
       loadFolders();
       return const Center(child: CircularProgressIndicator());
