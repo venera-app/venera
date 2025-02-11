@@ -606,23 +606,26 @@ class _ComicDescription extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12.0,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
             if (badge != null)
               Container(
-                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiaryContainer,
-                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                ),
+                child: Center(
+                  child: Text(
+                    "${badge![0].toUpperCase()}${badge!.substring(1).toLowerCase()}",
+                    style: const TextStyle(fontSize: 12),
                   ),
-                  child: Center(
-                    child: Text(
-                      "${badge![0].toUpperCase()}${badge!.substring(1).toLowerCase()}",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  )),
+                ),
+              ),
           ],
         )
       ],
