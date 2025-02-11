@@ -25,8 +25,13 @@ extension WebviewExtension on InAppWebViewController {
     if (url[url.length - 1] == '/') {
       url = url.substring(0, url.length - 1);
     }
-    CookieManager cookieManager = CookieManager.instance();
-    final cookies = await cookieManager.getCookies(url: WebUri(url));
+    CookieManager cookieManager = CookieManager.instance(
+      webViewEnvironment: AppWebview.webViewEnvironment,
+    );
+    final cookies = await cookieManager.getCookies(
+      url: WebUri(url),
+      webViewController: this,
+    );
     var res = <io.Cookie>[];
     for (var cookie in cookies) {
       var c = io.Cookie(cookie.name, cookie.value);
@@ -90,7 +95,8 @@ class _AppWebviewState extends State<AppWebview> {
     var proxy = appdata.settings['proxy'].toString();
     if (proxy != "system" && proxy != "direct") {
       var proxyAvailable = await WebViewFeature.isFeatureSupported(
-          WebViewFeature.PROXY_OVERRIDE);
+        WebViewFeature.PROXY_OVERRIDE,
+      );
       if (proxyAvailable) {
         ProxyController proxyController = ProxyController.instance();
         await proxyController.clearProxyOverride();
@@ -147,22 +153,21 @@ class _AppWebviewState extends State<AppWebview> {
       )
     ];
 
-    Widget body = (App.isWindows && AppWebview.webViewEnvironment == null)
-        ? FutureBuilder(
-            future: future,
-            builder: (context, e) {
-              if (e.error != null) {
-                return Center(child: Text("Error: ${e.error}"));
-              }
-              if (e.data == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              AppWebview.webViewEnvironment = e.data;
-              return createWebviewWithEnvironment(
-                  AppWebview.webViewEnvironment);
-            },
-          )
-        : createWebviewWithEnvironment(AppWebview.webViewEnvironment);
+    Widget body = FutureBuilder(
+      future: future,
+      builder: (context, e) {
+        if (e.error != null) {
+          return Center(child: Text("Error: ${e.error}"));
+        }
+        if (e.data == null) {
+          return const SizedBox();
+        }
+        AppWebview.webViewEnvironment = e.data;
+        return createWebviewWithEnvironment(
+          AppWebview.webViewEnvironment,
+        );
+      },
+    );
 
     body = Stack(
       children: [
