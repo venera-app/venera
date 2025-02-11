@@ -335,6 +335,11 @@ class _GalleryModeState extends State<_GalleryMode>
       }
     }
   }
+
+  @override
+  bool handleOnTap(Offset location) {
+    return false;
+  }
 }
 
 const Set<PointerDeviceKind> _kTouchLikeDeviceTypes = <PointerDeviceKind>{
@@ -366,12 +371,30 @@ class _ContinuousModeState extends State<_ContinuousMode>
   var fingers = 0;
   bool disableScroll = false;
 
+  /// Whether the user was scrolling the page.
+  /// The gesture detector has a delay to detect tap event.
+  /// To handle the tap event, we need to know if the user was scrolling before the delay.
+  bool delayedIsScrolling = false;
+
+  void delayedSetIsScrolling(bool value) {
+    Future.delayed(
+      const Duration(milliseconds: 300),
+      () => delayedIsScrolling = value,
+    );
+  }
+
   @override
   void initState() {
     reader = context.reader;
     reader._imageViewController = this;
     itemPositionsListener.itemPositions.addListener(onPositionChanged);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    itemPositionsListener.itemPositions.removeListener(onPositionChanged);
+    super.dispose();
   }
 
   void onPositionChanged() {
@@ -516,8 +539,14 @@ class _ContinuousModeState extends State<_ContinuousMode>
       child: widget,
     );
 
-    widget = NotificationListener<ScrollUpdateNotification>(
+    widget = NotificationListener<ScrollNotification>(
       onNotification: (notification) {
+        if (notification is ScrollStartNotification) {
+          delayedSetIsScrolling(true);
+        } else if (notification is ScrollEndNotification) {
+          delayedSetIsScrolling(false);
+        }
+
         var length = reader.maxChapter;
         if (!scrollController.hasClients) return false;
         if (scrollController.position.pixels <=
@@ -592,7 +621,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   void handleLongPressDown(Offset location) {
-    if (!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom'] || delayedIsScrolling) {
       return;
     }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
@@ -666,6 +695,16 @@ class _ContinuousModeState extends State<_ContinuousMode>
         curve: Curves.ease,
       );
     }
+  }
+
+  @override
+  bool handleOnTap(Offset location) {
+    if (delayedIsScrolling) {
+      print('isScrolling');
+      return true;
+    }
+    print('isNotScrolling');
+    return false;
   }
 }
 

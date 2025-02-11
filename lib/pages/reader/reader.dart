@@ -430,4 +430,7 @@ abstract interface class _ImageViewController {
   void handleLongPressUp(Offset location);
 
   void handleKeyEvent(KeyEvent event);
+
+  /// Returns true if the event is handled.
+  bool handleOnTap(Offset location);
 }

@@ -24,6 +24,8 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   int fingers = 0;
 
+  late _ReaderState reader;
+
   @override
   void initState() {
     _tapGestureRecognizer = TapGestureRecognizer()
@@ -33,6 +35,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
       };
     super.initState();
     context.readerScaffold._gestureDetectorState = this;
+    reader = context.reader;
   }
 
   @override
@@ -166,7 +169,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   }
 
   void onTap(Offset location) {
-    if (context.readerScaffold.isOpen) {
+    if (reader._imageViewController!.handleOnTap(location)) {
+      return;
+    } else if (context.readerScaffold.isOpen) {
       context.readerScaffold.openOrClose();
     } else {
       if (appdata.settings['enableTapToTurnPages']) {
