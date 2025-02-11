@@ -7,6 +7,10 @@ body:
     attributes:
       value: |
         Thank you for reporting a problem, please complete the title and fill in the following information.
+        
+        **Please do not report any issues related to config files.**
+        
+        To report a bug related to the config file, please send it to the [config repository](https://github.com/venera-app/venera-configs).
   - type: textarea
     id: what-happened
     attributes:
@@ -19,7 +23,8 @@ body:
     attributes:
       label: Version
       description: | 
-        App version
+        App version.
+        
         Please try to update if it is not the latest version
     validations:
       required: true
