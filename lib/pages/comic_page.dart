@@ -60,7 +60,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   @override
   void onReadEnd() {
-    // The history is passed by reference, so it will be updated automatically.
+    history ??= HistoryManager()
+        .findSync(widget.id, ComicType(widget.sourceKey.hashCode));
     update();
   }
 
@@ -678,7 +679,8 @@ abstract mixin class _ComicPageActions {
   ///
   /// [page] the page number, start from 1
   void read([int? ep, int? page]) {
-    App.rootContext.to(
+    App.rootContext
+        .to(
       () => Reader(
         type: comic.comicType,
         cid: comic.id,
@@ -690,7 +692,8 @@ abstract mixin class _ComicPageActions {
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
       ),
-    ).then((_) {
+    )
+        .then((_) {
       onReadEnd();
     });
   }
