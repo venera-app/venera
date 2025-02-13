@@ -1131,7 +1131,7 @@ class _ComicChaptersState extends State<_ComicChapters> {
         int length = eps.length;
         bool canShowAll = showAll;
         if (!showAll) {
-          var width = constrains.crossAxisExtent;
+          var width = constrains.crossAxisExtent - 16;
           var crossItems = width ~/ 200;
           if (width % 200 != 0) {
             crossItems += 1;
