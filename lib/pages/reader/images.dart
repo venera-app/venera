@@ -555,18 +555,20 @@ class _ContinuousModeState extends State<_ContinuousMode>
           delayedSetIsScrolling(false);
         }
 
-        var length = reader.maxChapter;
-        if (!scrollController.hasClients) return false;
-        if (scrollController.position.pixels <=
-                scrollController.position.minScrollExtent &&
-            reader.chapter != 1) {
-          context.readerScaffold.setFloatingButton(-1);
-        } else if (scrollController.position.pixels >=
-                scrollController.position.maxScrollExtent &&
-            reader.chapter < length) {
-          context.readerScaffold.setFloatingButton(1);
-        } else {
-          context.readerScaffold.setFloatingButton(0);
+        if (notification is ScrollUpdateNotification) {
+          var length = reader.maxChapter;
+          if (!scrollController.hasClients) return false;
+          if (scrollController.position.pixels <=
+              scrollController.position.minScrollExtent &&
+              reader.chapter != 1) {
+            context.readerScaffold.setFloatingButton(-1);
+          } else if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent &&
+              reader.chapter < length) {
+            context.readerScaffold.setFloatingButton(1);
+          } else {
+            context.readerScaffold.setFloatingButton(0);
+          }
         }
 
         return true;
