@@ -135,6 +135,7 @@ class _Settings with ChangeNotifier {
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
     'readerScreenPicNumber': 1, // 1 - 5
     'enableTapToTurnPages': true,
+    'reverseTapToTurnPages': false,
     'enablePageAnimation': true,
     'language': 'system', // system, zh-CN, zh-TW, en-US
     'cacheSize': 2048, // in MB

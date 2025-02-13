@@ -139,8 +139,8 @@
     "Block": "屏蔽",
     "Add new favorite to": "添加新收藏到",
     "Move favorite after reading": "阅读后移动收藏",
-    "Delete folder?" : "刪除文件夾？",
-    "Delete folder '@f' ?" : "删除文件夹 '@f' ？",
+    "Delete folder?" : "删除文件夹?",
+    "Delete folder '@f' ?" : "删除文件夹 '@f' ?",
     "Import from file": "从文件导入",
     "Failed to import": "导入失败",
     "Cache Limit": "缓存限制",
@@ -324,7 +324,15 @@
     "Success": "成功",
     "Compressing": "压缩中",
     "Exporting": "导出中",
-    "Search Sources": "搜索源"
+    "Search Sources": "搜索源",
+    "Removed": "已移除",
+    "Added to favorites": "已添加到收藏",
+    "Not added": "未添加",
+    "Create a folder": "新建收藏夹",
+    "Created successfully": "创建成功",
+    "name": "名称",
+    "Reverse tap to turn Pages": "反转点击翻页",
+    "Show all": "显示全部"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -651,6 +659,14 @@
     "Success": "成功",
     "Compressing": "壓縮中",
     "Exporting": "匯出中",
-    "Search Sources": "搜索源"
+    "Search Sources": "搜索源",
+    "Removed": "已移除",
+    "Added to favorites": "已添加到收藏",
+    "Not added": "未添加",
+    "Create a folder": "新建收藏夾",
+    "Created successfully": "創建成功",
+    "name": "名稱",
+    "Reverse tap to turn Pages": "反轉點擊翻頁",
+    "Show all": "顯示全部"
   }
 }

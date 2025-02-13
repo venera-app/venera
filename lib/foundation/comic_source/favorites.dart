@@ -37,6 +37,8 @@ class FavoriteData {
 
   final AddOrDelFavFunc? addOrDelFavorite;
 
+  final bool singleFolderForSingleComic;
+
   const FavoriteData({
     required this.key,
     required this.title,
@@ -49,6 +51,7 @@ class FavoriteData {
     this.allFavoritesId,
     this.addOrDelFavorite,
     this.isOldToNewSort,
+    this.singleFolderForSingleComic = false,
   });
 }
 

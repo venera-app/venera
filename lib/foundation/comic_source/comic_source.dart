@@ -417,7 +417,7 @@ class SearchOptions {
 
   const SearchOptions(this.options, this.label, this.type, this.defaultVal);
 
-  String get defaultValue => defaultVal ?? options.keys.first;
+  String get defaultValue => defaultVal ?? options.keys.firstOrNull ?? "";
 }
 
 typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(

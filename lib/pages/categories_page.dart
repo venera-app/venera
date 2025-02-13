@@ -32,7 +32,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
         .toList();
     categories =
         categories.where((element) => allCategories.contains(element)).toList();
-    if (!categories.isEqualsTo(this.categories)) {
+    if (!categories.isEqualTo(this.categories)) {
       setState(() {
         this.categories = categories;
       });

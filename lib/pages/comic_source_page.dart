@@ -1011,7 +1011,7 @@ class _LoginPageState extends State<_LoginPage> {
                 if (widget.config.loginWebsite != null)
                   TextButton(
                     onPressed: () {
-                      if (App.isWindows || App.isLinux) {
+                      if (App.isLinux) {
                         loginWithWebview2();
                       } else {
                         loginWithWebview();
@@ -1127,7 +1127,7 @@ class _LoginPageState extends State<_LoginPage> {
     }
   }
 
-  // for windows and linux
+  // for linux
   void loginWithWebview2() async {
     if (!await DesktopWebview.isAvailable()) {
       context.showMessage(message: "Webview is not available".tl);

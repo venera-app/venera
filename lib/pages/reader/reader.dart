@@ -237,6 +237,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
         history!.maxPage = maxPage;
       }
       history!.readEpisode.add(chapter);
+      print(history!.readEpisode);
       history!.time = DateTime.now();
       HistoryManager().addHistory(history!);
     }
@@ -430,4 +431,7 @@ abstract interface class _ImageViewController {
   void handleLongPressUp(Offset location);
 
   void handleKeyEvent(KeyEvent event);
+
+  /// Returns true if the event is handled.
+  bool handleOnTap(Offset location);
 }

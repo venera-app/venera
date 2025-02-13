@@ -24,6 +24,8 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
 
   int fingers = 0;
 
+  late _ReaderState reader;
+
   @override
   void initState() {
     _tapGestureRecognizer = TapGestureRecognizer()
@@ -33,6 +35,7 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
       };
     super.initState();
     context.readerScaffold._gestureDetectorState = this;
+    reader = context.reader;
   }
 
   @override
@@ -166,7 +169,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   }
 
   void onTap(Offset location) {
-    if (context.readerScaffold.isOpen) {
+    if (reader._imageViewController!.handleOnTap(location)) {
+      return;
+    } else if (context.readerScaffold.isOpen) {
       context.readerScaffold.openOrClose();
     } else {
       if (appdata.settings['enableTapToTurnPages']) {
@@ -186,31 +191,37 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
           isBottom = true;
         }
         bool isCenter = false;
+        var prev = context.reader.toPrevPage;
+        var next = context.reader.toNextPage;
+        if (appdata.settings['reverseTapToTurnPages']) {
+          prev = context.reader.toNextPage;
+          next = context.reader.toPrevPage;
+        }
         switch (context.reader.mode) {
           case ReaderMode.galleryLeftToRight:
           case ReaderMode.continuousLeftToRight:
             if (isLeft) {
-              context.reader.toPrevPage();
+              prev();
             } else if (isRight) {
-              context.reader.toNextPage();
+              next();
             } else {
               isCenter = true;
             }
           case ReaderMode.galleryRightToLeft:
           case ReaderMode.continuousRightToLeft:
             if (isLeft) {
-              context.reader.toNextPage();
+              next();
             } else if (isRight) {
-              context.reader.toPrevPage();
+              prev();
             } else {
               isCenter = true;
             }
           case ReaderMode.galleryTopToBottom:
           case ReaderMode.continuousTopToBottom:
             if (isTop) {
-              context.reader.toPrevPage();
+              prev();
             } else if (isBottom) {
-              context.reader.toNextPage();
+              next();
             } else {
               isCenter = true;
             }

@@ -189,7 +189,7 @@ class _SearchPageState extends State<SearchPage> {
   void updateSearchSourcesIfNeeded() {
     var old = searchSources;
     findSearchSources();
-    if (old.isEqualsTo(searchSources)) {
+    if (old.isEqualTo(searchSources)) {
       return;
     }
     setState(() {});

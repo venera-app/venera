@@ -25,7 +25,9 @@ extension ListExt<T> on List<T>{
     }
   }
 
-  bool isEqualsTo(List<T> list){
+  /// Compare every element of this list with another list.
+  /// Return true if all elements are equal.
+  bool isEqualTo(List<T> list){
     if(length != list.length){
       return false;
     }
@@ -79,10 +81,6 @@ extension StringExt on String{
     final before = substring(0, lastIndex);
     final after = substring(lastIndex + from.length);
     return '$before$to$after';
-  }
-
-  static bool hasMatch(String? value, String pattern) {
-    return (value == null) ? false : RegExp(pattern).hasMatch(value);
   }
 
   bool _isURL(){

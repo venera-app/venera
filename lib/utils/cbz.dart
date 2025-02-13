@@ -115,7 +115,17 @@ abstract class CBZ {
       cache.deleteSync(recursive: true);
       throw Exception('No images found in the archive');
     }
-    files.sort((a, b) => a.path.compareTo(b.path));
+    files.sort((a, b) {
+      var aName = a.basenameWithoutExt;
+      var bName = b.basenameWithoutExt;
+      var aIndex = int.tryParse(aName);
+      var bIndex = int.tryParse(bName);
+      if (aIndex != null && bIndex != null) {
+        return aIndex.compareTo(bIndex);
+      } else {
+        return a.path.compareTo(b.path);
+      }
+    });
     var coverFile = files.firstWhereOrNull(
       (element) =>
           element.path.endsWith('cover.${element.path.split('.').last}'),

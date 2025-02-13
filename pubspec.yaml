@@ -2,7 +2,7 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.2.4+124
+version: 1.2.5+125
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -43,7 +43,11 @@ dependencies:
     git:
       url: https://github.com/wgh136/flutter_desktop_webview
       path: packages/desktop_webview_window
-  flutter_inappwebview: ^6.1.5
+  flutter_inappwebview:
+    git:
+      url: https://github.com/pichillilorenzo/flutter_inappwebview
+      path: flutter_inappwebview
+      ref: 0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676
   app_links: ^6.3.3
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2

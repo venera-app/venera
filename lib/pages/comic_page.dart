@@ -49,19 +49,19 @@ class ComicPage extends StatefulWidget {
 
 class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     with _ComicPageActions {
+  @override
+  History? history;
+
   bool showAppbarTitle = false;
 
   var scrollController = ScrollController();
 
   bool isDownloaded = false;
 
-  void updateHistory() async {
-    var newHistory = await HistoryManager()
-        .find(widget.id, ComicType(widget.sourceKey.hashCode));
-    if (newHistory?.ep != history?.ep || newHistory?.page != history?.page) {
-      history = newHistory;
-      update();
-    }
+  @override
+  void onReadEnd() {
+    // The history is passed by reference, so it will be updated automatically.
+    update();
   }
 
   @override
@@ -77,14 +77,12 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   @override
   void initState() {
     scrollController.addListener(onScroll);
-    HistoryManager().addListener(updateHistory);
     super.initState();
   }
 
   @override
   void dispose() {
     scrollController.removeListener(onScroll);
-    HistoryManager().removeListener(updateHistory);
     super.dispose();
   }
 
@@ -552,7 +550,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     if (comic.chapters == null) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
-    return const _ComicChapters();
+    return _ComicChapters(history);
   }
 
   Widget buildThumbnails() {
@@ -594,7 +592,7 @@ abstract mixin class _ComicPageActions {
 
   ComicSource get comicSource => ComicSource.find(comic.sourceKey)!;
 
-  History? history;
+  History? get history;
 
   bool isLiking = false;
 
@@ -614,8 +612,10 @@ abstract mixin class _ComicPageActions {
     update();
   }
 
+  /// whether the comic is added to local favorite
   bool isAddToLocalFav = false;
 
+  /// whether the comic is favorite on the server
   bool isFavorite = false;
 
   FavoriteItem _toFavoriteItem() {
@@ -686,11 +686,13 @@ abstract mixin class _ComicPageActions {
         chapters: comic.chapters,
         initialChapter: ep,
         initialPage: page,
-        history: History.fromModel(model: comic, ep: 0, page: 0),
+        history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
       ),
-    );
+    ).then((_) {
+      onReadEnd();
+    });
   }
 
   void continueRead() {
@@ -698,6 +700,8 @@ abstract mixin class _ComicPageActions {
     var page = history?.page ?? 1;
     read(ep, page);
   }
+
+  void onReadEnd();
 
   void download() async {
     if (LocalManager().isDownloading(comic.id, comic.comicType)) {
@@ -1081,7 +1085,9 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _ComicChapters extends StatefulWidget {
-  const _ComicChapters();
+  const _ComicChapters(this.history);
+
+  final History? history;
 
   @override
   State<_ComicChapters> createState() => _ComicChaptersState();
@@ -1094,6 +1100,14 @@ class _ComicChaptersState extends State<_ComicChapters> {
 
   bool showAll = false;
 
+  late History? history;
+
+  @override
+  void initState() {
+    super.initState();
+    history = widget.history;
+  }
+
   @override
   void didChangeDependencies() {
     state = context.findAncestorStateOfType<_ComicPageState>()!;
@@ -1101,97 +1115,118 @@ class _ComicChaptersState extends State<_ComicChapters> {
   }
 
   @override
+  void didUpdateWidget(covariant _ComicChapters oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    setState(() {
+      history = widget.history;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final eps = state.comic.chapters!;
 
-    int length = eps.length;
+    return SliverLayoutBuilder(
+      builder: (context, constrains) {
+        int length = eps.length;
+        bool canShowAll = showAll;
+        if (!showAll) {
+          var width = constrains.crossAxisExtent - 16;
+          var crossItems = width ~/ 200;
+          if (width % 200 != 0) {
+            crossItems += 1;
+          }
+          length = math.min(length, crossItems * 8);
+          if (length == eps.length) {
+            canShowAll = true;
+          }
+        }
 
-    if (!showAll) {
-      length = math.min(length, 20);
-    }
-
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverToBoxAdapter(
-          child: ListTile(
-            title: Text("Chapters".tl),
-            trailing: Tooltip(
-              message: "Order".tl,
-              child: IconButton(
-                icon: Icon(reverse
-                    ? Icons.vertical_align_top
-                    : Icons.vertical_align_bottom_outlined),
-                onPressed: () {
-                  setState(() {
-                    reverse = !reverse;
-                  });
-                },
-              ),
-            ),
-          ),
-        ),
-        SliverGrid(
-          delegate:
-              SliverChildBuilderDelegate(childCount: length, (context, i) {
-            if (reverse) {
-              i = eps.length - i - 1;
-            }
-            var key = eps.keys.elementAt(i);
-            var value = eps[key]!;
-            bool visited =
-                (state.history?.readEpisode ?? const {}).contains(i + 1);
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-              child: Material(
-                color: context.colorScheme.surfaceContainer,
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                child: InkWell(
-                  onTap: () => state.read(i + 1),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Center(
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: visited ? context.colorScheme.outline : null,
-                        ),
-                      ),
-                    ),
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: ListTile(
+                title: Text("Chapters".tl),
+                trailing: Tooltip(
+                  message: "Order".tl,
+                  child: IconButton(
+                    icon: Icon(reverse
+                        ? Icons.vertical_align_top
+                        : Icons.vertical_align_bottom_outlined),
+                    onPressed: () {
+                      setState(() {
+                        reverse = !reverse;
+                      });
+                    },
                   ),
                 ),
               ),
-            );
-          }),
-          gridDelegate: const SliverGridDelegateWithFixedHeight(
-              maxCrossAxisExtent: 200, itemHeight: 48),
-        ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
-        if (eps.length > 20 && !showAll)
-          SliverToBoxAdapter(
-            child: Align(
-              alignment: Alignment.center,
-              child: FilledButton.tonal(
-                style: ButtonStyle(
-                  shape: WidgetStateProperty.all(const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)))),
-                ),
-                onPressed: () {
-                  setState(() {
-                    showAll = true;
-                  });
-                },
-                child: Text("${"Show all".tl} (${eps.length})"),
-              ).paddingTop(12),
             ),
-          ),
-        const SliverToBoxAdapter(
-          child: Divider(),
-        ),
-      ],
+            SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                childCount: length,
+                (context, i) {
+                  if (reverse) {
+                    i = eps.length - i - 1;
+                  }
+                  var key = eps.keys.elementAt(i);
+                  var value = eps[key]!;
+                  bool visited = (history?.readEpisode ?? {}).contains(i + 1);
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                    child: Material(
+                      color: context.colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        onTap: () => state.read(i + 1),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Center(
+                            child: Text(
+                              value,
+                              maxLines: 1,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: visited
+                                    ? context.colorScheme.outline
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              gridDelegate: const SliverGridDelegateWithFixedHeight(
+                maxCrossAxisExtent: 200,
+                itemHeight: 48,
+              ),
+            ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
+            if (eps.length > 20 && !canShowAll)
+              SliverToBoxAdapter(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.arrow_drop_down),
+                    onPressed: () {
+                      setState(() {
+                        showAll = true;
+                      });
+                    },
+                    label: Text("${"Show all".tl} (${eps.length})"),
+                  ).paddingTop(12),
+                ),
+              ),
+            const SliverToBoxAdapter(
+              child: Divider(),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1672,6 +1707,42 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
   }
 
   Widget buildMultiFolder() {
+    if (widget.isFavorite == true &&
+        widget.comicSource.favoriteData!.singleFolderForSingleComic) {
+      return Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Text("Added to favorites".tl),
+            ),
+          ),
+          Center(
+            child: Button.filled(
+              isLoading: isLoading,
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
+                var res = await widget.comicSource.favoriteData!
+                    .addOrDelFavorite!(widget.cid, '', false, null);
+                if (res.success) {
+                  widget.onFavorite(false);
+                  context.pop();
+                  App.rootContext.showMessage(message: "Removed".tl);
+                } else {
+                  setState(() {
+                    isLoading = false;
+                  });
+                  context.showMessage(message: res.errorMessage!);
+                }
+              },
+              child: Text("Remove".tl),
+            ).paddingVertical(8),
+          ),
+        ],
+      );
+    }
     if (isLoadingFolders) {
       loadFolders();
       return const Center(child: CircularProgressIndicator());

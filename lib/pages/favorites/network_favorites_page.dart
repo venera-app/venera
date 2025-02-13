@@ -476,55 +476,47 @@ class _CreateFolderDialogState extends State<_CreateFolderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return SimpleDialog(
-      title: Text("Create a folder".tl),
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: "name".tl,
-            ),
-          ),
-        ),
-        const SizedBox(
-          width: 200,
-          height: 10,
-        ),
-        if (loading)
-          Center(
-            child: const CircularProgressIndicator(
-              strokeWidth: 2,
-            ).fixWidth(24).fixHeight(24),
-          )
-        else
-          SizedBox(
-            height: 35,
-            child: Center(
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    loading = true;
-                  });
-                  widget.data.addFolder!(controller.text).then((b) {
-                    if (b.error) {
-                      context.showMessage(message: b.errorMessage!);
-                      setState(() {
-                        loading = false;
-                      });
-                    } else {
-                      context.pop();
-                      context.showMessage(message: "Created successfully".tl);
-                      widget.updateState();
-                    }
-                  });
-                },
-                child: Text("Submit".tl),
+    return ContentDialog(
+      title: "Create a folder".tl,
+      content: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            child: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: "name".tl,
               ),
             ),
-          )
+          ),
+          const SizedBox(
+            height: 16
+          ),
+        ],
+      ),
+      actions: [
+        Button.filled(
+          isLoading: loading,
+          onPressed: () {
+            setState(() {
+              loading = true;
+            });
+            widget.data.addFolder!(controller.text).then((b) {
+              if (b.error) {
+                context.showMessage(message: b.errorMessage!);
+                setState(() {
+                  loading = false;
+                });
+              } else {
+                context.pop();
+                context.showMessage(message: "Created successfully".tl);
+                widget.updateState();
+              }
+            });
+          },
+          child: Text("Submit".tl),
+        )
       ],
     );
   }
