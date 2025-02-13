@@ -91,7 +91,7 @@ class _AppWebviewState extends State<AppWebview> {
 
   late var future = _createWebviewEnvironment();
 
-  Future<WebViewEnvironment> _createWebviewEnvironment() async {
+  Future<bool> _createWebviewEnvironment() async {
     var proxy = appdata.settings['proxy'].toString();
     if (proxy != "system" && proxy != "direct") {
       var proxyAvailable = await WebViewFeature.isFeatureSupported(
@@ -110,11 +110,15 @@ class _AppWebviewState extends State<AppWebview> {
         );
       }
     }
-    return WebViewEnvironment.create(
+    if (!App.isWindows) {
+      return true;
+    }
+    AppWebview.webViewEnvironment = await WebViewEnvironment.create(
       settings: WebViewEnvironmentSettings(
         userDataFolder: "${App.dataPath}\\webview",
       ),
     );
+    return true;
   }
 
   @override
@@ -159,10 +163,9 @@ class _AppWebviewState extends State<AppWebview> {
         if (e.error != null) {
           return Center(child: Text("Error: ${e.error}"));
         }
-        if (e.data == null) {
+        if (!e.hasData) {
           return const SizedBox();
         }
-        AppWebview.webViewEnvironment = e.data;
         return createWebviewWithEnvironment(
           AppWebview.webViewEnvironment,
         );
