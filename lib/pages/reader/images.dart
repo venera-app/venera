@@ -512,6 +512,14 @@ class _ContinuousModeState extends State<_ContinuousMode>
           });
         }
       },
+      onPointerCancel: (event) {
+        fingers--;
+        if (fingers <= 1 && disableScroll) {
+          setState(() {
+            disableScroll = false;
+          });
+        }
+      },
       onPointerPanZoomUpdate: (event) {
         if (event.scale == 1.0) {
           smoothTo(0 - event.panDelta.dy);
