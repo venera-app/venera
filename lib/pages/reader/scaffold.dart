@@ -660,11 +660,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                     App.rootContext.pop();
                   },
                   child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    foregroundDecoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline,
                       ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     width: double.infinity,
                     height: double.infinity,
