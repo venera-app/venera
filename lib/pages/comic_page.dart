@@ -1106,94 +1106,108 @@ class _ComicChaptersState extends State<_ComicChapters> {
   Widget build(BuildContext context) {
     final eps = state.comic.chapters!;
 
-    int length = eps.length;
+    return SliverLayoutBuilder(
+      builder: (context, constrains) {
+        int length = eps.length;
+        bool canShowAll = showAll;
+        if (!showAll) {
+          var width = constrains.crossAxisExtent;
+          var crossItems = width ~/ 200;
+          if (width % 200 != 0) {
+            crossItems += 1;
+          }
+          length = math.min(length, crossItems * 8);
+          if (length == eps.length) {
+            canShowAll = true;
+          }
+        }
 
-    if (!showAll) {
-      length = math.min(length, 20);
-    }
-
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverToBoxAdapter(
-          child: ListTile(
-            title: Text("Chapters".tl),
-            trailing: Tooltip(
-              message: "Order".tl,
-              child: IconButton(
-                icon: Icon(reverse
-                    ? Icons.vertical_align_top
-                    : Icons.vertical_align_bottom_outlined),
-                onPressed: () {
-                  setState(() {
-                    reverse = !reverse;
-                  });
-                },
-              ),
-            ),
-          ),
-        ),
-        SliverGrid(
-          delegate:
-              SliverChildBuilderDelegate(childCount: length, (context, i) {
-            if (reverse) {
-              i = eps.length - i - 1;
-            }
-            var key = eps.keys.elementAt(i);
-            var value = eps[key]!;
-            bool visited =
-                (state.history?.readEpisode ?? const {}).contains(i + 1);
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-              child: Material(
-                color: context.colorScheme.surfaceContainer,
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                child: InkWell(
-                  onTap: () => state.read(i + 1),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Center(
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: visited ? context.colorScheme.outline : null,
-                        ),
-                      ),
-                    ),
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: ListTile(
+                title: Text("Chapters".tl),
+                trailing: Tooltip(
+                  message: "Order".tl,
+                  child: IconButton(
+                    icon: Icon(reverse
+                        ? Icons.vertical_align_top
+                        : Icons.vertical_align_bottom_outlined),
+                    onPressed: () {
+                      setState(() {
+                        reverse = !reverse;
+                      });
+                    },
                   ),
                 ),
               ),
-            );
-          }),
-          gridDelegate: const SliverGridDelegateWithFixedHeight(
-              maxCrossAxisExtent: 200, itemHeight: 48),
-        ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
-        if (eps.length > 20 && !showAll)
-          SliverToBoxAdapter(
-            child: Align(
-              alignment: Alignment.center,
-              child: FilledButton.tonal(
-                style: ButtonStyle(
-                  shape: WidgetStateProperty.all(const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)))),
-                ),
-                onPressed: () {
-                  setState(() {
-                    showAll = true;
-                  });
-                },
-                child: Text("${"Show all".tl} (${eps.length})"),
-              ).paddingTop(12),
             ),
-          ),
-        const SliverToBoxAdapter(
-          child: Divider(),
-        ),
-      ],
+            SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                childCount: length,
+                (context, i) {
+                  if (reverse) {
+                    i = eps.length - i - 1;
+                  }
+                  var key = eps.keys.elementAt(i);
+                  var value = eps[key]!;
+                  bool visited =
+                      (state.history?.readEpisode ?? const {}).contains(i + 1);
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                    child: Material(
+                      color: context.colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        onTap: () => state.read(i + 1),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Center(
+                            child: Text(
+                              value,
+                              maxLines: 1,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: visited
+                                    ? context.colorScheme.outline
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              gridDelegate: const SliverGridDelegateWithFixedHeight(
+                maxCrossAxisExtent: 200,
+                itemHeight: 48,
+              ),
+            ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
+            if (eps.length > 20 && !canShowAll)
+              SliverToBoxAdapter(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.arrow_drop_down),
+                    onPressed: () {
+                      setState(() {
+                        showAll = true;
+                      });
+                    },
+                    label: Text("${"Show all".tl} (${eps.length})"),
+                  ).paddingTop(12),
+                ),
+              ),
+            const SliverToBoxAdapter(
+              child: Divider(),
+            ),
+          ],
+        );
+      },
     );
   }
 }
