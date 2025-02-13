@@ -49,19 +49,19 @@ class ComicPage extends StatefulWidget {
 
 class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     with _ComicPageActions {
+  @override
+  History? history;
+
   bool showAppbarTitle = false;
 
   var scrollController = ScrollController();
 
   bool isDownloaded = false;
 
-  void updateHistory() async {
-    var newHistory = await HistoryManager()
-        .find(widget.id, ComicType(widget.sourceKey.hashCode));
-    if (newHistory?.ep != history?.ep || newHistory?.page != history?.page) {
-      history = newHistory;
-      update();
-    }
+  @override
+  void onReadEnd() {
+    // The history is passed by reference, so it will be updated automatically.
+    update();
   }
 
   @override
@@ -77,14 +77,12 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   @override
   void initState() {
     scrollController.addListener(onScroll);
-    HistoryManager().addListener(updateHistory);
     super.initState();
   }
 
   @override
   void dispose() {
     scrollController.removeListener(onScroll);
-    HistoryManager().removeListener(updateHistory);
     super.dispose();
   }
 
@@ -552,7 +550,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     if (comic.chapters == null) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
-    return const _ComicChapters();
+    return _ComicChapters(history);
   }
 
   Widget buildThumbnails() {
@@ -594,7 +592,7 @@ abstract mixin class _ComicPageActions {
 
   ComicSource get comicSource => ComicSource.find(comic.sourceKey)!;
 
-  History? history;
+  History? get history;
 
   bool isLiking = false;
 
@@ -688,11 +686,13 @@ abstract mixin class _ComicPageActions {
         chapters: comic.chapters,
         initialChapter: ep,
         initialPage: page,
-        history: History.fromModel(model: comic, ep: 0, page: 0),
+        history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
       ),
-    );
+    ).then((_) {
+      onReadEnd();
+    });
   }
 
   void continueRead() {
@@ -700,6 +700,8 @@ abstract mixin class _ComicPageActions {
     var page = history?.page ?? 1;
     read(ep, page);
   }
+
+  void onReadEnd();
 
   void download() async {
     if (LocalManager().isDownloading(comic.id, comic.comicType)) {
@@ -1083,7 +1085,9 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _ComicChapters extends StatefulWidget {
-  const _ComicChapters();
+  const _ComicChapters(this.history);
+
+  final History? history;
 
   @override
   State<_ComicChapters> createState() => _ComicChaptersState();
@@ -1096,10 +1100,26 @@ class _ComicChaptersState extends State<_ComicChapters> {
 
   bool showAll = false;
 
+  late History? history;
+
+  @override
+  void initState() {
+    super.initState();
+    history = widget.history;
+  }
+
   @override
   void didChangeDependencies() {
     state = context.findAncestorStateOfType<_ComicPageState>()!;
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ComicChapters oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    setState(() {
+      history = widget.history;
+    });
   }
 
   @override
@@ -1151,8 +1171,7 @@ class _ComicChaptersState extends State<_ComicChapters> {
                   }
                   var key = eps.keys.elementAt(i);
                   var value = eps[key]!;
-                  bool visited =
-                      (state.history?.readEpisode ?? const {}).contains(i + 1);
+                  bool visited = (history?.readEpisode ?? {}).contains(i + 1);
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
                     child: Material(
