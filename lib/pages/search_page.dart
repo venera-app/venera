@@ -16,7 +16,7 @@ import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
-import 'comic_page.dart';
+import 'comic_details_page/comic_page.dart';
 import 'comic_source_page.dart';
 
 class SearchPage extends StatefulWidget {

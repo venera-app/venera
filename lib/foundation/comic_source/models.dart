@@ -130,6 +130,11 @@ class ComicDetails with HistoryMixin {
   /// id-name
   final Map<String, String>? chapters;
 
+  /// key is group name.
+  /// When this field is not null, [chapters] will be a merged map of all groups.
+  /// Only available in some sources.
+  final Map<String, Map<String, String>>? groupedChapters;
+
   final List<String>? thumbnails;
 
   final List<Comic>? recommend;
@@ -171,15 +176,45 @@ class ComicDetails with HistoryMixin {
     return res;
   }
 
+  static Map<String, String>? _getChapters(dynamic chapters) {
+    if (chapters == null) return null;
+    var result = <String, String>{};
+    if (chapters is Map) {
+      for (var entry in chapters.entries) {
+        var value = entry.value;
+        if (value is Map) {
+          result.addAll(Map.from(value));
+        } else {
+          result[entry.key.toString()] = value.toString();
+        }
+      }
+    }
+    return result;
+  }
+
+  static Map<String, Map<String, String>>? _getGroupedChapters(dynamic chapters) {
+    if (chapters == null) return null;
+    var result = <String, Map<String, String>>{};
+    if (chapters is Map) {
+      for (var entry in chapters.entries) {
+        var value = entry.value;
+        if (value is Map) {
+          result[entry.key.toString()] = Map.from(value);
+        }
+      }
+    }
+    if (result.isEmpty) return null;
+    return result;
+  }
+
   ComicDetails.fromJson(Map<String, dynamic> json)
       : title = json["title"],
         subTitle = json["subtitle"],
         cover = json["cover"],
         description = json["description"],
         tags = _generateMap(json["tags"]),
-        chapters = json["chapters"] == null
-            ? null
-            : Map<String, String>.from(json["chapters"]),
+        chapters = _getChapters(json["chapters"]),
+        groupedChapters = _getGroupedChapters(json["chapters"]),
         sourceKey = json["sourceKey"],
         comicId = json["comicId"],
         thumbnails = ListOrNull.from(json["thumbnails"]),

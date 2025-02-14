@@ -1,15 +1,4 @@
-import 'dart:collection';
-
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-import 'package:venera/components/components.dart';
-import 'package:venera/foundation/app.dart';
-import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/image_provider/cached_image.dart';
-import 'package:venera/utils/app_links.dart';
-import 'package:venera/utils/ext.dart';
-import 'package:venera/utils/translations.dart';
+part of 'comic_page.dart';
 
 class CommentsPage extends StatefulWidget {
   const CommentsPage(
