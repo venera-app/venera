@@ -256,6 +256,16 @@ class HistoryManager with ChangeNotifier {
     _haveAsyncTask = true;
     await _addHistoryAsync(_db.handle.address, newItem);
     _haveAsyncTask = false;
+    if (_cachedHistoryIds == null) {
+      updateCache();
+    } else {
+      _cachedHistoryIds![newItem.id] = true;
+    }
+    cachedHistories[newItem.id] = newItem;
+    if (cachedHistories.length > 10) {
+      cachedHistories.remove(cachedHistories.keys.first);
+    }
+    notifyListeners();
   }
 
   /// add history. if exists, update time.
