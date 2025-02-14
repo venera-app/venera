@@ -6,166 +6,99 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/state_controller.dart';
 import 'package:window_manager/window_manager.dart';
 
 const _kTitleBarHeight = 36.0;
 
-class WindowFrameController extends StateController {
-  bool useDarkTheme = false;
-
-  bool isHideWindowFrame = false;
-
-  void setDarkTheme() {
-    useDarkTheme = true;
-    update();
-  }
-
-  void resetTheme() {
-    useDarkTheme = false;
-    update();
-  }
-
-  VoidCallback openSideBar = () {};
-
-  void hideWindowFrame() {
-    isHideWindowFrame = true;
-    update();
-  }
-
-  void showWindowFrame() {
-    isHideWindowFrame = false;
-    update();
-  }
-}
-
-class WindowFrame extends StatelessWidget {
+class WindowFrame extends StatefulWidget {
   const WindowFrame(this.child, {super.key});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    StateController.putIfNotExists<WindowFrameController>(
-        WindowFrameController());
-    if (App.isMobile) return child;
-    return StateBuilder<WindowFrameController>(builder: (controller) {
-      if (controller.isHideWindowFrame) return child;
-
-      var body = Stack(
-        children: [
-          Positioned.fill(
-            child: MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                  padding: const EdgeInsets.only(top: _kTitleBarHeight)),
-              child: child,
-            ),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Material(
-              color: Colors.transparent,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  brightness: controller.useDarkTheme ? Brightness.dark : null,
-                ),
-                child: Builder(builder: (context) {
-                  return SizedBox(
-                    height: _kTitleBarHeight,
-                    child: Row(
-                      children: [
-                        if (App.isMacOS)
-                          const DragToMoveArea(
-                            child: SizedBox(
-                              height: double.infinity,
-                              width: 16,
-                            ),
-                          ).paddingRight(52)
-                        else
-                          const SizedBox(width: 12),
-                        Expanded(
-                          child: DragToMoveArea(
-                            child: Text(
-                              'Venera',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: (controller.useDarkTheme ||
-                                        context.brightness == Brightness.dark)
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ).toAlign(Alignment.centerLeft).paddingLeft(4+(App.isMacOS?25:0)),
-                          ),
-                        ),
-                        if (kDebugMode)
-                          const TextButton(
-                            onPressed: debug,
-                            child: Text('Debug'),
-                          ),
-                        if (!App.isMacOS) const WindowButtons()
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-          )
-        ],
-      );
-
-      if (App.isLinux) {
-        return VirtualWindowFrame(child: body);
-      } else {
-        return body;
-      }
-    });
-  }
-
-  Widget buildMenuButton(
-      WindowFrameController controller, BuildContext context) {
-    return InkWell(
-        onTap: () {
-          controller.openSideBar();
-        },
-        child: SizedBox(
-          width: 42,
-          height: double.infinity,
-          child: Center(
-            child: CustomPaint(
-              size: const Size(18, 20),
-              painter: _MenuPainter(
-                  color: (controller.useDarkTheme ||
-                          Theme.of(context).brightness == Brightness.dark)
-                      ? Colors.white
-                      : Colors.black),
-            ),
-          ),
-        ));
-  }
+  State<WindowFrame> createState() => _WindowFrameState();
 }
 
-class _MenuPainter extends CustomPainter {
-  final Color color;
-
-  _MenuPainter({this.color = Colors.black});
+class _WindowFrameState extends State<WindowFrame> {
+  bool isHideWindowFrame = false;
+  bool useDarkTheme = false;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = getPaint(color);
-    final path = Path()
-      ..moveTo(0, size.height / 4)
-      ..lineTo(size.width, size.height / 4)
-      ..moveTo(0, size.height / 4 * 2)
-      ..lineTo(size.width, size.height / 4 * 2)
-      ..moveTo(0, size.height / 4 * 3)
-      ..lineTo(size.width, size.height / 4 * 3);
-    canvas.drawPath(path, paint);
+  Widget build(BuildContext context) {
+    if (App.isMobile) return widget.child;
+    if (isHideWindowFrame) return widget.child;
+
+    var body = Stack(
+      children: [
+        Positioned.fill(
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+                padding: const EdgeInsets.only(top: _kTitleBarHeight)),
+            child: widget.child,
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Material(
+            color: Colors.transparent,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                brightness: useDarkTheme ? Brightness.dark : null,
+              ),
+              child: Builder(builder: (context) {
+                return SizedBox(
+                  height: _kTitleBarHeight,
+                  child: Row(
+                    children: [
+                      if (App.isMacOS)
+                        const DragToMoveArea(
+                          child: SizedBox(
+                            height: double.infinity,
+                            width: 16,
+                          ),
+                        ).paddingRight(52)
+                      else
+                        const SizedBox(width: 12),
+                      Expanded(
+                        child: DragToMoveArea(
+                          child: Text(
+                            'Venera',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: (useDarkTheme ||
+                                      context.brightness == Brightness.dark)
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          )
+                              .toAlign(Alignment.centerLeft)
+                              .paddingLeft(4 + (App.isMacOS ? 25 : 0)),
+                        ),
+                      ),
+                      if (kDebugMode)
+                        const TextButton(
+                          onPressed: debug,
+                          child: Text('Debug'),
+                        ),
+                      if (!App.isMacOS) const WindowButtons()
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        )
+      ],
+    );
+
+    if (App.isLinux) {
+      return VirtualWindowFrame(child: body);
+    } else {
+      return body;
+    }
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class WindowButtons extends StatefulWidget {
@@ -489,7 +422,7 @@ class WindowPlacement {
 
   static Future<WindowPlacement> get current async {
     var rect = await windowManager.getBounds();
-    if(validate(rect)) {
+    if (validate(rect)) {
       lastValidRect = rect;
     } else {
       rect = lastValidRect ?? defaultPlacement.rect;

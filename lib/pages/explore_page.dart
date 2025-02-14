@@ -3,8 +3,8 @@ import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/global_state.dart';
 import 'package:venera/foundation/res.dart';
-import 'package:venera/foundation/state_controller.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
@@ -52,9 +52,7 @@ class _ExplorePageState extends State<ExplorePage>
     if (index == 2) {
       int page = controller.index;
       String currentPageId = pages[page];
-      StateController.find<SimpleController>(tag: currentPageId)
-          .control!()['toTop']
-          ?.call();
+      GlobalState.find<_SingleExplorePageState>(currentPageId).toTop();
     }
   }
 
@@ -98,7 +96,7 @@ class _ExplorePageState extends State<ExplorePage>
   void refresh() {
     int page = controller.index;
     String currentPageId = pages[page];
-    StateController.find<SimpleController>(tag: currentPageId).refresh();
+    GlobalState.find<_SingleExplorePageState>(currentPageId).refresh();
   }
 
   Widget buildFAB() => Material(
@@ -244,7 +242,7 @@ class _SingleExplorePage extends StatefulWidget {
   State<_SingleExplorePage> createState() => _SingleExplorePageState();
 }
 
-class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
+class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
     with AutomaticKeepAliveClientMixin<_SingleExplorePage> {
   late final ExplorePageData data;
 
@@ -328,7 +326,7 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
   }
 
   @override
-  Object? get tag => widget.title;
+  Object? get key => widget.title;
 
   @override
   void refresh() {
@@ -347,9 +345,6 @@ class _SingleExplorePageState extends StateWithController<_SingleExplorePage>
       );
     }
   }
-
-  @override
-  Map<String, dynamic> get control => {"toTop": toTop};
 }
 
 class _MixedExplorePage extends StatefulWidget {
