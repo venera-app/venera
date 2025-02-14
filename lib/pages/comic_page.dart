@@ -61,7 +61,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   @override
   void onReadEnd() {
     history ??= HistoryManager()
-        .findSync(widget.id, ComicType(widget.sourceKey.hashCode));
+        .find(widget.id, ComicType(widget.sourceKey.hashCode));
     update();
   }
 
@@ -138,7 +138,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       if (localComic == null) {
         return const Res.error('Local comic not found');
       }
-      var history = await HistoryManager().find(widget.id, ComicType.local);
+      var history = HistoryManager().find(widget.id, ComicType.local);
       if (isFirst) {
         Future.microtask(() {
           App.rootContext.to(() {
@@ -172,7 +172,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       widget.id,
       ComicType(widget.sourceKey.hashCode),
     );
-    history = await HistoryManager()
+    history = HistoryManager()
         .find(widget.id, ComicType(widget.sourceKey.hashCode));
     return comicSource.loadComicInfo!(widget.id);
   }

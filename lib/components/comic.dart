@@ -138,7 +138,7 @@ class ComicTile extends StatelessWidget {
         : false;
     var history = appdata.settings['showHistoryStatusOnTile']
         ? HistoryManager()
-            .findSync(comic.id, ComicType(comic.sourceKey.hashCode))
+            .find(comic.id, ComicType(comic.sourceKey.hashCode))
         : null;
     if (history?.page == 0) {
       history!.page = 1;

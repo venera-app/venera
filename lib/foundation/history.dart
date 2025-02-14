@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math';
+import 'dart:ffi' as ffi;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show ChangeNotifier;
+import 'package:sqlite3/common.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
@@ -124,30 +126,6 @@ class History implements Comic {
             .map((e) => int.parse(e))),
         maxPage = row["max_page"];
 
-  static Future<History> findOrCreate(
-    HistoryMixin model, {
-    int ep = 0,
-    int page = 0,
-  }) async {
-    var history = await HistoryManager().find(model.id, model.historyType);
-    if (history != null) {
-      return history;
-    }
-    history = History.fromModel(model: model, ep: ep, page: page);
-    HistoryManager().addHistory(history);
-    return history;
-  }
-
-  static Future<History> createIfNull(
-      History? history, HistoryMixin model) async {
-    if (history != null) {
-      return history;
-    }
-    history = History.fromModel(model: model, ep: 0, page: 0);
-    HistoryManager().addHistory(history);
-    return history;
-  }
-
   @override
   bool operator ==(Object other) {
     return other is History && type == other.type && id == other.id;
@@ -210,7 +188,11 @@ class HistoryManager with ChangeNotifier {
 
   int get length => _db.select("select count(*) from history;").first[0] as int;
 
-  Map<String, bool>? _cachedHistory;
+  /// Cache of history ids. Improve the performance of find operation.
+  Map<String, bool>? _cachedHistoryIds;
+
+  /// Cache records recently modified by the app. Improve the performance of listeners.
+  final cachedHistories = <String, History>{};
 
   bool isInitialized = false;
 
@@ -240,14 +222,38 @@ class HistoryManager with ChangeNotifier {
     isInitialized = true;
   }
 
+  static const  _insertHistorySql = """
+        insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      """;
+
+  static Future<void> _addHistoryAsync(int dbAddr, History newItem) {
+    return Isolate.run(() {
+      var db = sqlite3.fromPointer(ffi.Pointer.fromAddress(dbAddr));
+      db.execute(_insertHistorySql, [
+        newItem.id,
+        newItem.title,
+        newItem.subtitle,
+        newItem.cover,
+        newItem.time.millisecondsSinceEpoch,
+        newItem.type.value,
+        newItem.ep,
+        newItem.page,
+        newItem.readEpisode.join(','),
+        newItem.maxPage
+      ]);
+    });
+  }
+
+  Future<void> addHistoryAsync(History newItem) async {
+    _addHistoryAsync(_db.handle.address, newItem);
+  }
+
   /// add history. if exists, update time.
   ///
   /// This function would be called when user start reading.
-  Future<void> addHistory(History newItem) async {
-    _db.execute("""
-        insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-      """, [
+  void addHistory(History newItem) {
+    _db.execute(_insertHistorySql, [
       newItem.id,
       newItem.title,
       newItem.subtitle,
@@ -259,7 +265,15 @@ class HistoryManager with ChangeNotifier {
       newItem.readEpisode.join(','),
       newItem.maxPage
     ]);
-    updateCache();
+    if (_cachedHistoryIds == null) {
+      updateCache();
+    } else {
+      _cachedHistoryIds![newItem.id] = true;
+    }
+    cachedHistories[newItem.id] = newItem;
+    if (cachedHistories.length > 10) {
+      cachedHistories.remove(cachedHistories.keys.first);
+    }
     notifyListeners();
   }
 
@@ -278,26 +292,30 @@ class HistoryManager with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<History?> find(String id, ComicType type) async {
-    return findSync(id, type);
-  }
-
   void updateCache() {
-    _cachedHistory = {};
+    _cachedHistoryIds = {};
     var res = _db.select("""
-        select * from history;
+        select id from history;
       """);
     for (var element in res) {
-      _cachedHistory![element["id"] as String] = true;
+      _cachedHistoryIds![element["id"] as String] = true;
+    }
+    for (var key in cachedHistories.keys) {
+      if (!_cachedHistoryIds!.containsKey(key)) {
+        cachedHistories.remove(key);
+      }
     }
   }
 
-  History? findSync(String id, ComicType type) {
-    if (_cachedHistory == null) {
+  History? find(String id, ComicType type) {
+    if (_cachedHistoryIds == null) {
       updateCache();
     }
-    if (!_cachedHistory!.containsKey(id)) {
+    if (!_cachedHistoryIds!.containsKey(id)) {
       return null;
+    }
+    if (cachedHistories.containsKey(id)) {
+      return cachedHistories[id];
     }
 
     var res = _db.select("""
