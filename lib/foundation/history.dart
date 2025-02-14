@@ -245,8 +245,17 @@ class HistoryManager with ChangeNotifier {
     });
   }
 
+  bool _haveAsyncTask = false;
+
+  /// Create a isolate to add history to prevent blocking the UI thread.
   Future<void> addHistoryAsync(History newItem) async {
-    _addHistoryAsync(_db.handle.address, newItem);
+    while (_haveAsyncTask) {
+      await Future.delayed(Duration(milliseconds: 20));
+    }
+
+    _haveAsyncTask = true;
+    await _addHistoryAsync(_db.handle.address, newItem);
+    _haveAsyncTask = false;
   }
 
   /// add history. if exists, update time.

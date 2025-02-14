@@ -230,6 +230,10 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     updateHistory();
   }
 
+  /// Prevent multiple history updates in a short time.
+  /// `HistoryManager().addHistoryAsync` is a high-cost operation because it creates a new isolate.
+  Timer? _updateHistoryTimer;
+
   void updateHistory() {
     if (history != null) {
       history!.page = page;
@@ -239,7 +243,11 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       }
       history!.readEpisode.add(chapter);
       history!.time = DateTime.now();
-      HistoryManager().addHistoryAsync(history!);
+      _updateHistoryTimer?.cancel();
+      _updateHistoryTimer = Timer(const Duration(seconds: 1), () {
+        HistoryManager().addHistoryAsync(history!);
+        _updateHistoryTimer = null;
+      });
     }
   }
 
