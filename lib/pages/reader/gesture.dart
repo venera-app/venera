@@ -9,7 +9,7 @@ class _ReaderGestureDetector extends StatefulWidget {
   State<_ReaderGestureDetector> createState() => _ReaderGestureDetectorState();
 }
 
-class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
+class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDetector> {
   late TapGestureRecognizer _tapGestureRecognizer;
 
   static const _kDoubleTapMaxTime = Duration(milliseconds: 200);
@@ -25,6 +25,12 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   int fingers = 0;
 
   late _ReaderState reader;
+
+  bool ignoreNextTag = false;
+
+  void ignoreNextTap() {
+    ignoreNextTag = true;
+  }
 
   @override
   void initState() {
@@ -44,6 +50,10 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
         fingers++;
+        if (ignoreNextTag) {
+          ignoreNextTag = false;
+          return;
+        }
         _lastTapPointer = event.pointer;
         _lastTapMoveDistance = Offset.zero;
         _tapGestureRecognizer.addPointer(event);
@@ -290,6 +300,9 @@ class _ReaderGestureDetectorState extends State<_ReaderGestureDetector> {
   void removeDragListener(_DragListener listener) {
     _dragListeners.remove(listener);
   }
+
+  @override
+  Object? get key => "reader_gesture";
 }
 
 class _DragListener {

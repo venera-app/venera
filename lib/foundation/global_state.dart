@@ -9,7 +9,7 @@ abstract class GlobalState {
 
   static T find<T extends State>([Object? key]) {
     for (var pair in _state) {
-      if (pair.left == key && pair.right is T) {
+      if ((key == null || pair.left == key) && pair.right is T) {
         return pair.right as T;
       }
     }
@@ -18,7 +18,7 @@ abstract class GlobalState {
 
   static T? findOrNull<T extends State>([Object? key]) {
     for (var pair in _state) {
-      if (pair.left == key && pair.right is T) {
+      if ((key == null || pair.left == key) && pair.right is T) {
         return pair.right as T;
       }
     }
