@@ -332,7 +332,8 @@
     "Created successfully": "创建成功",
     "name": "名称",
     "Reverse tap to turn Pages": "反转点击翻页",
-    "Show all": "显示全部"
+    "Show all": "显示全部",
+    "Number of images preloaded": "预加载图片数量"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -667,6 +668,7 @@
     "Created successfully": "創建成功",
     "name": "名稱",
     "Reverse tap to turn Pages": "反轉點擊翻頁",
-    "Show all": "顯示全部"
+    "Show all": "顯示全部",
+    "Number of images preloaded": "預加載圖片數量"
   }
 }

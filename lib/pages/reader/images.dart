@@ -105,7 +105,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   late List<bool> cached;
 
-  int get preCacheCount => 4;
+  int get preCacheCount => appdata.settings["preloadImageCount"];
 
   var photoViewControllers = <int, PhotoViewController>{};
 
@@ -371,6 +371,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
   var fingers = 0;
   bool disableScroll = false;
 
+  late List<bool> cached;
+  int get preCacheCount => appdata.settings["preloadImageCount"];
+
   /// Whether the user was scrolling the page.
   /// The gesture detector has a delay to detect tap event.
   /// To handle the tap event, we need to know if the user was scrolling before the delay.
@@ -388,6 +391,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
     reader = context.reader;
     reader._imageViewController = this;
     itemPositionsListener.itemPositions.addListener(onPositionChanged);
+    cached = List.filled(reader.maxPage + 2, false);
+    Future.delayed(
+      const Duration(milliseconds: 100),
+      () => cacheImages(reader.page),
+    );
     super.initState();
   }
 
@@ -404,6 +412,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       reader.setPage(page);
       context.readerScaffold.update();
     }
+    cacheImages(page);
   }
 
   double? futurePosition;
@@ -443,6 +452,15 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
   }
 
+  void cacheImages(int current) {
+    for (int i = current + 1; i <= current + preCacheCount; i++) {
+      if (i <= reader.maxPage && !cached[i]) {
+        _precacheImage(i, context);
+        cached[i] = true;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget widget = ScrollablePositionedList.builder(
@@ -472,8 +490,6 @@ class _ContinuousModeState extends State<_ContinuousMode>
         } else {
           width = double.infinity;
         }
-
-        _precacheImage(index, context);
 
         ImageProvider image = _createImageProvider(index, context);
 

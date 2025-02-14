@@ -143,6 +143,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           callback: () => context.to(() => _CustomImageProcessing()),
           actionTitle: "Edit".tl,
         ).toSliver(),
+        _SliderSetting(
+          title: "Number of images preloaded".tl,
+          settingsIndex: "preloadImageCount",
+          interval: 1,
+          min: 1,
+          max: 16,
+        ).toSliver(),
       ],
     );
   }
