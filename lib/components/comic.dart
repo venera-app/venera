@@ -23,14 +23,16 @@ ImageProvider? _findImageProvider(Comic comic) {
 }
 
 class ComicTile extends StatelessWidget {
-  const ComicTile(
-      {super.key,
-      required this.comic,
-      this.enableLongPressed = true,
-      this.badge,
-      this.menuOptions,
-      this.onTap,
-      this.onLongPressed});
+  const ComicTile({
+    super.key,
+    required this.comic,
+    this.enableLongPressed = true,
+    this.badge,
+    this.menuOptions,
+    this.onTap,
+    this.onLongPressed,
+    this.heroID,
+  });
 
   final Comic comic;
 
@@ -44,6 +46,8 @@ class ComicTile extends StatelessWidget {
 
   final VoidCallback? onLongPressed;
 
+  final int? heroID;
+
   void _onTap() {
     if (onTap != null) {
       onTap!();
@@ -55,6 +59,7 @@ class ComicTile extends StatelessWidget {
         sourceKey: comic.sourceKey,
         cover: comic.cover,
         title: comic.title,
+        heroID: heroID,
       ),
     );
   }
@@ -137,8 +142,7 @@ class ComicTile extends StatelessWidget {
             .isExist(comic.id, ComicType(comic.sourceKey.hashCode))
         : false;
     var history = appdata.settings['showHistoryStatusOnTile']
-        ? HistoryManager()
-            .find(comic.id, ComicType(comic.sourceKey.hashCode))
+        ? HistoryManager().find(comic.id, ComicType(comic.sourceKey.hashCode))
         : null;
     if (history?.page == 0) {
       history!.page = 1;
@@ -210,63 +214,94 @@ class ComicTile extends StatelessWidget {
   Widget _buildDetailedMode(BuildContext context) {
     return LayoutBuilder(builder: (context, constrains) {
       final height = constrains.maxHeight - 16;
-      return InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: _onTap,
-          onLongPress: enableLongPressed ? () => _onLongPressed(context) : null,
-          onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
-            child: Row(
-              children: [
-                Hero(
-                  tag: "cover${comic.id}${comic.sourceKey}",
-                  child: Container(
-                    width: height * 0.68,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.colorScheme.outlineVariant,
-                          blurRadius: 1,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: buildImage(context),
-                  ),
-                ),
-                SizedBox.fromSize(
-                  size: const Size(16, 5),
-                ),
-                Expanded(
-                  child: _ComicDescription(
-                    title: comic.maxPage == null
-                        ? comic.title.replaceAll("\n", "")
-                        : "[${comic.maxPage}P]${comic.title.replaceAll("\n", "")}",
-                    subtitle: comic.subtitle ?? '',
-                    description: comic.description,
-                    badge: badge ?? comic.language,
-                    tags: comic.tags,
-                    maxLines: 2,
-                    enableTranslate: ComicSource.find(comic.sourceKey)
-                            ?.enableTagsTranslate ??
-                        false,
-                    rating: comic.stars,
-                  ),
-                ),
-              ],
+
+      Widget image = Container(
+        width: height * 0.68,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: context.colorScheme.outlineVariant,
+              blurRadius: 1,
+              offset: const Offset(0, 1),
             ),
-          ));
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: buildImage(context),
+      );
+
+      if (heroID != null) {
+        image = Hero(
+          tag: "cover$heroID",
+          child: image,
+        );
+      }
+
+      return InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: _onTap,
+        onLongPress: enableLongPressed ? () => _onLongPressed(context) : null,
+        onSecondaryTapDown: (detail) => onSecondaryTap(detail, context),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
+          child: Row(
+            children: [
+              image,
+              SizedBox.fromSize(
+                size: const Size(16, 5),
+              ),
+              Expanded(
+                child: _ComicDescription(
+                  title: comic.maxPage == null
+                      ? comic.title.replaceAll("\n", "")
+                      : "[${comic.maxPage}P]${comic.title.replaceAll("\n", "")}",
+                  subtitle: comic.subtitle ?? '',
+                  description: comic.description,
+                  badge: badge ?? comic.language,
+                  tags: comic.tags,
+                  maxLines: 2,
+                  enableTranslate:
+                      ComicSource.find(comic.sourceKey)?.enableTagsTranslate ??
+                          false,
+                  rating: comic.stars,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     });
   }
 
   Widget _buildBriefMode(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        Widget image = Container(
+          decoration: BoxDecoration(
+            color: context.colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.toOpacity(0.2),
+                blurRadius: 2,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: buildImage(context),
+        );
+
+        if (heroID != null) {
+          image = Hero(
+            tag: "cover$heroID",
+            child: image,
+          );
+        }
+
         return InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: _onTap,
@@ -278,24 +313,7 @@ class ComicTile extends StatelessWidget {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Hero(
-                        tag: "cover${comic.id}${comic.sourceKey}",
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: context.colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.toOpacity(0.2),
-                                blurRadius: 2,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: buildImage(context),
-                        ),
-                      ),
+                      child: image,
                     ),
                     Align(
                       alignment: Alignment.bottomRight,
@@ -739,6 +757,16 @@ class SliverGridComics extends StatefulWidget {
 
 class _SliverGridComicsState extends State<SliverGridComics> {
   List<Comic> comics = [];
+  List<int> heroIDs = [];
+
+  static int _nextHeroID = 0;
+
+  void generateHeroID() {
+    heroIDs.clear();
+    for (var i = 0; i < comics.length; i++) {
+      heroIDs.add(_nextHeroID++);
+    }
+  }
 
   @override
   void didUpdateWidget(covariant SliverGridComics oldWidget) {
@@ -749,6 +777,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
           comics.add(comic);
         }
       }
+      generateHeroID();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -760,6 +789,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
         comics.add(comic);
       }
     }
+    generateHeroID();
     HistoryManager().addListener(update);
     super.initState();
   }
@@ -785,6 +815,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
   Widget build(BuildContext context) {
     return _SliverGridComics(
       comics: comics,
+      heroIDs: heroIDs,
       selection: widget.selections,
       onLastItemBuild: widget.onLastItemBuild,
       badgeBuilder: widget.badgeBuilder,
@@ -798,6 +829,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
 class _SliverGridComics extends StatelessWidget {
   const _SliverGridComics({
     required this.comics,
+    required this.heroIDs,
     this.onLastItemBuild,
     this.badgeBuilder,
     this.menuBuilder,
@@ -807,6 +839,8 @@ class _SliverGridComics extends StatelessWidget {
   });
 
   final List<Comic> comics;
+
+  final List<int> heroIDs;
 
   final Map<Comic, bool>? selection;
 
@@ -839,6 +873,7 @@ class _SliverGridComics extends StatelessWidget {
             onLongPressed: onLongPressed != null
                 ? () => onLongPressed!(comics[index])
                 : null,
+            heroID: heroIDs[index],
           );
           if (selection == null) {
             return comic;

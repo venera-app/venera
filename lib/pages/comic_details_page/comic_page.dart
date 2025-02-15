@@ -47,6 +47,7 @@ class ComicPage extends StatefulWidget {
     required this.sourceKey,
     this.cover,
     this.title,
+    this.heroID,
   });
 
   final String id;
@@ -56,6 +57,8 @@ class ComicPage extends StatefulWidget {
   final String? cover;
 
   final String? title;
+
+  final int? heroID;
 
   @override
   State<ComicPage> createState() => _ComicPageState();
@@ -86,6 +89,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       title: widget.title,
       sourceKey: widget.sourceKey,
       cid: widget.id,
+      heroID: widget.heroID,
     );
   }
 
@@ -225,7 +229,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         children: [
           const SizedBox(width: 16),
           Hero(
-            tag: "cover${comic.id}${comic.sourceKey}",
+            tag: "cover${widget.heroID}",
             child: Container(
               decoration: BoxDecoration(
                 color: context.colorScheme.primaryContainer,
@@ -776,6 +780,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
     this.title,
     required this.sourceKey,
     required this.cid,
+    this.heroID,
   });
 
   final String? cover;
@@ -785,6 +790,8 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
   final String sourceKey;
 
   final String cid;
+
+  final int? heroID;
 
   @override
   Widget build(BuildContext context) {
@@ -870,7 +877,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
     }
 
     return Hero(
-      tag: "cover$cid$sourceKey",
+      tag: "cover$heroID",
       child: Container(
         decoration: BoxDecoration(
           color: context.colorScheme.primaryContainer,
