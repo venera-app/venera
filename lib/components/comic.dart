@@ -556,10 +556,8 @@ class _ComicDescription extends StatelessWidget {
             softWrap: true,
             overflow: TextOverflow.ellipsis,
           ),
-        const SizedBox(
-          height: 4,
-        ),
-        if (tags != null)
+        const SizedBox(height: 4),
+        if (tags != null && tags!.isNotEmpty)
           Expanded(
             child: LayoutBuilder(builder: (context, constraints) {
               if (constraints.maxHeight < 22) {
@@ -624,7 +622,7 @@ class _ComicDescription extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12.0,
                     ),
-                    maxLines: 1,
+                    maxLines: (tags == null || tags!.isEmpty) ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

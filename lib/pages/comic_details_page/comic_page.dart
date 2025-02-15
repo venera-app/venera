@@ -362,7 +362,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       : FilledButton(onPressed: read, child: Text("Read".tl)),
                 )
               ],
-            ).paddingHorizontal(16).paddingTop(8),
+            ).paddingHorizontal(16).paddingVertical(8),
           if (history != null)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
