@@ -138,7 +138,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
                 itemHeight: 48,
               ),
             ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
-            if (chapters.length > 20 && !canShowAll)
+            if (!canShowAll)
               SliverToBoxAdapter(
                 child: Align(
                   alignment: Alignment.center,
@@ -322,7 +322,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
                 itemHeight: 48,
               ),
             ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
-            if (chapters.length > 20 && !canShowAll)
+            if (!canShowAll)
               SliverToBoxAdapter(
                 child: Align(
                   alignment: Alignment.center,
