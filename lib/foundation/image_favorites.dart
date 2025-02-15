@@ -396,7 +396,7 @@ class ImageFavoriteManager with ChangeNotifier {
     var token = ServicesBinding.rootIsolateToken!;
     var count = ImageFavoriteManager().length;
     if (count == 0) {
-      return Future.value(ImageFavoritesComputed([], [], []));
+      return Future.value(ImageFavoritesComputed([], [], [], 0));
     } else if (count > 100) {
       return Isolate.run(() async {
         BackgroundIsolateBinaryMessenger.ensureInitialized(token);
@@ -436,8 +436,10 @@ class ImageFavoriteManager with ChangeNotifier {
     Map<String, int> authorCount = {};
     Map<ImageFavoritesComic, int> comicImageCount = {};
     Map<ImageFavoritesComic, int> comicMaxPages = {};
+    int count = 0;
 
     for (var comic in comics) {
+      count += comic.images.length;
       for (var tag in comic.tags) {
         String finalTag = tag;
         tagCount[finalTag] = (tagCount[finalTag] ?? 0) + 1;
@@ -492,6 +494,7 @@ class ImageFavoriteManager with ChangeNotifier {
           .map((comic) => TextWithCount(comic.key.title, comic.value))
           .take(maxLength)
           .toList(),
+      count,
     );
   }
 
@@ -524,11 +527,14 @@ class ImageFavoritesComputed {
   /// 基于喜欢的图片数排序
   final List<TextWithCount> comics;
 
+  final int count;
+
   /// 计算后的图片收藏数据
   const ImageFavoritesComputed(
     this.tags,
     this.authors,
     this.comics,
+    this.count,
   );
 
   bool get isEmpty => tags.isEmpty && authors.isEmpty && comics.isEmpty;

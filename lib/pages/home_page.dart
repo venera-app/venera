@@ -823,6 +823,20 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                     Center(
                       child: Text('Image Favorites'.tl, style: ts.s18),
                     ),
+                    if (hasData)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          imageFavoritesCompute!.count.toString(),
+                          style: ts.s12,
+                        ),
+                      ),
                     const Spacer(),
                     const Icon(Icons.arrow_right),
                   ],
