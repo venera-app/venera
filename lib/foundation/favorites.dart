@@ -642,6 +642,7 @@ class LocalFavoritesManager with ChangeNotifier {
 
   void onRead(String id, ComicType type) async {
     if (appdata.settings['moveFavoriteAfterRead'] == "none") {
+      markAsRead(id, type);
       return;
     }
     _modifiedAfterLastCache = true;
@@ -933,8 +934,11 @@ class LocalFavoritesManager with ChangeNotifier {
         .toList();
   }
 
-  void markAsRead(String folder, String id, ComicType type) {
+  void markAsRead(String id, ComicType type) {
     var folder = appdata.settings['followUpdatesFolder'];
+    if (!existsFolder(folder)) {
+      return;
+    }
     _db.execute("""
       update "$folder"
       set has_new_update = 0
