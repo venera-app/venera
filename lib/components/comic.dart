@@ -463,7 +463,9 @@ class ComicTile extends StatelessWidget {
                   children: [
                     for (var word in all)
                       OptionChip(
-                        text: word,
+                        text: (comic.tags?.contains(word) ?? false)
+                            ? word.translateTagIfNeed
+                            : word,
                         isSelected: words.contains(word),
                         onTap: () {
                           setState(() {
