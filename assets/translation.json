@@ -337,7 +337,8 @@
     "Ascending": "升序",
     "Descending": "降序",
     "Last Reading: Chapter @ep Page @page": "上次阅读: 第 @ep 章 第 @page 页",
-    "Last Reading: Page @page": "上次阅读: 第 @page 页"
+    "Last Reading: Page @page": "上次阅读: 第 @page 页",
+    "Replies": "回复"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -677,6 +678,7 @@
     "Ascending": "升序",
     "Descending": "降序",
     "Last Reading: Chapter @ep Page @page": "上次閱讀: 第 @ep 章 第 @page 頁",
-    "Last Reading: Page @page": "上次閱讀: 第 @page 頁"
+    "Last Reading: Page @page": "上次閱讀: 第 @page 頁",
+    "Replies": "回覆"
   }
 }
