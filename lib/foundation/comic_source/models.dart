@@ -295,6 +295,41 @@ class ComicDetails with HistoryMixin {
     }
     return null;
   }
+
+  String? _validateUpdateTime(String time) {
+    time = time.split(" ").first;
+    var segments = time.split("-");
+    if (segments.length != 3) return null;
+    var year = int.tryParse(segments[0]);
+    var month = int.tryParse(segments[1]);
+    var day = int.tryParse(segments[2]);
+    if (year == null || month == null || day == null) return null;
+    if (year < 2000 || year > 3000) return null;
+    if (month < 1 || month > 12) return null;
+    if (day < 1 || day > 31) return null;
+    return "$year-$month-$day";
+  }
+
+  String? findUpdateTime() {
+    if (updateTime != null) {
+      return _validateUpdateTime(updateTime!);
+    }
+    const acceptedNamespaces = [
+      "更新",
+      "最後更新",
+      "最后更新",
+      "update",
+      "last update",
+    ];
+    for (var entry in tags.entries) {
+      if (acceptedNamespaces.contains(entry.key.toLowerCase()) &&
+          entry.value.isNotEmpty) {
+        var value = entry.value.first;
+        return _validateUpdateTime(value);
+      }
+    }
+    return null;
+  }
 }
 
 class ArchiveInfo {

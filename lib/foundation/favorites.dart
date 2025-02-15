@@ -6,6 +6,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/image_provider/local_favorite_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/pages/follow_updates_page.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'dart:io';
 
@@ -152,6 +153,38 @@ class FavoriteItemWithFolderInfo extends FavoriteItem {
           type: item.type,
           tags: item.tags,
         );
+}
+
+class FavoriteItemWithUpdateInfo extends FavoriteItem {
+  String? updateTime;
+
+  DateTime? lastCheckTime;
+
+  bool hasNewUpdate;
+
+  FavoriteItemWithUpdateInfo(
+    FavoriteItem item,
+    this.updateTime,
+    this.hasNewUpdate,
+    int? lastCheckTime,
+  )   : lastCheckTime = lastCheckTime == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(lastCheckTime),
+        super(
+          id: item.id,
+          name: item.name,
+          coverPath: item.coverPath,
+          author: item.author,
+          type: item.type,
+          tags: item.tags,
+        );
+
+  @override
+  String get description {
+    var updateTime = this.updateTime ?? "Unknown";
+    var sourceName = type.comicSource?.name ?? "Unknown";
+    return "$updateTime | $sourceName";
+  }
 }
 
 class LocalFavoritesManager with ChangeNotifier {
@@ -599,6 +632,7 @@ class LocalFavoritesManager with ChangeNotifier {
       return;
     }
     _modifiedAfterLastCache = true;
+    var followUpdatesFolder = appdata.settings['followUpdatesFolder'];
     for (final folder in folderNames) {
       var rows = _db.select("""
         select * from "$folder"
@@ -627,9 +661,13 @@ class LocalFavoritesManager with ChangeNotifier {
             UPDATE "$folder"
             SET 
               $updateLocationSql
+              ${followUpdatesFolder == folder ? "has_new_update = 0," : ""}
               time = ?
-            WHERE id == ?;
-          """, [newTime, id]);
+            WHERE id == ? and type == ?;
+          """, [newTime, id, type.value]);
+        if (followUpdatesFolder == folder) {
+          updateFollowUpdatesUI();
+        }
       }
     }
     notifyListeners();
@@ -781,6 +819,114 @@ class LocalFavoritesManager with ChangeNotifier {
         Log.error("Import Data", e.toString());
       }
     }
+  }
+
+  void prepareTableForFollowUpdates(String table) {
+    // check if the table has the column "last_update_time" "has_new_update" "last_check_time"
+    var columns = _db.select("""
+      pragma table_info("$table");
+    """);
+    if (!columns.any((element) => element["name"] == "last_update_time")) {
+      _db.execute("""
+        alter table "$table"
+        add column last_update_time TEXT;
+      """);
+    }
+    if (!columns.any((element) => element["name"] == "has_new_update")) {
+      _db.execute("""
+        alter table "$table"
+        add column has_new_update int;
+      """);
+    }
+    _db.execute("""
+        update "$table"
+        set has_new_update = 0;
+      """);
+    if (!columns.any((element) => element["name"] == "last_check_time")) {
+      _db.execute("""
+        alter table "$table"
+        add column last_check_time int;
+      """);
+    }
+  }
+
+  void updateUpdateTime(
+    String folder,
+    String id,
+    ComicType type,
+    String updateTime,
+  ) {
+    var oldTime = _db.select("""
+      select last_update_time from "$folder"
+      where id == ? and type == ?;
+    """, [id, type.value]).first['last_update_time'];
+    var hasNewUpdate = oldTime != updateTime;
+    _db.execute("""
+      update "$folder"
+      set last_update_time = ?, has_new_update = ?, last_check_time = ?
+      where id == ? and type == ?;
+    """, [
+      updateTime,
+      hasNewUpdate ? 1 : 0,
+      DateTime.now().millisecondsSinceEpoch,
+      id,
+      type.value,
+    ]);
+  }
+
+  int countUpdates(String folder) {
+    return _db.select("""
+      select count(*) as c from "$folder"
+      where has_new_update == 1;
+    """).first['c'];
+  }
+
+  List<FavoriteItemWithUpdateInfo> getUpdates(String folder) {
+    if (!existsFolder(folder)) {
+      return [];
+    }
+    var res = _db.select("""
+      select * from "$folder"
+      where has_new_update == 1;
+    """);
+    return res
+        .map(
+          (e) => FavoriteItemWithUpdateInfo(
+            FavoriteItem.fromRow(e),
+            e['last_update_time'],
+            e['has_new_update'] == 1,
+            e['last_check_time'],
+          ),
+        )
+        .toList();
+  }
+
+  List<FavoriteItemWithUpdateInfo> getComicsWithUpdatesInfo(String folder) {
+    if (!existsFolder(folder)) {
+      return [];
+    }
+    var res = _db.select("""
+      select * from "$folder";
+    """);
+    return res
+        .map(
+          (e) => FavoriteItemWithUpdateInfo(
+            FavoriteItem.fromRow(e),
+            e['last_update_time'],
+            e['has_new_update'] == 1,
+            e['last_check_time'],
+          ),
+        )
+        .toList();
+  }
+
+  void markAsRead(String folder, String id, ComicType type) {
+    var folder = appdata.settings['followUpdatesFolder'];
+    _db.execute("""
+      update "$folder"
+      set has_new_update = 0
+      where id == ? and type == ?;
+    """, [id, type.value]);
   }
 
   void close() {
