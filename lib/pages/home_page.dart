@@ -9,9 +9,10 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
-import 'package:venera/pages/comic_page.dart';
+import 'package:venera/pages/comic_details_page/comic_page.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/pages/downloading_page.dart';
+import 'package:venera/pages/follow_updates_page.dart';
 import 'package:venera/pages/history_page.dart';
 import 'package:venera/pages/image_favorites_page/image_favorites_page.dart';
 import 'package:venera/pages/search_page.dart';
@@ -34,6 +35,7 @@ class HomePage extends StatelessWidget {
         const _SyncDataWidget(),
         const _History(),
         const _Local(),
+        const FollowUpdatesWidget(),
         const _ComicSourceWidget(),
         const ImageFavorites(),
         SliverPadding(padding: EdgeInsets.only(top: context.padding.bottom)),
@@ -821,6 +823,20 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                     Center(
                       child: Text('Image Favorites'.tl, style: ts.s18),
                     ),
+                    if (hasData)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          imageFavoritesCompute!.count.toString(),
+                          style: ts.s12,
+                        ),
+                      ),
                     const Spacer(),
                     const Icon(Icons.arrow_right),
                   ],

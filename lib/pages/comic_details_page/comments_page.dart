@@ -1,25 +1,18 @@
-import 'dart:collection';
-
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-import 'package:venera/components/components.dart';
-import 'package:venera/foundation/app.dart';
-import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/image_provider/cached_image.dart';
-import 'package:venera/utils/app_links.dart';
-import 'package:venera/utils/ext.dart';
-import 'package:venera/utils/translations.dart';
+part of 'comic_page.dart';
 
 class CommentsPage extends StatefulWidget {
-  const CommentsPage(
-      {super.key, required this.data, required this.source, this.replyId});
+  const CommentsPage({
+    super.key,
+    required this.data,
+    required this.source,
+    this.replyComment,
+  });
 
   final ComicDetails data;
 
   final ComicSource source;
 
-  final String? replyId;
+  final Comment? replyComment;
 
   @override
   State<CommentsPage> createState() => _CommentsPageState();
@@ -36,7 +29,7 @@ class _CommentsPageState extends State<CommentsPage> {
 
   void firstLoad() async {
     var res = await widget.source.commentsLoader!(
-        widget.data.comicId, widget.data.subId, 1, widget.replyId);
+        widget.data.comicId, widget.data.subId, 1, widget.replyComment?.id);
     if (res.error) {
       setState(() {
         _error = res.errorMessage;
@@ -53,7 +46,11 @@ class _CommentsPageState extends State<CommentsPage> {
 
   void loadMore() async {
     var res = await widget.source.commentsLoader!(
-        widget.data.comicId, widget.data.subId, _page + 1, widget.replyId);
+      widget.data.comicId,
+      widget.data.subId,
+      _page + 1,
+      widget.replyComment?.id,
+    );
     if (res.error) {
       context.showMessage(message: res.errorMessage ?? "Unknown Error");
     } else {
@@ -105,8 +102,44 @@ class _CommentsPageState extends State<CommentsPage> {
             child: ListView.builder(
               primary: false,
               padding: EdgeInsets.zero,
-              itemCount: _comments!.length + 1,
+              itemCount: _comments!.length + 2,
               itemBuilder: (context, index) {
+                if (index == 0) {
+                  if (widget.replyComment != null) {
+                    return Column(
+                      children: [
+                        _CommentTile(
+                          comment: widget.replyComment!,
+                          source: widget.source,
+                          comic: widget.data,
+                          showAvatar: showAvatar,
+                          showActions: false,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: context.colorScheme.outlineVariant,
+                                width: 0.6,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "Replies".tl,
+                            style: ts.s18,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return const SizedBox();
+                  }
+                }
+                index--;
+
                 if (index == _comments!.length) {
                   if (_page < (maxPage ?? _page + 1)) {
                     loadMore();
@@ -141,6 +174,12 @@ class _CommentsPageState extends State<CommentsPage> {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: context.colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+        ),
       ),
       child: Material(
         color: context.colorScheme.surfaceContainer,
@@ -160,7 +199,7 @@ class _CommentsPageState extends State<CommentsPage> {
             ),
             if (sending)
               const Padding(
-                padding: EdgeInsets.all(8.5),
+                padding: EdgeInsets.all(8),
                 child: SizedBox(
                   width: 24,
                   height: 24,
@@ -182,7 +221,7 @@ class _CommentsPageState extends State<CommentsPage> {
                       widget.data.comicId,
                       widget.data.subId,
                       controller.text,
-                      widget.replyId);
+                      widget.replyComment?.id);
                   if (!b.error) {
                     controller.text = "";
                     setState(() {
@@ -205,7 +244,7 @@ class _CommentsPageState extends State<CommentsPage> {
                 ),
               )
           ],
-        ).paddingVertical(2).paddingLeft(16).paddingRight(4),
+        ).paddingLeft(16).paddingRight(4),
       ),
     );
   }
@@ -217,6 +256,7 @@ class _CommentTile extends StatefulWidget {
     required this.source,
     required this.comic,
     required this.showAvatar,
+    this.showActions = true,
   });
 
   final Comment comment;
@@ -226,6 +266,8 @@ class _CommentTile extends StatefulWidget {
   final ComicDetails comic;
 
   final bool showAvatar;
+
+  final bool showActions;
 
   @override
   State<_CommentTile> createState() => _CommentTileState();
@@ -243,24 +285,17 @@ class _CommentTileState extends State<_CommentTile> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 0.6,
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.showAvatar)
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(18),
                   color: Theme.of(context).colorScheme.secondaryContainer),
               child: widget.comment.avatar == null
                   ? null
@@ -270,7 +305,7 @@ class _CommentTileState extends State<_CommentTile> {
                         sourceKey: widget.source.key,
                       ),
                     ),
-            ).paddingRight(12),
+            ).paddingRight(8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,11 +323,14 @@ class _CommentTileState extends State<_CommentTile> {
             ),
           )
         ],
-      ).paddingAll(16),
+      ),
     );
   }
 
   Widget buildActions() {
+    if (!widget.showActions) {
+      return const SizedBox();
+    }
     if (widget.comment.score == null && widget.comment.replyCount == null) {
       return const SizedBox();
     }
@@ -331,7 +369,7 @@ class _CommentTileState extends State<_CommentTile> {
             CommentsPage(
               data: widget.comic,
               source: widget.source,
-              replyId: widget.comment.id,
+              replyComment: widget.comment,
             ),
             showBarrier: false,
           );
@@ -676,7 +714,17 @@ class _RichCommentContentState extends State<RichCommentContent> {
                 attributes[attrSplits[0]] = attrSplits[1].replaceAll('"', '');
               }
             }
-            const acceptedTags = ['img', 'a', 'b', 'i', 'u', 's', 'br', 'span', 'strong'];
+            const acceptedTags = [
+              'img',
+              'a',
+              'b',
+              'i',
+              'u',
+              's',
+              'br',
+              'span',
+              'strong'
+            ];
             if (acceptedTags.contains(tagName)) {
               writeBuffer();
               if (tagName == 'img') {

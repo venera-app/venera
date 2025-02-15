@@ -85,8 +85,8 @@ class _AboutSettingsState extends State<AboutSettings> {
 }
 
 Future<bool> checkUpdate() async {
-  var res = await AppDio().get(
-      "https://cdn.jsdelivr.net/gh/venera-app/venera@latest/pubspec.yaml");
+  var res = await AppDio()
+      .get("https://cdn.jsdelivr.net/gh/venera-app/venera@master/pubspec.yaml");
   if (res.statusCode == 200) {
     var data = loadYaml(res.data);
     if (data["version"] != null) {
@@ -108,7 +108,7 @@ Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true]) async {
               content: Text(
                       "A new version is available. Do you want to update now?"
                           .tl)
-                  .paddingHorizontal(8),
+                  .paddingHorizontal(16),
               actions: [
                 Button.text(
                   onPressed: () {
@@ -136,6 +136,9 @@ bool _compareVersion(String version1, String version2) {
   for (var i = 0; i < v1.length; i++) {
     if (int.parse(v1[i]) > int.parse(v2[i])) {
       return true;
+    }
+    if (int.parse(v1[i]) < int.parse(v2[i])) {
+      return false;
     }
   }
   return false;

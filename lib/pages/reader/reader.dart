@@ -22,6 +22,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
+import 'package:venera/foundation/global_state.dart';
 import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
@@ -229,6 +230,10 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     updateHistory();
   }
 
+  /// Prevent multiple history updates in a short time.
+  /// `HistoryManager().addHistoryAsync` is a high-cost operation because it creates a new isolate.
+  Timer? _updateHistoryTimer;
+
   void updateHistory() {
     if (history != null) {
       history!.page = page;
@@ -237,9 +242,12 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
         history!.maxPage = maxPage;
       }
       history!.readEpisode.add(chapter);
-      print(history!.readEpisode);
       history!.time = DateTime.now();
-      HistoryManager().addHistory(history!);
+      _updateHistoryTimer?.cancel();
+      _updateHistoryTimer = Timer(const Duration(seconds: 1), () {
+        HistoryManager().addHistoryAsync(history!);
+        _updateHistoryTimer = null;
+      });
     }
   }
 

@@ -351,6 +351,21 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   text: "Download".tl,
                   onClick: downloadSelected,
                 ),
+                if (selectedComics.length == 1)
+                  MenuEntry(
+                    icon: Icons.copy,
+                    text: "Copy Title".tl,
+                    onClick: () {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: selectedComics.keys.first.title,
+                        ),
+                      );
+                      context.showMessage(
+                        message: "Copied".tl,
+                      );
+                    },
+                  ),
               ]),
             ],
           )

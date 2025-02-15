@@ -52,6 +52,15 @@ extension TagsTranslation on String{
   /// translate tag's text to chinese
   String get translateTagsToCN => _translateTags(this);
 
+  String get translateTagIfNeed {
+    var locale = App.locale;
+    if (locale.languageCode == "zh") {
+      return translateTagsToCN;
+    } else {
+      return this;
+    }
+  }
+
   static String translateTag(String tag) {
     if(tag.contains(':') && tag.indexOf(':') == tag.lastIndexOf(':')) {
       var [namespace, text] = tag.split(':');

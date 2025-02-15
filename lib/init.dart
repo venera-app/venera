@@ -10,6 +10,9 @@ import 'package:venera/foundation/js_engine.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/pages/comic_source_page.dart';
+import 'package:venera/pages/follow_updates_page.dart';
+import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
@@ -54,4 +57,24 @@ Future<void> init() async {
   FlutterError.onError = (details) {
     Log.error("Unhandled Exception", "${details.exception}\n${details.stack}");
   };
+}
+
+Future<void> _checkAppUpdates() async {
+  var lastCheck = appdata.implicitData['lastCheckUpdate'] ?? 0;
+  var now = DateTime.now().millisecondsSinceEpoch;
+  if (now - lastCheck < 24 * 60 * 60 * 1000) {
+    return;
+  }
+  appdata.implicitData['lastCheckUpdate'] = now;
+  appdata.writeImplicitData();
+  ComicSourcePage.checkComicSourceUpdate();
+  if (appdata.settings['checkUpdateOnStart']) {
+    await Future.delayed(const Duration(milliseconds: 300));
+    await checkUpdateUi(false);
+  }
+}
+
+void checkUpdates() {
+  _checkAppUpdates();
+  FollowUpdatesService.initChecker();
 }

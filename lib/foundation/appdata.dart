@@ -158,6 +158,8 @@ class _Settings with ChangeNotifier {
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
     'comicSourceListUrl': "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@latest/index.json",
+    'preloadImageCount': 4,
+    'followUpdatesFolder': null,
   };
 
   operator [](String key) {

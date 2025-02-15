@@ -156,23 +156,27 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  static Future<void> update(ComicSource source) async {
+  static Future<void> update(ComicSource source,
+      [bool showLoading = true]) async {
     if (!source.url.isURL) {
       App.rootContext.showMessage(message: "Invalid url config");
       return;
     }
     ComicSource.remove(source.key);
     bool cancel = false;
-    var controller = showLoadingDialog(
-      App.rootContext,
-      onCancel: () => cancel = true,
-      barrierDismissible: false,
-    );
+    LoadingDialogController? controller;
+    if (showLoading) {
+      controller = showLoadingDialog(
+        App.rootContext,
+        onCancel: () => cancel = true,
+        barrierDismissible: false,
+      );
+    }
     try {
       var res = await AppDio().get<String>(source.url,
           options: Options(responseType: ResponseType.plain));
       if (cancel) return;
-      controller.close();
+      controller?.close();
       await ComicSourceParser().parse(res.data!, source.filePath);
       await File(source.filePath).writeAsString(res.data!);
       if (ComicSource.availableUpdates.containsKey(source.key)) {
@@ -551,11 +555,57 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
     } else if (count == 0) {
       context.showMessage(message: "No updates".tl);
     } else {
-      context.showMessage(message: "@c updates".tlParams({"c": count}));
+      showUpdateDialog();
     }
     setState(() {
       isLoading = false;
     });
+  }
+
+  void showUpdateDialog() async {
+    var text = ComicSource.availableUpdates.entries.map((e) {
+      return "${ComicSource.find(e.key)!.name}: ${e.value}";
+    }).join("\n");
+    bool doUpdate = false;
+    await showDialog(
+      context: App.rootContext,
+      builder: (context) {
+        return ContentDialog(
+          title: "Updates".tl,
+          content: Text(text).paddingHorizontal(16),
+          actions: [
+            FilledButton(
+              onPressed: () {
+                doUpdate = true;
+                context.pop();
+              },
+              child: Text("Update".tl),
+            ),
+          ],
+        );
+      },
+    );
+    if (doUpdate) {
+      var loadingController = showLoadingDialog(
+        context,
+        message: "Updating".tl,
+        withProgress: true,
+      );
+      int current = 0;
+      int total = ComicSource.availableUpdates.length;
+      try {
+        var shouldUpdate = ComicSource.availableUpdates.keys.toList();
+        for (var key in shouldUpdate) {
+          var source = ComicSource.find(key)!;
+          await _BodyState.update(source, false);
+          current++;
+          loadingController.setProgress(current / total);
+        }
+      } catch (e) {
+        context.showMessage(message: e.toString());
+      }
+      loadingController.close();
+    }
   }
 
   @override

@@ -274,6 +274,7 @@ class AppTabBar extends StatefulWidget {
     this.controller,
     required this.tabs,
     this.actionButton,
+    this.withUnderLine = true,
   });
 
   final TabController? controller;
@@ -281,6 +282,8 @@ class AppTabBar extends StatefulWidget {
   final List<Tab> tabs;
 
   final Widget? actionButton;
+
+  final bool withUnderLine;
 
   @override
   State<AppTabBar> createState() => _AppTabBarState();
@@ -396,14 +399,16 @@ class _AppTabBarState extends State<AppTabBar> {
       key: tabBarKey,
       height: _kTabHeight,
       width: double.infinity,
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: context.colorScheme.outlineVariant,
-            width: 0.6,
-          ),
-        ),
-      ),
+      decoration: widget.withUnderLine
+          ? BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: context.colorScheme.outlineVariant,
+                  width: 0.6,
+                ),
+              ),
+            )
+          : null,
       child: widget.tabs.isEmpty ? const SizedBox() : child,
     );
   }

@@ -105,8 +105,8 @@ class LocalComic with HistoryMixin implements Comic {
   @override
   int? get maxPage => null;
 
-  void read() async {
-    var history = await HistoryManager().find(id, comicType);
+  void read() {
+    var history = HistoryManager().find(id, comicType);
     App.rootContext.to(
       () => Reader(
         type: comicType,
@@ -511,7 +511,7 @@ class LocalManager with ChangeNotifier {
     }
     // Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
     if (c.comicType == ComicType.local) {
-      if (HistoryManager().findSync(c.id, c.comicType) != null) {
+      if (HistoryManager().find(c.id, c.comicType) != null) {
         HistoryManager().remove(c.id, c.comicType);
       }
       var folders = LocalFavoritesManager().find(c.id, c.comicType);
