@@ -7,6 +7,7 @@ class _FavoritePanel extends StatefulWidget {
     required this.isFavorite,
     required this.onFavorite,
     required this.favoriteItem,
+    this.updateTime,
   });
 
   final String cid;
@@ -21,6 +22,8 @@ class _FavoritePanel extends StatefulWidget {
   final void Function(bool?, bool?) onFavorite;
 
   final FavoriteItem favoriteItem;
+
+  final String? updateTime;
 
   @override
   State<_FavoritePanel> createState() => _FavoritePanelState();
@@ -164,14 +167,14 @@ class _FavoritePanelState extends State<_FavoritePanel>
                 onChanged: disabled
                     ? null
                     : (v) {
-                  setState(() {
-                    if (v!) {
-                      selectedLocalFolders.add(folder);
-                    } else {
-                      selectedLocalFolders.remove(folder);
-                    }
-                  });
-                },
+                        setState(() {
+                          if (v!) {
+                            selectedLocalFolders.add(folder);
+                          } else {
+                            selectedLocalFolders.remove(folder);
+                          }
+                        });
+                      },
               );
             },
           ),
@@ -190,7 +193,12 @@ class _FavoritePanelState extends State<_FavoritePanel>
                 widget.onFavorite(false, null);
               } else {
                 for (var folder in selectedLocalFolders) {
-                  LocalFavoritesManager().addComic(folder, widget.favoriteItem);
+                  LocalFavoritesManager().addComic(
+                    folder,
+                    widget.favoriteItem,
+                    null,
+                    widget.updateTime,
+                  );
                 }
                 widget.onFavorite(true, null);
               }
@@ -396,7 +404,7 @@ class _NetworkFavoritesState extends State<_NetworkFavorites> {
                   isLoading = true;
                 });
                 var res =
-                await widget.comicSource.favoriteData!.addOrDelFavorite!(
+                    await widget.comicSource.favoriteData!.addOrDelFavorite!(
                   widget.cid,
                   selected!,
                   !addedFolders.contains(selected!),

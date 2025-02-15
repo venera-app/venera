@@ -462,7 +462,8 @@ class LocalFavoritesManager with ChangeNotifier {
 
   /// add comic to a folder.
   /// return true if success, false if already exists
-  bool addComic(String folder, FavoriteItem comic, [int? order]) {
+  bool addComic(String folder, FavoriteItem comic,
+      [int? order, String? updateTime]) {
     _modifiedAfterLastCache = true;
     if (!existsFolder(folder)) {
       throw Exception("Folder does not exists");
@@ -500,6 +501,18 @@ class LocalFavoritesManager with ChangeNotifier {
         insert into "$folder" (id, name, author, type, tags, cover_path, time, translated_tags, display_order)
         values (?, ?, ?, ?, ?, ?, ?, ?, ?);
       """, [...params, minValue(folder) - 1]);
+    }
+    if (updateTime != null) {
+      var columns = _db.select("""
+      pragma table_info("$folder");
+    """);
+      if (columns.any((element) => element["name"] == "last_update_time")) {
+        _db.execute("""
+          update "$folder"
+          set last_update_time = ?
+          where id == ? and type == ?;
+        """, [updateTime, comic.id, comic.type.value]);
+      }
     }
     notifyListeners();
     return true;

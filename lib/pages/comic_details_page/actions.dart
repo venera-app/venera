@@ -61,6 +61,7 @@ abstract mixin class _ComicPageActions {
           update();
         },
         favoriteItem: _toFavoriteItem(),
+        updateTime: comic.findUpdateTime(),
       ),
     );
   }
@@ -73,6 +74,8 @@ abstract mixin class _ComicPageActions {
     LocalFavoritesManager().addComic(
       folder,
       _toFavoriteItem(),
+      null,
+      comic.findUpdateTime(),
     );
     isAddToLocalFav = true;
     update();
