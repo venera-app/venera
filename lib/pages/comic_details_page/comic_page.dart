@@ -362,7 +362,43 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       : FilledButton(onPressed: read, child: Text("Read".tl)),
                 )
               ],
-            ).paddingHorizontal(16).paddingVertical(8),
+            ).paddingHorizontal(16).paddingTop(8),
+          if (history != null)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: context.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history, color: context.useTextColor(Colors.teal)),
+                  const SizedBox(width: 8),
+                  Builder(
+                    builder: (context) {
+                      bool haveChapter = comic.chapters != null;
+                      var page = history!.page;
+                      var ep = history!.ep;
+                      String text;
+                      if (haveChapter) {
+                        text = "Last Reading: Chapter @ep Page @page".tlParams({
+                          'ep': ep,
+                          'page': page,
+                        });
+                      } else {
+                        text = "Last Reading: Page @page".tlParams({
+                          'page': page,
+                        });
+                      }
+                      return Text(text);
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            ).toAlign(Alignment.centerLeft),
           const Divider(),
         ],
       ).paddingTop(16),

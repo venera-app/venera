@@ -333,7 +333,11 @@
     "name": "名称",
     "Reverse tap to turn Pages": "反转点击翻页",
     "Show all": "显示全部",
-    "Number of images preloaded": "预加载图片数量"
+    "Number of images preloaded": "预加载图片数量",
+    "Ascending": "升序",
+    "Descending": "降序",
+    "Last Reading: Chapter @ep Page @page": "上次阅读: 第 @ep 章 第 @page 页",
+    "Last Reading: Page @page": "上次阅读: 第 @page 页"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -669,6 +673,10 @@
     "name": "名稱",
     "Reverse tap to turn Pages": "反轉點擊翻頁",
     "Show all": "顯示全部",
-    "Number of images preloaded": "預加載圖片數量"
+    "Number of images preloaded": "預加載圖片數量",
+    "Ascending": "升序",
+    "Descending": "降序",
+    "Last Reading: Chapter @ep Page @page": "上次閱讀: 第 @ep 章 第 @page 頁",
+    "Last Reading: Page @page": "上次閱讀: 第 @page 頁"
   }
 }
