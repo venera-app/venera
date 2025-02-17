@@ -33,82 +33,202 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   var comics = HistoryManager().getAll();
-
   var controller = FlyoutController();
+  
+  bool multiSelectMode = false;
+  Map<History, bool> selectedComics = {};
+
+  void selectAll() {
+    setState(() {
+      selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+    });
+  }
+
+  void deSelect() {
+    setState(() {
+      selectedComics.clear();
+    });
+  }
+
+  void invertSelection() {
+    setState(() {
+      comics.asMap().forEach((k, v) {
+        selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
+      });
+      selectedComics.removeWhere((k, v) => !v);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SmoothCustomScrollView(
-        slivers: [
-          SliverAppbar(
-            title: Text('History'.tl),
-            actions: [
-              Tooltip(
-                message: 'Clear History'.tl,
-                child: Flyout(
-                  controller: controller,
-                  flyoutBuilder: (context) {
-                    return FlyoutContent(
-                      title: 'Clear History'.tl,
-                      content: Text(
-                          'Are you sure you want to clear your history?'.tl),
-                      actions: [
-                        Button.filled(
-                          color: context.colorScheme.error,
-                          onPressed: () {
-                            HistoryManager().clearHistory();
-                            context.pop();
-                          },
-                          child: Text('Clear'.tl),
-                        ),
-                      ],
-                    );
-                  },
-                  child: IconButton(
-                    icon: const Icon(Icons.clear_all),
-                    onPressed: () {
-                      controller.show();
-                    },
-                  ),
-                ),
-              )
-            ],
-          ),
-          SliverGridComics(
-            comics: comics,
-            badgeBuilder: (c) {
-              return ComicSource.find(c.sourceKey)?.name;
-            },
-            menuBuilder: (c) {
-              return [
-                MenuEntry(
-                  icon: Icons.remove,
-                  text: 'Remove'.tl,
+    List<Widget> selectActions = [
+      IconButton(
+        icon: const Icon(Icons.select_all),
+        tooltip: "Select All".tl,
+        onPressed: selectAll
+      ),
+      IconButton(
+        icon: const Icon(Icons.deselect),
+        tooltip: "Deselect".tl,
+        onPressed: deSelect
+      ),
+      IconButton(
+        icon: const Icon(Icons.flip),
+        tooltip: "Invert Selection".tl,
+        onPressed: invertSelection
+      ),
+      IconButton(
+        icon: const Icon(Icons.delete),
+        tooltip: "Delete".tl,
+        onPressed: selectedComics.isEmpty ? null : () {
+          for (final comic in selectedComics.keys) {
+            if (comic.sourceKey.startsWith("Unknown")) {
+              HistoryManager().remove(
+                comic.id,
+                ComicType(int.parse(comic.sourceKey.split(':')[1])),
+              );
+            } else if (comic.sourceKey == 'local') {
+              HistoryManager().remove(
+                comic.id,
+                ComicType.local,
+              );
+            } else {
+              HistoryManager().remove(
+                comic.id,
+                ComicType(comic.sourceKey.hashCode),
+              );
+            }
+          }
+          setState(() {
+            multiSelectMode = false;
+            selectedComics.clear();
+          });
+        },
+      ),
+    ];
+
+    List<Widget> normalActions = [
+      Tooltip(
+        message: 'Clear History'.tl,
+        child: Flyout(
+          controller: controller,
+          flyoutBuilder: (context) {
+            return FlyoutContent(
+              title: 'Clear History'.tl,
+              content: Text('Are you sure you want to clear your history?'.tl),
+              actions: [
+                Button.filled(
                   color: context.colorScheme.error,
-                  onClick: () {
-                    if (c.sourceKey.startsWith("Unknown")) {
-                      HistoryManager().remove(
-                        c.id,
-                        ComicType(int.parse(c.sourceKey.split(':')[1])),
-                      );
-                    } else if (c.sourceKey == 'local') {
-                      HistoryManager().remove(
-                        c.id,
-                        ComicType.local,
-                      );
+                  onPressed: () {
+                    HistoryManager().clearHistory();
+                    context.pop();
+                  },
+                  child: Text('Clear'.tl),
+                ),
+              ],
+            );
+          },
+          child: IconButton(
+            icon: const Icon(Icons.clear_all),
+            onPressed: () {
+              controller.show();
+            },
+          ),
+        ),
+      )
+    ];
+
+    return PopScope(
+      canPop: !multiSelectMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (multiSelectMode) {
+          setState(() {
+            multiSelectMode = false;
+            selectedComics.clear();
+          });
+        }
+      },
+      child: Scaffold(
+        body: SmoothCustomScrollView(
+          slivers: [
+            SliverAppbar(
+              leading: Tooltip(
+                message: multiSelectMode ? "Cancel".tl : "Back".tl,
+                child: IconButton(
+                  onPressed: () {
+                    if (multiSelectMode) {
+                      setState(() {
+                        multiSelectMode = false;
+                        selectedComics.clear();
+                      });
                     } else {
-                      HistoryManager().remove(
-                        c.id,
-                        ComicType(c.sourceKey.hashCode),
-                      );
+                      context.pop();
                     }
                   },
+                  icon: multiSelectMode
+                      ? const Icon(Icons.close)
+                      : const Icon(Icons.arrow_back),
                 ),
-              ];
-            },
-          ),
-        ],
+              ),
+              title: multiSelectMode
+                  ? Text(selectedComics.length.toString())
+                  : Text('History'.tl),
+              actions: multiSelectMode ? selectActions : normalActions,
+            ),
+            SliverGridComics(
+              comics: comics,
+              selections: selectedComics,
+              onLongPressed: (c) {
+                setState(() {
+                  multiSelectMode = true;
+                  selectedComics[c as History] = true;
+                });
+              },
+              onTap: multiSelectMode ? (c) {
+                setState(() {
+                  if (selectedComics.containsKey(c as History)) {
+                    selectedComics.remove(c);
+                  } else {
+                    selectedComics[c] = true;
+                  }
+                  if (selectedComics.isEmpty) {
+                    multiSelectMode = false;
+                  }
+                });
+              } : null,
+              badgeBuilder: (c) {
+                return ComicSource.find(c.sourceKey)?.name;
+              },
+              menuBuilder: (c) {
+                return [
+                  MenuEntry(
+                    icon: Icons.remove,
+                    text: 'Remove'.tl,
+                    color: context.colorScheme.error,
+                    onClick: () {
+                      if (c.sourceKey.startsWith("Unknown")) {
+                        HistoryManager().remove(
+                          c.id,
+                          ComicType(int.parse(c.sourceKey.split(':')[1])),
+                        );
+                      } else if (c.sourceKey == 'local') {
+                        HistoryManager().remove(
+                          c.id,
+                          ComicType.local,
+                        );
+                      } else {
+                        HistoryManager().remove(
+                          c.id,
+                          ComicType(c.sourceKey.hashCode),
+                        );
+                      }
+                    },
+                  ),
+                ];
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

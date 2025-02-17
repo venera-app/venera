@@ -197,10 +197,12 @@ class _HistoryState extends State<_History> {
   late int count;
 
   void onHistoryChange() {
-    setState(() {
-      history = HistoryManager().getRecent();
-      count = HistoryManager().count();
-    });
+    if (mounted) {
+      setState(() {
+        history = HistoryManager().getRecent();
+        count = HistoryManager().count();
+      });
+    }
   }
 
   @override
