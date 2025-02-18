@@ -40,15 +40,19 @@ class DataSync with ChangeNotifier {
 
   bool get isEnabled {
     var config = appdata.settings['webdav'];
-    return config is List && config.isNotEmpty;
+    var autoSync = appdata.settings['webdavAutoSync'] ?? false;
+    return autoSync && config is List && config.isNotEmpty;
   }
 
   List<String>? _validateConfig() {
     var config = appdata.settings['webdav'];
-    if (config is! List || (config.isNotEmpty && config.length != 3)) {
+    if (config is! List) {
       return null;
     }
-    if (config.whereType<String>().length != 3) {
+    if (config.isEmpty) {
+      return [];
+    }
+    if (config.length != 3 || config.whereType<String>().length != 3) {
       return null;
     }
     return List.from(config);

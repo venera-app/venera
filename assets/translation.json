@@ -354,10 +354,10 @@
     "The comic will be marked as no updates as soon as you read it.": "漫画将在您阅读后立即标记为无更新",
     "Disable": "禁用",
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功后, APP将自动与服务器同步数据",
-    "Webdav is enabled." : "已启用Webdav",
     "Cache cleared": "缓存已清除",
     "Disabled": "已禁用",
-    "Last Reading: @epName Page @page": "上次阅读: @epName 第 @page 页"
+    "Last Reading: @epName Page @page": "上次阅读: @epName 第 @page 页",
+    "WebDAV Auto Sync": "WebDAV 自动同步"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -714,9 +714,9 @@
     "The comic will be marked as no updates as soon as you read it.": "漫畫將在您閱讀後立即標記為無更新",
     "Disable": "禁用",
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功後, APP將自動與服務器同步數據",
-    "Webdav is enabled." : "已啟用Webdav",
     "Cache cleared": "緩存已清除",
     "Disabled": "已禁用",
-    "Last Reading: @epName Page @page": "上次閱讀: @epName 第 @page 頁"
+    "Last Reading: @epName Page @page": "上次閱讀: @epName 第 @page 頁",
+    "WebDAV Auto Sync": "WebDAV 自動同步"
   }
 }
