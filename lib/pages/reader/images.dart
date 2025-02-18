@@ -406,6 +406,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
   }
 
   void onPositionChanged() {
+    if (itemPositionsListener.itemPositions.value.isEmpty) {
+      return;
+    }
     var page = itemPositionsListener.itemPositions.value.first.index;
     page = page.clamp(1, reader.maxPage);
     if (page != reader.page) {

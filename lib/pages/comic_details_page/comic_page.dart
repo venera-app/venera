@@ -165,6 +165,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               cid: widget.id,
               name: localComic.title,
               chapters: localComic.chapters,
+              initialPage: history?.page,
+              initialChapter: history?.ep,
               history: history ??
                   History.fromModel(
                     model: localComic,

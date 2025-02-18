@@ -319,7 +319,7 @@ class HistoryManager with ChangeNotifier {
     for (var element in res) {
       _cachedHistoryIds![element["id"] as String] = true;
     }
-    for (var key in cachedHistories.keys) {
+    for (var key in cachedHistories.keys.toList()) {
       if (!_cachedHistoryIds!.containsKey(key)) {
         cachedHistories.remove(key);
       }
