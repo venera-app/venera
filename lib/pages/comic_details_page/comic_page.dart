@@ -385,8 +385,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       var ep = history!.ep;
                       String text;
                       if (haveChapter) {
-                        text = "Last Reading: Chapter @ep Page @page".tlParams({
-                          'ep': ep,
+                        text = "Last Reading: @epName Page @page".tlParams({
+                          'epName': comic.chapters!.values.elementAt(
+                              math.min(ep - 1, comic.chapters!.length - 1)),
                           'page': page,
                         });
                       } else {

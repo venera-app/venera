@@ -336,7 +336,6 @@
     "Number of images preloaded": "预加载图片数量",
     "Ascending": "升序",
     "Descending": "降序",
-    "Last Reading: Chapter @ep Page @page": "上次阅读: 第 @ep 章 第 @page 页",
     "Last Reading: Page @page": "上次阅读: 第 @page 页",
     "Replies": "回复",
     "Follow Updates": "追更",
@@ -357,7 +356,8 @@
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功后, APP将自动与服务器同步数据",
     "Webdav is enabled." : "已启用Webdav",
     "Cache cleared": "缓存已清除",
-    "Disabled": "已禁用"
+    "Disabled": "已禁用",
+    "Last Reading: @epName Page @page": "上次阅读: @epName 第 @page 页"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -696,7 +696,6 @@
     "Number of images preloaded": "預加載圖片數量",
     "Ascending": "升序",
     "Descending": "降序",
-    "Last Reading: Chapter @ep Page @page": "上次閱讀: 第 @ep 章 第 @page 頁",
     "Last Reading: Page @page": "上次閱讀: 第 @page 頁",
     "Replies": "回覆",
     "Follow Updates": "追更",
@@ -717,6 +716,7 @@
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功後, APP將自動與服務器同步數據",
     "Webdav is enabled." : "已啟用Webdav",
     "Cache cleared": "緩存已清除",
-    "Disabled": "已禁用"
+    "Disabled": "已禁用",
+    "Last Reading: @epName Page @page": "上次閱讀: @epName 第 @page 頁"
   }
 }
