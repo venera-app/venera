@@ -330,6 +330,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
   String url = "";
   String user = "";
   String pass = "";
+  bool autoSync = false;
 
   bool isTesting = false;
   bool upload = true;
@@ -349,6 +350,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     user = configs[1];
     pass = configs[2];
     isEnabled = true;
+    autoSync = appdata.settings['webdavAutoSync'] ?? false;
   }
 
   @override
@@ -358,6 +360,18 @@ class _WebdavSettingState extends State<_WebdavSetting> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: Text("WebDAV Auto Sync".tl),
+              value: autoSync,
+              onChanged: (value) {
+                setState(() {
+                  autoSync = value;
+                  appdata.settings['webdavAutoSync'] = value;
+                  appdata.saveData();
+                });
+              },
+            ),
             const SizedBox(height: 12),
             TextField(
               decoration: const InputDecoration(
@@ -428,39 +442,33 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                 ],
               ),
             ),
-            if (isEnabled)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.sync, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text("Webdav is enabled.".tl),
-                    ),
-                    Button.text(
-                      onPressed: () {
-                        appdata.settings['webdav'] = [];
-                        appdata.saveData();
-                        context.showMessage(message: "Disabled".tl);
-                        App.rootPop();
-                      },
-                      child: Text("Disable".tl),
-                    )
-                  ],
-                ),
-              ).paddingTop(16),
             const SizedBox(height: 16),
             Center(
               child: Button.filled(
                 isLoading: isTesting,
                 onPressed: () async {
                   var oldConfig = appdata.settings['webdav'];
+                  var oldAutoSync = appdata.settings['webdavAutoSync'];
+                  
+                  if (url.trim().isEmpty && user.trim().isEmpty && pass.trim().isEmpty) {
+                    appdata.settings['webdav'] = [];
+                    appdata.settings['webdavAutoSync'] = false;
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
+                    return;
+                  }
+
                   appdata.settings['webdav'] = [url, user, pass];
+                  appdata.settings['webdavAutoSync'] = autoSync;
+
+                  if (!autoSync) {
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
+                    return;
+                  }
+
                   setState(() {
                     isTesting = true;
                   });
@@ -472,6 +480,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                       isTesting = false;
                     });
                     appdata.settings['webdav'] = oldConfig;
+                    appdata.settings['webdavAutoSync'] = oldAutoSync;
                     context.showMessage(message: testResult.errorMessage!);
                     return;
                   }
