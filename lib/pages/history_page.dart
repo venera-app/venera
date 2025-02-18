@@ -29,12 +29,18 @@ class _HistoryPageState extends State<HistoryPage> {
   void onUpdate() {
     setState(() {
       comics = HistoryManager().getAll();
+      if (multiSelectMode) {
+        selectedComics.removeWhere((comic, _) => !comics.contains(comic));
+        if (selectedComics.isEmpty) {
+          multiSelectMode = false;
+        }
+      }
     });
   }
 
   var comics = HistoryManager().getAll();
   var controller = FlyoutController();
-  
+
   bool multiSelectMode = false;
   Map<History, bool> selectedComics = {};
 
@@ -59,55 +65,72 @@ class _HistoryPageState extends State<HistoryPage> {
     });
   }
 
+  void _removeHistory(History comic) {
+    if (comic.sourceKey.startsWith("Unknown")) {
+      HistoryManager().remove(
+        comic.id,
+        ComicType(int.parse(comic.sourceKey.split(':')[1])),
+      );
+    } else if (comic.sourceKey == 'local') {
+      HistoryManager().remove(
+        comic.id,
+        ComicType.local,
+      );
+    } else {
+      HistoryManager().remove(
+        comic.id,
+        ComicType(comic.sourceKey.hashCode),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> selectActions = [
       IconButton(
-        icon: const Icon(Icons.select_all),
-        tooltip: "Select All".tl,
-        onPressed: selectAll
+          icon: const Icon(Icons.select_all),
+          tooltip: "Select All".tl,
+          onPressed: selectAll
       ),
       IconButton(
-        icon: const Icon(Icons.deselect),
-        tooltip: "Deselect".tl,
-        onPressed: deSelect
+          icon: const Icon(Icons.deselect),
+          tooltip: "Deselect".tl,
+          onPressed: deSelect
       ),
       IconButton(
-        icon: const Icon(Icons.flip),
-        tooltip: "Invert Selection".tl,
-        onPressed: invertSelection
+          icon: const Icon(Icons.flip),
+          tooltip: "Invert Selection".tl,
+          onPressed: invertSelection
       ),
       IconButton(
         icon: const Icon(Icons.delete),
         tooltip: "Delete".tl,
-        onPressed: selectedComics.isEmpty ? null : () {
-          for (final comic in selectedComics.keys) {
-            if (comic.sourceKey.startsWith("Unknown")) {
-              HistoryManager().remove(
-                comic.id,
-                ComicType(int.parse(comic.sourceKey.split(':')[1])),
-              );
-            } else if (comic.sourceKey == 'local') {
-              HistoryManager().remove(
-                comic.id,
-                ComicType.local,
-              );
-            } else {
-              HistoryManager().remove(
-                comic.id,
-                ComicType(comic.sourceKey.hashCode),
-              );
-            }
-          }
-          setState(() {
-            multiSelectMode = false;
-            selectedComics.clear();
-          });
-        },
+        onPressed: selectedComics.isEmpty
+            ? null
+            : () {
+                final comicsToDelete = List<History>.from(selectedComics.keys);
+                setState(() {
+                  multiSelectMode = false;
+                  selectedComics.clear();
+                });
+
+                for (final comic in comicsToDelete) {
+                  _removeHistory(comic);
+                }
+              },
       ),
     ];
 
     List<Widget> normalActions = [
+      IconButton(
+        icon: const Icon(Icons.checklist),
+        tooltip: multiSelectMode ? "Exit Multi-Select".tl : "Multi-Select".tl,
+        onPressed: () {
+          setState(() {
+            multiSelectMode = !multiSelectMode;
+          });
+        },
+      ),
       Tooltip(
         message: 'Clear History'.tl,
         child: Flyout(
@@ -178,24 +201,21 @@ class _HistoryPageState extends State<HistoryPage> {
             SliverGridComics(
               comics: comics,
               selections: selectedComics,
-              onLongPressed: (c) {
-                setState(() {
-                  multiSelectMode = true;
-                  selectedComics[c as History] = true;
-                });
-              },
-              onTap: multiSelectMode ? (c) {
-                setState(() {
-                  if (selectedComics.containsKey(c as History)) {
-                    selectedComics.remove(c);
-                  } else {
-                    selectedComics[c] = true;
-                  }
-                  if (selectedComics.isEmpty) {
-                    multiSelectMode = false;
-                  }
-                });
-              } : null,
+              onLongPressed: null,
+              onTap: multiSelectMode
+                  ? (c) {
+                      setState(() {
+                        if (selectedComics.containsKey(c as History)) {
+                          selectedComics.remove(c);
+                        } else {
+                          selectedComics[c] = true;
+                        }
+                        if (selectedComics.isEmpty) {
+                          multiSelectMode = false;
+                        }
+                      });
+                    }
+                  : null,
               badgeBuilder: (c) {
                 return ComicSource.find(c.sourceKey)?.name;
               },
@@ -206,22 +226,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     text: 'Remove'.tl,
                     color: context.colorScheme.error,
                     onClick: () {
-                      if (c.sourceKey.startsWith("Unknown")) {
-                        HistoryManager().remove(
-                          c.id,
-                          ComicType(int.parse(c.sourceKey.split(':')[1])),
-                        );
-                      } else if (c.sourceKey == 'local') {
-                        HistoryManager().remove(
-                          c.id,
-                          ComicType.local,
-                        );
-                      } else {
-                        HistoryManager().remove(
-                          c.id,
-                          ComicType(c.sourceKey.hashCode),
-                        );
-                      }
+                      _removeHistory(c as History);
                     },
                   ),
                 ];
