@@ -332,8 +332,8 @@ class _WebdavSettingState extends State<_WebdavSetting> {
   String pass = "";
 
   bool isTesting = false;
-
   bool upload = true;
+  bool isEnabled = false;
 
   @override
   void initState() {
@@ -348,6 +348,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     url = configs[0];
     user = configs[1];
     pass = configs[2];
+    isEnabled = true;
   }
 
   @override
@@ -410,6 +411,49 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                 Text("Download".tl),
               ],
             ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text("Once the operation is successful, app will automatically sync data with the server.".tl),
+                  ),
+                ],
+              ),
+            ),
+            if (isEnabled)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.sync, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text("Webdav is enabled.".tl),
+                    ),
+                    Button.text(
+                      onPressed: () {
+                        appdata.settings['webdav'] = [];
+                        appdata.saveData();
+                        context.showMessage(message: "Disabled".tl);
+                        App.rootPop();
+                      },
+                      child: Text("Disable".tl),
+                    )
+                  ],
+                ),
+              ).paddingTop(16),
             const SizedBox(height: 16),
             Center(
               child: Button.filled(

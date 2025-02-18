@@ -353,7 +353,11 @@
     "No updates found": "未找到更新",
     "All Comics": "全部漫画",
     "The comic will be marked as no updates as soon as you read it.": "漫画将在您阅读后立即标记为无更新",
-    "Disable": "禁用"
+    "Disable": "禁用",
+    "Once the operation is successful, app will automatically sync data with the server.": "操作成功后, APP将自动与服务器同步数据",
+    "Webdav is enabled." : "已启用Webdav",
+    "Cache cleared": "缓存已清除",
+    "Disabled": "已禁用"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -709,6 +713,10 @@
     "No updates found": "未找到更新",
     "All Comics": "全部漫畫",
     "The comic will be marked as no updates as soon as you read it.": "漫畫將在您閱讀後立即標記為無更新",
-    "Disable": "禁用"
+    "Disable": "禁用",
+    "Once the operation is successful, app will automatically sync data with the server.": "操作成功後, APP將自動與服務器同步數據",
+    "Webdav is enabled." : "已啟用Webdav",
+    "Cache cleared": "緩存已清除",
+    "Disabled": "已禁用"
   }
 }
