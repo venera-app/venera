@@ -358,7 +358,9 @@
     "Cache cleared": "缓存已清除",
     "Disabled": "已禁用",
     "Last Reading: @epName Page @page": "上次阅读: @epName 第 @page 页",
-    "WebDAV Auto Sync": "WebDAV 自动同步"
+    "WebDAV Auto Sync": "WebDAV 自动同步",
+    "Mark all as read": "全部标记为已读",
+    "Do you want to mark all as read?" : "您要全部标记为已读吗？"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -719,6 +721,8 @@
     "Cache cleared": "緩存已清除",
     "Disabled": "已禁用",
     "Last Reading: @epName Page @page": "上次閱讀: @epName 第 @page 頁",
-    "WebDAV Auto Sync": "WebDAV 自動同步"
+    "WebDAV Auto Sync": "WebDAV 自動同步",
+    "Mark all as read": "全部標記為已讀",
+    "Do you want to mark all as read?" : "您要全部標記為已讀嗎？"
   }
 }

@@ -142,8 +142,7 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
           }
         }
         return 0;
-      }
-      catch(_) {
+      } catch (_) {
         return 0;
       }
     });
@@ -282,6 +281,27 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
                   "Updates".tl,
                   style: ts.s18,
                 ),
+                const Spacer(),
+                if (updatedComics.isNotEmpty)
+                  IconButton(
+                    icon: Icon(Icons.clear_all),
+                    onPressed: () {
+                      showConfirmDialog(
+                        context: App.rootContext,
+                        title: "Mark all as read".tl,
+                        content: "Do you want to mark all as read?".tl,
+                        onConfirm: () {
+                          for (var comic in updatedComics) {
+                            LocalFavoritesManager().markAsRead(
+                              comic.id,
+                              comic.type,
+                            );
+                          }
+                          updateFollowUpdatesUI();
+                        },
+                      );
+                    },
+                  ),
               ],
             ),
           ),
