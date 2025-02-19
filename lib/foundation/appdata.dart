@@ -6,8 +6,8 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/io.dart';
 
-class _Appdata {
-  final _Settings settings = _Settings();
+class Appdata {
+  final Settings settings = Settings();
 
   var searchHistory = <String>[];
 
@@ -110,10 +110,10 @@ class _Appdata {
   }
 }
 
-final appdata = _Appdata();
+final appdata = Appdata();
 
-class _Settings with ChangeNotifier {
-  _Settings();
+class Settings with ChangeNotifier {
+  Settings();
 
   final _data = <String, dynamic>{
     'comicDisplayMode': 'detailed', // detailed, brief
