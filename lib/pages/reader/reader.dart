@@ -156,6 +156,9 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
     if (chapter < 1) {
       chapter = 1;
     }
+    if (widget.initialPage != null) {
+      page = (widget.initialPage! / imagesPerPage).ceil();
+    }
     mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     history = widget.history;
     Future.microtask(() {
