@@ -188,9 +188,9 @@ const defaultCustomImageProcessing = '''
  * @returns {Promise<ArrayBuffer> | {image: Promise<ArrayBuffer>, onCancel: () => void}} - The processed image
  */
 function processImage(image, cid, eid, page, sourceKey) {
-    let image = new Promise((resolve, reject) => {
+    let futureImage = new Promise((resolve, reject) => {
         resolve(image);
     });
-    return image;
+    return futureImage;
 }
 ''';
