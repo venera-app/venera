@@ -133,7 +133,19 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
       } else if (b.updateTime == null) {
         return 1;
       }
-      return b.updateTime!.compareTo(a.updateTime!);
+      try {
+        var aNums = a.updateTime!.split('-').map(int.parse).toList();
+        var bNums = b.updateTime!.split('-').map(int.parse).toList();
+        for (int i = 0; i < aNums.length; i++) {
+          if (aNums[i] != bNums[i]) {
+            return bNums[i] - aNums[i];
+          }
+        }
+        return 0;
+      }
+      catch(_) {
+        return 0;
+      }
     });
   }
 
