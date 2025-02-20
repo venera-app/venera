@@ -15,6 +15,15 @@ class DownloadingPage extends StatefulWidget {
 }
 
 class _DownloadingPageState extends State<DownloadingPage> {
+  DownloadTask? firstTask;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    firstTask = LocalManager().downloadingTasks.firstOrNull;
+    firstTask?.addListener(update);
+  }
+
   @override
   void initState() {
     LocalManager().addListener(update);
@@ -24,10 +33,17 @@ class _DownloadingPageState extends State<DownloadingPage> {
   @override
   void dispose() {
     LocalManager().removeListener(update);
+    firstTask?.removeListener(update);
     super.dispose();
   }
 
   void update() {
+    var currentFirstTask = LocalManager().downloadingTasks.firstOrNull;
+    if (currentFirstTask != firstTask) {
+      firstTask?.removeListener(update);
+      firstTask = currentFirstTask;
+      firstTask?.addListener(update);
+    }
     if(mounted) {
       setState(() {});
     }

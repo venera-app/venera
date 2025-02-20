@@ -509,7 +509,7 @@ class LocalManager with ChangeNotifier {
       var dir = Directory(FilePath.join(path, c.directory));
       dir.deleteIgnoreError(recursive: true);
     }
-    // Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
+    // Deleting a local comic means that it's no longer available, thus both favorite and history should be deleted.
     if (c.comicType == ComicType.local) {
       if (HistoryManager().find(c.id, c.comicType) != null) {
         HistoryManager().remove(c.id, c.comicType);

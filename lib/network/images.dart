@@ -139,12 +139,10 @@ class ImageDownloader {
         var buffer = <int>[];
         await for (var data in stream) {
           buffer.addAll(data);
-          if (expectedBytes != null) {
-            yield ImageDownloadProgress(
-              currentBytes: buffer.length,
-              totalBytes: expectedBytes,
-            );
-          }
+          yield ImageDownloadProgress(
+            currentBytes: buffer.length,
+            totalBytes: expectedBytes,
+          );
         }
 
         if (configs['onResponse'] is JSInvokable) {
@@ -194,7 +192,7 @@ class ImageDownloader {
 class ImageDownloadProgress {
   final int currentBytes;
 
-  final int totalBytes;
+  final int? totalBytes;
 
   final Uint8List? imageBytes;
 
