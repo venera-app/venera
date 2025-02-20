@@ -50,17 +50,24 @@ class History implements Comic {
   @override
   String cover;
 
+  /// index of chapters. 1-based.
   int ep;
 
+  /// index of pages. 1-based.
   int page;
+
+  /// index of chapter groups. 1-based.
+  /// If [group] is not null, [ep] is the index of chapter in the group.
+  int? group;
 
   @override
   String id;
 
   /// readEpisode is a set of episode numbers that have been read.
-  ///
-  /// The number of episodes is 1-based.
-  Set<int> readEpisode;
+  /// For normal chapters, it is a set of chapter numbers.
+  /// For grouped chapters, it is a set of strings in the format of "group_number-chapter_number".
+  /// 1-based.
+  Set<String> readEpisode;
 
   @override
   int? maxPage;
@@ -69,28 +76,16 @@ class History implements Comic {
       {required HistoryMixin model,
       required this.ep,
       required this.page,
-      Set<int>? readChapters,
+      this.group,
+      Set<String>? readChapters,
       DateTime? time})
       : type = model.historyType,
         title = model.title,
         subtitle = model.subTitle ?? '',
         cover = model.cover,
         id = model.id,
-        readEpisode = readChapters ?? <int>{},
+        readEpisode = readChapters ?? <String>{},
         time = time ?? DateTime.now();
-
-  Map<String, dynamic> toMap() => {
-        "type": type.value,
-        "time": time.millisecondsSinceEpoch,
-        "title": title,
-        "subtitle": subtitle,
-        "cover": cover,
-        "ep": ep,
-        "page": page,
-        "id": id,
-        "readEpisode": readEpisode.toList(),
-        "max_page": maxPage
-      };
 
   History.fromMap(Map<String, dynamic> map)
       : type = HistoryType(map["type"]),
@@ -101,8 +96,9 @@ class History implements Comic {
         ep = map["ep"],
         page = map["page"],
         id = map["id"],
-        readEpisode = Set<int>.from(
-            (map["readEpisode"] as List<dynamic>?)?.toSet() ?? const <int>{}),
+        readEpisode = Set<String>.from(
+            (map["readEpisode"] as List<dynamic>?)?.toSet() ??
+                const <String>{}),
         maxPage = map["max_page"];
 
   @override
@@ -119,11 +115,11 @@ class History implements Comic {
         ep = row["ep"],
         page = row["page"],
         id = row["id"],
-        readEpisode = Set<int>.from((row["readEpisode"] as String)
+        readEpisode = Set<String>.from((row["readEpisode"] as String)
             .split(',')
-            .where((element) => element != "")
-            .map((e) => int.parse(e))),
-        maxPage = row["max_page"];
+            .where((element) => element != "")),
+        maxPage = row["max_page"],
+        group = row["chapter_group"];
 
   @override
   bool operator ==(Object other) {
@@ -212,18 +208,24 @@ class HistoryManager with ChangeNotifier {
           ep int,
           page int,
           readEpisode text,
-          max_page int
+          max_page int,
+          chapter_group int
         );
       """);
+
+    var columns = _db.select("PRAGMA table_info(history);");
+    if (!columns.any((element) => element["name"] == "chapter_group")) {
+      _db.execute("alter table history add column chapter_group int;");
+    }
 
     notifyListeners();
     ImageFavoriteManager().init();
     isInitialized = true;
   }
 
-  static const  _insertHistorySql = """
-        insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  static const _insertHistorySql = """
+        insert or replace into history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page, chapter_group)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       """;
 
   static Future<void> _addHistoryAsync(int dbAddr, History newItem) {
@@ -239,7 +241,8 @@ class HistoryManager with ChangeNotifier {
         newItem.ep,
         newItem.page,
         newItem.readEpisode.join(','),
-        newItem.maxPage
+        newItem.maxPage,
+        newItem.group
       ]);
     });
   }
@@ -281,7 +284,8 @@ class HistoryManager with ChangeNotifier {
       newItem.ep,
       newItem.page,
       newItem.readEpisode.join(','),
-      newItem.maxPage
+      newItem.maxPage,
+      newItem.group
     ]);
     if (_cachedHistoryIds == null) {
       updateCache();

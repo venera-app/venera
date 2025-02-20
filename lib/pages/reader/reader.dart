@@ -62,6 +62,7 @@ class Reader extends StatefulWidget {
     required this.history,
     this.initialPage,
     this.initialChapter,
+    this.initialChapterGroup,
     required this.author,
     required this.tags,
   });
@@ -83,6 +84,9 @@ class Reader extends StatefulWidget {
 
   /// Starts from 1, invalid values equal to 1
   final int? initialChapter;
+
+  /// Starts from 1, invalid values equal to 1
+  final int? initialChapterGroup;
 
   final History history;
 
@@ -147,12 +151,17 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   @override
   void initState() {
     page = widget.initialPage ?? 1;
-    chapter = widget.initialChapter ?? 1;
     if (page < 1) {
       page = 1;
     }
+    chapter = widget.initialChapter ?? 1;
     if (chapter < 1) {
       chapter = 1;
+    }
+    if (widget.initialChapterGroup != null) {
+      for (int i=0; i<(widget.initialChapterGroup!-1); i++) {
+        chapter += widget.chapters!.getGroupByIndex(i).length;
+      }
     }
     if (widget.initialPage != null) {
       page = (widget.initialPage! / imagesPerPage).ceil();
@@ -238,11 +247,23 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   void updateHistory() {
     if (history != null) {
       history!.page = page;
-      history!.ep = chapter;
       if (maxPage > 1) {
         history!.maxPage = maxPage;
       }
-      history!.readEpisode.add(chapter);
+      if (widget.chapters?.isGrouped ?? false) {
+        int g = 0;
+        int c = chapter;
+        while (c > widget.chapters!.getGroupByIndex(g).length) {
+          c -= widget.chapters!.getGroupByIndex(g).length;
+          g++;
+        }
+        history!.readEpisode.add('${g + 1}-$c');
+        history!.ep = c;
+        history!.group = g+1;
+      } else {
+        history!.readEpisode.add(chapter.toString());
+        history!.ep = chapter;
+      }
       history!.time = DateTime.now();
       _updateHistoryTimer?.cancel();
       _updateHistoryTimer = Timer(const Duration(seconds: 1), () {

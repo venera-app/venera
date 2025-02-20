@@ -286,8 +286,13 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
                     }
                     chapterIndex += chapters.getGroupByIndex(j).length;
                   }
-                  bool visited =
-                      (history?.readEpisode ?? {}).contains(chapterIndex + 1);
+                  String rawIndex = (chapterIndex + 1).toString();
+                  String groupedIndex = "${index + 1}-${i + 1}";
+                  bool visited = false;
+                  if (history != null) {
+                    visited = history!.readEpisode.contains(groupedIndex) ||
+                        history!.readEpisode.contains(rawIndex);
+                  }
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
                     child: Material(

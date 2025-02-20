@@ -115,6 +115,7 @@ class LocalComic with HistoryMixin implements Comic {
         chapters: chapters,
         initialChapter: history?.ep,
         initialPage: history?.page,
+        initialChapterGroup: history?.group,
         history: history ??
             History.fromModel(
               model: this,

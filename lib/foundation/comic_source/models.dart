@@ -376,7 +376,7 @@ class ComicChapters {
     return _groupedChapters![group] ?? {};
   }
 
-  /// Get a group of chapters by index
+  /// Get a group of chapters by index(0-based)
   Map<String, String> getGroupByIndex(int index) {
     return _groupedChapters!.values.elementAt(index);
   }
