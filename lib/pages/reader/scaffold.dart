@@ -1135,7 +1135,7 @@ class _GroupedChaptersViewState extends State<_GroupedChaptersView>
 
   late final ScrollController _scrollController;
 
-  late final initialGroupName;
+  late final String initialGroupName;
 
   @override
   void initState() {
