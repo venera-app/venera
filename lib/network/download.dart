@@ -423,7 +423,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       "comic": comic?.toJson(),
       "chapters": chapters,
       "path": path,
-      "cover": cover,
+      "cover": _cover,
       "images": _images,
       "downloadedCount": _downloadedCount,
       "totalCount": _totalCount,
