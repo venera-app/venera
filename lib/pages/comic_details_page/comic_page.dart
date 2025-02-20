@@ -386,7 +386,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       String text;
                       if (haveChapter) {
                         text = "Last Reading: @epName Page @page".tlParams({
-                          'epName': comic.chapters!.values.elementAt(
+                          'epName': comic.chapters!.titles.elementAt(
                               math.min(ep - 1, comic.chapters!.length - 1)),
                           'page': page,
                         });
@@ -610,7 +610,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     }
     return _ComicChapters(
       history: history,
-      groupedMode: comic.groupedChapters != null,
+      groupedMode: comic.chapters!.isGrouped,
     );
   }
 

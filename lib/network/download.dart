@@ -328,8 +328,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
         _images = {};
         _totalCount = 0;
         int cpCount = 0;
-        int totalCpCount = chapters?.length ?? comic!.chapters!.length;
-        for (var i in comic!.chapters!.keys) {
+        int totalCpCount =
+            chapters?.length ?? comic!.chapters!.allChapters.length;
+        for (var i in comic!.chapters!.allChapters.keys) {
           if (chapters != null && !chapters!.contains(i)) {
             continue;
           }

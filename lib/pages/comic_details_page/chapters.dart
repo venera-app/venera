@@ -33,7 +33,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
 
   late History? history;
 
-  late Map<String, String> chapters;
+  late ComicChapters chapters;
 
   @override
   void initState() {
@@ -101,7 +101,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
                   if (reverse) {
                     i = chapters.length - i - 1;
                   }
-                  var key = chapters.keys.elementAt(i);
+                  var key = chapters.ids.elementAt(i);
                   var value = chapters[key]!;
                   bool visited = (history?.readEpisode ?? {}).contains(i + 1);
                   return Padding(
@@ -182,7 +182,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
 
   late History? history;
 
-  late Map<String, Map<String, String>> chapters;
+  late ComicChapters chapters;
 
   late TabController tabController;
 
@@ -197,9 +197,9 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
   @override
   void didChangeDependencies() {
     state = context.findAncestorStateOfType<_ComicPageState>()!;
-    chapters = state.comic.groupedChapters!;
+    chapters = state.comic.chapters!;
     tabController = TabController(
-      length: chapters.keys.length,
+      length: chapters.ids.length,
       vsync: this,
     );
     tabController.addListener(onTabChange);
@@ -226,7 +226,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
   Widget build(BuildContext context) {
     return SliverLayoutBuilder(
       builder: (context, constrains) {
-        var group = chapters.values.elementAt(index);
+        var group = chapters.getGroupByIndex(index);
         int length = group.length;
         bool canShowAll = showAll;
         if (!showAll) {
@@ -265,7 +265,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
               child: AppTabBar(
                 withUnderLine: false,
                 controller: tabController,
-                tabs: chapters.keys.map((e) => Tab(text: e)).toList(),
+                tabs: chapters.groups.map((e) => Tab(text: e)).toList(),
               ),
             ),
             SliverPadding(padding: const EdgeInsets.only(top: 8)),
@@ -279,12 +279,12 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
                   var key = group.keys.elementAt(i);
                   var value = group[key]!;
                   var chapterIndex = 0;
-                  for (var j = 0; j < chapters.length; j++) {
+                  for (var j = 0; j < chapters.groupCount; j++) {
                     if (j == index) {
                       chapterIndex += i;
                       break;
                     }
-                    chapterIndex += chapters.values.elementAt(j).length;
+                    chapterIndex += chapters.getGroupByIndex(j).length;
                   }
                   bool visited =
                       (history?.readEpisode ?? {}).contains(chapterIndex + 1);

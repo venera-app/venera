@@ -45,7 +45,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
     } else {
       var res = await reader.type.comicSource!.loadComicPages!(
         reader.widget.cid,
-        reader.widget.chapters?.keys.elementAt(reader.chapter - 1),
+        reader.widget.chapters?.ids.elementAt(reader.chapter - 1),
       );
       if (res.error) {
         setState(() {

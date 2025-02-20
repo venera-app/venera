@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_7zip/flutter_7zip.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/utils/ext.dart';
@@ -176,7 +177,7 @@ abstract class CBZ {
       tags: metaData.tags,
       comicType: ComicType.local,
       directory: dest.name,
-      chapters: cpMap,
+      chapters: ComicChapters.fromJson(cpMap),
       downloadedChapters: cpMap?.keys.toList() ?? [],
       cover: 'cover.${coverFile.extension}',
       createdAt: DateTime.now(),

@@ -101,7 +101,7 @@ class ReaderProps {
 
   final String name;
 
-  final Map<String, String>? chapters;
+  final ComicChapters? chapters;
 
   final History history;
 

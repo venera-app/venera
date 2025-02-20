@@ -632,6 +632,7 @@ class _TabViewBodyState extends State<TabViewBody> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _controller = widget.controller ?? DefaultTabController.of(context);
+    _currentIndex = _controller.index;
     _controller.addListener(updateIndex);
   }
 

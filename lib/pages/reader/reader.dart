@@ -76,9 +76,7 @@ class Reader extends StatefulWidget {
 
   final String name;
 
-  /// key: Chapter ID, value: Chapter Name
-  /// null if the comic is a gallery
-  final Map<String, String>? chapters;
+  final ComicChapters? chapters;
 
   /// Starts from 1, invalid values equal to 1
   final int? initialPage;
@@ -105,7 +103,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   String get cid => widget.cid;
 
-  String get eid => widget.chapters?.keys.elementAt(chapter - 1) ?? '0';
+  String get eid => widget.chapters?.ids.elementAt(chapter - 1) ?? '0';
 
   List<String>? images;
 
