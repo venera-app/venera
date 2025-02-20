@@ -185,6 +185,18 @@ class FavoriteItemWithUpdateInfo extends FavoriteItem {
     var sourceName = type.comicSource?.name ?? "Unknown";
     return "$updateTime | $sourceName";
   }
+
+  @override
+  operator ==(Object other) {
+    return other is FavoriteItemWithUpdateInfo &&
+        other.updateTime == updateTime &&
+        other.hasNewUpdate == hasNewUpdate &&
+        super == other;
+  }
+
+  @override
+  int get hashCode =>
+      super.hashCode ^ updateTime.hashCode ^ hasNewUpdate.hashCode;
 }
 
 class LocalFavoritesManager with ChangeNotifier {
