@@ -603,7 +603,7 @@ void _updateFolderBase(
             tags: newTags,
           );
 
-          LocalFavoritesManager().updateInfo(folder, item);
+          LocalFavoritesManager().updateInfo(folder, item, false);
 
           var updateTime = newInfo.findUpdateTime();
           if (updateTime != null && updateTime != c.updateTime) {
@@ -613,6 +613,8 @@ void _updateFolderBase(
               c.type,
               updateTime,
             );
+          } else {
+            LocalFavoritesManager().updateCheckTime(folder, c.id, c.type);
           }
           updated++;
           return;
@@ -638,6 +640,10 @@ void _updateFolderBase(
   }
 
   await Future.wait(futures);
+
+  if (updated > 0) {
+    LocalFavoritesManager().notifyChanges();
+  }
 
   stream.close();
 }
