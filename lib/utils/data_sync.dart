@@ -58,7 +58,7 @@ class DataSync with ChangeNotifier {
     return List.from(config);
   }
 
-  Future<Res<bool>> uploadData({bool forceSync = false}) async {
+  Future<Res<bool>> uploadData() async {
     if (isDownloading) return const Res(true);
     if (haveWaitingTask) return const Res(true);
     while (isUploading) {
@@ -102,32 +102,20 @@ class DataSync with ChangeNotifier {
       }
 
       try {
-        var files = await client.readDir('/');
-        files = files.where((e) => e.name!.endsWith('.venera')).toList();
-        files.sort((a, b) => b.name!.compareTo(a.name!));
-        var remoteFile = files.firstWhereOrNull((e) => e.name!.endsWith('.venera'));
-        var remoteVersion = 0;
-        if (remoteFile != null) {
-          remoteVersion = int.tryParse(remoteFile.name!.split('-').elementAtOrNull(1)?.split('.').first ?? '0') ?? 0;
-        }
-        var localVersion = appdata.settings['dataVersion'] ?? 0;
-
-        if (!forceSync && remoteVersion >= localVersion) {
-          Log.info("Data Sync", 'Local: $localVersion Remote: $remoteVersion Skip upload ForceSync: $forceSync');
-          return const Res(true);
-        }
-
-        appdata.settings['dataVersion'] = forceSync ? remoteVersion + 1 : localVersion + 1;
+        appdata.settings['dataVersion']++;
         await appdata.saveData(false);
         var data = await exportAppData();
-        var time = (DateTime.now().millisecondsSinceEpoch ~/ 86400000).toString();
-        var filename = '$time-${appdata.settings['dataVersion']}.venera';
-        
-        if (!forceSync) {
-          var old = files.firstWhereOrNull((e) => e.name!.startsWith("$time-"));
-          if (old != null) {
-            await client.remove(old.name!);
-          }
+        var time =
+            (DateTime.now().millisecondsSinceEpoch ~/ 86400000).toString();
+        var filename = time;
+        filename += '-';
+        filename += appdata.settings['dataVersion'].toString();
+        filename += '.venera';
+        var files = await client.readDir('/');
+        files = files.where((e) => e.name!.endsWith('.venera')).toList();
+        var old = files.firstWhereOrNull((e) => e.name!.startsWith("$time-"));
+        if (old != null) {
+          await client.remove(old.name!);
         }
         if (files.length >= 10) {
           files.sort((a, b) => a.name!.compareTo(b.name!));
@@ -135,7 +123,7 @@ class DataSync with ChangeNotifier {
         }
         await client.write(filename, await data.readAsBytes());
         data.deleteIgnoreError();
-        Log.info("Data Sync", "Local: ${appdata.settings['dataVersion']} Remote: $remoteVersion Data uploaded successfully ForceSync: $forceSync");
+        Log.info("Upload Data", "Data uploaded successfully");
         return const Res(true);
       } catch (e, s) {
         Log.error("Upload Data", e, s);
@@ -147,7 +135,7 @@ class DataSync with ChangeNotifier {
     }
   }
 
-  Future<Res<bool>> downloadData({bool forceSync = false}) async {
+  Future<Res<bool>> downloadData() async {
     if (haveWaitingTask) return const Res(true);
     while (isDownloading || isUploading) {
       haveWaitingTask = true;
@@ -196,16 +184,16 @@ class DataSync with ChangeNotifier {
         if (file == null) {
           throw 'No data file found';
         }
-        var version = file.name!.split('-').elementAtOrNull(1)?.split('.').first;
-        var remoteVersion = int.tryParse(version ?? '') ?? 0;
-        var localVersion = appdata.settings['dataVersion'] ?? 0;
-
-        if (!forceSync && remoteVersion <= localVersion) {
-          Log.info("Data Sync", 'Local: $localVersion Remote: $remoteVersion Skip download ForceSync: $forceSync');
-          return const Res(true);
+        var version =
+            file.name!.split('-').elementAtOrNull(1)?.split('.').first;
+        if (version != null && int.tryParse(version) != null) {
+          var currentVersion = appdata.settings['dataVersion'];
+          if (currentVersion != null && int.parse(version) <= currentVersion) {
+            Log.info("Data Sync", 'No new data to download');
+            return const Res(true);
+          }
         }
-
-        Log.info("Data Sync", "Local: $localVersion Remote: $remoteVersion Downloading data ForceSync: $forceSync");
+        Log.info("Data Sync", "Downloading data from WebDAV server");
         var localFile = File(FilePath.join(App.cachePath, file.name!));
         await client.read2File(file.name!, localFile.path);
         await importAppData(localFile, true);

@@ -473,8 +473,8 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                     isTesting = true;
                   });
                   var testResult = upload
-                      ? await DataSync().uploadData(forceSync: true)
-                      : await DataSync().downloadData(forceSync: true);
+                      ? await DataSync().uploadData()
+                      : await DataSync().downloadData();
                   if (testResult.error) {
                     setState(() {
                       isTesting = false;
@@ -482,12 +482,11 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                     appdata.settings['webdav'] = oldConfig;
                     appdata.settings['webdavAutoSync'] = oldAutoSync;
                     context.showMessage(message: testResult.errorMessage!);
-                    context.showMessage(message: "Saved Failed".tl);
-                  } else {
-                    appdata.saveData();
-                    context.showMessage(message: "Saved".tl);
-                    App.rootPop();
+                    return;
                   }
+                  appdata.saveData();
+                  context.showMessage(message: "Saved".tl);
+                  App.rootPop();
                 },
                 child: Text("Continue".tl),
               ),
