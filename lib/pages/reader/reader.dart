@@ -114,6 +114,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   late ReaderMode mode;
 
   int get imagesPerPage {
+    if (mode.isContinuous)  return 1;
     if (isPortrait) {
       return appdata.settings['readerScreenPicNumberForPortrait'] ?? 1;
     } else {
@@ -125,12 +126,6 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   bool get isPortrait =>
       MediaQuery.of(context).orientation == Orientation.portrait;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkImagesPerPageChange();
-  }
 
   void _checkImagesPerPageChange() {
     int currentImagesPerPage = imagesPerPage;
@@ -173,13 +168,10 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       }
     }
     if (widget.initialPage != null) {
-      page = (widget.initialPage! / imagesPerPage).ceil();
+      page = widget.initialPage!;
     }
     mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     history = widget.history;
-    _lastImagesPerPage = isPortrait
-        ? appdata.settings['readerScreenPicNumberForPortrait'] ?? 1
-        : appdata.settings['readerScreenPicNumberForLandscape'] ?? 1;
     Future.microtask(() {
       updateHistory();
     });
@@ -192,6 +184,15 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       LocalFavoritesManager().onRead(cid, type);
     });
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _lastImagesPerPage = imagesPerPage;
+    if (imagesPerPage != 1) {
+      page = (widget.initialPage! / imagesPerPage).ceil();
+    }
   }
 
   void setImageCacheSize() async {

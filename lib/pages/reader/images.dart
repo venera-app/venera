@@ -232,7 +232,7 @@ class _GalleryModeState extends State<_GalleryMode>
       ImageProvider imageProvider =
           _createImageProviderFromKey(imageKey, context);
       return Expanded(
-        child: Image(
+        child: ComicImage(
           image: imageProvider,
           fit: BoxFit.contain,
         ),
