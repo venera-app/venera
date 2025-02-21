@@ -605,6 +605,19 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
     super.dispose();
   }
 
+  int get _availableUpdates {
+    int c = 0;
+    ComicSource.availableUpdates.forEach((key, version) {
+      var source = ComicSource.find(key);
+      if (source != null) {
+        if (compareSemVer(version, source.version)) {
+          c++;
+        }
+      }
+    });
+    return c;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
@@ -668,7 +681,7 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                     }).toList(),
                   ).paddingHorizontal(16).paddingBottom(16),
                 ),
-              if (ComicSource.availableUpdates.isNotEmpty)
+              if (_availableUpdates > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -687,7 +700,7 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                       Icon(Icons.update, color: context.colorScheme.primary, size: 20,),
                       const SizedBox(width: 8),
                       Text("@c updates".tlParams({
-                        'c': ComicSource.availableUpdates.length,
+                        'c': _availableUpdates,
                       }), style: ts.withColor(context.colorScheme.primary),),
                     ],
                   ),
