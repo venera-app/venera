@@ -725,8 +725,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "94724a0b"
-      resolved-ref: "94724a0b7f94167fd1ae061f84e14ae04cae5c39"
+      ref: d71faf3c75e059d013b0ce9ddaf5ecc1680e2eb6
+      resolved-ref: d71faf3c75e059d013b0ce9ddaf5ecc1680e2eb6
       url: "https://github.com/wgh136/photo_view"
     source: git
     version: "0.14.0"
