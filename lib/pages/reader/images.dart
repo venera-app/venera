@@ -206,11 +206,11 @@ class _GalleryModeState extends State<_GalleryMode>
       ),
       onPageChanged: (i) {
         if (i == 0) {
-          if (!reader.toPrevChapter()) {
+          if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
             reader.toPage(1);
           }
         } else if (i == totalPages + 1) {
-          if (!reader.toNextChapter()) {
+          if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
             reader.toPage(totalPages);
           }
         } else {
@@ -575,15 +575,14 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
 
         if (notification is ScrollUpdateNotification) {
-          var length = reader.maxChapter;
           if (!scrollController.hasClients) return false;
           if (scrollController.position.pixels <=
               scrollController.position.minScrollExtent &&
-              reader.chapter != 1) {
+              !reader.isFirstChapterOfGroup) {
             context.readerScaffold.setFloatingButton(-1);
           } else if (scrollController.position.pixels >=
               scrollController.position.maxScrollExtent &&
-              reader.chapter < length) {
+              !reader.isLastChapterOfGroup) {
             context.readerScaffold.setFloatingButton(1);
           } else {
             context.readerScaffold.setFloatingButton(0);

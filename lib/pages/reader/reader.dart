@@ -265,6 +265,40 @@ class _ReaderState extends State<Reader>
       });
     }
   }
+
+  bool get isFirstChapterOfGroup {
+    if (widget.chapters?.isGrouped ?? false) {
+      int c = chapter - 1;
+      int g = 1;
+      while (c > 0) {
+        c -= widget.chapters!.getGroupByIndex(g - 1).length;
+        g++;
+      }
+      if (c == 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return chapter == 1;
+  }
+
+  bool get isLastChapterOfGroup {
+    if (widget.chapters?.isGrouped ?? false) {
+      int c = chapter;
+      int g = 1;
+      while (c > 0) {
+        c -= widget.chapters!.getGroupByIndex(g - 1).length;
+        g++;
+      }
+      if (c == 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return chapter == maxChapter;
+  }
 }
 
 abstract mixin class _ImagePerPageHandler {

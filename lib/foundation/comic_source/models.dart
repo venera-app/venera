@@ -381,7 +381,7 @@ class ComicChapters {
     return _groupedChapters!.values.elementAt(index);
   }
 
-  /// Get a chapter by index
+  /// Get total number of chapters
   int get length {
     return isGrouped
         ? _groupedChapters!.values.map((e) => e.length).reduce((a, b) => a + b)
