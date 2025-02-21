@@ -240,9 +240,7 @@ class _ReaderState extends State<Reader>
         /// Record the first image of the page
         history!.page = (page - 1) * imagesPerPage + 1;
       }
-      if (maxPage > 1) {
-        history!.maxPage = images?.length ?? 1;
-      }
+      history!.maxPage = images?.length ?? 1;
       if (widget.chapters?.isGrouped ?? false) {
         int g = 0;
         int c = chapter;
