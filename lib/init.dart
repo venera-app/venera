@@ -56,6 +56,18 @@ void _checkOldConfigs() {
         .map((e) => e.key)
         .toList();
   }
+
+  if (appdata.implicitData['webdavAutoSync'] == null) {
+    var webdavConfig = appdata.settings['webdav'];
+    if (webdavConfig is List &&
+        webdavConfig.length == 3 &&
+        webdavConfig.whereType<String>().length == 3) {
+      appdata.implicitData['webdavAutoSync'] = true;
+    } else {
+      appdata.implicitData['webdavAutoSync'] = false;
+    }
+    appdata.writeImplicitData();
+  }
 }
 
 Future<void> _checkAppUpdates() async {

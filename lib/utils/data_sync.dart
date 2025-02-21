@@ -44,7 +44,7 @@ class DataSync with ChangeNotifier {
 
   bool get isEnabled {
     var config = appdata.settings['webdav'];
-    var autoSync = appdata.settings['webdavAutoSync'] ?? false;
+    var autoSync = appdata.implicitData['webdavAutoSync'] ?? false;
     return autoSync && config is List && config.isNotEmpty;
   }
 
