@@ -350,7 +350,15 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     user = configs[1];
     pass = configs[2];
     isEnabled = true;
-    autoSync = appdata.settings['webdavAutoSync'] ?? false;
+    autoSync = appdata.implicitData['webdavAutoSync'] ?? false;
+  }
+
+  void onAutoSyncChanged(bool value) {
+    setState(() {
+      autoSync = value;
+      appdata.implicitData['webdavAutoSync'] = value;
+      appdata.writeImplicitData();
+    });
   }
 
   @override
@@ -364,13 +372,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
             SwitchListTile(
               title: Text("WebDAV Auto Sync".tl),
               value: autoSync,
-              onChanged: (value) {
-                setState(() {
-                  autoSync = value;
-                  appdata.settings['webdavAutoSync'] = value;
-                  appdata.saveData();
-                });
-              },
+              onChanged: onAutoSyncChanged,
             ),
             const SizedBox(height: 12),
             TextField(
@@ -448,11 +450,14 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                 isLoading: isTesting,
                 onPressed: () async {
                   var oldConfig = appdata.settings['webdav'];
-                  var oldAutoSync = appdata.settings['webdavAutoSync'];
-                  
-                  if (url.trim().isEmpty && user.trim().isEmpty && pass.trim().isEmpty) {
+                  var oldAutoSync = appdata.implicitData['webdavAutoSync'];
+
+                  if (url.trim().isEmpty &&
+                      user.trim().isEmpty &&
+                      pass.trim().isEmpty) {
                     appdata.settings['webdav'] = [];
-                    appdata.settings['webdavAutoSync'] = false;
+                    appdata.implicitData['webdavAutoSync'] = false;
+                    appdata.writeImplicitData();
                     appdata.saveData();
                     context.showMessage(message: "Saved".tl);
                     App.rootPop();
@@ -460,7 +465,8 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                   }
 
                   appdata.settings['webdav'] = [url, user, pass];
-                  appdata.settings['webdavAutoSync'] = autoSync;
+                  appdata.implicitData['webdavAutoSync'] = autoSync;
+                  appdata.writeImplicitData();
 
                   if (!autoSync) {
                     appdata.saveData();
@@ -480,13 +486,16 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                       isTesting = false;
                     });
                     appdata.settings['webdav'] = oldConfig;
-                    appdata.settings['webdavAutoSync'] = oldAutoSync;
+                    appdata.implicitData['webdavAutoSync'] = oldAutoSync;
+                    appdata.writeImplicitData();
+                    appdata.saveData();
                     context.showMessage(message: testResult.errorMessage!);
-                    return;
+                    context.showMessage(message: "Saved Failed".tl);
+                  } else {
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
                   }
-                  appdata.saveData();
-                  context.showMessage(message: "Saved".tl);
-                  App.rootPop();
                 },
                 child: Text("Continue".tl),
               ),
