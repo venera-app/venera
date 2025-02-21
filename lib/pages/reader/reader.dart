@@ -258,9 +258,15 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   void updateHistory() {
     if (history != null) {
-      history!.page = page;
+      if(page == maxPage){
+        /// Record the last image of chapter
+        history!.page = images?.length ?? 1;
+      } else {
+        /// Record the first image of the page
+        history!.page = (page-1) * imagesPerPage + 1;
+      }
       if (maxPage > 1) {
-        history!.maxPage = maxPage;
+        history!.maxPage = images?.length ?? 1;
       }
       if (widget.chapters?.isGrouped ?? false) {
         int g = 0;
