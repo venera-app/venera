@@ -133,7 +133,8 @@ class Settings with ChangeNotifier {
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
-    'readerScreenPicNumber': 1, // 1 - 5
+    'readerScreenPicNumberForLandscape': 1, // 1 - 5
+    'readerScreenPicNumberForPortrait': 1, // 1 - 5
     'enableTapToTurnPages': true,
     'reverseTapToTurnPages': false,
     'enablePageAnimation': true,

@@ -50,8 +50,10 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             var readerMode = appdata.settings['readerMode'];
             if (readerMode?.toLowerCase().startsWith('continuous') ?? false) {
-              appdata.settings['readerScreenPicNumber'] = 1;
-              widget.onChanged?.call('readerScreenPicNumber');
+              appdata.settings['readerScreenPicNumberForLandscape'] = 1;
+              widget.onChanged?.call('readerScreenPicNumberForLandscape');
+              appdata.settings['readerScreenPicNumberForPortrait'] = 1;
+              widget.onChanged?.call('readerScreenPicNumberForPortrait');
             }
             widget.onChanged?.call("readerMode");
           },
@@ -81,13 +83,40 @@ class _ReaderSettingsState extends State<ReaderSettings> {
                   : 1.0,
               duration: Duration(milliseconds: 300),
               child: _SliderSetting(
-                title: "The number of pic in screen (Only Gallery Mode)".tl,
-                settingsIndex: "readerScreenPicNumber",
+                title: "The number of pic in screen for landscape (Only Gallery Mode)".tl,
+                settingsIndex: "readerScreenPicNumberForLandscape",
                 interval: 1,
                 min: 1,
                 max: 5,
                 onChanged: () {
-                  widget.onChanged?.call("readerScreenPicNumber");
+                  widget.onChanged?.call("readerScreenPicNumberForLandscape");
+                },
+              ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: AbsorbPointer(
+            absorbing: (appdata.settings['readerMode']
+                ?.toLowerCase()
+                .startsWith('continuous') ??
+                false),
+            child: AnimatedOpacity(
+              opacity: (appdata.settings['readerMode']
+                  ?.toLowerCase()
+                  .startsWith('continuous') ??
+                  false)
+                  ? 0.5
+                  : 1.0,
+              duration: Duration(milliseconds: 300),
+              child: _SliderSetting(
+                title: "The number of pic in screen for portrait (Only Gallery Mode)".tl,
+                settingsIndex: "readerScreenPicNumberForPortrait",
+                interval: 1,
+                min: 1,
+                max: 5,
+                onChanged: () {
+                  widget.onChanged?.call("readerScreenPicNumberForPortrait");
                 },
               ),
             ),
