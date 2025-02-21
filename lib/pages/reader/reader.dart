@@ -40,9 +40,13 @@ import 'package:window_manager/window_manager.dart';
 import 'package:battery_plus/battery_plus.dart';
 
 part 'scaffold.dart';
+
 part 'images.dart';
+
 part 'gesture.dart';
+
 part 'comic_image.dart';
+
 part 'loading.dart';
 
 extension _ReaderContext on BuildContext {
@@ -94,7 +98,8 @@ class Reader extends StatefulWidget {
   State<Reader> createState() => _ReaderState();
 }
 
-class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
+class _ReaderState extends State<Reader>
+    with _ReaderLocation, _ReaderWindow, _VolumeListener, _ImagePerPageHandler {
   @override
   void update() {
     setState(() {});
@@ -111,37 +116,11 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   List<String>? images;
 
+  @override
   late ReaderMode mode;
 
-  int get imagesPerPage {
-    if (mode.isContinuous)  return 1;
-    if (isPortrait) {
-      return appdata.settings['readerScreenPicNumberForPortrait'] ?? 1;
-    } else {
-      return appdata.settings['readerScreenPicNumberForLandscape'] ?? 1;
-    }
-  }
-
-  late int _lastImagesPerPage;
-
-  bool get isPortrait =>
-      MediaQuery.of(context).orientation == Orientation.portrait;
-
-  void _checkImagesPerPageChange() {
-    int currentImagesPerPage = imagesPerPage;
-    if (_lastImagesPerPage != currentImagesPerPage) {
-      _adjustPageForImagesPerPageChange(
-          _lastImagesPerPage, currentImagesPerPage);
-      _lastImagesPerPage = currentImagesPerPage;
-    }
-  }
-
-  void _adjustPageForImagesPerPageChange(
-      int oldImagesPerPage, int newImagesPerPage) {
-    int previousImageIndex = (page - 1) * oldImagesPerPage;
-    int newPage = (previousImageIndex ~/ newImagesPerPage) + 1;
-    page = newPage;
-  }
+  @override
+  bool get isPortrait => MediaQuery.of(context).orientation == Orientation.portrait;
 
   History? history;
 
@@ -149,8 +128,6 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   bool isLoading = false;
 
   var focusNode = FocusNode();
-
-  VolumeListener? volumeListener;
 
   @override
   void initState() {
@@ -163,7 +140,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       chapter = 1;
     }
     if (widget.initialChapterGroup != null) {
-      for (int i=0; i<(widget.initialChapterGroup!-1); i++) {
+      for (int i = 0; i < (widget.initialChapterGroup! - 1); i++) {
         chapter += widget.chapters!.getGroupByIndex(i).length;
       }
     }
@@ -189,10 +166,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _lastImagesPerPage = imagesPerPage;
-    if (imagesPerPage != 1) {
-      page = (widget.initialPage! / imagesPerPage).ceil();
-    }
+    initImagesPerPage(widget.initialPage ?? 1);
   }
 
   void setImageCacheSize() async {
@@ -259,12 +233,12 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
 
   void updateHistory() {
     if (history != null) {
-      if(page == maxPage){
+      if (page == maxPage) {
         /// Record the last image of chapter
         history!.page = images?.length ?? 1;
       } else {
         /// Record the first image of the page
-        history!.page = (page-1) * imagesPerPage + 1;
+        history!.page = (page - 1) * imagesPerPage + 1;
       }
       if (maxPage > 1) {
         history!.maxPage = images?.length ?? 1;
@@ -278,7 +252,7 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
         }
         history!.readEpisode.add('${g + 1}-$c');
         history!.ep = c;
-        history!.group = g+1;
+        history!.group = g + 1;
       } else {
         history!.readEpisode.add(chapter.toString());
         history!.ep = chapter;
@@ -291,6 +265,61 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       });
     }
   }
+}
+
+abstract mixin class _ImagePerPageHandler {
+  late int _lastImagesPerPage;
+
+  bool get isPortrait;
+
+  int get page;
+
+  set page(int value);
+
+  ReaderMode get mode;
+
+  void initImagesPerPage(int initialPage) {
+    _lastImagesPerPage = imagesPerPage;
+    if (imagesPerPage != 1) {
+      page = (initialPage / imagesPerPage).ceil();
+    }
+  }
+
+  /// The number of images displayed on one screen
+  int get imagesPerPage {
+    if (mode.isContinuous) return 1;
+    if (isPortrait) {
+      return appdata.settings['readerScreenPicNumberForPortrait'] ?? 1;
+    } else {
+      return appdata.settings['readerScreenPicNumberForLandscape'] ?? 1;
+    }
+  }
+
+  /// Check if the number of images per page has changed
+  void _checkImagesPerPageChange() {
+    int currentImagesPerPage = imagesPerPage;
+    if (_lastImagesPerPage != currentImagesPerPage) {
+      _adjustPageForImagesPerPageChange(
+          _lastImagesPerPage, currentImagesPerPage);
+      _lastImagesPerPage = currentImagesPerPage;
+    }
+  }
+
+  /// Adjust the page number when the number of images per page changes
+  void _adjustPageForImagesPerPageChange(
+      int oldImagesPerPage, int newImagesPerPage) {
+    int previousImageIndex = (page - 1) * oldImagesPerPage;
+    int newPage = (previousImageIndex ~/ newImagesPerPage) + 1;
+    page = newPage;
+  }
+}
+
+abstract mixin class _VolumeListener {
+  bool toNextPage();
+
+  bool toPrevPage();
+
+  VolumeListener? volumeListener;
 
   void handleVolumeEvent() {
     if (!App.isAndroid) {
@@ -301,12 +330,8 @@ class _ReaderState extends State<Reader> with _ReaderLocation, _ReaderWindow {
       volumeListener?.cancel();
     }
     volumeListener = VolumeListener(
-      onDown: () {
-        toNextPage();
-      },
-      onUp: () {
-        toPrevPage();
-      },
+      onDown: toNextPage,
+      onUp: toPrevPage,
     )..listen();
   }
 
