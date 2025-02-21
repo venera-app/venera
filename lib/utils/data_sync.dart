@@ -32,9 +32,13 @@ class DataSync with ChangeNotifier {
 
   factory DataSync() => instance ?? (instance = DataSync._());
 
-  bool isDownloading = false;
+  bool _isDownloading = false;
 
-  bool isUploading = false;
+  bool get isDownloading => _isDownloading;
+
+  bool _isUploading = false;
+
+  bool get isUploading => _isUploading;
 
   bool haveWaitingTask = false;
 
@@ -66,7 +70,7 @@ class DataSync with ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     haveWaitingTask = false;
-    isUploading = true;
+    _isUploading = true;
     notifyListeners();
     try {
       var config = _validateConfig();
@@ -130,7 +134,7 @@ class DataSync with ChangeNotifier {
         return Res.error(e.toString());
       }
     } finally {
-      isUploading = false;
+      _isUploading = false;
       notifyListeners();
     }
   }
@@ -142,7 +146,7 @@ class DataSync with ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     haveWaitingTask = false;
-    isDownloading = true;
+    _isDownloading = true;
     notifyListeners();
     try {
       var config = _validateConfig();
@@ -205,7 +209,7 @@ class DataSync with ChangeNotifier {
         return Res.error(e.toString());
       }
     } finally {
-      isDownloading = false;
+      _isDownloading = false;
       notifyListeners();
     }
   }
