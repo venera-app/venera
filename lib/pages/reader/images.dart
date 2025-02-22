@@ -349,7 +349,7 @@ const Set<PointerDeviceKind> _kTouchLikeDeviceTypes = <PointerDeviceKind>{
   PointerDeviceKind.unknown
 };
 
-const double _kChangeChapterOffset = 200;
+const double _kChangeChapterOffset = 160;
 
 class _ContinuousMode extends StatefulWidget {
   const _ContinuousMode({super.key});
@@ -567,8 +567,10 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
         if (fingers == 0) {
           if (jumpToPrevChapter) {
+            context.readerScaffold.setFloatingButton(0);
             reader.toPrevChapter();
           } else if (jumpToNextChapter) {
+            context.readerScaffold.setFloatingButton(0);
             reader.toNextChapter();
           }
         }
@@ -697,7 +699,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
             controller: scrollController,
             isPrev: false,
           ),
-        SizedBox(height: context.padding.bottom + 16),
+        SizedBox(height: 36),
       ],
     );
   }
