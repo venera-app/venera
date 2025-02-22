@@ -921,10 +921,21 @@ class _SwipeChangeChapterProgressState
     return CustomPaint(
       painter: _ProgressPainter(
         value: value,
-        backgroundColor: context.colorScheme.surfaceContainer,
-        color: context.colorScheme.primaryContainer,
+        backgroundColor: context.colorScheme.surfaceContainerLow,
+        color: context.colorScheme.surfaceContainerHighest,
       ),
-      child: Text(msg).paddingVertical(4).paddingHorizontal(16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.isPrev ? Icons.arrow_downward : Icons.arrow_upward,
+            color: context.colorScheme.onSurface,
+            size: 16,
+          ),
+          const SizedBox(width: 4),
+          Text(msg),
+        ],
+      ).paddingVertical(6).paddingHorizontal(16),
     );
   }
 }

@@ -372,7 +372,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: context.colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -395,14 +395,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                                 .getGroupByIndex(group - 1)
                                 .values
                                 .elementAt(ep - 1);
-                        text = "Last Reading: @epName Page @page".tlParams({
-                          'epName': epName,
-                          'page': page,
-                        });
+                        text = "${"Last Reading".tl}: $epName P$page";
                       } else {
-                        text = "Last Reading: Page @page".tlParams({
-                          'page': page,
-                        });
+                        text = "${"Last Reading".tl}: P$page";
                       }
                       return Text(text);
                     },
