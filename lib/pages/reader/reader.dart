@@ -49,6 +49,8 @@ part 'comic_image.dart';
 
 part 'loading.dart';
 
+part 'chapters.dart';
+
 extension _ReaderContext on BuildContext {
   _ReaderState get reader => findAncestorStateOfType<_ReaderState>()!;
 
