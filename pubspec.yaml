@@ -2,7 +2,7 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.3.0+130
+version: 1.3.1+131
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -14,24 +14,24 @@ dependencies:
   path_provider: any
   intl: any
   window_manager: ^0.4.3
-  sqlite3: ^2.4.7
-  sqlite3_flutter_libs: ^0.5.28
+  sqlite3: ^2.7.4
+  sqlite3_flutter_libs: ^0.5.30
   flutter_qjs:
     git:
       url: https://github.com/wgh136/flutter_qjs
       ref: 5978d0c7784fbbefcacc573547f0ab01ba59b7b3
   crypto: ^3.0.6
-  dio: ^5.7.0
+  dio: ^5.8.0+1
   html: ^0.15.5
-  pointycastle: ^3.9.1
+  pointycastle: ^4.0.0
   url_launcher: ^6.3.0
   path: ^1.9.0
   photo_view:
     git:
       url: https://github.com/wgh136/photo_view
-      ref: 94724a0b
+      ref: d71faf3c75e059d013b0ce9ddaf5ecc1680e2eb6
   mime: ^2.0.0
-  share_plus: ^10.1.3
+  share_plus: ^10.1.4
   scrollable_positioned_list:
     git:
       url: https://github.com/venera-app/flutter.widgets
@@ -48,7 +48,7 @@ dependencies:
       url: https://github.com/pichillilorenzo/flutter_inappwebview
       path: flutter_inappwebview
       ref: 0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676
-  app_links: ^6.3.3
+  app_links: ^6.4.0
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2
   file_selector: ^1.0.3
@@ -57,7 +57,7 @@ dependencies:
     git:
       url: https://github.com/venera-app/lodepng_flutter
       ref: 9a784b193af5d55b2a35e58fa390bda3e4f35d00
-  rhttp: 0.9.8
+  rhttp: 0.10.0
   webdav_client:
     git:
       url: https://github.com/wgh136/webdav_client

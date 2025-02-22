@@ -97,7 +97,7 @@ class ImageFavoritesProvider
     if (localComic == null) {
       return null;
     }
-    var epIndex = localComic.chapters?.keys.toList().indexOf(eid) ?? -1;
+    var epIndex = localComic.chapters?.ids.toList().indexOf(eid) ?? -1;
     if (epIndex == -1 && localComic.hasChapters) {
       return null;
     }

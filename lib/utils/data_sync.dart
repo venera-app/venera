@@ -32,23 +32,31 @@ class DataSync with ChangeNotifier {
 
   factory DataSync() => instance ?? (instance = DataSync._());
 
-  bool isDownloading = false;
+  bool _isDownloading = false;
 
-  bool isUploading = false;
+  bool get isDownloading => _isDownloading;
+
+  bool _isUploading = false;
+
+  bool get isUploading => _isUploading;
 
   bool haveWaitingTask = false;
 
   bool get isEnabled {
     var config = appdata.settings['webdav'];
-    return config is List && config.isNotEmpty;
+    var autoSync = appdata.implicitData['webdavAutoSync'] ?? false;
+    return autoSync && config is List && config.isNotEmpty;
   }
 
   List<String>? _validateConfig() {
     var config = appdata.settings['webdav'];
-    if (config is! List || (config.isNotEmpty && config.length != 3)) {
+    if (config is! List) {
       return null;
     }
-    if (config.whereType<String>().length != 3) {
+    if (config.isEmpty) {
+      return [];
+    }
+    if (config.length != 3 || config.whereType<String>().length != 3) {
       return null;
     }
     return List.from(config);
@@ -62,7 +70,7 @@ class DataSync with ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     haveWaitingTask = false;
-    isUploading = true;
+    _isUploading = true;
     notifyListeners();
     try {
       var config = _validateConfig();
@@ -126,7 +134,7 @@ class DataSync with ChangeNotifier {
         return Res.error(e.toString());
       }
     } finally {
-      isUploading = false;
+      _isUploading = false;
       notifyListeners();
     }
   }
@@ -138,7 +146,7 @@ class DataSync with ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     haveWaitingTask = false;
-    isDownloading = true;
+    _isDownloading = true;
     notifyListeners();
     try {
       var config = _validateConfig();
@@ -201,7 +209,7 @@ class DataSync with ChangeNotifier {
         return Res.error(e.toString());
       }
     } finally {
-      isDownloading = false;
+      _isDownloading = false;
       notifyListeners();
     }
   }

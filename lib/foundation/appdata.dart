@@ -6,8 +6,8 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/io.dart';
 
-class _Appdata {
-  final _Settings settings = _Settings();
+class Appdata {
+  final Settings settings = Settings();
 
   var searchHistory = <String>[];
 
@@ -110,10 +110,10 @@ class _Appdata {
   }
 }
 
-final appdata = _Appdata();
+final appdata = Appdata();
 
-class _Settings with ChangeNotifier {
-  _Settings();
+class Settings with ChangeNotifier {
+  Settings();
 
   final _data = <String, dynamic>{
     'comicDisplayMode': 'detailed', // detailed, brief
@@ -133,7 +133,8 @@ class _Settings with ChangeNotifier {
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
-    'readerScreenPicNumber': 1, // 1 - 5
+    'readerScreenPicNumberForLandscape': 1, // 1 - 5
+    'readerScreenPicNumberForPortrait': 1, // 1 - 5
     'enableTapToTurnPages': true,
     'reverseTapToTurnPages': false,
     'enablePageAnimation': true,
@@ -188,9 +189,9 @@ const defaultCustomImageProcessing = '''
  * @returns {Promise<ArrayBuffer> | {image: Promise<ArrayBuffer>, onCancel: () => void}} - The processed image
  */
 function processImage(image, cid, eid, page, sourceKey) {
-    let image = new Promise((resolve, reject) => {
+    let futureImage = new Promise((resolve, reject) => {
         resolve(image);
     });
-    return image;
+    return futureImage;
 }
 ''';

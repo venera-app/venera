@@ -33,6 +33,7 @@ class _ReaderWithLoadingState
       history: data.history,
       initialChapter: widget.initialEp ?? data.history.ep,
       initialPage: widget.initialPage ?? data.history.page,
+      initialChapterGroup: data.history.group,
       author: data.author,
       tags: data.tags,
     );
@@ -101,7 +102,7 @@ class ReaderProps {
 
   final String name;
 
-  final Map<String, String>? chapters;
+  final ComicChapters? chapters;
 
   final History history;
 

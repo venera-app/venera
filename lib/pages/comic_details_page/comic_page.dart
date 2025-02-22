@@ -165,6 +165,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               cid: widget.id,
               name: localComic.title,
               chapters: localComic.chapters,
+              initialPage: history?.page,
+              initialChapter: history?.ep,
+              initialChapterGroup: history?.group,
               history: history ??
                   History.fromModel(
                     model: localComic,
@@ -369,7 +372,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: context.colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -381,16 +384,20 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       bool haveChapter = comic.chapters != null;
                       var page = history!.page;
                       var ep = history!.ep;
+                      var group = history!.group;
                       String text;
                       if (haveChapter) {
-                        text = "Last Reading: Chapter @ep Page @page".tlParams({
-                          'ep': ep,
-                          'page': page,
-                        });
+                        var epName = group == null
+                            ? comic.chapters!.titles.elementAt(
+                                math.min(ep - 1, comic.chapters!.length - 1),
+                              )
+                            : comic.chapters!
+                                .getGroupByIndex(group - 1)
+                                .values
+                                .elementAt(ep - 1);
+                        text = "${"Last Reading".tl}: $epName P$page";
                       } else {
-                        text = "Last Reading: Page @page".tlParams({
-                          'page': page,
-                        });
+                        text = "${"Last Reading".tl}: P$page";
                       }
                       return Text(text);
                     },
@@ -607,7 +614,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     }
     return _ComicChapters(
       history: history,
-      groupedMode: comic.groupedChapters != null,
+      groupedMode: comic.chapters!.isGrouped,
     );
   }
 

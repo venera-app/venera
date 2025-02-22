@@ -95,16 +95,19 @@ abstract mixin class _ComicPageActions {
   /// [ep] the episode number, start from 1
   ///
   /// [page] the page number, start from 1
-  void read([int? ep, int? page]) {
+  ///
+  /// [group] the chapter group number, start from 1
+  void read([int? ep, int? page, int? group]) {
     App.rootContext
         .to(
-          () => Reader(
+      () => Reader(
         type: comic.comicType,
         cid: comic.id,
         name: comic.title,
         chapters: comic.chapters,
         initialChapter: ep,
         initialPage: page,
+        initialChapterGroup: group,
         history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
@@ -118,7 +121,8 @@ abstract mixin class _ComicPageActions {
   void continueRead() {
     var ep = history?.ep ?? 1;
     var page = history?.page ?? 1;
-    read(ep, page);
+    var group = history?.group ?? 1;
+    read(ep, page, group);
   }
 
   void onReadEnd();
@@ -219,7 +223,7 @@ abstract mixin class _ComicPageActions {
                         isGettingLink = true;
                       });
                       var res =
-                      await comicSource.archiveDownloader!.getDownloadUrl(
+                          await comicSource.archiveDownloader!.getDownloadUrl(
                         comic.id,
                         archives![selected].id,
                       );
@@ -262,7 +266,7 @@ abstract mixin class _ComicPageActions {
       if (localComic != null) {
         for (int i = 0; i < comic.chapters!.length; i++) {
           if (localComic.downloadedChapters
-              .contains(comic.chapters!.keys.elementAt(i))) {
+              .contains(comic.chapters!.ids.elementAt(i))) {
             downloaded.add(i);
           }
         }
@@ -270,8 +274,8 @@ abstract mixin class _ComicPageActions {
       await showSideBar(
         App.rootContext,
         _SelectDownloadChapter(
-          comic.chapters!.values.toList(),
-              (v) => selected = v,
+          comic.chapters!.titles.toList(),
+          (v) => selected = v,
           downloaded,
         ),
       );
@@ -281,7 +285,7 @@ abstract mixin class _ComicPageActions {
         comicId: comic.id,
         comic: comic,
         chapters: selected!.map((i) {
-          return comic.chapters!.keys.elementAt(i);
+          return comic.chapters!.ids.elementAt(i);
         }).toList(),
       ));
     }
@@ -298,13 +302,13 @@ abstract mixin class _ComicPageActions {
     var context = App.mainNavigatorKey!.currentContext!;
     if (config['action'] == 'search') {
       context.to(() => SearchResultPage(
-        text: config['keyword'] ?? '',
-        sourceKey: comicSource.key,
-        options: const [],
-      ));
+            text: config['keyword'] ?? '',
+            sourceKey: comicSource.key,
+            options: const [],
+          ));
     } else if (config['action'] == 'category') {
       context.to(
-            () => CategoryComicsPage(
+        () => CategoryComicsPage(
           category: config['keyword'] ?? '',
           categoryKey: comicSource.categoryData!.key,
           param: config['param'],

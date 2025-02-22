@@ -3,14 +3,17 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:venera/foundation/history.dart';
 
 import 'appdata.dart';
+import 'favorites.dart';
+import 'local.dart';
 
 export "widget_utils.dart";
 export "context.dart";
 
 class _App {
-  final version = "1.3.0";
+  final version = "1.3.1";
 
   bool get isAndroid => Platform.isAndroid;
 
@@ -51,6 +54,14 @@ class _App {
 
   BuildContext get rootContext => rootNavigatorKey.currentContext!;
 
+  final Appdata data = appdata;
+
+  final HistoryManager history = HistoryManager();
+
+  final LocalFavoritesManager favorites = LocalFavoritesManager();
+
+  final LocalManager local = LocalManager();
+
   void rootPop() {
     rootNavigatorKey.currentState?.maybePop();
   }
@@ -66,6 +77,10 @@ class _App {
   Future<void> init() async {
     cachePath = (await getApplicationCacheDirectory()).path;
     dataPath = (await getApplicationSupportDirectory()).path;
+    await data.init();
+    await history.init();
+    await favorites.init();
+    await local.init();
   }
 
   Function? _forceRebuildHandler;

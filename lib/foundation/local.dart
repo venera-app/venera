@@ -9,7 +9,6 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/download.dart';
 import 'package:venera/pages/reader/reader.dart';
-import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
 
 import 'app.dart';
@@ -34,7 +33,7 @@ class LocalComic with HistoryMixin implements Comic {
   /// key: chapter id, value: chapter title
   ///
   /// chapter id is the name of the directory in `LocalManager.path/$directory`
-  final Map<String, String>? chapters;
+  final ComicChapters? chapters;
 
   bool get hasChapters => chapters != null;
 
@@ -67,7 +66,7 @@ class LocalComic with HistoryMixin implements Comic {
         subtitle = row[2] as String,
         tags = List.from(jsonDecode(row[3] as String)),
         directory = row[4] as String,
-        chapters = MapOrNull.from(jsonDecode(row[5] as String)),
+        chapters = ComicChapters.fromJsonOrNull(jsonDecode(row[5] as String)),
         cover = row[6] as String,
         comicType = ComicType(row[7] as int),
         downloadedChapters = List.from(jsonDecode(row[8] as String)),
@@ -99,6 +98,7 @@ class LocalComic with HistoryMixin implements Comic {
       "tags": tags,
       "description": description,
       "sourceKey": sourceKey,
+      "chapters": chapters?.toJson(),
     };
   }
 
@@ -115,6 +115,7 @@ class LocalComic with HistoryMixin implements Comic {
         chapters: chapters,
         initialChapter: history?.ep,
         initialPage: history?.page,
+        initialChapterGroup: history?.group,
         history: history ??
             History.fromModel(
               model: this,
@@ -391,7 +392,7 @@ class LocalManager with ChangeNotifier {
     var directory = Directory(comic.baseDir);
     if (comic.hasChapters) {
       var cid =
-          ep is int ? comic.chapters!.keys.elementAt(ep - 1) : (ep as String);
+          ep is int ? comic.chapters!.ids.elementAt(ep - 1) : (ep as String);
       directory = Directory(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
@@ -425,7 +426,7 @@ class LocalManager with ChangeNotifier {
     if (comic == null) return false;
     if (comic.chapters == null || ep == null) return true;
     return comic.downloadedChapters
-        .contains(comic.chapters!.keys.elementAt(ep - 1));
+        .contains(comic.chapters!.ids.elementAt(ep - 1));
   }
 
   List<DownloadTask> downloadingTasks = [];
@@ -509,7 +510,7 @@ class LocalManager with ChangeNotifier {
       var dir = Directory(FilePath.join(path, c.directory));
       dir.deleteIgnoreError(recursive: true);
     }
-    // Deleting a local comic means that it's nolonger available, thus both favorite and history should be deleted.
+    // Deleting a local comic means that it's no longer available, thus both favorite and history should be deleted.
     if (c.comicType == ComicType.local) {
       if (HistoryManager().find(c.id, c.comicType) != null) {
         HistoryManager().remove(c.id, c.comicType);

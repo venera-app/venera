@@ -330,10 +330,11 @@ class _WebdavSettingState extends State<_WebdavSetting> {
   String url = "";
   String user = "";
   String pass = "";
+  bool autoSync = false;
 
   bool isTesting = false;
-
   bool upload = true;
+  bool isEnabled = false;
 
   @override
   void initState() {
@@ -348,6 +349,16 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     url = configs[0];
     user = configs[1];
     pass = configs[2];
+    isEnabled = true;
+    autoSync = appdata.implicitData['webdavAutoSync'] ?? false;
+  }
+
+  void onAutoSyncChanged(bool value) {
+    setState(() {
+      autoSync = value;
+      appdata.implicitData['webdavAutoSync'] = value;
+      appdata.writeImplicitData();
+    });
   }
 
   @override
@@ -357,6 +368,12 @@ class _WebdavSettingState extends State<_WebdavSetting> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: Text("WebDAV Auto Sync".tl),
+              value: autoSync,
+              onChanged: onAutoSyncChanged,
+            ),
             const SizedBox(height: 12),
             TextField(
               decoration: const InputDecoration(
@@ -411,12 +428,53 @@ class _WebdavSettingState extends State<_WebdavSetting> {
               ],
             ),
             const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text("Once the operation is successful, app will automatically sync data with the server.".tl),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Center(
               child: Button.filled(
                 isLoading: isTesting,
                 onPressed: () async {
                   var oldConfig = appdata.settings['webdav'];
+                  var oldAutoSync = appdata.implicitData['webdavAutoSync'];
+
+                  if (url.trim().isEmpty &&
+                      user.trim().isEmpty &&
+                      pass.trim().isEmpty) {
+                    appdata.settings['webdav'] = [];
+                    appdata.implicitData['webdavAutoSync'] = false;
+                    appdata.writeImplicitData();
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
+                    return;
+                  }
+
                   appdata.settings['webdav'] = [url, user, pass];
+                  appdata.implicitData['webdavAutoSync'] = autoSync;
+                  appdata.writeImplicitData();
+
+                  if (!autoSync) {
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
+                    return;
+                  }
+
                   setState(() {
                     isTesting = true;
                   });
@@ -428,12 +486,16 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                       isTesting = false;
                     });
                     appdata.settings['webdav'] = oldConfig;
+                    appdata.implicitData['webdavAutoSync'] = oldAutoSync;
+                    appdata.writeImplicitData();
+                    appdata.saveData();
                     context.showMessage(message: testResult.errorMessage!);
-                    return;
+                    context.showMessage(message: "Saved Failed".tl);
+                  } else {
+                    appdata.saveData();
+                    context.showMessage(message: "Saved".tl);
+                    App.rootPop();
                   }
-                  appdata.saveData();
-                  context.showMessage(message: "Saved".tl);
-                  App.rootPop();
                 },
                 child: Text("Continue".tl),
               ),

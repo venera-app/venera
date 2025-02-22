@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/local.dart';
@@ -262,7 +263,9 @@ class ImportComic {
       subtitle: subtitle ?? '',
       tags: tags ?? [],
       directory: directory.path,
-      chapters: hasChapters ? Map.fromIterables(chapters, chapters) : null,
+      chapters: hasChapters
+          ? ComicChapters(Map.fromIterables(chapters, chapters))
+          : null,
       cover: coverPath,
       comicType: ComicType.local,
       downloadedChapters: chapters,

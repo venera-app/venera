@@ -45,7 +45,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
     } else {
       var res = await reader.type.comicSource!.loadComicPages!(
         reader.widget.cid,
-        reader.widget.chapters?.keys.elementAt(reader.chapter - 1),
+        reader.widget.chapters?.ids.elementAt(reader.chapter - 1),
       );
       if (res.error) {
         setState(() {
@@ -154,7 +154,6 @@ class _GalleryModeState extends State<_GalleryMode>
       builder: (BuildContext context, int index) {
         if (index == 0 || index == totalPages + 1) {
           return PhotoViewGalleryPageOptions.customChild(
-            scaleStateController: PhotoViewScaleStateController(),
             child: const SizedBox(),
           );
         } else {
@@ -168,7 +167,7 @@ class _GalleryModeState extends State<_GalleryMode>
           cached[index] = true;
           cache(index);
 
-          photoViewControllers[index] = PhotoViewController();
+          photoViewControllers[index] ??= PhotoViewController();
 
           if (reader.imagesPerPage == 1) {
             return PhotoViewGalleryPageOptions(
@@ -206,11 +205,11 @@ class _GalleryModeState extends State<_GalleryMode>
       ),
       onPageChanged: (i) {
         if (i == 0) {
-          if (!reader.toPrevChapter()) {
+          if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
             reader.toPage(1);
           }
         } else if (i == totalPages + 1) {
-          if (!reader.toNextChapter()) {
+          if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
             reader.toPage(totalPages);
           }
         } else {
@@ -232,7 +231,7 @@ class _GalleryModeState extends State<_GalleryMode>
       ImageProvider imageProvider =
           _createImageProviderFromKey(imageKey, context);
       return Expanded(
-        child: Image(
+        child: ComicImage(
           image: imageProvider,
           fit: BoxFit.contain,
         ),
@@ -350,6 +349,8 @@ const Set<PointerDeviceKind> _kTouchLikeDeviceTypes = <PointerDeviceKind>{
   PointerDeviceKind.unknown
 };
 
+const double _kChangeChapterOffset = 160;
+
 class _ContinuousMode extends StatefulWidget {
   const _ContinuousMode({super.key});
 
@@ -364,7 +365,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
   var itemScrollController = ItemScrollController();
   var itemPositionsListener = ItemPositionsListener.create();
   var photoViewController = PhotoViewController();
-  late ScrollController scrollController;
+  ScrollController? _scrollController;
+
+  ScrollController get scrollController => _scrollController!;
 
   var isCTRLPressed = false;
   static var _isMouseScrolling = false;
@@ -372,6 +375,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   bool disableScroll = false;
 
   late List<bool> cached;
+
   int get preCacheCount => appdata.settings["preloadImageCount"];
 
   /// Whether the user was scrolling the page.
@@ -385,6 +389,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
       () => delayedIsScrolling = value,
     );
   }
+
+  bool prepareToPrevChapter = false;
+  bool prepareToNextChapter = false;
+  bool jumpToNextChapter = false;
+  bool jumpToPrevChapter = false;
 
   @override
   void initState() {
@@ -406,6 +415,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
   }
 
   void onPositionChanged() {
+    if (itemPositionsListener.itemPositions.value.isEmpty) {
+      return;
+    }
     var page = itemPositionsListener.itemPositions.value.first.index;
     page = page.clamp(1, reader.maxPage);
     if (page != reader.page) {
@@ -461,6 +473,18 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
   }
 
+  void onScroll() {
+    if (prepareToPrevChapter) {
+      jumpToNextChapter = false;
+      jumpToPrevChapter = scrollController.offset <
+          scrollController.position.minScrollExtent - _kChangeChapterOffset;
+    } else if (prepareToNextChapter) {
+      jumpToNextChapter = scrollController.offset >
+          scrollController.position.maxScrollExtent + _kChangeChapterOffset;
+      jumpToPrevChapter = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget widget = ScrollablePositionedList.builder(
@@ -468,7 +492,11 @@ class _ContinuousModeState extends State<_ContinuousMode>
       itemScrollController: itemScrollController,
       itemPositionsListener: itemPositionsListener,
       scrollControllerCallback: (scrollController) {
-        this.scrollController = scrollController;
+        if (_scrollController != null) {
+          _scrollController!.removeListener(onScroll);
+        }
+        _scrollController = scrollController;
+        _scrollController!.addListener(onScroll);
       },
       itemCount: reader.maxPage + 2,
       addSemanticIndexes: false,
@@ -478,7 +506,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       reverse: reader.mode == ReaderMode.continuousRightToLeft,
       physics: isCTRLPressed || _isMouseScrolling || disableScroll
           ? const NeverScrollableScrollPhysics()
-          : const ClampingScrollPhysics(),
+          : const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
         if (index == 0 || index == reader.maxPage + 1) {
           return const SizedBox();
@@ -493,16 +521,26 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
         ImageProvider image = _createImageProvider(index, context);
 
-        return ComicImage(
-          filterQuality: FilterQuality.medium,
-          image: image,
-          width: width,
-          height: height,
-          fit: BoxFit.contain,
+        return ColoredBox(
+          color: context.colorScheme.surface,
+          child: ComicImage(
+            filterQuality: FilterQuality.medium,
+            image: image,
+            width: width,
+            height: height,
+            fit: BoxFit.contain,
+          ),
         );
       },
       scrollBehavior: const MaterialScrollBehavior()
           .copyWith(scrollbars: false, dragDevices: _kTouchLikeDeviceTypes),
+    );
+
+    widget = Stack(
+      children: [
+        Positioned.fill(child: buildBackground(context)),
+        Positioned.fill(child: widget),
+      ],
     );
 
     widget = Listener(
@@ -526,6 +564,15 @@ class _ContinuousModeState extends State<_ContinuousMode>
           setState(() {
             disableScroll = false;
           });
+        }
+        if (fingers == 0) {
+          if (jumpToPrevChapter) {
+            context.readerScaffold.setFloatingButton(0);
+            reader.toPrevChapter();
+          } else if (jumpToNextChapter) {
+            context.readerScaffold.setFloatingButton(0);
+            reader.toNextChapter();
+          }
         }
       },
       onPointerCancel: (event) {
@@ -572,18 +619,39 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
 
         if (notification is ScrollUpdateNotification) {
-          var length = reader.maxChapter;
           if (!scrollController.hasClients) return false;
           if (scrollController.position.pixels <=
-              scrollController.position.minScrollExtent &&
-              reader.chapter != 1) {
-            context.readerScaffold.setFloatingButton(-1);
+                  scrollController.position.minScrollExtent &&
+              !reader.isFirstChapterOfGroup) {
+            if (!prepareToPrevChapter) {
+              jumpToPrevChapter = false;
+              jumpToNextChapter = false;
+              context.readerScaffold.setFloatingButton(-1);
+              setState(() {
+                prepareToPrevChapter = true;
+              });
+            }
           } else if (scrollController.position.pixels >=
-              scrollController.position.maxScrollExtent &&
-              reader.chapter < length) {
-            context.readerScaffold.setFloatingButton(1);
+                  scrollController.position.maxScrollExtent &&
+              !reader.isLastChapterOfGroup) {
+            if (!prepareToNextChapter) {
+              jumpToPrevChapter = false;
+              jumpToNextChapter = false;
+              context.readerScaffold.setFloatingButton(1);
+              setState(() {
+                prepareToNextChapter = true;
+              });
+            }
           } else {
             context.readerScaffold.setFloatingButton(0);
+            if (prepareToPrevChapter || prepareToNextChapter) {
+              jumpToPrevChapter = false;
+              jumpToNextChapter = false;
+              setState(() {
+                prepareToPrevChapter = false;
+                prepareToNextChapter = false;
+              });
+            }
           }
         }
 
@@ -613,6 +681,26 @@ class _ContinuousModeState extends State<_ContinuousMode>
         height: height,
         child: widget,
       ),
+    );
+  }
+
+  Widget buildBackground(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(height: context.padding.top + 16),
+        if (prepareToPrevChapter)
+          _SwipeChangeChapterProgress(
+            controller: scrollController,
+            isPrev: true,
+          ),
+        const Spacer(),
+        if (prepareToNextChapter)
+          _SwipeChangeChapterProgress(
+            controller: scrollController,
+            isPrev: false,
+          ),
+        SizedBox(height: 36),
+      ],
     );
   }
 
@@ -755,4 +843,139 @@ void _precacheImage(int page, BuildContext context) {
     _createImageProvider(page, context),
     context,
   );
+}
+
+class _SwipeChangeChapterProgress extends StatefulWidget {
+  const _SwipeChangeChapterProgress({
+    this.controller,
+    required this.isPrev,
+  });
+
+  final ScrollController? controller;
+
+  final bool isPrev;
+
+  @override
+  State<_SwipeChangeChapterProgress> createState() =>
+      _SwipeChangeChapterProgressState();
+}
+
+class _SwipeChangeChapterProgressState
+    extends State<_SwipeChangeChapterProgress> {
+  double value = 0;
+
+  late final isPrev = widget.isPrev;
+
+  ScrollController? controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller != null) {
+      controller = widget.controller;
+      controller!.addListener(onScroll);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _SwipeChangeChapterProgress oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      controller?.removeListener(onScroll);
+      controller = widget.controller;
+      controller?.addListener(onScroll);
+      if (value != 0) {
+        setState(() {
+          value = 0;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller?.removeListener(onScroll);
+  }
+
+  void onScroll() {
+    var position = controller!.position.pixels;
+    var offset = isPrev
+        ? controller!.position.minScrollExtent - position
+        : position - controller!.position.maxScrollExtent;
+    var newValue = offset / _kChangeChapterOffset;
+    newValue = newValue.clamp(0.0, 1.0);
+    if (newValue != value) {
+      setState(() {
+        value = newValue;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final msg = widget.isPrev
+        ? "Swipe down for previous chapter".tl
+        : "Swipe up for next chapter".tl;
+
+    return CustomPaint(
+      painter: _ProgressPainter(
+        value: value,
+        backgroundColor: context.colorScheme.surfaceContainerLow,
+        color: context.colorScheme.surfaceContainerHighest,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.isPrev ? Icons.arrow_downward : Icons.arrow_upward,
+            color: context.colorScheme.onSurface,
+            size: 16,
+          ),
+          const SizedBox(width: 4),
+          Text(msg),
+        ],
+      ).paddingVertical(6).paddingHorizontal(16),
+    );
+  }
+}
+
+class _ProgressPainter extends CustomPainter {
+  final double value;
+
+  final Color backgroundColor;
+
+  final Color color;
+
+  const _ProgressPainter({
+    required this.value,
+    required this.backgroundColor,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromLTRBR(0, 0, size.width, size.height, Radius.circular(16)),
+      paint,
+    );
+
+    paint.color = color;
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+          0, 0, size.width * value, size.height, Radius.circular(16)),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return oldDelegate is! _ProgressPainter ||
+        oldDelegate.value != value ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.color != color;
+  }
 }

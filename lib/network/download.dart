@@ -328,8 +328,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
         _images = {};
         _totalCount = 0;
         int cpCount = 0;
-        int totalCpCount = chapters?.length ?? comic!.chapters!.length;
-        for (var i in comic!.chapters!.keys) {
+        int totalCpCount =
+            chapters?.length ?? comic!.chapters!.allChapters.length;
+        for (var i in comic!.chapters!.allChapters.keys) {
           if (chapters != null && !chapters!.contains(i)) {
             continue;
           }
@@ -422,7 +423,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       "comic": comic?.toJson(),
       "chapters": chapters,
       "path": path,
-      "cover": cover,
+      "cover": _cover,
       "images": _images,
       "downloadedCount": _downloadedCount,
       "totalCount": _totalCount,

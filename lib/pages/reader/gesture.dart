@@ -131,11 +131,11 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     }
     if (context.reader.mode.key.startsWith('gallery')) {
       if (forward) {
-        if (!context.reader.toNextPage()) {
+        if (!context.reader.toNextPage() && !context.reader.isLastChapterOfGroup) {
           context.reader.toNextChapter();
         }
       } else {
-        if (!context.reader.toPrevPage()) {
+        if (!context.reader.toPrevPage() && !context.reader.isFirstChapterOfGroup) {
           context.reader.toPrevChapter();
         }
       }

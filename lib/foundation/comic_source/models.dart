@@ -128,12 +128,7 @@ class ComicDetails with HistoryMixin {
   final Map<String, List<String>> tags;
 
   /// id-name
-  final Map<String, String>? chapters;
-
-  /// key is group name.
-  /// When this field is not null, [chapters] will be a merged map of all groups.
-  /// Only available in some sources.
-  final Map<String, Map<String, String>>? groupedChapters;
+  final ComicChapters? chapters;
 
   final List<String>? thumbnails;
 
@@ -176,45 +171,13 @@ class ComicDetails with HistoryMixin {
     return res;
   }
 
-  static Map<String, String>? _getChapters(dynamic chapters) {
-    if (chapters == null) return null;
-    var result = <String, String>{};
-    if (chapters is Map) {
-      for (var entry in chapters.entries) {
-        var value = entry.value;
-        if (value is Map) {
-          result.addAll(Map.from(value));
-        } else {
-          result[entry.key.toString()] = value.toString();
-        }
-      }
-    }
-    return result;
-  }
-
-  static Map<String, Map<String, String>>? _getGroupedChapters(dynamic chapters) {
-    if (chapters == null) return null;
-    var result = <String, Map<String, String>>{};
-    if (chapters is Map) {
-      for (var entry in chapters.entries) {
-        var value = entry.value;
-        if (value is Map) {
-          result[entry.key.toString()] = Map.from(value);
-        }
-      }
-    }
-    if (result.isEmpty) return null;
-    return result;
-  }
-
   ComicDetails.fromJson(Map<String, dynamic> json)
       : title = json["title"],
         subTitle = json["subtitle"],
         cover = json["cover"],
         description = json["description"],
         tags = _generateMap(json["tags"]),
-        chapters = _getChapters(json["chapters"]),
-        groupedChapters = _getGroupedChapters(json["chapters"]),
+        chapters = ComicChapters.fromJsonOrNull(json["chapters"]),
         sourceKey = json["sourceKey"],
         comicId = json["comicId"],
         thumbnails = ListOrNull.from(json["thumbnails"]),
@@ -341,4 +304,123 @@ class ArchiveInfo {
       : title = json["title"],
         description = json["description"],
         id = json["id"];
+}
+
+class ComicChapters {
+  final Map<String, String>? _chapters;
+
+  final Map<String, Map<String, String>>? _groupedChapters;
+
+  /// Create a ComicChapters object with a flat map
+  const ComicChapters(Map<String, String> this._chapters)
+      : _groupedChapters = null;
+
+  /// Create a ComicChapters object with a grouped map
+  const ComicChapters.grouped(
+      Map<String, Map<String, String>> this._groupedChapters)
+      : _chapters = null;
+
+  factory ComicChapters.fromJson(dynamic json) {
+    if (json is! Map) throw ArgumentError("Invalid json type");
+    var chapters = <String, String>{};
+    var groupedChapters = <String, Map<String, String>>{};
+    for (var entry in json.entries) {
+      var key = entry.key;
+      var value = entry.value;
+      if (key is! String) throw ArgumentError("Invalid key type");
+      if (value is Map) {
+        groupedChapters[key] = Map.from(value);
+      } else {
+        chapters[key] = value.toString();
+      }
+    }
+    if (chapters.isNotEmpty) {
+      return ComicChapters(chapters);
+    } else {
+      return ComicChapters.grouped(groupedChapters);
+    }
+  }
+
+  static fromJsonOrNull(dynamic json) {
+    if (json == null) return null;
+    return ComicChapters.fromJson(json);
+  }
+
+  Map<String, dynamic> toJson() {
+    if (_chapters != null) {
+      return _chapters;
+    } else {
+      return _groupedChapters!;
+    }
+  }
+
+  /// Whether the chapters are grouped
+  bool get isGrouped => _groupedChapters != null;
+
+  /// All group names
+  Iterable<String> get groups => _groupedChapters?.keys ?? [];
+
+  /// All chapters.
+  /// If the chapters are grouped, all groups will be merged.
+  Map<String, String> get allChapters {
+    if (_chapters != null) return _chapters;
+    var res = <String, String>{};
+    for (var entry in _groupedChapters!.values) {
+      res.addAll(entry);
+    }
+    return res;
+  }
+
+  /// Get a group of chapters by name
+  Map<String, String> getGroup(String group) {
+    return _groupedChapters![group] ?? {};
+  }
+
+  /// Get a group of chapters by index(0-based)
+  Map<String, String> getGroupByIndex(int index) {
+    return _groupedChapters!.values.elementAt(index);
+  }
+
+  /// Get total number of chapters
+  int get length {
+    return isGrouped
+        ? _groupedChapters!.values.map((e) => e.length).reduce((a, b) => a + b)
+        : _chapters!.length;
+  }
+
+  /// Get the number of groups
+  int get groupCount => _groupedChapters?.length ?? 0;
+
+  /// Iterate all chapter ids
+  Iterable<String> get ids sync* {
+    if (isGrouped) {
+      for (var entry in _groupedChapters!.values) {
+        yield* entry.keys;
+      }
+    } else {
+      yield* _chapters!.keys;
+    }
+  }
+
+  /// Iterate all chapter titles
+  Iterable<String> get titles sync* {
+    if (isGrouped) {
+      for (var entry in _groupedChapters!.values) {
+        yield* entry.values;
+      }
+    } else {
+      yield* _chapters!.values;
+    }
+  }
+
+  String? operator [](String key) {
+    if (isGrouped) {
+      for (var entry in _groupedChapters!.values) {
+        if (entry.containsKey(key)) return entry[key];
+      }
+      return null;
+    } else {
+      return _chapters![key];
+    }
+  }
 }

@@ -4,10 +4,7 @@ import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/cache_manager.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/favorites.dart';
-import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/js_engine.dart';
-import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/pages/comic_source_page.dart';
@@ -32,31 +29,45 @@ extension _FutureInit<T> on Future<T> {
 }
 
 Future<void> init() async {
-  await Rhttp.init();
-  await SAFTaskWorker().init().wait();
-  await AppTranslation.init().wait();
-  await appdata.init().wait();
   await App.init().wait();
-  await HistoryManager().init().wait();
-  await TagsTranslation.readData().wait();
-  await LocalFavoritesManager().init().wait();
   SingleInstanceCookieJar("${App.dataPath}/cookie.db");
-  await JsEngine().init().wait();
-  await ComicSource.init().wait();
-  await LocalManager().init().wait();
+  var futures = [
+    Rhttp.init(),
+    SAFTaskWorker().init().wait(),
+    AppTranslation.init().wait(),
+    TagsTranslation.readData().wait(),
+    JsEngine().init().then((_) => ComicSource.init()).wait(),
+  ];
+  await Future.wait(futures);
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
-  if (appdata.settings['searchSources'] == null) {
-    appdata.settings['searchSources'] = ComicSource.all()
-        .where((e) => e.searchPageData != null)
-        .map((e) => e.key)
-        .toList();
-  }
+  _checkOldConfigs();
   if (App.isAndroid) {
     handleLinks();
   }
   FlutterError.onError = (details) {
     Log.error("Unhandled Exception", "${details.exception}\n${details.stack}");
   };
+}
+
+void _checkOldConfigs() {
+  if (appdata.settings['searchSources'] == null) {
+    appdata.settings['searchSources'] = ComicSource.all()
+        .where((e) => e.searchPageData != null)
+        .map((e) => e.key)
+        .toList();
+  }
+
+  if (appdata.implicitData['webdavAutoSync'] == null) {
+    var webdavConfig = appdata.settings['webdav'];
+    if (webdavConfig is List &&
+        webdavConfig.length == 3 &&
+        webdavConfig.whereType<String>().length == 3) {
+      appdata.implicitData['webdavAutoSync'] = true;
+    } else {
+      appdata.implicitData['webdavAutoSync'] = false;
+    }
+    appdata.writeImplicitData();
+  }
 }
 
 Future<void> _checkAppUpdates() async {

@@ -14,7 +14,7 @@ import 'cookie_jar.dart';
 class CloudflareException implements DioException {
   final String url;
 
-  const CloudflareException(this.url);
+  CloudflareException(this.url);
 
   @override
   String toString() {
@@ -55,6 +55,9 @@ class CloudflareException implements DioException {
 
   @override
   DioExceptionType get type => DioExceptionType.badResponse;
+
+  @override
+  DioExceptionReadableStringBuilder? stringBuilder;
 }
 
 class CloudflareInterceptor extends Interceptor {

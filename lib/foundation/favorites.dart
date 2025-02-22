@@ -185,6 +185,18 @@ class FavoriteItemWithUpdateInfo extends FavoriteItem {
     var sourceName = type.comicSource?.name ?? "Unknown";
     return "$updateTime | $sourceName";
   }
+
+  @override
+  operator ==(Object other) {
+    return other is FavoriteItemWithUpdateInfo &&
+        other.updateTime == updateTime &&
+        other.hasNewUpdate == hasNewUpdate &&
+        super == other;
+  }
+
+  @override
+  int get hashCode =>
+      super.hashCode ^ updateTime.hashCode ^ hasNewUpdate.hashCode;
 }
 
 class LocalFavoritesManager with ChangeNotifier {
@@ -785,7 +797,7 @@ class LocalFavoritesManager with ChangeNotifier {
     }
   }
 
-  void updateInfo(String folder, FavoriteItem comic) {
+  void updateInfo(String folder, FavoriteItem comic, [bool notify = true]) {
     _db.execute("""
       update "$folder"
       set name = ?, author = ?, cover_path = ?, tags = ?
@@ -798,7 +810,9 @@ class LocalFavoritesManager with ChangeNotifier {
       comic.id,
       comic.type.value
     ]);
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   String folderToJson(String folder) {
@@ -888,6 +902,18 @@ class LocalFavoritesManager with ChangeNotifier {
     ]);
   }
 
+  void updateCheckTime(
+    String folder,
+    String id,
+    ComicType type,
+  ) {
+    _db.execute("""
+      update "$folder"
+      set last_check_time = ?
+      where id == ? and type == ?;
+    """, [DateTime.now().millisecondsSinceEpoch, id, type.value]);
+  }
+
   int countUpdates(String folder) {
     return _db.select("""
       select count(*) as c from "$folder"
@@ -948,5 +974,9 @@ class LocalFavoritesManager with ChangeNotifier {
 
   void close() {
     _db.dispose();
+  }
+
+  void notifyChanges() {
+    notifyListeners();
   }
 }

@@ -26,73 +26,21 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   var lastValue = 0;
 
-  var fABValue = ValueNotifier<double>(0);
-
   _ReaderGestureDetectorState? _gestureDetectorState;
-
-  _DragListener? _floatingButtonDragListener;
 
   void setFloatingButton(int value) {
     lastValue = showFloatingButtonValue;
     if (value == 0) {
       if (showFloatingButtonValue != 0) {
         showFloatingButtonValue = 0;
-        fABValue.value = 0;
         update();
       }
-      if (_floatingButtonDragListener != null) {
-        _gestureDetectorState!.removeDragListener(_floatingButtonDragListener!);
-        _floatingButtonDragListener = null;
-      }
     }
-    var readerMode = context.reader.mode;
     if (value == 1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = 1;
-      _floatingButtonDragListener = _DragListener(
-        onMove: (offset) {
-          if (readerMode == ReaderMode.continuousTopToBottom) {
-            fABValue.value -= offset.dy;
-          } else if (readerMode == ReaderMode.continuousLeftToRight) {
-            fABValue.value -= offset.dx;
-          } else if (readerMode == ReaderMode.continuousRightToLeft) {
-            fABValue.value += offset.dx;
-          }
-        },
-        onEnd: () {
-          if (fABValue.value.abs() > 58 * 3) {
-            setState(() {
-              showFloatingButtonValue = 0;
-            });
-            context.reader.toNextChapter();
-          }
-          fABValue.value = 0;
-        },
-      );
-      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
     } else if (value == -1 && showFloatingButtonValue == 0) {
       showFloatingButtonValue = -1;
-      _floatingButtonDragListener = _DragListener(
-        onMove: (offset) {
-          if (readerMode == ReaderMode.continuousTopToBottom) {
-            fABValue.value += offset.dy;
-          } else if (readerMode == ReaderMode.continuousLeftToRight) {
-            fABValue.value += offset.dx;
-          } else if (readerMode == ReaderMode.continuousRightToLeft) {
-            fABValue.value -= offset.dx;
-          }
-        },
-        onEnd: () {
-          if (fABValue.value.abs() > 58 * 3) {
-            setState(() {
-              showFloatingButtonValue = 0;
-            });
-            context.reader.toPrevChapter();
-          }
-          fABValue.value = 0;
-        },
-      );
-      _gestureDetectorState!.addDragListener(_floatingButtonDragListener!);
       update();
     }
   }
@@ -279,7 +227,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       List<String> tags = context.reader.widget.tags;
       String author = context.reader.widget.author;
 
-      var epName = context.reader.widget.chapters?.values
+      var epName = context.reader.widget.chapters?.titles
               .elementAtOrNull(context.reader.chapter - 1) ??
           "E${context.reader.chapter}";
       var translatedTags = tags.map((e) => e.translateTagsToCN).toList();
@@ -561,7 +509,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildPageInfoText() {
-    var epName = context.reader.widget.chapters?.values
+    var epName = context.reader.widget.chapters?.titles
             .elementAtOrNull(context.reader.chapter - 1) ??
         "E${context.reader.chapter}";
     if (epName.length > 8) {
@@ -614,7 +562,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   void openChapterDrawer() {
     showSideBar(
       context,
-      _ChaptersView(context.reader),
+      context.reader.widget.chapters!.isGrouped
+          ? _GroupedChaptersView(context.reader)
+          : _ChaptersView(context.reader),
       width: 400,
     );
   }
@@ -776,62 +726,35 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         );
       case -1:
       case 1:
-        return Container(
+        return SizedBox(
           width: 58,
           height: 58,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
+          child: Material(
             color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(16),
-          ),
-          child: ValueListenableBuilder(
-            valueListenable: fABValue,
-            builder: (context, value, child) {
-              return Stack(
-                children: [
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          if (showFloatingButtonValue == 1) {
-                            context.reader.toNextChapter();
-                          } else if (showFloatingButtonValue == -1) {
-                            context.reader.toPrevChapter();
-                          }
-                          setFloatingButton(0);
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Center(
-                          child: Icon(
-                            showFloatingButtonValue == 1
-                                ? Icons.arrow_forward_ios
-                                : Icons.arrow_back_ios_outlined,
-                            size: 24,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: value.clamp(0, 58 * 3) / 3,
-                    child: ColoredBox(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceTint
-                          .toOpacity(0.2),
-                      child: const SizedBox.expand(),
-                    ),
-                  ),
-                ],
-              );
-            },
+            elevation: 2,
+            child: InkWell(
+              onTap: () {
+                if (showFloatingButtonValue == 1) {
+                  context.reader.toNextChapter();
+                } else if (showFloatingButtonValue == -1) {
+                  context.reader.toPrevChapter();
+                }
+                setFloatingButton(0);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Center(
+                child: Icon(
+                  showFloatingButtonValue == 1
+                      ? Icons.arrow_forward_ios
+                      : Icons.arrow_back_ios_outlined,
+                  size: 24,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer,
+                ),
+              ),
+            ),
           ),
         );
     }
@@ -1014,82 +937,6 @@ class _ClockWidgetState extends State<_ClockWidget> {
         ),
         Text(_currentTime),
       ],
-    );
-  }
-}
-
-class _ChaptersView extends StatefulWidget {
-  const _ChaptersView(this.reader);
-
-  final _ReaderState reader;
-
-  @override
-  State<_ChaptersView> createState() => _ChaptersViewState();
-}
-
-class _ChaptersViewState extends State<_ChaptersView> {
-  bool desc = false;
-
-  @override
-  Widget build(BuildContext context) {
-    var chapters = widget.reader.widget.chapters!;
-    var current = widget.reader.chapter - 1;
-    return Scaffold(
-      body: SmoothCustomScrollView(
-        slivers: [
-          SliverAppbar(
-            title: Text("Chapters".tl),
-            actions: [
-              Tooltip(
-                message: "Click to change the order".tl,
-                child: TextButton.icon(
-                  icon: Icon(
-                    !desc ? Icons.arrow_upward : Icons.arrow_downward,
-                    size: 18,
-                  ),
-                  label: Text(!desc ? "Ascending".tl : "Descending".tl),
-                  onPressed: () {
-                    setState(() {
-                      desc = !desc;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                if (desc) {
-                  index = chapters.length - 1 - index;
-                }
-                var chapter = chapters.values.elementAt(index);
-                return ListTile(
-                  shape: Border(
-                    left: BorderSide(
-                      color: current == index
-                          ? context.colorScheme.primary
-                          : Colors.transparent,
-                      width: 4,
-                    ),
-                  ),
-                  title: Text(
-                    chapter,
-                    style: current == index
-                        ? ts.withColor(context.colorScheme.primary).bold
-                        : null,
-                  ),
-                  onTap: () {
-                    widget.reader.toChapter(index + 1);
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
-              childCount: chapters.length,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
