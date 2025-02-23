@@ -11,6 +11,22 @@ body:
         **Please do not report any issues related to config files.**
         
         To report a bug related to the config file, please send it to the [config repository](https://github.com/venera-app/venera-configs).
+  - type: dropdown
+    id: bugType
+    attributes:
+      label: Bug type
+      description: What type of bug are you reporting?
+      options:
+        - Crash
+        - UI
+        - Performance
+        - Security
+        - Reader
+        - JS Engine
+        - Comic Source
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:
