@@ -172,7 +172,16 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         child: Row(
           children: [
             const SizedBox(width: 8),
-            const BackButton(),
+            IconButton(
+              onPressed: () {
+                if (context.reader.isFullscreen) {
+                  context.reader.fullscreen();
+                } else {
+                  context.pop();
+                }
+              },
+              icon: const Icon(Icons.arrow_back),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

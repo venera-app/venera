@@ -6,9 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/global_state.dart';
 import 'package:window_manager/window_manager.dart';
 
 const _kTitleBarHeight = 36.0;
+
+void toggleWindowFrame() {
+  GlobalState.find<_WindowFrameState>().toggleWindowFrame();
+}
 
 class WindowFrame extends StatefulWidget {
   const WindowFrame(this.child, {super.key});
@@ -19,9 +24,13 @@ class WindowFrame extends StatefulWidget {
   State<WindowFrame> createState() => _WindowFrameState();
 }
 
-class _WindowFrameState extends State<WindowFrame> {
+class _WindowFrameState extends AutomaticGlobalState<WindowFrame> {
   bool isHideWindowFrame = false;
   bool useDarkTheme = false;
+
+  void toggleWindowFrame() {
+    isHideWindowFrame = !isHideWindowFrame;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +108,9 @@ class _WindowFrameState extends State<WindowFrame> {
       return body;
     }
   }
+
+  @override
+  Object? get key => 'WindowFrame';
 }
 
 class WindowButtons extends StatefulWidget {
