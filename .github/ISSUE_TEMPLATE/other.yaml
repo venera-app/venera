@@ -1,9 +1,0 @@
-name: other
-description: Other contents
-body:
-  - type: textarea
-    id: what-happened
-    attributes:
-      label: Content
-    validations:
-      required: true

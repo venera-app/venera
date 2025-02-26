@@ -7,6 +7,16 @@ body:
     attributes:
       value: |
         Welcome to make a feature request, please fill in the following information after completing the title.
+        
+        欢迎提出功能建议，请填写完整标题后填写以下信息。
+        
+        **Please do not report any issues related to config files.**
+
+        **请不要报告与配置文件相关的任何问题。**
+
+        This project is a comic reader that allows users write their own config files. And there is no built-in comic source.
+
+        本项目是一个漫画阅读器，允许用户编写自己的配置文件，并且没有内置漫画源。
   - type: textarea
     id: what-happened
     attributes:

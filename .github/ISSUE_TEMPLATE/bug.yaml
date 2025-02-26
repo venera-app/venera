@@ -8,9 +8,31 @@ body:
       value: |
         Thank you for reporting a problem, please complete the title and fill in the following information.
         
+        感谢您的反馈，请填写完整标题并填写以下信息。
+        
         **Please do not report any issues related to config files.**
         
-        To report a bug related to the config file, please send it to the [config repository](https://github.com/venera-app/venera-configs).
+        **请不要报告与配置文件相关的任何问题。**
+        
+        This project is a comic reader that allows users write their own config files. And there is no built-in comic source.
+        
+        本项目是一个漫画阅读器，允许用户编写自己的配置文件，并且没有内置漫画源。
+  - type: dropdown
+    id: bugType
+    attributes:
+      label: Bug type
+      description: What type of bug are you reporting?
+      options:
+        - Crash
+        - UI
+        - Performance
+        - Security
+        - Reader
+        - JS Engine
+        - Comic Source
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:
