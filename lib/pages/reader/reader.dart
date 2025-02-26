@@ -15,6 +15,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/components/custom_slider.dart';
+import 'package:venera/components/window_frame.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/cache_manager.dart';
@@ -191,6 +192,9 @@ class _ReaderState extends State<Reader>
 
   @override
   void dispose() {
+    if (isFullscreen) {
+      fullscreen();
+    }
     autoPageTurningTimer?.cancel();
     focusNode.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -498,6 +502,7 @@ mixin class _ReaderWindow {
   void fullscreen() {
     windowManager.setFullScreen(!isFullscreen);
     isFullscreen = !isFullscreen;
+    toggleWindowFrame();
   }
 }
 
