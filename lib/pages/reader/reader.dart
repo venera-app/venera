@@ -192,6 +192,9 @@ class _ReaderState extends State<Reader>
 
   @override
   void dispose() {
+    if (isFullscreen) {
+      fullscreen();
+    }
     autoPageTurningTimer?.cancel();
     focusNode.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
