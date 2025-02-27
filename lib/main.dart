@@ -152,6 +152,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         'sans-serif'
       ];
     }
+    if (App.isLinux) {
+      font = 'Noto Sans CJK';
+      fallback = [
+        'Segoe UI',
+        'Microsoft YaHei',
+        'PingFang SC',
+        'Noto Sans CJK',
+        'Arial',
+        'sans-serif'
+      ];
+    }
     return ThemeData(
       colorScheme: SeedColorScheme.fromSeeds(
         primaryKey: primary,
