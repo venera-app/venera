@@ -40,6 +40,7 @@ extension FileSystemEntityExt on FileSystemEntity {
     return p.basename(path);
   }
 
+  /// Delete the file or directory and ignore errors.
   Future<void> deleteIgnoreError({bool recursive = false}) async {
     try {
       await delete(recursive: recursive);
@@ -48,12 +49,14 @@ extension FileSystemEntityExt on FileSystemEntity {
     }
   }
 
+  /// Delete the file or directory if it exists.
   Future<void> deleteIfExists({bool recursive = false}) async {
     if (existsSync()) {
       await delete(recursive: recursive);
     }
   }
 
+  /// Delete the file or directory if it exists.
   void deleteIfExistsSync({bool recursive = false}) {
     if (existsSync()) {
       deleteSync(recursive: recursive);
@@ -74,12 +77,14 @@ extension FileExtension on File {
     await newFile.writeAsBytes(await readAsBytes());
   }
 
+  /// Get the base name of the file without the extension.
   String get basenameWithoutExt {
     return p.basenameWithoutExtension(path);
   }
 }
 
 extension DirectoryExtension on Directory {
+  /// Calculate the size of the directory.
   Future<int> get size async {
     if (!existsSync()) return 0;
     int total = 0;
@@ -91,6 +96,7 @@ extension DirectoryExtension on Directory {
     return total;
   }
 
+  /// Change the base name of the directory.
   Directory renameX(String newName) {
     newName = sanitizeFileName(newName);
     return renameSync(path.replaceLast(name, newName));
@@ -100,6 +106,7 @@ extension DirectoryExtension on Directory {
     return File(FilePath.join(path, name));
   }
 
+  /// Delete the contents of the directory.
   void deleteContentsSync({recursive = true}) {
     if (!existsSync()) return;
     for (var f in listSync()) {
@@ -107,14 +114,24 @@ extension DirectoryExtension on Directory {
     }
   }
 
+  /// Delete the contents of the directory.
   Future<void> deleteContents({recursive = true}) async {
     if (!existsSync()) return;
     for (var f in listSync()) {
       await f.deleteIfExists(recursive: recursive);
     }
   }
+
+  /// Create the directory. If the directory already exists, delete it first.
+  void forceCreateSync() {
+    if (existsSync()) {
+      deleteSync(recursive: true);
+    }
+    createSync(recursive: true);
+  }
 }
 
+/// Sanitize the file name. Remove invalid characters and trim the file name.
 String sanitizeFileName(String fileName) {
   if (fileName.endsWith('.')) {
     fileName = fileName.substring(0, fileName.length - 1);
@@ -157,6 +174,8 @@ Future<void> copyDirectory(Directory source, Directory destination) async {
   }
 }
 
+/// Copy the **contents** of the source directory to the destination directory.
+/// This function is executed in an isolate to prevent the UI from freezing.
 Future<void> copyDirectoryIsolate(
     Directory source, Directory destination) async {
   await Isolate.run(() => overrideIO(() => copyDirectory(source, destination)));

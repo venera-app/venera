@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
+import 'package:flutter_saf/flutter_saf.dart';
+import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
@@ -739,11 +741,12 @@ class ArchiveDownloadTask extends DownloadTask {
       path = dir.path;
     }
 
-    var resultFile = File(FilePath.join(path!, "archive.zip"));
+    var archiveFile =
+        File(FilePath.join(App.dataPath, "archive_downloading.zip"));
 
     Log.info("Download", "Downloading $archiveUrl");
 
-    _downloader = FileDownloader(archiveUrl, resultFile.path);
+    _downloader = FileDownloader(archiveUrl, archiveFile.path);
 
     bool isDownloaded = false;
 
@@ -772,22 +775,33 @@ class ArchiveDownloadTask extends DownloadTask {
     }
 
     try {
-      await extractArchive(path!);
+      await _extractArchive(archiveFile.path, path!);
     } catch (e) {
       _setError("Failed to extract archive: $e");
       return;
     }
 
-    await resultFile.deleteIgnoreError();
+    await archiveFile.deleteIgnoreError();
 
     LocalManager().completeTask(this);
   }
 
-  static Future<void> extractArchive(String path) async {
-    var resultFile = FilePath.join(path, "archive.zip");
-    await Isolate.run(() {
-      ZipFile.openAndExtract(resultFile, path);
-    });
+  static Future<void> _extractArchive(String archive, String outDir) async {
+    var out = Directory(outDir);
+    if (out is AndroidDirectory) {
+      // Saf directory can't be accessed by native code.
+      var cacheDir = FilePath.join(App.cachePath, "archive_downloading");
+      Directory(cacheDir).forceCreateSync();
+      await Isolate.run(() {
+        ZipFile.openAndExtract(archive, cacheDir);
+      });
+      await copyDirectoryIsolate(Directory(cacheDir), Directory(outDir));
+      await Directory(cacheDir).deleteIgnoreError(recursive: true);
+    } else {
+      await Isolate.run(() {
+        ZipFile.openAndExtract(archive, outDir);
+      });
+    }
   }
 
   @override
