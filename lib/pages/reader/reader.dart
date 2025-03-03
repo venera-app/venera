@@ -222,6 +222,9 @@ class _ReaderState extends State<Reader>
   }
 
   void onKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.f12 && event is KeyUpEvent) {
+      fullscreen();
+    }
     _imageViewController?.handleKeyEvent(event);
   }
 
@@ -496,10 +499,12 @@ abstract mixin class _ReaderLocation {
 mixin class _ReaderWindow {
   bool isFullscreen = false;
 
-  void fullscreen() {
-    windowManager.setFullScreen(!isFullscreen);
+  void fullscreen() async {
+    await windowManager.hide();
+    await windowManager.setFullScreen(!isFullscreen);
+    await windowManager.show();
     isFullscreen = !isFullscreen;
-    toggleWindowFrame();
+    WindowFrame.of(App.rootContext).setWindowFrame(!isFullscreen);
   }
 }
 

@@ -6,13 +6,27 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
-import 'package:venera/foundation/global_state.dart';
 import 'package:window_manager/window_manager.dart';
 
 const _kTitleBarHeight = 36.0;
 
-void toggleWindowFrame() {
-  GlobalState.find<_WindowFrameState>().toggleWindowFrame();
+class WindowFrameController extends InheritedWidget {
+  /// Whether the window frame is hidden.
+  final bool isWindowFrameHidden;
+
+  /// Sets the visibility of the window frame.
+  final void Function(bool) setWindowFrame;
+
+  const WindowFrameController._create({
+    required this.isWindowFrameHidden,
+    required this.setWindowFrame,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
+    return false;
+  }
 }
 
 class WindowFrame extends StatefulWidget {
@@ -22,95 +36,105 @@ class WindowFrame extends StatefulWidget {
 
   @override
   State<WindowFrame> createState() => _WindowFrameState();
+
+  static WindowFrameController of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<WindowFrameController>()!;
+  }
 }
 
-class _WindowFrameState extends AutomaticGlobalState<WindowFrame> {
-  bool isHideWindowFrame = false;
+class _WindowFrameState extends State<WindowFrame> {
+  bool isWindowFrameHidden = false;
   bool useDarkTheme = false;
 
-  void toggleWindowFrame() {
-    isHideWindowFrame = !isHideWindowFrame;
+  void setWindowFrame(bool show) {
+    setState(() {
+      isWindowFrameHidden = !show;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (App.isMobile) return widget.child;
-    if (isHideWindowFrame) return widget.child;
 
-    var body = Stack(
+    Widget body = Stack(
       children: [
         Positioned.fill(
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(
-                padding: const EdgeInsets.only(top: _kTitleBarHeight)),
+              padding: isWindowFrameHidden
+                  ? null
+                  : const EdgeInsets.only(top: _kTitleBarHeight),
+            ),
             child: widget.child,
           ),
         ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Material(
-            color: Colors.transparent,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                brightness: useDarkTheme ? Brightness.dark : null,
-              ),
-              child: Builder(builder: (context) {
-                return SizedBox(
-                  height: _kTitleBarHeight,
-                  child: Row(
-                    children: [
-                      if (App.isMacOS)
-                        const DragToMoveArea(
-                          child: SizedBox(
-                            height: double.infinity,
-                            width: 16,
-                          ),
-                        ).paddingRight(52)
-                      else
-                        const SizedBox(width: 12),
-                      Expanded(
-                        child: DragToMoveArea(
-                          child: Text(
-                            'Venera',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: (useDarkTheme ||
-                                      context.brightness == Brightness.dark)
-                                  ? Colors.white
-                                  : Colors.black,
+        if (!isWindowFrameHidden)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Material(
+              color: Colors.transparent,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  brightness: useDarkTheme ? Brightness.dark : null,
+                ),
+                child: Builder(builder: (context) {
+                  return SizedBox(
+                    height: _kTitleBarHeight,
+                    child: Row(
+                      children: [
+                        if (App.isMacOS)
+                          const DragToMoveArea(
+                            child: SizedBox(
+                              height: double.infinity,
+                              width: 16,
                             ),
-                          )
-                              .toAlign(Alignment.centerLeft)
-                              .paddingLeft(4 + (App.isMacOS ? 25 : 0)),
+                          ).paddingRight(52)
+                        else
+                          const SizedBox(width: 12),
+                        Expanded(
+                          child: DragToMoveArea(
+                            child: Text(
+                              'Venera',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: (useDarkTheme ||
+                                        context.brightness == Brightness.dark)
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            )
+                                .toAlign(Alignment.centerLeft)
+                                .paddingLeft(4 + (App.isMacOS ? 25 : 0)),
+                          ),
                         ),
-                      ),
-                      if (kDebugMode)
-                        const TextButton(
-                          onPressed: debug,
-                          child: Text('Debug'),
-                        ),
-                      if (!App.isMacOS) const WindowButtons()
-                    ],
-                  ),
-                );
-              }),
+                        if (kDebugMode)
+                          const TextButton(
+                            onPressed: debug,
+                            child: Text('Debug'),
+                          ),
+                        if (!App.isMacOS) const WindowButtons()
+                      ],
+                    ),
+                  );
+                }),
+              ),
             ),
-          ),
-        )
+          )
       ],
     );
 
     if (App.isLinux) {
-      return VirtualWindowFrame(child: body);
-    } else {
-      return body;
+      body = VirtualWindowFrame(child: body);
     }
-  }
 
-  @override
-  Object? get key => 'WindowFrame';
+    return WindowFrameController._create(
+      isWindowFrameHidden: isWindowFrameHidden,
+      setWindowFrame: setWindowFrame,
+      child: body,
+    );
+  }
 }
 
 class WindowButtons extends StatefulWidget {
