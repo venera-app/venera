@@ -170,6 +170,7 @@ class _ReaderState extends State<Reader>
   void didChangeDependencies() {
     super.didChangeDependencies();
     initImagesPerPage(widget.initialPage ?? 1);
+    initReaderWindow();
   }
 
   void setImageCacheSize() async {
@@ -203,6 +204,7 @@ class _ReaderState extends State<Reader>
       DataSync().onDataChanged();
     });
     PaintingBinding.instance.imageCache.maximumSizeBytes = 100 << 20;
+    disposeReaderWindow();
     super.dispose();
   }
 
@@ -499,12 +501,28 @@ abstract mixin class _ReaderLocation {
 mixin class _ReaderWindow {
   bool isFullscreen = false;
 
+  late WindowFrameController windowFrame;
+
+  void initReaderWindow() {
+    windowFrame = WindowFrame.of(App.rootContext);
+    windowFrame.addCloseListener(onWindowClose);
+  }
+
   void fullscreen() async {
     await windowManager.hide();
     await windowManager.setFullScreen(!isFullscreen);
     await windowManager.show();
     isFullscreen = !isFullscreen;
     WindowFrame.of(App.rootContext).setWindowFrame(!isFullscreen);
+  }
+
+  bool onWindowClose() {
+    App.rootContext.pop();
+    return false;
+  }
+
+  void disposeReaderWindow() {
+    windowFrame.removeCloseListener(onWindowClose);
   }
 }
 

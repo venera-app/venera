@@ -17,9 +17,18 @@ class WindowFrameController extends InheritedWidget {
   /// Sets the visibility of the window frame.
   final void Function(bool) setWindowFrame;
 
+  /// Adds a listener that will be called when close button is clicked.
+  /// The listener should return `true` to allow the window to be closed.
+  final void Function(WindowCloseListener listener) addCloseListener;
+
+  /// Removes a close listener.
+  final void Function(WindowCloseListener listener) removeCloseListener;
+
   const WindowFrameController._create({
     required this.isWindowFrameHidden,
     required this.setWindowFrame,
+    required this.addCloseListener,
+    required this.removeCloseListener,
     required super.child,
   });
 
@@ -42,14 +51,38 @@ class WindowFrame extends StatefulWidget {
   }
 }
 
+typedef WindowCloseListener = bool Function();
+
 class _WindowFrameState extends State<WindowFrame> {
   bool isWindowFrameHidden = false;
   bool useDarkTheme = false;
+  var closeListeners = <WindowCloseListener>[];
 
+  /// Sets the visibility of the window frame.
   void setWindowFrame(bool show) {
     setState(() {
       isWindowFrameHidden = !show;
     });
+  }
+
+  /// Adds a listener that will be called when close button is clicked.
+  /// The listener should return `true` to allow the window to be closed.
+  void addCloseListener(WindowCloseListener listener) {
+    closeListeners.add(listener);
+  }
+
+  /// Removes a close listener.
+  void removeCloseListener(WindowCloseListener listener) {
+    closeListeners.remove(listener);
+  }
+
+  void _onClose() {
+    for (var listener in closeListeners) {
+      if (!listener()) {
+        return;
+      }
+    }
+    windowManager.close();
   }
 
   @override
@@ -114,7 +147,9 @@ class _WindowFrameState extends State<WindowFrame> {
                             onPressed: debug,
                             child: Text('Debug'),
                           ),
-                        if (!App.isMacOS) const WindowButtons()
+                        if (!App.isMacOS) _WindowButtons(
+                          onClose: _onClose,
+                        )
                       ],
                     ),
                   );
@@ -132,19 +167,23 @@ class _WindowFrameState extends State<WindowFrame> {
     return WindowFrameController._create(
       isWindowFrameHidden: isWindowFrameHidden,
       setWindowFrame: setWindowFrame,
+      addCloseListener: addCloseListener,
+      removeCloseListener: removeCloseListener,
       child: body,
     );
   }
 }
 
-class WindowButtons extends StatefulWidget {
-  const WindowButtons({super.key});
+class _WindowButtons extends StatefulWidget {
+  const _WindowButtons({required this.onClose});
+
+  final void Function() onClose;
 
   @override
-  State<WindowButtons> createState() => _WindowButtonsState();
+  State<_WindowButtons> createState() => _WindowButtonsState();
 }
 
-class _WindowButtonsState extends State<WindowButtons> with WindowListener {
+class _WindowButtonsState extends State<_WindowButtons> with WindowListener {
   bool isMaximized = false;
 
   @override
@@ -233,9 +272,7 @@ class _WindowButtonsState extends State<WindowButtons> with WindowListener {
               color: !dark ? Colors.white : Colors.black,
             ),
             hoverColor: Colors.red,
-            onPressed: () {
-              windowManager.close();
-            },
+            onPressed: widget.onClose,
           )
         ],
       ),
