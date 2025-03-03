@@ -40,7 +40,11 @@ class DataSync with ChangeNotifier {
 
   bool get isUploading => _isUploading;
 
-  bool haveWaitingTask = false;
+  bool _haveWaitingTask = false;
+
+  String? _lastError;
+
+  String? get lastError => _lastError;
 
   bool get isEnabled {
     var config = appdata.settings['webdav'];
@@ -64,17 +68,19 @@ class DataSync with ChangeNotifier {
 
   Future<Res<bool>> uploadData() async {
     if (isDownloading) return const Res(true);
-    if (haveWaitingTask) return const Res(true);
+    if (_haveWaitingTask) return const Res(true);
     while (isUploading) {
-      haveWaitingTask = true;
+      _haveWaitingTask = true;
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    haveWaitingTask = false;
+    _haveWaitingTask = false;
     _isUploading = true;
+    _lastError = null;
     notifyListeners();
     try {
       var config = _validateConfig();
       if (config == null) {
+        _lastError = 'Invalid WebDAV configuration';
         return const Res.error('Invalid WebDAV configuration');
       }
       if (config.isEmpty) {
@@ -97,13 +103,6 @@ class DataSync with ChangeNotifier {
           },
         ),
       );
-
-      try {
-        await client.ping();
-      } catch (e) {
-        Log.error("Upload Data", 'Failed to connect to WebDAV server');
-        return const Res.error('Failed to connect to WebDAV server');
-      }
 
       try {
         appdata.settings['dataVersion']++;
@@ -131,6 +130,7 @@ class DataSync with ChangeNotifier {
         return const Res(true);
       } catch (e, s) {
         Log.error("Upload Data", e, s);
+        _lastError = e.toString();
         return Res.error(e.toString());
       }
     } finally {
@@ -140,17 +140,19 @@ class DataSync with ChangeNotifier {
   }
 
   Future<Res<bool>> downloadData() async {
-    if (haveWaitingTask) return const Res(true);
+    if (_haveWaitingTask) return const Res(true);
     while (isDownloading || isUploading) {
-      haveWaitingTask = true;
+      _haveWaitingTask = true;
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    haveWaitingTask = false;
+    _haveWaitingTask = false;
     _isDownloading = true;
+    _lastError = null;
     notifyListeners();
     try {
       var config = _validateConfig();
       if (config == null) {
+        _lastError = 'Invalid WebDAV configuration';
         return const Res.error('Invalid WebDAV configuration');
       }
       if (config.isEmpty) {
@@ -173,13 +175,6 @@ class DataSync with ChangeNotifier {
           },
         ),
       );
-
-      try {
-        await client.ping();
-      } catch (e) {
-        Log.error("Data Sync", 'Failed to connect to WebDAV server');
-        return const Res.error('Failed to connect to WebDAV server');
-      }
 
       try {
         var files = await client.readDir('/');
@@ -206,6 +201,7 @@ class DataSync with ChangeNotifier {
         return const Res(true);
       } catch (e, s) {
         Log.error("Data Sync", e, s);
+        _lastError = e.toString();
         return Res.error(e.toString());
       }
     } finally {
