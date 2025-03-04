@@ -504,11 +504,13 @@ mixin class _ReaderWindow {
   late WindowFrameController windowFrame;
 
   void initReaderWindow() {
+    if (!App.isDesktop) return;
     windowFrame = WindowFrame.of(App.rootContext);
     windowFrame.addCloseListener(onWindowClose);
   }
 
   void fullscreen() async {
+    if (!App.isDesktop) return;
     await windowManager.hide();
     await windowManager.setFullScreen(!isFullscreen);
     await windowManager.show();
@@ -522,6 +524,7 @@ mixin class _ReaderWindow {
   }
 
   void disposeReaderWindow() {
+    if (!App.isDesktop) return;
     windowFrame.removeCloseListener(onWindowClose);
   }
 }
