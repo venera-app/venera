@@ -138,7 +138,10 @@ class _CommentWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Expanded(
-            child: RichCommentContent(text: comment.content).fixWidth(324),
+            child: RichCommentContent(
+              text: comment.content,
+              showImages: false,
+            ).fixWidth(324),
           ),
           const SizedBox(height: 4),
           if (comment.time != null)

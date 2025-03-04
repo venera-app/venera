@@ -651,9 +651,15 @@ class _CommentImage {
 }
 
 class RichCommentContent extends StatefulWidget {
-  const RichCommentContent({super.key, required this.text});
+  const RichCommentContent({
+    super.key,
+    required this.text,
+    this.showImages = true,
+  });
 
   final String text;
+
+  final bool showImages;
 
   @override
   State<RichCommentContent> createState() => _RichCommentContentState();
@@ -808,7 +814,7 @@ class _RichCommentContentState extends State<RichCommentContent> {
         children: textSpan,
       ),
     );
-    if (images.isNotEmpty) {
+    if (images.isNotEmpty && widget.showImages) {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
