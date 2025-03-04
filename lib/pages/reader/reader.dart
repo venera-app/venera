@@ -503,10 +503,13 @@ mixin class _ReaderWindow {
 
   late WindowFrameController windowFrame;
 
+  bool _isInit = false;
+
   void initReaderWindow() {
-    if (!App.isDesktop) return;
+    if (!App.isDesktop || _isInit) return;
     windowFrame = WindowFrame.of(App.rootContext);
     windowFrame.addCloseListener(onWindowClose);
+    _isInit = true;
   }
 
   void fullscreen() async {
@@ -519,8 +522,12 @@ mixin class _ReaderWindow {
   }
 
   bool onWindowClose() {
-    App.rootContext.pop();
-    return false;
+    if (Navigator.of(App.rootContext).canPop()) {
+      Navigator.of(App.rootContext).pop();
+      return false;
+    } else {
+      return true;
+    }
   }
 
   void disposeReaderWindow() {
