@@ -630,19 +630,19 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
   @override
   void initState() {
     comicSources = ComicSource.all().map((e) => e.name).toList();
-    ComicSource.addListener(onComicSourceChange);
+    ComicSourceManager().addListener(onComicSourceChange);
     super.initState();
   }
 
   @override
   void dispose() {
-    ComicSource.removeListener(onComicSourceChange);
+    ComicSourceManager().removeListener(onComicSourceChange);
     super.dispose();
   }
 
   int get _availableUpdates {
     int c = 0;
-    ComicSource.availableUpdates.forEach((key, version) {
+    ComicSourceManager().availableUpdates.forEach((key, version) {
       var source = ComicSource.find(key);
       if (source != null) {
         if (compareSemVer(version, source.version)) {

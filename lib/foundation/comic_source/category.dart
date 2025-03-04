@@ -145,7 +145,7 @@ class RandomCategoryPartWithRuntimeData extends BaseCategoryPart {
 }
 
 CategoryData getCategoryDataWithKey(String key) {
-  for (var source in ComicSource._sources) {
+  for (var source in ComicSource.all()) {
     if (source.categoryData?.key == key) {
       return source.categoryData!;
     }

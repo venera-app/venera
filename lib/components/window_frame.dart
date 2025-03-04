@@ -640,5 +640,5 @@ TransitionBuilder VirtualWindowFrameInit() {
 }
 
 void debug() {
-  ComicSource.reload();
+  ComicSourceManager().reload();
 }

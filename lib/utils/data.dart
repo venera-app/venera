@@ -103,7 +103,7 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
           await file.copy(targetFile);
         }
       }
-      await ComicSource.reload();
+      await ComicSourceManager().reload();
     }
   } finally {
     cacheDir.deleteIgnoreError(recursive: true);

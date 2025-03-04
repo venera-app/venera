@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart' show protected;
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html;
 import 'package:html/dom.dart' as dom;
@@ -24,6 +25,7 @@ import 'package:venera/components/js_ui.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/utils/init.dart';
 
 import 'comic_source/comic_source.dart';
 import 'consts.dart';
@@ -40,7 +42,7 @@ class JavaScriptRuntimeException implements Exception {
   }
 }
 
-class JsEngine with _JSEngineApi, JsUiApi {
+class JsEngine with _JSEngineApi, JsUiApi, Init {
   factory JsEngine() => _cache ?? (_cache = JsEngine._create());
 
   static JsEngine? _cache;
@@ -64,7 +66,9 @@ class JsEngine with _JSEngineApi, JsUiApi {
         responseType: ResponseType.plain, validateStatus: (status) => true));
   }
 
-  Future<void> init() async {
+  @override
+  @protected
+  Future<void> doInit() async {
     if (!_closed) {
       return;
     }

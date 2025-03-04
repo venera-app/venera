@@ -40,10 +40,11 @@ class ComicSourcePage extends StatelessWidget {
       }
     }
     if (shouldUpdate.isNotEmpty) {
+      var updates = <String, String>{};
       for (var key in shouldUpdate) {
-        ComicSource.availableUpdates[key] = versions[key]!;
+        updates[key] = versions[key]!;
       }
-      ComicSource.notifyListeners();
+      ComicSourceManager().updateAvailableUpdates(updates);
     }
     return shouldUpdate.length;
   }
@@ -73,13 +74,13 @@ class _BodyState extends State<_Body> {
   @override
   void initState() {
     super.initState();
-    ComicSource.addListener(updateUI);
+    ComicSourceManager().addListener(updateUI);
   }
 
   @override
   void dispose() {
     super.dispose();
-    ComicSource.removeListener(updateUI);
+    ComicSourceManager().removeListener(updateUI);
   }
 
   @override
@@ -115,7 +116,7 @@ class _BodyState extends State<_Body> {
       onConfirm: () {
         var file = File(source.filePath);
         file.delete();
-        ComicSource.remove(source.key);
+        ComicSourceManager().remove(source.key);
         _validatePages();
         App.forceRebuild();
       },
@@ -136,7 +137,7 @@ class _BodyState extends State<_Body> {
                   child: const Text("cancel")),
               TextButton(
                   onPressed: () async {
-                    await ComicSource.reload();
+                    await ComicSourceManager().reload();
                     App.forceRebuild();
                   },
                   child: const Text("continue")),
@@ -150,7 +151,7 @@ class _BodyState extends State<_Body> {
     }
     context.to(
       () => _EditFilePage(source.filePath, () async {
-        await ComicSource.reload();
+        await ComicSourceManager().reload();
         setState(() {});
       }),
     );
@@ -162,7 +163,7 @@ class _BodyState extends State<_Body> {
       App.rootContext.showMessage(message: "Invalid url config");
       return;
     }
-    ComicSource.remove(source.key);
+    ComicSourceManager().remove(source.key);
     bool cancel = false;
     LoadingDialogController? controller;
     if (showLoading) {
@@ -179,14 +180,14 @@ class _BodyState extends State<_Body> {
       controller?.close();
       await ComicSourceParser().parse(res.data!, source.filePath);
       await File(source.filePath).writeAsString(res.data!);
-      if (ComicSource.availableUpdates.containsKey(source.key)) {
-        ComicSource.availableUpdates.remove(source.key);
+      if (ComicSourceManager().availableUpdates.containsKey(source.key)) {
+        ComicSourceManager().availableUpdates.remove(source.key);
       }
     } catch (e) {
       if (cancel) return;
       App.rootContext.showMessage(message: e.toString());
     }
-    await ComicSource.reload();
+    await ComicSourceManager().reload();
     App.forceRebuild();
   }
 
@@ -304,7 +305,7 @@ class _BodyState extends State<_Body> {
 
   Future<void> addSource(String js, String fileName) async {
     var comicSource = await ComicSourceParser().createAndParse(js, fileName);
-    ComicSource.add(comicSource);
+    ComicSourceManager().add(comicSource);
     _addAllPagesWithComicSource(comicSource);
     appdata.saveData();
     App.forceRebuild();
@@ -563,7 +564,7 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
   }
 
   void showUpdateDialog() async {
-    var text = ComicSource.availableUpdates.entries.map((e) {
+    var text = ComicSourceManager().availableUpdates.entries.map((e) {
       return "${ComicSource.find(e.key)!.name}: ${e.value}";
     }).join("\n");
     bool doUpdate = false;
@@ -592,9 +593,9 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
         withProgress: true,
       );
       int current = 0;
-      int total = ComicSource.availableUpdates.length;
+      int total = ComicSourceManager().availableUpdates.length;
       try {
-        var shouldUpdate = ComicSource.availableUpdates.keys.toList();
+        var shouldUpdate = ComicSourceManager().availableUpdates.keys.toList();
         for (var key in shouldUpdate) {
           var source = ComicSource.find(key)!;
           await _BodyState.update(source, false);
@@ -692,7 +693,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
 
   @override
   Widget build(BuildContext context) {
-    var newVersion = ComicSource.availableUpdates[source.key];
+    var newVersion = ComicSourceManager().availableUpdates[source.key];
     bool hasUpdate =
         newVersion != null && compareSemVer(newVersion, source.version);
 
@@ -960,7 +961,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
           source.data["account"] = null;
           source.account?.logout();
           source.saveData();
-          ComicSource.notifyListeners();
+          ComicSourceManager().notifyStateChange();
           setState(() {});
         },
         trailing: const Icon(Icons.logout),

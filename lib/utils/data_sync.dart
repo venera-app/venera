@@ -19,7 +19,7 @@ class DataSync with ChangeNotifier {
       downloadData();
     }
     LocalFavoritesManager().addListener(onDataChanged);
-    ComicSource.addListener(onDataChanged);
+    ComicSourceManager().addListener(onDataChanged);
   }
 
   void onDataChanged() {
