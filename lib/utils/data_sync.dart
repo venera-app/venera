@@ -1,4 +1,3 @@
-import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
@@ -90,18 +89,11 @@ class DataSync with ChangeNotifier {
       String user = config[1];
       String pass = config[2];
 
-      var proxy = await AppDio.getProxy();
-
       var client = newClient(
         url,
         user: user,
         password: pass,
-        adapter: IOHttpClientAdapter(
-          createHttpClient: () {
-            return HttpClient()
-              ..findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
-          },
-        ),
+        adapter: RHttpAdapter(),
       );
 
       try {
@@ -162,18 +154,11 @@ class DataSync with ChangeNotifier {
       String user = config[1];
       String pass = config[2];
 
-      var proxy = await AppDio.getProxy();
-
       var client = newClient(
         url,
         user: user,
         password: pass,
-        adapter: IOHttpClientAdapter(
-          createHttpClient: () {
-            return HttpClient()
-              ..findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
-          },
-        ),
+        adapter: RHttpAdapter(),
       );
 
       try {

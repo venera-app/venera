@@ -257,18 +257,7 @@ class RHttpAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     var res = await rhttp.Rhttp.request(
-      method: switch (options.method) {
-        'GET' => rhttp.HttpMethod.get,
-        'POST' => rhttp.HttpMethod.post,
-        'PUT' => rhttp.HttpMethod.put,
-        'PATCH' => rhttp.HttpMethod.patch,
-        'DELETE' => rhttp.HttpMethod.delete,
-        'HEAD' => rhttp.HttpMethod.head,
-        'OPTIONS' => rhttp.HttpMethod.options,
-        'TRACE' => rhttp.HttpMethod.trace,
-        'CONNECT' => rhttp.HttpMethod.connect,
-        _ => throw ArgumentError('Unsupported method: ${options.method}'),
-      },
+      method: rhttp.HttpMethod(options.method),
       url: options.uri.toString(),
       settings: settings,
       expectBody: rhttp.HttpExpectBody.stream,

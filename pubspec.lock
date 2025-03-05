@@ -757,10 +757,11 @@ packages:
   rhttp:
     dependency: "direct main"
     description:
-      name: rhttp
-      sha256: "3deabc6c3384b4efa252dfb4a5059acc6530117fdc1b10f5f67ff9768c9af75a"
-      url: "https://pub.dev"
-    source: hosted
+      path: rhttp
+      ref: HEAD
+      resolved-ref: "18d430cc45fd4f0114885c5235090abf65106257"
+      url: "https://github.com/wgh136/rhttp"
+    source: git
     version: "0.10.0"
   screen_retriever:
     dependency: transitive
