@@ -80,6 +80,16 @@ class _ExploreSettingsState extends State<ExploreSettings> {
             'japanese': "Japanese",
           },
         ).toSliver(),
+        SelectSetting(
+          title: "Initial Page".tl,
+          settingKey: "initialPage",
+          optionTranslation: {
+            '0': "Home Page".tl,
+            '1': "Favorites Page".tl,
+            '2': "Explore Page".tl,
+            '3': "Categories Page".tl,
+          },
+        ).toSliver(),
       ],
     );
   }

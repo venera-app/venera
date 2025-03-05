@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/pages/categories_page.dart';
 import 'package:venera/pages/search_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
@@ -39,6 +40,7 @@ class _MainPageState extends State<MainPage> {
     _observer = NaviObserver();
     _navigatorKey = GlobalKey();
     App.mainNavigatorKey = _navigatorKey;
+    index = int.tryParse(appdata.settings['initialPage'].toString()) ?? 0;
     super.initState();
   }
 
@@ -60,6 +62,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return NaviPane(
+      initialPage: index,
       observer: _observer,
       navigatorKey: _navigatorKey!,
       paneItems: [
