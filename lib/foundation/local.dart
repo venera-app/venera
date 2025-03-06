@@ -265,6 +265,7 @@ class LocalManager with ChangeNotifier {
     }
     _checkPathValidation();
     _checkNoMedia();
+    await ComicSourceManager().ensureInit();
     restoreDownloadingTasks();
   }
 

@@ -336,8 +336,10 @@ class ComicChapters {
     }
     if (chapters.isNotEmpty) {
       return ComicChapters(chapters);
-    } else {
+    } else if (groupedChapters.isNotEmpty) {
       return ComicChapters.grouped(groupedChapters);
+    } else {
+      throw ArgumentError("Empty chapter list");
     }
   }
 

@@ -13,6 +13,7 @@ import 'package:venera/foundation/history.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/init.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -27,81 +28,29 @@ part 'parser.dart';
 
 part 'models.dart';
 
-/// build comic list, [Res.subData] should be maxPage or null if there is no limit.
-typedef ComicListBuilder = Future<Res<List<Comic>>> Function(int page);
+part 'types.dart';
 
-/// build comic list with next param, [Res.subData] should be next page param or null if there is no next page.
-typedef ComicListBuilderWithNext = Future<Res<List<Comic>>> Function(
-    String? next);
+class ComicSourceManager with ChangeNotifier, Init {
+  final List<ComicSource> _sources = [];
 
-typedef LoginFunction = Future<Res<bool>> Function(String, String);
+  static ComicSourceManager? _instance;
 
-typedef LoadComicFunc = Future<Res<ComicDetails>> Function(String id);
+  ComicSourceManager._create();
 
-typedef LoadComicPagesFunc = Future<Res<List<String>>> Function(
-    String id, String? ep);
+  factory ComicSourceManager() => _instance ??= ComicSourceManager._create();
 
-typedef CommentsLoader = Future<Res<List<Comment>>> Function(
-    String id, String? subId, int page, String? replyTo);
+  List<ComicSource> all() => List.from(_sources);
 
-typedef SendCommentFunc = Future<Res<bool>> Function(
-    String id, String? subId, String content, String? replyTo);
-
-typedef GetImageLoadingConfigFunc = Future<Map<String, dynamic>> Function(
-    String imageKey, String comicId, String epId)?;
-typedef GetThumbnailLoadingConfigFunc = Map<String, dynamic> Function(
-    String imageKey)?;
-
-typedef ComicThumbnailLoader = Future<Res<List<String>>> Function(
-    String comicId, String? next);
-
-typedef LikeOrUnlikeComicFunc = Future<Res<bool>> Function(
-    String comicId, bool isLiking);
-
-/// [isLiking] is true if the user is liking the comment, false if unliking.
-/// return the new likes count or null.
-typedef LikeCommentFunc = Future<Res<int?>> Function(
-    String comicId, String? subId, String commentId, bool isLiking);
-
-/// [isUp] is true if the user is upvoting the comment, false if downvoting.
-/// return the new vote count or null.
-typedef VoteCommentFunc = Future<Res<int?>> Function(
-    String comicId, String? subId, String commentId, bool isUp, bool isCancel);
-
-typedef HandleClickTagEvent = Map<String, String> Function(
-    String namespace, String tag);
-
-/// [rating] is the rating value, 0-10. 1 represents 0.5 star.
-typedef StarRatingFunc = Future<Res<bool>> Function(String comicId, int rating);
-
-class ComicSource {
-  static final List<ComicSource> _sources = [];
-
-  static final List<Function> _listeners = [];
-
-  static void addListener(Function listener) {
-    _listeners.add(listener);
-  }
-
-  static void removeListener(Function listener) {
-    _listeners.remove(listener);
-  }
-
-  static void notifyListeners() {
-    for (var listener in _listeners) {
-      listener();
-    }
-  }
-
-  static List<ComicSource> all() => List.from(_sources);
-
-  static ComicSource? find(String key) =>
+  ComicSource? find(String key) =>
       _sources.firstWhereOrNull((element) => element.key == key);
 
-  static ComicSource? fromIntKey(int key) =>
+  ComicSource? fromIntKey(int key) =>
       _sources.firstWhereOrNull((element) => element.key.hashCode == key);
 
-  static Future<void> init() async {
+  @override
+  @protected
+  Future<void> doInit() async {
+    await JsEngine().ensureInit();
     final path = "${App.dataPath}/comic_source";
     if (!(await Directory(path).exists())) {
       Directory(path).create();
@@ -120,26 +69,49 @@ class ComicSource {
     }
   }
 
-  static Future reload() async {
+  Future reload() async {
     _sources.clear();
     JsEngine().runCode("ComicSource.sources = {};");
-    await init();
+    await doInit();
     notifyListeners();
   }
 
-  static void add(ComicSource source) {
+  void add(ComicSource source) {
     _sources.add(source);
     notifyListeners();
   }
 
-  static void remove(String key) {
+  void remove(String key) {
     _sources.removeWhere((element) => element.key == key);
     notifyListeners();
   }
 
-  static final availableUpdates = <String, String>{};
+  bool get isEmpty => _sources.isEmpty;
 
-  static bool get isEmpty => _sources.isEmpty;
+  /// Key is the source key, value is the version.
+  final _availableUpdates = <String, String>{};
+
+  void updateAvailableUpdates(Map<String, String> updates) {
+    _availableUpdates.addAll(updates);
+    notifyListeners();
+  }
+
+  Map<String, String> get availableUpdates => Map.from(_availableUpdates);
+
+  void notifyStateChange() {
+    notifyListeners();
+  }
+}
+
+class ComicSource {
+  static List<ComicSource> all() => ComicSourceManager().all();
+
+  static ComicSource? find(String key) => ComicSourceManager().find(key);
+
+  static ComicSource? fromIntKey(int key) =>
+      ComicSourceManager().fromIntKey(key);
+
+  static bool get isEmpty => ComicSourceManager().isEmpty;
 
   /// Name of this source.
   final String name;
@@ -321,7 +293,7 @@ class AccountConfig {
     this.onLoginWithWebviewSuccess,
     this.cookieFields,
     this.validateCookies,
-  )   : infoItems = const [];
+  ) : infoItems = const [];
 }
 
 class AccountInfoItem {

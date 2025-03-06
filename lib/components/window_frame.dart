@@ -10,6 +10,34 @@ import 'package:window_manager/window_manager.dart';
 
 const _kTitleBarHeight = 36.0;
 
+class WindowFrameController extends InheritedWidget {
+  /// Whether the window frame is hidden.
+  final bool isWindowFrameHidden;
+
+  /// Sets the visibility of the window frame.
+  final void Function(bool) setWindowFrame;
+
+  /// Adds a listener that will be called when close button is clicked.
+  /// The listener should return `true` to allow the window to be closed.
+  final void Function(WindowCloseListener listener) addCloseListener;
+
+  /// Removes a close listener.
+  final void Function(WindowCloseListener listener) removeCloseListener;
+
+  const WindowFrameController._create({
+    required this.isWindowFrameHidden,
+    required this.setWindowFrame,
+    required this.addCloseListener,
+    required this.removeCloseListener,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
+    return false;
+  }
+}
+
 class WindowFrame extends StatefulWidget {
   const WindowFrame(this.child, {super.key});
 
@@ -17,98 +45,145 @@ class WindowFrame extends StatefulWidget {
 
   @override
   State<WindowFrame> createState() => _WindowFrameState();
+
+  static WindowFrameController of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<WindowFrameController>()!;
+  }
 }
 
+typedef WindowCloseListener = bool Function();
+
 class _WindowFrameState extends State<WindowFrame> {
-  bool isHideWindowFrame = false;
+  bool isWindowFrameHidden = false;
   bool useDarkTheme = false;
+  var closeListeners = <WindowCloseListener>[];
+
+  /// Sets the visibility of the window frame.
+  void setWindowFrame(bool show) {
+    setState(() {
+      isWindowFrameHidden = !show;
+    });
+  }
+
+  /// Adds a listener that will be called when close button is clicked.
+  /// The listener should return `true` to allow the window to be closed.
+  void addCloseListener(WindowCloseListener listener) {
+    closeListeners.add(listener);
+  }
+
+  /// Removes a close listener.
+  void removeCloseListener(WindowCloseListener listener) {
+    closeListeners.remove(listener);
+  }
+
+  void _onClose() {
+    for (var listener in closeListeners) {
+      if (!listener()) {
+        return;
+      }
+    }
+    windowManager.close();
+  }
 
   @override
   Widget build(BuildContext context) {
     if (App.isMobile) return widget.child;
-    if (isHideWindowFrame) return widget.child;
 
-    var body = Stack(
+    Widget body = Stack(
       children: [
         Positioned.fill(
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(
-                padding: const EdgeInsets.only(top: _kTitleBarHeight)),
+              padding: isWindowFrameHidden
+                  ? null
+                  : const EdgeInsets.only(top: _kTitleBarHeight),
+            ),
             child: widget.child,
           ),
         ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Material(
-            color: Colors.transparent,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                brightness: useDarkTheme ? Brightness.dark : null,
-              ),
-              child: Builder(builder: (context) {
-                return SizedBox(
-                  height: _kTitleBarHeight,
-                  child: Row(
-                    children: [
-                      if (App.isMacOS)
-                        const DragToMoveArea(
-                          child: SizedBox(
-                            height: double.infinity,
-                            width: 16,
-                          ),
-                        ).paddingRight(52)
-                      else
-                        const SizedBox(width: 12),
-                      Expanded(
-                        child: DragToMoveArea(
-                          child: Text(
-                            'Venera',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: (useDarkTheme ||
-                                      context.brightness == Brightness.dark)
-                                  ? Colors.white
-                                  : Colors.black,
+        if (!isWindowFrameHidden)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Material(
+              color: Colors.transparent,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  brightness: useDarkTheme ? Brightness.dark : null,
+                ),
+                child: Builder(builder: (context) {
+                  return SizedBox(
+                    height: _kTitleBarHeight,
+                    child: Row(
+                      children: [
+                        if (App.isMacOS)
+                          const DragToMoveArea(
+                            child: SizedBox(
+                              height: double.infinity,
+                              width: 16,
                             ),
-                          )
-                              .toAlign(Alignment.centerLeft)
-                              .paddingLeft(4 + (App.isMacOS ? 25 : 0)),
+                          ).paddingRight(52)
+                        else
+                          const SizedBox(width: 12),
+                        Expanded(
+                          child: DragToMoveArea(
+                            child: Text(
+                              'Venera',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: (useDarkTheme ||
+                                        context.brightness == Brightness.dark)
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            )
+                                .toAlign(Alignment.centerLeft)
+                                .paddingLeft(4 + (App.isMacOS ? 25 : 0)),
+                          ),
                         ),
-                      ),
-                      if (kDebugMode)
-                        const TextButton(
-                          onPressed: debug,
-                          child: Text('Debug'),
-                        ),
-                      if (!App.isMacOS) const WindowButtons()
-                    ],
-                  ),
-                );
-              }),
+                        if (kDebugMode)
+                          const TextButton(
+                            onPressed: debug,
+                            child: Text('Debug'),
+                          ),
+                        if (!App.isMacOS) _WindowButtons(
+                          onClose: _onClose,
+                        )
+                      ],
+                    ),
+                  );
+                }),
+              ),
             ),
-          ),
-        )
+          )
       ],
     );
 
     if (App.isLinux) {
-      return VirtualWindowFrame(child: body);
-    } else {
-      return body;
+      body = VirtualWindowFrame(child: body);
     }
+
+    return WindowFrameController._create(
+      isWindowFrameHidden: isWindowFrameHidden,
+      setWindowFrame: setWindowFrame,
+      addCloseListener: addCloseListener,
+      removeCloseListener: removeCloseListener,
+      child: body,
+    );
   }
 }
 
-class WindowButtons extends StatefulWidget {
-  const WindowButtons({super.key});
+class _WindowButtons extends StatefulWidget {
+  const _WindowButtons({required this.onClose});
+
+  final void Function() onClose;
 
   @override
-  State<WindowButtons> createState() => _WindowButtonsState();
+  State<_WindowButtons> createState() => _WindowButtonsState();
 }
 
-class _WindowButtonsState extends State<WindowButtons> with WindowListener {
+class _WindowButtonsState extends State<_WindowButtons> with WindowListener {
   bool isMaximized = false;
 
   @override
@@ -197,9 +272,7 @@ class _WindowButtonsState extends State<WindowButtons> with WindowListener {
               color: !dark ? Colors.white : Colors.black,
             ),
             hoverColor: Colors.red,
-            onPressed: () {
-              windowManager.close();
-            },
+            onPressed: widget.onClose,
           )
         ],
       ),
@@ -567,5 +640,5 @@ TransitionBuilder VirtualWindowFrameInit() {
 }
 
 void debug() {
-  ComicSource.reload();
+  ComicSourceManager().reload();
 }

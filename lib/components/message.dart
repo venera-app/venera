@@ -125,11 +125,11 @@ class OverlayWidgetState extends State<OverlayWidget> {
 void showDialogMessage(BuildContext context, String title, String message) {
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
+    builder: (context) => ContentDialog(
+      title: title,
+      content: Text(message).paddingHorizontal(16),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: context.pop,
           child: Text("OK".tl),
         )

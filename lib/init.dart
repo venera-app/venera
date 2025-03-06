@@ -30,13 +30,15 @@ extension _FutureInit<T> on Future<T> {
 
 Future<void> init() async {
   await App.init().wait();
-  SingleInstanceCookieJar("${App.dataPath}/cookie.db");
+  await SingleInstanceCookieJar.createInstance();
   var futures = [
     Rhttp.init(),
+    App.initComponents(),
     SAFTaskWorker().init().wait(),
     AppTranslation.init().wait(),
     TagsTranslation.readData().wait(),
-    JsEngine().init().then((_) => ComicSource.init()).wait(),
+    JsEngine().init().wait(),
+    ComicSourceManager().init().wait(),
   ];
   await Future.wait(futures);
   CacheManager().setLimitSize(appdata.settings['cacheSize']);

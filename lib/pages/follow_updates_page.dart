@@ -703,8 +703,9 @@ abstract class FollowUpdatesService {
     if (_isInitialized) return;
     _isInitialized = true;
     _check();
+    DataSync().addListener(updateFollowUpdatesUI);
     // A short interval will not affect the performance since every comic has a check time.
-    Timer.periodic(const Duration(minutes: 5), (timer) {
+    Timer.periodic(const Duration(minutes: 10), (timer) {
       _check();
     });
   }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/ext.dart';
@@ -200,6 +201,11 @@ class SingleInstanceCookieJar extends CookieJarSql {
   SingleInstanceCookieJar._create(super.path);
 
   static SingleInstanceCookieJar? instance;
+
+  static Future<void> createInstance() async {
+    var dataPath = (await getApplicationSupportDirectory()).path;
+    instance = SingleInstanceCookieJar("$dataPath/cookie.db");
+  }
 }
 
 class CookieManagerSql extends Interceptor {

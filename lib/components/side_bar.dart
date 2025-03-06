@@ -1,14 +1,12 @@
 part of 'components.dart';
 
 class SideBarRoute<T> extends PopupRoute<T> {
-  SideBarRoute(this.title, this.widget,
+  SideBarRoute(this.widget,
       {this.showBarrier = true,
       this.useSurfaceTintColor = false,
       required this.width,
       this.addBottomPadding = true,
       this.addTopPadding = true});
-
-  final String? title;
 
   final Widget widget;
 
@@ -36,11 +34,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
       Animation<double> secondaryAnimation) {
     bool showSideBar = MediaQuery.of(context).size.width > width;
 
-    Widget body = SidebarBody(
-      title: title,
-      widget: widget,
-      autoChangeTitleBarColor: !useSurfaceTintColor,
-    );
+    Widget body = widget;
 
     if (addTopPadding) {
       body = Padding(
@@ -129,97 +123,13 @@ class SideBarRoute<T> extends PopupRoute<T> {
   }
 }
 
-class SidebarBody extends StatefulWidget {
-  const SidebarBody(
-      {required this.title,
-      required this.widget,
-      required this.autoChangeTitleBarColor,
-      super.key});
-
-  final String? title;
-  final Widget widget;
-  final bool autoChangeTitleBarColor;
-
-  @override
-  State<SidebarBody> createState() => _SidebarBodyState();
-}
-
-class _SidebarBodyState extends State<SidebarBody> {
-  bool top = true;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget body = Expanded(child: widget.widget);
-
-    if (widget.autoChangeTitleBarColor) {
-      body = NotificationListener<ScrollNotification>(
-        onNotification: (notifications) {
-          if (notifications.metrics.pixels ==
-                  notifications.metrics.minScrollExtent &&
-              !top) {
-            setState(() {
-              top = true;
-            });
-          } else if (notifications.metrics.pixels !=
-                  notifications.metrics.minScrollExtent &&
-              top) {
-            setState(() {
-              top = false;
-            });
-          }
-          return false;
-        },
-        child: body,
-      );
-    }
-
-    return Column(
-      children: [
-        if (widget.title != null)
-          Container(
-            height: 60 + MediaQuery.of(context).padding.top,
-            color: top
-                ? null
-                : Theme.of(context).colorScheme.surfaceTint.withAlpha(20),
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-            child: Row(
-              children: [
-                const SizedBox(
-                  width: 8,
-                ),
-                Tooltip(
-                  message: "Back".tl,
-                  child: IconButton(
-                    iconSize: 25,
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(
-                  widget.title!,
-                  style: const TextStyle(fontSize: 22),
-                )
-              ],
-            ),
-          ),
-        body
-      ],
-    );
-  }
-}
-
 Future<void> showSideBar(BuildContext context, Widget widget,
-    {String? title,
-    bool showBarrier = true,
+    {bool showBarrier = true,
     bool useSurfaceTintColor = false,
     double width = 500,
     bool addTopPadding = false}) {
   return Navigator.of(context).push(
     SideBarRoute(
-      title,
       widget,
       showBarrier: showBarrier,
       useSurfaceTintColor: useSurfaceTintColor,

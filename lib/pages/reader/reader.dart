@@ -15,6 +15,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/components/custom_slider.dart';
+import 'package:venera/components/window_frame.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/cache_manager.dart';
@@ -169,6 +170,7 @@ class _ReaderState extends State<Reader>
   void didChangeDependencies() {
     super.didChangeDependencies();
     initImagesPerPage(widget.initialPage ?? 1);
+    initReaderWindow();
   }
 
   void setImageCacheSize() async {
@@ -191,6 +193,9 @@ class _ReaderState extends State<Reader>
 
   @override
   void dispose() {
+    if (isFullscreen) {
+      fullscreen();
+    }
     autoPageTurningTimer?.cancel();
     focusNode.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -199,6 +204,7 @@ class _ReaderState extends State<Reader>
       DataSync().onDataChanged();
     });
     PaintingBinding.instance.imageCache.maximumSizeBytes = 100 << 20;
+    disposeReaderWindow();
     super.dispose();
   }
 
@@ -218,6 +224,9 @@ class _ReaderState extends State<Reader>
   }
 
   void onKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.f12 && event is KeyUpEvent) {
+      fullscreen();
+    }
     _imageViewController?.handleKeyEvent(event);
   }
 
@@ -429,11 +438,8 @@ abstract mixin class _ReaderLocation {
 
   bool toPage(int page) {
     if (_validatePage(page)) {
-      if (page == this.page) {
-        if (!(chapter == 1 && page == 1) &&
-            !(chapter == maxChapter && page == maxPage)) {
-          return false;
-        }
+      if (page == this.page && page != 1 && page != maxPage) {
+        return false;
       }
       this.page = page;
       update();
@@ -495,9 +501,38 @@ abstract mixin class _ReaderLocation {
 mixin class _ReaderWindow {
   bool isFullscreen = false;
 
-  void fullscreen() {
-    windowManager.setFullScreen(!isFullscreen);
+  late WindowFrameController windowFrame;
+
+  bool _isInit = false;
+
+  void initReaderWindow() {
+    if (!App.isDesktop || _isInit) return;
+    windowFrame = WindowFrame.of(App.rootContext);
+    windowFrame.addCloseListener(onWindowClose);
+    _isInit = true;
+  }
+
+  void fullscreen() async {
+    if (!App.isDesktop) return;
+    await windowManager.hide();
+    await windowManager.setFullScreen(!isFullscreen);
+    await windowManager.show();
     isFullscreen = !isFullscreen;
+    WindowFrame.of(App.rootContext).setWindowFrame(!isFullscreen);
+  }
+
+  bool onWindowClose() {
+    if (Navigator.of(App.rootContext).canPop()) {
+      Navigator.of(App.rootContext).pop();
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  void disposeReaderWindow() {
+    if (!App.isDesktop) return;
+    windowFrame.removeCloseListener(onWindowClose);
   }
 }
 

@@ -7,7 +7,9 @@ import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/io.dart';
 
 class Appdata {
-  final Settings settings = Settings();
+  Appdata._create();
+
+  final Settings settings = Settings._create();
 
   var searchHistory = <String>[];
 
@@ -110,10 +112,10 @@ class Appdata {
   }
 }
 
-final appdata = Appdata();
+final appdata = Appdata._create();
 
 class Settings with ChangeNotifier {
-  Settings();
+  Settings._create();
 
   final _data = <String, dynamic>{
     'comicDisplayMode': 'detailed', // detailed, brief
@@ -161,6 +163,7 @@ class Settings with ChangeNotifier {
     'comicSourceListUrl': "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@latest/index.json",
     'preloadImageCount': 4,
     'followUpdatesFolder': null,
+    'initialPage': '0',
   };
 
   operator [](String key) {

@@ -162,16 +162,50 @@ class _SyncDataWidgetState extends State<_SyncDataWidget>
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (DataSync().lastError != null)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      showDialogMessage(
+                        App.rootContext,
+                        "Error".tl,
+                        DataSync().lastError!,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          Text('Error'.tl, style: ts.s12),
+                        ],
+                      ),
+                    ),
+                  ).paddingRight(4),
                 IconButton(
-                    icon: const Icon(Icons.cloud_upload_outlined),
-                    onPressed: () async {
-                      DataSync().uploadData();
-                    }),
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                  onPressed: () async {
+                    DataSync().uploadData();
+                  },
+                ),
                 IconButton(
-                    icon: const Icon(Icons.cloud_download_outlined),
-                    onPressed: () async {
-                      DataSync().downloadData();
-                    }),
+                  icon: const Icon(Icons.cloud_download_outlined),
+                  onPressed: () async {
+                    DataSync().downloadData();
+                  },
+                ),
               ],
             ),
           ),
@@ -538,7 +572,8 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
             ],
           ),
           onPressed: () {
-            launchUrlString("https://github.com/venera-app/venera/blob/master/doc/import_comic.md");
+            launchUrlString(
+                "https://github.com/venera-app/venera/blob/master/doc/import_comic.md");
           },
         ).fixWidth(90).paddingRight(8),
         Button.filled(
@@ -595,19 +630,19 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
   @override
   void initState() {
     comicSources = ComicSource.all().map((e) => e.name).toList();
-    ComicSource.addListener(onComicSourceChange);
+    ComicSourceManager().addListener(onComicSourceChange);
     super.initState();
   }
 
   @override
   void dispose() {
-    ComicSource.removeListener(onComicSourceChange);
+    ComicSourceManager().removeListener(onComicSourceChange);
     super.dispose();
   }
 
   int get _availableUpdates {
     int c = 0;
-    ComicSource.availableUpdates.forEach((key, version) {
+    ComicSourceManager().availableUpdates.forEach((key, version) {
       var source = ComicSource.find(key);
       if (source != null) {
         if (compareSemVer(version, source.version)) {
@@ -697,14 +732,24 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.update, color: context.colorScheme.primary, size: 20,),
+                      Icon(
+                        Icons.update,
+                        color: context.colorScheme.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
-                      Text("@c updates".tlParams({
-                        'c': _availableUpdates,
-                      }), style: ts.withColor(context.colorScheme.primary),),
+                      Text(
+                        "@c updates".tlParams({
+                          'c': _availableUpdates,
+                        }),
+                        style: ts.withColor(context.colorScheme.primary),
+                      ),
                     ],
                   ),
-                ).toAlign(Alignment.centerLeft).paddingHorizontal(16).paddingBottom(8),
+                )
+                    .toAlign(Alignment.centerLeft)
+                    .paddingHorizontal(16)
+                    .paddingBottom(8),
             ],
           ),
         ),
@@ -844,7 +889,8 @@ class _ImageFavoritesState extends State<ImageFavorites> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

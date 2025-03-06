@@ -177,7 +177,7 @@ abstract class CBZ {
       tags: metaData.tags,
       comicType: ComicType.local,
       directory: dest.name,
-      chapters: ComicChapters.fromJson(cpMap),
+      chapters: ComicChapters.fromJsonOrNull(cpMap),
       downloadedChapters: cpMap?.keys.toList() ?? [],
       cover: 'cover.${coverFile.extension}',
       createdAt: DateTime.now(),

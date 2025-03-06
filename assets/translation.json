@@ -362,7 +362,12 @@
     "Mark all as read": "全部标记为已读",
     "Do you want to mark all as read?" : "您要全部标记为已读吗？",
     "Swipe down for previous chapter": "向下滑动查看上一章",
-    "Swipe up for next chapter": "向上滑动查看下一章"
+    "Swipe up for next chapter": "向上滑动查看下一章",
+    "Initial Page": "初始页面",
+    "Home Page": "主页",
+    "Favorites Page": "收藏页面",
+    "Explore Page": "探索页面",
+    "Categories Page": "分类页面"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -727,6 +732,11 @@
     "Mark all as read": "全部標記為已讀",
     "Do you want to mark all as read?" : "您要全部標記為已讀嗎？",
     "Swipe down for previous chapter": "向下滑動查看上一章",
-    "Swipe up for next chapter": "向上滑動查看下一章"
+    "Swipe up for next chapter": "向上滑動查看下一章",
+    "Initial Page": "初始頁面",
+    "Home Page": "主頁",
+    "Favorites Page": "收藏頁面",
+    "Explore Page": "探索頁面",
+    "Categories Page": "分類頁面"
   }
 }
