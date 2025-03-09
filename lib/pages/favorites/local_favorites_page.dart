@@ -518,11 +518,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
         ),
       ],
     );
-    body = Scrollbar(
+    body = AppScrollBar(
+      topPadding: 48,
       controller: scrollController,
-      thickness: App.isDesktop ? 8 : 12,
-      radius: const Radius.circular(8),
-      interactive: true,
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         child: body,
