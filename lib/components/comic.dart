@@ -770,7 +770,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
 
   @override
   void didUpdateWidget(covariant SliverGridComics oldWidget) {
-    if (!oldWidget.comics.isEqualTo(widget.comics)) {
+    if (!comics.isEqualTo(widget.comics)) {
       comics.clear();
       for (var comic in widget.comics) {
         if (isBlocked(comic) == null) {
@@ -879,6 +879,7 @@ class _SliverGridComics extends StatelessWidget {
             return comic;
           }
           return AnimatedContainer(
+            key: ValueKey(comics[index].id),
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
