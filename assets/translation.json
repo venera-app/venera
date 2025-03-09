@@ -367,7 +367,9 @@
     "Home Page": "主页",
     "Favorites Page": "收藏页面",
     "Explore Page": "探索页面",
-    "Categories Page": "分类页面"
+    "Categories Page": "分类页面",
+    "Convert to local": "转换为本地",
+    "Refresh": "刷新"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -737,6 +739,8 @@
     "Home Page": "主頁",
     "Favorites Page": "收藏頁面",
     "Explore Page": "探索頁面",
-    "Categories Page": "分類頁面"
+    "Categories Page": "分類頁面",
+    "Convert to local": "轉換為本地",
+    "Refresh": "刷新"
   }
 }
