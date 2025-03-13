@@ -282,9 +282,27 @@ class RHttpAdapter implements HttpClientAdapter {
     return ResponseBody(
       res.body,
       res.statusCode,
-      statusMessage: null,
+      statusMessage: _getStatusMessage(res.statusCode),
       isRedirect: false,
       headers: headers,
     );
+  }
+
+  static String _getStatusMessage(int statusCode) {
+    return switch(statusCode) {
+      200 => "OK",
+      201 => "Created",
+      202 => "Accepted",
+      204 => "No Content",
+      206 => "Partial Content",
+      301 => "Moved Permanently",
+      302 => "Found",
+      400 => "Invalid Status Code 400: The Request is invalid.",
+      401 => "Invalid Status Code 401: The Request is unauthorized.",
+      403 => "Invalid Status Code 403: No permission to access the resource. Check your account or network.",
+      404 => "Invalid Status Code 404: Not found.",
+      429 => "Invalid Status Code 429: Too many requests. Please try again later.",
+      _ => "Invalid Status Code $statusCode",
+    };
   }
 }
