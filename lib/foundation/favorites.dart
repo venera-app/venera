@@ -224,7 +224,8 @@ class LocalFavoritesManager with ChangeNotifier {
         source_folder text
       );
     """);
-    for (var folder in _getFolderNamesWithDB()) {
+    var folderNames = _getFolderNamesWithDB();
+    for (var folder in folderNames) {
       var columns = _db.select("""
         pragma table_info("$folder");
       """);
@@ -245,6 +246,15 @@ class LocalFavoritesManager with ChangeNotifier {
       } else {
         break;
       }
+    }
+    await appdata.ensureInit();
+    // Make sure the follow updates folder is ready
+    var followUpdateFolder = appdata.settings['followUpdatesFolder'];
+    if (followUpdateFolder is String &&
+        folderNames.contains(followUpdateFolder)) {
+      prepareTableForFollowUpdates(followUpdateFolder, false);
+    } else {
+      appdata.settings['followUpdatesFolder'] = null;
     }
   }
 
@@ -849,7 +859,7 @@ class LocalFavoritesManager with ChangeNotifier {
     }
   }
 
-  void prepareTableForFollowUpdates(String table) {
+  void prepareTableForFollowUpdates(String table, [bool clearData = true]) {
     // check if the table has the column "last_update_time" "has_new_update" "last_check_time"
     var columns = _db.select("""
       pragma table_info("$table");
@@ -866,10 +876,12 @@ class LocalFavoritesManager with ChangeNotifier {
         add column has_new_update int;
       """);
     }
-    _db.execute("""
+    if (clearData) {
+      _db.execute("""
         update "$table"
         set has_new_update = 0;
       """);
+    }
     if (!columns.any((element) => element["name"] == "last_check_time")) {
       _db.execute("""
         alter table "$table"

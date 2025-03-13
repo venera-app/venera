@@ -4,9 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/utils/data_sync.dart';
+import 'package:venera/utils/init.dart';
 import 'package:venera/utils/io.dart';
 
-class Appdata {
+class Appdata with Init {
   Appdata._create();
 
   final Settings settings = Settings._create();
@@ -53,28 +54,6 @@ class Appdata {
     saveData();
   }
 
-  Future<void> init() async {
-    var dataPath = (await getApplicationSupportDirectory()).path;
-    var file = File(FilePath.join(
-      dataPath,
-      'appdata.json',
-    ));
-    if (!await file.exists()) {
-      return;
-    }
-    var json = jsonDecode(await file.readAsString());
-    for (var key in (json['settings'] as Map<String, dynamic>).keys) {
-      if (json['settings'][key] != null) {
-        settings[key] = json['settings'][key];
-      }
-    }
-    searchHistory = List.from(json['searchHistory']);
-    var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
-    if (await implicitDataFile.exists()) {
-      implicitData = jsonDecode(await implicitDataFile.readAsString());
-    }
-  }
-
   Map<String, dynamic> toJson() {
     return {
       'settings': settings._data,
@@ -109,6 +88,29 @@ class Appdata {
   void writeImplicitData() {
     var file = File(FilePath.join(App.dataPath, 'implicitData.json'));
     file.writeAsString(jsonEncode(implicitData));
+  }
+
+  @override
+  Future<void> doInit() async {
+    var dataPath = (await getApplicationSupportDirectory()).path;
+    var file = File(FilePath.join(
+      dataPath,
+      'appdata.json',
+    ));
+    if (!await file.exists()) {
+      return;
+    }
+    var json = jsonDecode(await file.readAsString());
+    for (var key in (json['settings'] as Map<String, dynamic>).keys) {
+      if (json['settings'][key] != null) {
+        settings[key] = json['settings'][key];
+      }
+    }
+    searchHistory = List.from(json['searchHistory']);
+    var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
+    if (await implicitDataFile.exists()) {
+      implicitData = jsonDecode(await implicitDataFile.readAsString());
+    }
   }
 }
 
@@ -160,7 +162,8 @@ class Settings with ChangeNotifier {
     'customImageProcessing': defaultCustomImageProcessing,
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
-    'comicSourceListUrl': "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@latest/index.json",
+    'comicSourceListUrl':
+        "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@latest/index.json",
     'preloadImageCount': 4,
     'followUpdatesFolder': null,
     'initialPage': '0',
