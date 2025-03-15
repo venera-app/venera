@@ -90,6 +90,14 @@ class _ExploreSettingsState extends State<ExploreSettings> {
             '3': "Categories Page".tl,
           },
         ).toSliver(),
+        SelectSetting(
+          title: "Display mode of comic list".tl,
+          settingKey: "comicListDisplayMode",
+          optionTranslation: {
+            "paging": "Paging".tl,
+            "Continuous": "Continuous".tl,
+          },
+        ).toSliver(),
       ],
     );
   }

@@ -1141,7 +1141,7 @@ class ComicListState extends State<ComicList> {
         setState(() {});
       });
     }
-    if (_loading[page] == true) {
+    if (_data[page] != null || _loading[page] == true) {
       return;
     }
     _loading[page] = true;
@@ -1151,8 +1151,8 @@ class ComicListState extends State<ComicList> {
         if (!mounted) return;
         if (res.success) {
           if (res.data.isEmpty) {
-            _data[page] = const [];
             setState(() {
+              _data[page] = const [];
               _maxPage = page;
             });
           } else {
@@ -1196,12 +1196,18 @@ class ComicListState extends State<ComicList> {
     if (res.subData == null) {
       _maxPage = _data.length;
     } else {
+      print("next page: ${_data.length}");
       _nextUrl = res.subData;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    var type = appdata.settings['comicListDisplayMode'];
+    return type == 'paging' ? buildPagingMode() : buildContinuousMode();
+  }
+
+  Widget buildPagingMode() {
     if (_error != null) {
       return Column(
         children: [
@@ -1246,6 +1252,85 @@ class ComicListState extends State<ComicList> {
         ),
         if (_data[_page]!.length > 6 && _maxPage != 1)
           _buildSliverPageSelector(),
+        if (widget.trailingSliver != null) widget.trailingSliver!,
+      ],
+    );
+  }
+
+  Widget buildContinuousMode() {
+    if (_error != null && _data.isEmpty) {
+      return Column(
+        children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
+          _buildPageSelector(),
+          Expanded(
+            child: NetworkError(
+              withAppbar: false,
+              message: _error!,
+              retry: () {
+                setState(() {
+                  _error = null;
+                });
+              },
+            ),
+          ),
+        ],
+      );
+    }
+    if (_data[_page] == null) {
+      _loadPage(_page);
+      return Column(
+        children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      );
+    }
+    return SmoothCustomScrollView(
+      key: enablePageStorage ? PageStorageKey('scroll$_page') : null,
+      controller: widget.controller,
+      slivers: [
+        if (widget.leadingSliver != null) widget.leadingSliver!,
+        SliverGridComics(
+          comics: _data.values.expand((element) => element).toList(),
+          menuBuilder: widget.menuBuilder,
+          onLastItemBuild: () {
+            if (_error == null && (_maxPage == null || _page < _maxPage!)) {
+              _loadPage(_data.length + 1);
+            }
+          },
+        ),
+        if (_error != null)
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.error_outline),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_error!, maxLines: 3)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                      });
+                    },
+                    child: Text("Retry".tl),
+                  ),
+                ),
+              ],
+            ).paddingHorizontal(16).paddingVertical(8),
+          )
+        else if (_maxPage == null || _page < _maxPage!)
+          const SliverListLoadingIndicator(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );

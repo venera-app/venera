@@ -167,6 +167,7 @@ class Settings with ChangeNotifier {
     'preloadImageCount': 4,
     'followUpdatesFolder': null,
     'initialPage': '0',
+    'comicListDisplayMode': 'paging', // paging, continuous
   };
 
   operator [](String key) {
