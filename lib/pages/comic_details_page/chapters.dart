@@ -186,12 +186,17 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
 
   late TabController tabController;
 
-  int index = 0;
+  late int index;
 
   @override
   void initState() {
     super.initState();
     history = widget.history;
+    if (history?.group != null) {
+      index = history!.group! - 1;
+    } else {
+      index = 0;
+    }
   }
 
   @override
@@ -199,6 +204,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
     state = context.findAncestorStateOfType<_ComicPageState>()!;
     chapters = state.comic.chapters!;
     tabController = TabController(
+      initialIndex: index,
       length: chapters.ids.length,
       vsync: this,
     );
