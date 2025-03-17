@@ -115,7 +115,7 @@ class _ReaderState extends State<Reader>
 
   String get cid => widget.cid;
 
-  String get eid => widget.chapters?.ids.elementAt(chapter - 1) ?? '0';
+  String get eid => widget.chapters?.ids.elementAtOrNull(chapter - 1) ?? '0';
 
   List<String>? images;
 
