@@ -1196,7 +1196,6 @@ class ComicListState extends State<ComicList> {
     if (res.subData == null) {
       _maxPage = _data.length;
     } else {
-      print("next page: ${_data.length}");
       _nextUrl = res.subData;
     }
   }
@@ -1621,17 +1620,20 @@ class _SMClipper extends CustomClipper<Rect> {
 }
 
 class SimpleComicTile extends StatelessWidget {
-  const SimpleComicTile({super.key, required this.comic, this.onTap});
+  const SimpleComicTile(
+      {super.key, required this.comic, this.onTap, this.withTitle = false});
 
   final Comic comic;
 
   final void Function()? onTap;
 
+  final bool withTitle;
+
   @override
   Widget build(BuildContext context) {
     var image = _findImageProvider(comic);
 
-    var child = image == null
+    Widget child = image == null
         ? const SizedBox()
         : AnimatedImage(
             image: image,
@@ -1641,7 +1643,18 @@ class SimpleComicTile extends StatelessWidget {
             filterQuality: FilterQuality.medium,
           );
 
-    return AnimatedTapRegion(
+    child = Container(
+      width: 98,
+      height: 136,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.secondaryContainer,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+
+    child = AnimatedTapRegion(
       borderRadius: 8,
       onTap: onTap ??
           () {
@@ -1652,16 +1665,29 @@ class SimpleComicTile extends StatelessWidget {
               ),
             );
           },
-      child: Container(
-        width: 92,
-        height: 114,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: Theme.of(context).colorScheme.secondaryContainer,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: child,
-      ),
+      child: child,
     );
+
+    if (withTitle) {
+      child = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          child,
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 92,
+            child: Center(
+              child: Text(
+                comic.title.replaceAll('\n', ''),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return child;
   }
 }
