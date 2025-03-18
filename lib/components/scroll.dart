@@ -174,7 +174,7 @@ class _AppScrollBarState extends State<AppScrollBar> {
 
   double viewHeight = 0;
 
-  final _scrollIndicatorSize = App.isDesktop ? 42.0 : 48.0;
+  final _scrollIndicatorSize = App.isDesktop ? 42.0 : 64.0;
 
   late final VerticalDragGestureRecognizer _dragGestureRecognizer;
 
