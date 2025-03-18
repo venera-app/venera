@@ -90,7 +90,7 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
     with AutomaticKeepAliveClientMixin {
   bool isLoading = true;
 
-  static const _kComicHeight = 132.0;
+  static const _kComicHeight = 162.0;
 
   get _comicWidth => _kComicHeight * 0.7;
 
@@ -152,7 +152,7 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
   }
 
   Widget buildComic(Comic c) {
-    return SimpleComicTile(comic: c)
+    return SimpleComicTile(comic: c, withTitle: true)
         .paddingLeft(_kLeftPadding)
         .paddingBottom(2);
   }

@@ -297,7 +297,7 @@ class _HistoryState extends State<_History> {
               ).paddingHorizontal(16),
               if (history.isNotEmpty)
                 SizedBox(
-                  height: 128,
+                  height: 136,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
@@ -400,13 +400,14 @@ class _LocalState extends State<_Local> {
               ).paddingHorizontal(16),
               if (local.isNotEmpty)
                 SizedBox(
-                  height: 128,
+                  height: 136,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
                       return SimpleComicTile(comic: local[index])
-                          .paddingHorizontal(8);
+                          .paddingHorizontal(8)
+                          .paddingVertical(2);
                     },
                   ),
                 ).paddingHorizontal(8),

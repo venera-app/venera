@@ -111,6 +111,9 @@ class Comic {
 
   @override
   int get hashCode => id.hashCode ^ sourceKey.hashCode;
+
+  @override
+  toString() => "$sourceKey@$id";
 }
 
 class ComicDetails with HistoryMixin {

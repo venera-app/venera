@@ -141,24 +141,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   ) {
     String? font;
     List<String>? fallback;
-    if (App.isWindows) {
-      font = 'Segoe UI';
-      fallback = [
-        'Segoe UI',
-        'Microsoft YaHei',
-        'PingFang SC',
-        'Noto Sans CJK',
-        'Arial',
-        'sans-serif'
-      ];
-    }
-    if (App.isLinux) {
+    if (App.isLinux || App.isWindows) {
       font = 'Noto Sans CJK';
       fallback = [
         'Segoe UI',
+        'Noto Sans SC',
+        'Noto Sans TC',
+        'Noto Sans',
         'Microsoft YaHei',
         'PingFang SC',
-        'Noto Sans CJK',
         'Arial',
         'sans-serif'
       ];

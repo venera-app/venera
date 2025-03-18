@@ -32,7 +32,7 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 android {
     namespace = "com.github.wgh136.venera"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion "25.1.8937393"
+    ndkVersion "28.0.13004108"
 
     splits{
         abi {

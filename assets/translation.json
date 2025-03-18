@@ -367,7 +367,12 @@
     "Home Page": "主页",
     "Favorites Page": "收藏页面",
     "Explore Page": "探索页面",
-    "Categories Page": "分类页面"
+    "Categories Page": "分类页面",
+    "Convert to local": "转换为本地",
+    "Refresh": "刷新",
+    "Paging": "分页",
+    "Continuous": "连续",
+    "Display mode of comic list": "漫画列表的显示模式"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -737,6 +742,11 @@
     "Home Page": "首頁",
     "Favorites Page": "收藏頁面",
     "Explore Page": "探索頁面",
-    "Categories Page": "分類頁面"
+    "Categories Page": "分類頁面",
+    "Convert to local": "轉換為本地",
+    "Refresh": "刷新",
+    "Paging": "分頁",
+    "Continuous": "連續",
+    "Display mode of comic list": "漫畫列表的顯示模式"
   }
 }

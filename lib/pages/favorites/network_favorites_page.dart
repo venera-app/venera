@@ -110,6 +110,15 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
           child: Text(widget.data.title),
         ),
         actions: [
+          Tooltip(
+            message: "Refresh".tl,
+            child: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                comicListKey.currentState!.refresh();
+              },
+            ),
+          ),
           MenuButton(entries: [
             MenuEntry(
               icon: Icons.sync,

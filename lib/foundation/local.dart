@@ -422,12 +422,30 @@ class LocalManager with ChangeNotifier {
     return files.map((e) => "file://${e.path}").toList();
   }
 
-  bool isDownloaded(String id, ComicType type, [int? ep]) {
+  bool isDownloaded(String id, ComicType type,
+      [int? ep, ComicChapters? chapters]) {
     var comic = find(id, type);
     if (comic == null) return false;
     if (comic.chapters == null || ep == null) return true;
+    if (chapters != null) {
+      if (comic.chapters?.length != chapters.length) {
+        // update
+        add(LocalComic(
+          id: comic.id,
+          title: comic.title,
+          subtitle: comic.subtitle,
+          tags: comic.tags,
+          directory: comic.directory,
+          chapters: chapters,
+          cover: comic.cover,
+          comicType: comic.comicType,
+          downloadedChapters: comic.downloadedChapters,
+          createdAt: comic.createdAt,
+        ));
+      }
+    }
     return comic.downloadedChapters
-        .contains(comic.chapters!.ids.elementAt(ep - 1));
+        .contains((chapters ?? comic.chapters)!.ids.elementAtOrNull(ep - 1));
   }
 
   List<DownloadTask> downloadingTasks = [];

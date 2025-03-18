@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/comic_details_page/comic_page.dart';
@@ -304,7 +305,9 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                   }
                 });
               } else {
-                (c as LocalComic).read();
+                // prevent dirty data
+                var comic = LocalManager().find(c.id, ComicType(c.sourceKey.hashCode))!;
+                comic.read();
               }
             },
             menuBuilder: (c) {

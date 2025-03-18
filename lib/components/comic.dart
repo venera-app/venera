@@ -770,7 +770,7 @@ class _SliverGridComicsState extends State<SliverGridComics> {
 
   @override
   void didUpdateWidget(covariant SliverGridComics oldWidget) {
-    if (!oldWidget.comics.isEqualTo(widget.comics)) {
+    if (!comics.isEqualTo(widget.comics)) {
       comics.clear();
       for (var comic in widget.comics) {
         if (isBlocked(comic) == null) {
@@ -879,6 +879,7 @@ class _SliverGridComics extends StatelessWidget {
             return comic;
           }
           return AnimatedContainer(
+            key: ValueKey(comics[index].id),
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
@@ -1140,7 +1141,7 @@ class ComicListState extends State<ComicList> {
         setState(() {});
       });
     }
-    if (_loading[page] == true) {
+    if (_data[page] != null || _loading[page] == true) {
       return;
     }
     _loading[page] = true;
@@ -1150,8 +1151,8 @@ class ComicListState extends State<ComicList> {
         if (!mounted) return;
         if (res.success) {
           if (res.data.isEmpty) {
-            _data[page] = const [];
             setState(() {
+              _data[page] = const [];
               _maxPage = page;
             });
           } else {
@@ -1201,6 +1202,11 @@ class ComicListState extends State<ComicList> {
 
   @override
   Widget build(BuildContext context) {
+    var type = appdata.settings['comicListDisplayMode'];
+    return type == 'paging' ? buildPagingMode() : buildContinuousMode();
+  }
+
+  Widget buildPagingMode() {
     if (_error != null) {
       return Column(
         children: [
@@ -1245,6 +1251,85 @@ class ComicListState extends State<ComicList> {
         ),
         if (_data[_page]!.length > 6 && _maxPage != 1)
           _buildSliverPageSelector(),
+        if (widget.trailingSliver != null) widget.trailingSliver!,
+      ],
+    );
+  }
+
+  Widget buildContinuousMode() {
+    if (_error != null && _data.isEmpty) {
+      return Column(
+        children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
+          _buildPageSelector(),
+          Expanded(
+            child: NetworkError(
+              withAppbar: false,
+              message: _error!,
+              retry: () {
+                setState(() {
+                  _error = null;
+                });
+              },
+            ),
+          ),
+        ],
+      );
+    }
+    if (_data[_page] == null) {
+      _loadPage(_page);
+      return Column(
+        children: [
+          if (widget.errorLeading != null) widget.errorLeading!,
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      );
+    }
+    return SmoothCustomScrollView(
+      key: enablePageStorage ? PageStorageKey('scroll$_page') : null,
+      controller: widget.controller,
+      slivers: [
+        if (widget.leadingSliver != null) widget.leadingSliver!,
+        SliverGridComics(
+          comics: _data.values.expand((element) => element).toList(),
+          menuBuilder: widget.menuBuilder,
+          onLastItemBuild: () {
+            if (_error == null && (_maxPage == null || _page < _maxPage!)) {
+              _loadPage(_data.length + 1);
+            }
+          },
+        ),
+        if (_error != null)
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.error_outline),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_error!, maxLines: 3)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                      });
+                    },
+                    child: Text("Retry".tl),
+                  ),
+                ),
+              ],
+            ).paddingHorizontal(16).paddingVertical(8),
+          )
+        else if (_maxPage == null || _page < _maxPage!)
+          const SliverListLoadingIndicator(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
     );
@@ -1535,17 +1620,20 @@ class _SMClipper extends CustomClipper<Rect> {
 }
 
 class SimpleComicTile extends StatelessWidget {
-  const SimpleComicTile({super.key, required this.comic, this.onTap});
+  const SimpleComicTile(
+      {super.key, required this.comic, this.onTap, this.withTitle = false});
 
   final Comic comic;
 
   final void Function()? onTap;
 
+  final bool withTitle;
+
   @override
   Widget build(BuildContext context) {
     var image = _findImageProvider(comic);
 
-    var child = image == null
+    Widget child = image == null
         ? const SizedBox()
         : AnimatedImage(
             image: image,
@@ -1555,7 +1643,18 @@ class SimpleComicTile extends StatelessWidget {
             filterQuality: FilterQuality.medium,
           );
 
-    return AnimatedTapRegion(
+    child = Container(
+      width: 98,
+      height: 136,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.secondaryContainer,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+
+    child = AnimatedTapRegion(
       borderRadius: 8,
       onTap: onTap ??
           () {
@@ -1566,16 +1665,29 @@ class SimpleComicTile extends StatelessWidget {
               ),
             );
           },
-      child: Container(
-        width: 92,
-        height: 114,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: Theme.of(context).colorScheme.secondaryContainer,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: child,
-      ),
+      child: child,
     );
+
+    if (withTitle) {
+      child = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          child,
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 92,
+            child: Center(
+              child: Text(
+                comic.title.replaceAll('\n', ''),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return child;
   }
 }
