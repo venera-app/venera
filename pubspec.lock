@@ -1045,8 +1045,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "285f87f15bccd2d5d5ff443761348c6ee47b98d1"
-      resolved-ref: "285f87f15bccd2d5d5ff443761348c6ee47b98d1"
+      ref: "2f669c98fb81cff1c64fee93466a1475c77e4273"
+      resolved-ref: "2f669c98fb81cff1c64fee93466a1475c77e4273"
       url: "https://github.com/wgh136/webdav_client"
     source: git
     version: "1.2.2"
