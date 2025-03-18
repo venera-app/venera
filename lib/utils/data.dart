@@ -95,11 +95,13 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     }
     var comicSourceDir = FilePath.join(cacheDirPath, "comic_source");
     if (Directory(comicSourceDir).existsSync()) {
+      Directory(FilePath.join(App.dataPath, "comic_source"))
+          .deleteIfExistsSync(recursive: true);
+      Directory(FilePath.join(App.dataPath, "comic_source")).createSync();
       for (var file in Directory(comicSourceDir).listSync()) {
         if (file is File) {
           var targetFile =
               FilePath.join(App.dataPath, "comic_source", file.name);
-          File(targetFile).deleteIfExistsSync();
           await file.copy(targetFile);
         }
       }
