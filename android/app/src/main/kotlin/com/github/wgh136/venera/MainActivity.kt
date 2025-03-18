@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
@@ -39,6 +40,41 @@ class MainActivity : FlutterFragmentActivity() {
     private var storagePermissionRequest: ((Boolean) -> Unit)? = null
 
     private val nextLocalRequestCode = AtomicInteger()
+
+    private val sharedTexts = ArrayList<String>()
+
+    private var textShareHandler: ((String) -> Unit)? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        if (intent?.action == Intent.ACTION_SEND) {
+            if (intent.type == "text/plain") {
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (text != null)
+                    handleSharedText(text)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == Intent.ACTION_SEND) {
+            if (intent.type == "text/plain") {
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (text != null)
+                    handleSharedText(text)
+            }
+        }
+    }
+
+    private fun handleSharedText(text: String) {
+        if (textShareHandler != null) {
+            textShareHandler?.invoke(text)
+        } else {
+            sharedTexts.add(text)
+        }
+    }
 
     private fun <I, O> startContractForResult(
         contract: ActivityResultContract<I, O>,
@@ -134,6 +170,26 @@ class MainActivity : FlutterFragmentActivity() {
             val mimeType = req.arguments<String>()
             openFile(res, mimeType!!)
         }
+
+        val shareTextChannel = EventChannel(flutterEngine.dartExecutor.binaryMessenger, "venera/text_share")
+        shareTextChannel.setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                    textShareHandler = {text ->
+                        events.success(text)
+                    }
+                    if (sharedTexts.isNotEmpty()) {
+                        for (text in sharedTexts) {
+                            events.success(text)
+                        }
+                        sharedTexts.clear()
+                    }
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    textShareHandler = null
+                }
+            })
     }
 
     private fun getProxy(): String {
