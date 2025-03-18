@@ -408,8 +408,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "5978d0c7784fbbefcacc573547f0ab01ba59b7b3"
-      resolved-ref: "5978d0c7784fbbefcacc573547f0ab01ba59b7b3"
+      ref: "8feae95df7fb00455df129ad7a0dfec1d0e8d8e4"
+      resolved-ref: "8feae95df7fb00455df129ad7a0dfec1d0e8d8e4"
       url: "https://github.com/wgh136/flutter_qjs"
     source: git
     version: "0.3.7"
@@ -425,17 +425,17 @@ packages:
     dependency: transitive
     description:
       name: flutter_rust_bridge
-      sha256: "3292ad6085552987b8b3b9a7e5805567f4013372d302736b702801acb001ee00"
+      sha256: "5a5c7a5deeef2cc2ffe6076a33b0429f4a20ceac22a397297aed2b1eb067e611"
       url: "https://pub.dev"
     source: hosted
-    version: "2.7.1"
+    version: "2.9.0"
   flutter_saf:
     dependency: "direct main"
     description:
       path: "."
-      ref: "7637b8b67d0a831f3cd7e702b8173e300880d32e"
-      resolved-ref: "7637b8b67d0a831f3cd7e702b8173e300880d32e"
-      url: "https://github.com/pkuislm/flutter_saf.git"
+      ref: "690a03a954f1603e0149cfd479c8961b88f21336"
+      resolved-ref: "690a03a954f1603e0149cfd479c8961b88f21336"
+      url: "https://github.com/venera-app/flutter_saf"
     source: git
     version: "0.0.1"
   flutter_test:
@@ -612,8 +612,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "9a784b193af5d55b2a35e58fa390bda3e4f35d00"
-      resolved-ref: "9a784b193af5d55b2a35e58fa390bda3e4f35d00"
+      ref: ac7d05dde32e8d728102a9ff66e6b55f05d94ba1
+      resolved-ref: ac7d05dde32e8d728102a9ff66e6b55f05d94ba1
       url: "https://github.com/venera-app/lodepng_flutter"
     source: git
     version: "0.0.1"
@@ -757,12 +757,11 @@ packages:
   rhttp:
     dependency: "direct main"
     description:
-      path: rhttp
-      ref: HEAD
-      resolved-ref: "18d430cc45fd4f0114885c5235090abf65106257"
-      url: "https://github.com/wgh136/rhttp"
-    source: git
-    version: "0.10.0"
+      name: rhttp
+      sha256: "037e9b59a68bb4ba664db1cbb4601e878cf5a2fc1cb3d0a9c58e3776609dec4d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.0"
   screen_retriever:
     dependency: transitive
     description:
@@ -1094,10 +1093,10 @@ packages:
     dependency: "direct main"
     description:
       name: zip_flutter
-      sha256: bbf3160062610a43901b7ebbc6f6dd46519540f03a84027dc7b1fff399dda1ac
+      sha256: c4d5a34c5803def866bc550926bb16fe89717c9b7304695d5b2ede30964eb8a8
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.10"
+    version: "0.0.12"
 sdks:
   dart: ">=3.7.0 <4.0.0"
-  flutter: ">=3.29.0"
+  flutter: ">=3.29.2"
