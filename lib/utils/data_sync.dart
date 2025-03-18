@@ -9,6 +9,7 @@ import 'package:venera/network/app_dio.dart';
 import 'package:venera/utils/data.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:webdav_client/webdav_client.dart' hide File;
+import 'package:rhttp/rhttp.dart' as rhttp;
 
 import 'io.dart';
 
@@ -89,11 +90,18 @@ class DataSync with ChangeNotifier {
       String user = config[1];
       String pass = config[2];
 
+      var proxy = await AppDio.getProxy();
+
       var client = newClient(
         url,
         user: user,
         password: pass,
-        adapter: RHttpAdapter(),
+        adapter: RHttpAdapter(
+          rhttp.ClientSettings(
+            proxySettings:
+                proxy == null ? null : rhttp.ProxySettings.proxy(proxy),
+          ),
+        ),
       );
 
       try {
@@ -154,11 +162,18 @@ class DataSync with ChangeNotifier {
       String user = config[1];
       String pass = config[2];
 
+      var proxy = await AppDio.getProxy();
+
       var client = newClient(
         url,
         user: user,
         password: pass,
-        adapter: RHttpAdapter(),
+        adapter: RHttpAdapter(
+          rhttp.ClientSettings(
+            proxySettings:
+                proxy == null ? null : rhttp.ProxySettings.proxy(proxy),
+          ),
+        ),
       );
 
       try {
