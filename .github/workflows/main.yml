@@ -100,7 +100,7 @@ jobs:
       - name: Setup Rust
         run: |
           rustup update
-          rustup default stable
+          rustup default 1.85.1
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
