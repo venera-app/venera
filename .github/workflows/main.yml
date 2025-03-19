@@ -26,6 +26,9 @@ jobs:
           echo "$CERTIFICATE" | base64 --decode > signing_certificate.p12
           security import signing_certificate.p12 -k ~/Library/Keychains/login.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
 
+      - name: Check rust-toolchain.toml
+        run: rustup show
+
       # Step 2: Build the Flutter macOS app
       - name: Build Flutter macOS App
         run: flutter build macos --release
