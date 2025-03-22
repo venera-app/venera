@@ -25,8 +25,8 @@ class _ReaderImagesState extends State<_ReaderImages> {
     if (inProgress) return;
     inProgress = true;
     if (reader.type == ComicType.local ||
-        (LocalManager()
-            .isDownloaded(reader.cid, reader.type, reader.chapter, reader.widget.chapters))) {
+        (LocalManager().isDownloaded(
+            reader.cid, reader.type, reader.chapter, reader.widget.chapters))) {
       try {
         var images = await LocalManager()
             .getImages(reader.cid, reader.type, reader.chapter);
@@ -395,6 +395,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
   bool jumpToNextChapter = false;
   bool jumpToPrevChapter = false;
 
+  bool isZoomedIn = false;
+
   @override
   void initState() {
     reader = context.reader;
@@ -485,6 +487,16 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
   }
 
+  bool onScaleUpdate([double? scale]) {
+    var isZoomedIn = (scale ?? photoViewController.scale) != 1.0;
+    if (isZoomedIn != this.isZoomedIn) {
+      setState(() {
+        this.isZoomedIn = isZoomedIn;
+      });
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget widget = ScrollablePositionedList.builder(
@@ -506,7 +518,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
       reverse: reader.mode == ReaderMode.continuousRightToLeft,
       physics: isCTRLPressed || _isMouseScrolling || disableScroll
           ? const NeverScrollableScrollPhysics()
-          : const BouncingScrollPhysics(),
+          : isZoomedIn
+              ? const ClampingScrollPhysics()
+              : const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
         if (index == 0 || index == reader.maxPage + 1) {
           return const SizedBox();
@@ -593,18 +607,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
         if (photoViewController.scale == 1 || fingers != 1) {
           return;
         }
-        if (scrollController.offset !=
-                scrollController.position.maxScrollExtent &&
-            scrollController.offset !=
-                scrollController.position.minScrollExtent) {
-          if (reader.mode == ReaderMode.continuousTopToBottom) {
-            value = Offset(value.dx, 0);
-          } else {
-            value = Offset(0, value.dy);
-          }
-        }
         photoViewController.updateMultiple(
-            position: photoViewController.position + value);
+          position: photoViewController.position + Offset(value.dx, value.dy),
+        );
       },
       onPointerSignal: onPointerSignal,
       child: widget,
@@ -676,6 +681,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       maxScale: 2.5,
       strictScale: true,
       controller: photoViewController,
+      onScaleUpdate: onScaleUpdate,
       child: SizedBox(
         width: width,
         height: height,
@@ -731,6 +737,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       target,
       Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
     );
+    onScaleUpdate(target);
   }
 
   @override
@@ -744,6 +751,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       target,
       Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
     );
+    onScaleUpdate(target);
   }
 
   @override
