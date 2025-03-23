@@ -75,6 +75,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   bool isDownloaded = false;
 
+  bool showFAB = false;
+
   @override
   void onReadEnd() {
     history ??=
@@ -114,7 +116,15 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   ComicDetails get comic => data!;
 
   void onScroll() {
-    if (scrollController.offset > 100) {
+    var offset = scrollController.position.pixels -
+        scrollController.position.minScrollExtent;
+    var showFAB = offset > 0;
+    if (showFAB != this.showFAB) {
+      setState(() {
+        this.showFAB = showFAB;
+      });
+    }
+    if (offset > 100) {
       if (!showAppbarTitle) {
         setState(() {
           showAppbarTitle = true;
@@ -133,19 +143,33 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   @override
   Widget buildContent(BuildContext context, ComicDetails data) {
-    return SmoothCustomScrollView(
-      controller: scrollController,
-      slivers: [
-        ...buildTitle(),
-        buildActions(),
-        buildDescription(),
-        buildInfo(),
-        buildChapters(),
-        buildComments(),
-        buildThumbnails(),
-        buildRecommend(),
-        SliverPadding(padding: EdgeInsets.only(bottom: context.padding.bottom)),
-      ],
+    return Scaffold(
+      floatingActionButton: showFAB
+          ? FloatingActionButton(
+              onPressed: () {
+                scrollController.animateTo(0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.ease);
+              },
+              child: const Icon(Icons.arrow_upward),
+            )
+          : null,
+      body: SmoothCustomScrollView(
+        controller: scrollController,
+        slivers: [
+          ...buildTitle(),
+          buildActions(),
+          buildDescription(),
+          buildInfo(),
+          buildChapters(),
+          buildComments(),
+          buildThumbnails(),
+          buildRecommend(),
+          SliverPadding(
+            padding: EdgeInsets.only(bottom: context.padding.bottom + 80), // Add additional padding for FAB
+          ),
+        ],
+      ),
     );
   }
 
