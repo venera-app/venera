@@ -358,7 +358,7 @@
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功后, APP将自动与服务器同步数据",
     "Cache cleared": "缓存已清除",
     "Disabled": "已禁用",
-    "WebDAV Auto Sync": "WebDAV 自动同步",
+    "Auto Sync Data": "自动同步数据",
     "Mark all as read": "全部标记为已读",
     "Do you want to mark all as read?" : "您要全部标记为已读吗？",
     "Swipe down for previous chapter": "向下滑动查看上一章",
@@ -372,7 +372,8 @@
     "Refresh": "刷新",
     "Paging": "分页",
     "Continuous": "连续",
-    "Display mode of comic list": "漫画列表的显示模式"
+    "Display mode of comic list": "漫画列表的显示模式",
+    "A valid WebDav directory URL": "有效的WebDav目录URL"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -733,7 +734,7 @@
     "Once the operation is successful, app will automatically sync data with the server.": "操作成功後, APP將自動與伺服器同步資料",
     "Cache cleared": "快取已清除",
     "Disabled": "已停用",
-    "WebDAV Auto Sync": "WebDAV 自動同步",
+    "Auto Sync Data": "自動同步資料",
     "Mark all as read": "全部標記為已讀",
     "Do you want to mark all as read?" : "您要全部標記為已讀嗎？",
     "Swipe down for previous chapter": "向下滑動查看上一章",
@@ -747,6 +748,7 @@
     "Refresh": "刷新",
     "Paging": "分頁",
     "Continuous": "連續",
-    "Display mode of comic list": "漫畫列表的顯示模式"
+    "Display mode of comic list": "漫畫列表的顯示模式",
+    "A valid WebDav directory URL": "有效的WebDav目錄URL"
   }
 }
