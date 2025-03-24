@@ -147,9 +147,10 @@ class _WindowFrameState extends State<WindowFrame> {
                             onPressed: debug,
                             child: Text('Debug'),
                           ),
-                        if (!App.isMacOS) _WindowButtons(
-                          onClose: _onClose,
-                        )
+                        if (!App.isMacOS)
+                          _WindowButtons(
+                            onClose: _onClose,
+                          )
                       ],
                     ),
                   );
@@ -559,31 +560,31 @@ class _VirtualWindowFrameState extends State<VirtualWindowFrame>
   }
 
   Widget _buildVirtualWindowFrame(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: (_isMaximized || _isFullScreen) ? 0 : 1,
-        ),
-        boxShadow: <BoxShadow>[
-          if (!_isMaximized && !_isFullScreen)
+    return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(_isMaximized ? 0 : 8),
+          color: Colors.transparent,
+          boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.black.toOpacity(0.1),
-              offset: Offset(0.0, _isFocused ? 4 : 2),
-              blurRadius: 6,
-            )
-        ],
-      ),
-      child: widget.child,
-    );
+                color: Colors.black.toOpacity(_isFocused ? 0.4 : 0.2),
+                offset: Offset(0.0, 2),
+                blurRadius: 4,
+              )
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: widget.child,
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return DragToResizeArea(
       enableResizeEdges: (_isMaximized || _isFullScreen) ? [] : null,
-      child: _buildVirtualWindowFrame(context),
+      child: Padding(
+        padding: EdgeInsets.all(_isMaximized ? 0 : 4),
+        child: _buildVirtualWindowFrame(context),
+      ),
     );
   }
 
