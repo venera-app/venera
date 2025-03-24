@@ -179,6 +179,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           min: 1,
           max: 16,
         ).toSliver(),
+        _SwitchSetting(
+          title: "Show Page Number".tl,
+          settingKey: "showPageNumberInReader",
+          onChanged: () {
+            widget.onChanged?.call("showPageNumberInReader");
+          },
+        ).toSliver(),
       ],
     );
   }

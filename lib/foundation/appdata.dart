@@ -168,6 +168,7 @@ class Settings with ChangeNotifier {
     'followUpdatesFolder': null,
     'initialPage': '0',
     'comicListDisplayMode': 'paging', // paging, continuous
+    'showPageNumberInReader': true,
   };
 
   operator [](String key) {

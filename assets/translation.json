@@ -372,7 +372,8 @@
     "Refresh": "刷新",
     "Paging": "分页",
     "Continuous": "连续",
-    "Display mode of comic list": "漫画列表的显示模式"
+    "Display mode of comic list": "漫画列表的显示模式",
+    "Show Page Number": "显示页码"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -747,6 +748,7 @@
     "Refresh": "刷新",
     "Paging": "分頁",
     "Continuous": "連續",
-    "Display mode of comic list": "漫畫列表的顯示模式"
+    "Display mode of comic list": "漫畫列表的顯示模式",
+    "Show Page Number": "顯示頁碼"
   }
 }

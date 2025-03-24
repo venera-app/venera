@@ -127,7 +127,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         Positioned.fill(
           child: widget.child,
         ),
-        buildPageInfoText(),
+        if (appdata.settings['showPageNumberInReader'] == true)
+          buildPageInfoText(),
         buildStatusInfo(),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
