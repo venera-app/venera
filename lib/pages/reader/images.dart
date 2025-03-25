@@ -298,6 +298,8 @@ class _GalleryModeState extends State<_GalleryMode>
     photoViewController.animateScale?.call(target);
   }
 
+  Timer? keyRepeatTimer;
+
   @override
   void handleKeyEvent(KeyEvent event) {
     bool? forward;
@@ -320,7 +322,11 @@ class _GalleryModeState extends State<_GalleryMode>
         event.logicalKey == LogicalKeyboardKey.arrowRight) {
       forward = false;
     }
-    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+    if (event is KeyDownEvent) {
+      if (keyRepeatTimer != null) {
+        keyRepeatTimer!.cancel();
+        keyRepeatTimer = null;
+      }
       if (forward == true) {
         controller.nextPage(
           duration: const Duration(milliseconds: 200),
@@ -332,6 +338,31 @@ class _GalleryModeState extends State<_GalleryMode>
           curve: Curves.ease,
         );
       }
+    }
+    if (event is KeyRepeatEvent && keyRepeatTimer == null) {
+      keyRepeatTimer = Timer.periodic(
+        const Duration(milliseconds: 100),
+        (timer) {
+          if (!mounted) {
+            timer.cancel();
+            return;
+          } else if (forward == true) {
+            controller.nextPage(
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.ease,
+            );
+          } else if (forward == false) {
+            controller.previousPage(
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.ease,
+            );
+          }
+        },
+      );
+    }
+    if (event is KeyUpEvent && keyRepeatTimer != null) {
+      keyRepeatTimer!.cancel();
+      keyRepeatTimer = null;
     }
   }
 
