@@ -82,7 +82,7 @@ class ComicSourceParser {
     js = js.replaceAll("\r\n", "\n");
     var line1 = js
         .split('\n')
-        .firstWhereOrNull((element) => element.removeAllBlank.isNotEmpty);
+        .firstWhereOrNull((e) => e.trim().startsWith("class "));
     if (line1 == null ||
         !line1.startsWith("class ") ||
         !line1.contains("extends ComicSource")) {
