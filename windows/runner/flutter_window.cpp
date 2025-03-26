@@ -102,6 +102,47 @@ bool FlutterWindow::OnCreate() {
 
   channel2.SetStreamHandler(std::move(eventHandler));
 
+  const flutter::MethodChannel<> channel3(
+    flutter_controller_->engine()->messenger(), "venera/clipboard",
+    &flutter::StandardMethodCodec::GetInstance()
+  );
+  channel3.SetMethodCallHandler(
+    [](const flutter::MethodCall<>& call,const std::unique_ptr<flutter::MethodResult<>>& result) {
+      if(call.method_name() == "writeImageToClipboard"){
+          flutter::EncodableMap arguments = std::get<flutter::EncodableMap>(*call.arguments());
+          std::vector<uint8_t> data = std::get<std::vector<uint8_t>>(arguments["data"]);
+          std::int32_t width = std::get<std::int32_t>(arguments["width"]);
+          std::int32_t height = std::get<std::int32_t>(arguments["height"]);
+
+          // convert rgba to bgra
+          for (int i = 0; i < data.size()/4; i++) {
+              uint8_t temp = data[i * 4];
+              data[i * 4] = data[i * 4 + 2];
+              data[i * 4 + 2] = temp;
+          }
+          
+          auto bitmap = CreateBitmap((int)width, (int)height, 1, 32, data.data());
+
+          if (!bitmap) {
+              result->Error("0", "Invalid Image Data");
+              return;
+          }
+
+          if (OpenClipboard(NULL))
+          {
+              EmptyClipboard();
+              SetClipboardData(CF_BITMAP, bitmap);
+              CloseClipboard();
+              result->Success();
+          }
+          else {
+              result->Error("Failed to open clipboard");
+          }
+
+          DeleteObject(bitmap);
+      }
+  });
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

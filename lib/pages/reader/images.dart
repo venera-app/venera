@@ -113,6 +113,8 @@ class _GalleryModeState extends State<_GalleryMode>
 
   int get totalPages => (reader.images!.length / reader.imagesPerPage).ceil();
 
+  var imageStates = <State<ComicImage>>{};
+
   @override
   void initState() {
     reader = context.reader;
@@ -234,6 +236,8 @@ class _GalleryModeState extends State<_GalleryMode>
         child: ComicImage(
           image: imageProvider,
           fit: BoxFit.contain,
+          onInit: (state) => imageStates.add(state),
+          onDispose: (state) => imageStates.remove(state),
         ),
       );
     }).toList();
@@ -370,6 +374,28 @@ class _GalleryModeState extends State<_GalleryMode>
   bool handleOnTap(Offset location) {
     return false;
   }
+
+  @override
+  Future<Uint8List?> getImageByOffset(Offset offset) async {
+    String? imageKey;
+    if (reader.imagesPerPage == 1) {
+      imageKey = reader.images![reader.page - 1];
+    } else {
+      for (var imageState in imageStates) {
+        if ((imageState as _ComicImageState).containsPoint(offset)) {
+          imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+        }
+      }
+    }
+    if (imageKey == null) return null;
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
+  }
 }
 
 const Set<PointerDeviceKind> _kTouchLikeDeviceTypes = <PointerDeviceKind>{
@@ -413,6 +439,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
   /// The gesture detector has a delay to detect tap event.
   /// To handle the tap event, we need to know if the user was scrolling before the delay.
   bool delayedIsScrolling = false;
+
+  var imageStates = <State<ComicImage>>{};
 
   void delayedSetIsScrolling(bool value) {
     Future.delayed(
@@ -574,6 +602,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
             width: width,
             height: height,
             fit: BoxFit.contain,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
           ),
         );
       },
@@ -856,6 +886,24 @@ class _ContinuousModeState extends State<_ContinuousMode>
       return true;
     }
     return false;
+  }
+
+  @override
+  Future<Uint8List?> getImageByOffset(Offset offset) async {
+    String? imageKey;
+    for (var imageState in imageStates) {
+      if ((imageState as _ComicImageState).containsPoint(offset)) {
+        imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+      }
+    }
+    if (imageKey == null) return null;
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
   }
 }
 

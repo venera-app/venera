@@ -376,7 +376,8 @@
     "Show Page Number": "显示页码",
     "Jump to page": "跳转到页面",
     "Page": "页面",
-    "Jump": "跳转"
+    "Jump": "跳转",
+    "Copy Image": "复制图片"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -755,6 +756,7 @@
     "Show Page Number": "顯示頁碼",
     "Jump to page": "跳轉到頁面",
     "Page": "頁面",
-    "Jump": "跳轉"
+    "Jump": "跳轉",
+    "Copy Image": "複製圖片"
   }
 }
