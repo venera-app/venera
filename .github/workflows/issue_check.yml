@@ -1,0 +1,29 @@
+name: Check Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Check Issue
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Check Issue
+        id: check
+        uses: wgh136/gpt_issue_checker@v1.0.0
+        with:
+          api-url: ${{ secrets.API_URL }} 
+          api-key: ${{ secrets.API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: "You are a repository issue checker. The project is a comic app that supports view local or network comics using a config file. The App itself does not have the ability to display network comics. User should not report any issue related to config file to the project repository because there is another repository for managing config files. You are given an issue content and you need to decide whether to close the issue. If you decide not to close the issue, you should provide a comment which is a summary of the issue. You should response with a JSON object with the following keys: should_close, should_comment, comment."
+          model: "gpt-4o-mini"
