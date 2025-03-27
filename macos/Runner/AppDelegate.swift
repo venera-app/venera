@@ -38,6 +38,31 @@ class AppDelegate: FlutterAppDelegate {
           result(FlutterMethodNotImplemented)
         }
       }
+
+      let clipboardChannel = FlutterMethodChannel(name: "venera/clipboard", binaryMessenger: controller.engine.binaryMessenger)
+
+      clipboardChannel.setMethodCallHandler { (call, result) in
+        switch call.method {
+        case "writeImageToClipboard":
+          guard let arguments = call.arguments as? [String: Any],
+            let data = arguments["data"] as? FlutterStandardTypedData else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+          }
+
+          guard let image = NSImage(data: data.data) else {
+            result(FlutterError(code: "INVALID_IMAGE", message: "Could not create image from data", details: nil))
+            return
+          }
+
+          let pasteboard = NSPasteboard.general
+          pasteboard.clearContents()
+          pasteboard.writeObjects([image])
+          result(true)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      }
     }
 
   func getDirectoryPath() {
