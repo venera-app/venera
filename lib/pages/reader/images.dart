@@ -455,6 +455,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   bool jumpToPrevChapter = false;
 
   bool isZoomedIn = false;
+  bool isLongPressing = false;
 
   @override
   void initState() {
@@ -668,8 +669,23 @@ class _ContinuousModeState extends State<_ContinuousMode>
         if (photoViewController.scale == 1 || fingers != 1) {
           return;
         }
+        Offset offset;
+        var sp = scrollController.position;
+        if (sp.pixels < sp.minScrollExtent
+            || sp.pixels > sp.maxScrollExtent) {
+          offset = Offset(value.dx, value.dy);
+        } else {
+          if (reader.mode == ReaderMode.continuousTopToBottom) {
+            offset = Offset(value.dx, 0);
+          } else {
+            offset = Offset(0, value.dy);
+          }
+        }
+        if (isLongPressing) {
+          offset += value;
+        }
         photoViewController.updateMultiple(
-          position: photoViewController.position + Offset(value.dx, value.dy),
+          position: photoViewController.position + offset,
         );
       },
       onPointerSignal: onPointerSignal,
@@ -807,12 +823,12 @@ class _ContinuousModeState extends State<_ContinuousMode>
       return;
     }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
-    var size = MediaQuery.of(context).size;
     photoViewController.animateScale?.call(
       target,
-      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+      Offset(0, 0),
     );
     onScaleUpdate(target);
+    isLongPressing = true;
   }
 
   @override
@@ -822,6 +838,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
+    onScaleUpdate(target);
+    isLongPressing = false;
   }
 
   @override

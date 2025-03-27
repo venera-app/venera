@@ -29,7 +29,7 @@ dependencies:
   photo_view:
     git:
       url: https://github.com/wgh136/photo_view
-      ref: d71faf3c75e059d013b0ce9ddaf5ecc1680e2eb6
+      ref: a1255d1b5945aad4b7323303ec2ecdf0c90ffc4c
   mime: ^2.0.0
   share_plus: ^10.1.4
   scrollable_positioned_list:
