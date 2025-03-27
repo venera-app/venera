@@ -26,6 +26,9 @@ jobs:
           echo "$CERTIFICATE" | base64 --decode > signing_certificate.p12
           security import signing_certificate.p12 -k ~/Library/Keychains/login.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
 
+      - name: Check rust-toolchain.toml
+        run: rustup show
+
       # Step 2: Build the Flutter macOS app
       - name: Build Flutter macOS App
         run: flutter build macos --release
@@ -97,10 +100,8 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: '17'
-      - name: Setup Rust
-        run: |
-          rustup update
-          rustup default stable
+      - name: Check rust-toolchain.toml
+        run: rustup show
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4

@@ -330,11 +330,10 @@ class _WebdavSettingState extends State<_WebdavSetting> {
   String url = "";
   String user = "";
   String pass = "";
-  bool autoSync = false;
+  bool autoSync = true;
 
   bool isTesting = false;
   bool upload = true;
-  bool isEnabled = false;
 
   @override
   void initState() {
@@ -349,8 +348,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     url = configs[0];
     user = configs[1];
     pass = configs[2];
-    isEnabled = true;
-    autoSync = appdata.implicitData['webdavAutoSync'] ?? false;
+    autoSync = appdata.implicitData['webdavAutoSync'] ?? true;
   }
 
   void onAutoSyncChanged(bool value) {
@@ -369,15 +367,10 @@ class _WebdavSettingState extends State<_WebdavSetting> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            SwitchListTile(
-              title: Text("WebDAV Auto Sync".tl),
-              value: autoSync,
-              onChanged: onAutoSyncChanged,
-            ),
-            const SizedBox(height: 12),
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: "URL",
+                hintText: "A valid WebDav directory URL".tl,
                 border: OutlineInputBorder(),
               ),
               controller: TextEditingController(text: url),
@@ -400,6 +393,16 @@ class _WebdavSettingState extends State<_WebdavSetting> {
               ),
               controller: TextEditingController(text: pass),
               onChanged: (value) => pass = value,
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: Icon(Icons.sync),
+              title: Text("Auto Sync Data".tl),
+              contentPadding: EdgeInsets.zero,
+              trailing: Switch(
+                value: autoSync,
+                onChanged: onAutoSyncChanged,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -428,21 +431,28 @@ class _WebdavSettingState extends State<_WebdavSetting> {
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text("Once the operation is successful, app will automatically sync data with the server.".tl),
-                  ),
-                ],
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              child: autoSync
+                  ? Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                                "Once the operation is successful, app will automatically sync data with the server."
+                                    .tl),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ),
             const SizedBox(height: 16),
             Center(

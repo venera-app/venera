@@ -34,13 +34,10 @@ void main(List<String> args) {
             await windowManager.setBackgroundColor(Colors.transparent);
           }
           await windowManager.setMinimumSize(const Size(500, 600));
-          if (!App.isLinux) {
-            // https://github.com/leanflutter/window_manager/issues/460
-            var placement = await WindowPlacement.loadFromFile();
-            await placement.applyToWindow();
-            await windowManager.show();
-            WindowPlacement.loop();
-          }
+          var placement = await WindowPlacement.loadFromFile();
+          await placement.applyToWindow();
+          await windowManager.show();
+          WindowPlacement.loop();
         });
       }
     }, (error, stack) {
@@ -201,6 +198,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           'dark' => ThemeMode.dark,
           _ => ThemeMode.system
         },
+        color: Colors.transparent,
         localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
@@ -248,6 +246,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               );
             }
             return _SystemUiProvider(Material(
+              color: App.isLinux ? Colors.transparent : null,
               child: widget,
             ));
           }
