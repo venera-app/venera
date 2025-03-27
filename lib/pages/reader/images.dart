@@ -228,22 +228,54 @@ class _GalleryModeState extends State<_GalleryMode>
         : Axis.horizontal;
 
     bool reverse = reader.mode == ReaderMode.galleryRightToLeft;
-
-    List<Widget> imageWidgets = images.map((imageKey) {
-      ImageProvider imageProvider =
-          _createImageProviderFromKey(imageKey, context);
-      return Expanded(
-        child: ComicImage(
-          image: imageProvider,
-          fit: BoxFit.contain,
-          onInit: (state) => imageStates.add(state),
-          onDispose: (state) => imageStates.remove(state),
-        ),
-      );
-    }).toList();
-
     if (reverse) {
-      imageWidgets = imageWidgets.reversed.toList();
+      images = images.reversed.toList();
+    }
+
+    List<Widget> imageWidgets;
+
+    if (images.length == 2) {
+      imageWidgets = [
+        Expanded(
+          child: ComicImage(
+            width: double.infinity,
+            height: double.infinity,
+            image: _createImageProviderFromKey(images[0], context),
+            fit: BoxFit.contain,
+            alignment: axis == Axis.vertical
+                ? Alignment.bottomCenter
+                : Alignment.centerRight,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        ),
+        Expanded(
+          child: ComicImage(
+            width: double.infinity,
+            height: double.infinity,
+            image: _createImageProviderFromKey(images[1], context),
+            fit: BoxFit.contain,
+            alignment: axis == Axis.vertical
+                ? Alignment.topCenter
+                : Alignment.centerLeft,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        )
+      ];
+    } else {
+      imageWidgets = images.map((imageKey) {
+        ImageProvider imageProvider =
+        _createImageProviderFromKey(imageKey, context);
+        return Expanded(
+          child: ComicImage(
+            image: imageProvider,
+            fit: BoxFit.contain,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        );
+      }).toList();
     }
 
     return axis == Axis.vertical
@@ -671,8 +703,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
         Offset offset;
         var sp = scrollController.position;
-        if (sp.pixels < sp.minScrollExtent
-            || sp.pixels > sp.maxScrollExtent) {
+        if (sp.pixels < sp.minScrollExtent || sp.pixels > sp.maxScrollExtent) {
           offset = Offset(value.dx, value.dy);
         } else {
           if (reader.mode == ReaderMode.continuousTopToBottom) {
