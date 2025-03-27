@@ -20,7 +20,7 @@ jobs:
 
       - name: Check Issue
         id: check
-        uses: wgh136/gpt_issue_checker@v1.0.1
+        uses: wgh136/gpt_issue_checker@v1.0.2
         with:
           api-url: ${{ secrets.API_URL }} 
           api-key: ${{ secrets.API_KEY }}
