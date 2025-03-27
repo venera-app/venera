@@ -61,7 +61,7 @@ class _MenuRoute<T> extends PopupRoute<T> {
             child: BlurEffect(
               borderRadius: BorderRadius.circular(4),
               child: Material(
-                color: context.colorScheme.surface.toOpacity(0.78),
+                color: context.colorScheme.surface.toOpacity(0.92),
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
                   width: width,

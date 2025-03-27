@@ -80,7 +80,7 @@ class _AppbarState extends State<Appbar> {
     var content = Container(
       decoration: BoxDecoration(
         color: widget.backgroundColor ??
-            context.colorScheme.surface.toOpacity(0.72),
+            context.colorScheme.surface.toOpacity(0.86),
       ),
       height: _kAppBarHeight + context.padding.top,
       child: Row(
@@ -231,7 +231,7 @@ class _MySliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         child: BlurEffect(
           blur: 15,
           child: Material(
-            color: context.colorScheme.surface.toOpacity(0.72),
+            color: context.colorScheme.surface.toOpacity(0.86),
             elevation: 0,
             borderRadius: BorderRadius.circular(radius),
             child: body,
