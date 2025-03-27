@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 Future<void> writeImageToClipboard(Uint8List imageBytes) async {
   const channel = MethodChannel("venera/clipboard");
-  if (Platform.isWindows) {
+  if (Platform.isWindows || Platform.isLinux) {
     var image = await instantiateImageCodec(imageBytes);
     var frame = await image.getNextFrame();
     var data = await frame.image.toByteData(format: ImageByteFormat.rawRgba);

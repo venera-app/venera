@@ -5,14 +5,44 @@
 #include <gdk/gdkx.h>
 #endif
 
+#include <iostream>
+
 #include "flutter/generated_plugin_registrant.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* clipboard_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static void handle_clipboard_call(FlMethodChannel* channel, FlMethodCall* call, gpointer user_data) {
+  if (strcmp(fl_method_call_get_name(call), "writeImageToClipboard") == 0) {
+    const auto args = fl_method_call_get_args(call);
+    const auto width = fl_value_get_int(fl_value_get_map_value(args, 0));
+    const auto height = fl_value_get_int(fl_value_get_map_value(args, 1));
+    const auto data = fl_value_get_uint8_list(fl_value_get_map_value(args, 2));
+
+    std::cout << width << " " << height << " " << data[0] << " " << data[1] << std::endl;
+
+    GBytes* bytes = g_bytes_new(data, width * height * 4);
+
+    GdkDisplay* display = gdk_display_get_default();
+    GtkClipboard* clipboard = gtk_clipboard_get_default(display);
+    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_bytes(
+      bytes,
+      GDK_COLORSPACE_RGB,
+      true,
+      8,
+      width,
+      height,
+      width * 4
+    );
+    gtk_clipboard_set_image(clipboard, pixbuf);
+    fl_method_call_respond_success(call, fl_value_new_string("Ok"), nullptr);
+  }
+}
 
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
@@ -64,6 +94,14 @@ static void my_application_activate(GApplication* application) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->clipboard_channel = fl_method_channel_new(
+    fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+    "venera/clipboard", FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+    self->clipboard_channel, handle_clipboard_call, self, nullptr);
+
   gtk_widget_hide(GTK_WIDGET(window));
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -110,6 +148,7 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->clipboard_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
