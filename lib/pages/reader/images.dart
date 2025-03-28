@@ -115,6 +115,10 @@ class _GalleryModeState extends State<_GalleryMode>
 
   var imageStates = <State<ComicImage>>{};
 
+  bool isLongPressing = false;
+
+  int fingers = 0;
+
   @override
   void initState() {
     reader = context.reader;
@@ -144,81 +148,103 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   Widget build(BuildContext context) {
-    return PhotoViewGallery.builder(
-      backgroundDecoration: BoxDecoration(
-        color: context.colorScheme.surface,
-      ),
-      reverse: reader.mode == ReaderMode.galleryRightToLeft,
-      scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
-          ? Axis.vertical
-          : Axis.horizontal,
-      itemCount: totalPages + 2,
-      builder: (BuildContext context, int index) {
-        if (index == 0 || index == totalPages + 1) {
-          return PhotoViewGalleryPageOptions.customChild(
-            child: const SizedBox(),
-          );
-        } else {
-          int pageIndex = index - 1;
-          int startIndex = pageIndex * reader.imagesPerPage;
-          int endIndex = math.min(
-              startIndex + reader.imagesPerPage, reader.images!.length);
-          List<String> pageImages =
-              reader.images!.sublist(startIndex, endIndex);
-
-          cached[index] = true;
-          cache(index);
-
-          photoViewControllers[index] ??= PhotoViewController();
-
-          if (reader.imagesPerPage == 1) {
-            return PhotoViewGalleryPageOptions(
-              filterQuality: FilterQuality.medium,
-              controller: photoViewControllers[index],
-              imageProvider:
-                  _createImageProviderFromKey(pageImages[0], context),
-              fit: BoxFit.contain,
-              errorBuilder: (_, error, s, retry) {
-                return NetworkError(message: error.toString(), retry: retry);
-              },
+    return Listener(
+      onPointerDown: (event) {
+        fingers++;
+      },
+      onPointerUp: (event) {
+        fingers--;
+      },
+      onPointerCancel: (event) {
+        fingers--;
+      },
+      onPointerMove: (event) {
+        if (isLongPressing) {
+          var controller = photoViewControllers[reader.page]!;
+          Offset value = event.delta;
+          if (isLongPressing) {
+            controller.updateMultiple(
+              position: controller.position + value,
             );
           }
-
-          return PhotoViewGalleryPageOptions.customChild(
-            controller: photoViewControllers[index],
-            minScale: PhotoViewComputedScale.contained * 1.0,
-            maxScale: PhotoViewComputedScale.covered * 10.0,
-            child: buildPageImages(pageImages),
-          );
         }
       },
-      pageController: controller,
-      loadingBuilder: (context, event) => Center(
-        child: SizedBox(
-          width: 20.0,
-          height: 20.0,
-          child: CircularProgressIndicator(
-            backgroundColor: context.colorScheme.surfaceContainerHigh,
-            value: event == null || event.expectedTotalBytes == null
-                ? null
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+      child: PhotoViewGallery.builder(
+        backgroundDecoration: BoxDecoration(
+          color: context.colorScheme.surface,
+        ),
+        reverse: reader.mode == ReaderMode.galleryRightToLeft,
+        scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
+            ? Axis.vertical
+            : Axis.horizontal,
+        itemCount: totalPages + 2,
+        builder: (BuildContext context, int index) {
+          if (index == 0 || index == totalPages + 1) {
+            return PhotoViewGalleryPageOptions.customChild(
+              child: const SizedBox(),
+            );
+          } else {
+            int pageIndex = index - 1;
+            int startIndex = pageIndex * reader.imagesPerPage;
+            int endIndex = math.min(
+                startIndex + reader.imagesPerPage, reader.images!.length);
+            List<String> pageImages =
+                reader.images!.sublist(startIndex, endIndex);
+
+            cached[index] = true;
+            cache(index);
+
+            photoViewControllers[index] ??= PhotoViewController();
+
+            if (reader.imagesPerPage == 1) {
+              return PhotoViewGalleryPageOptions(
+                filterQuality: FilterQuality.medium,
+                controller: photoViewControllers[index],
+                imageProvider:
+                    _createImageProviderFromKey(pageImages[0], context),
+                fit: BoxFit.contain,
+                errorBuilder: (_, error, s, retry) {
+                  return NetworkError(message: error.toString(), retry: retry);
+                },
+              );
+            }
+
+            return PhotoViewGalleryPageOptions.customChild(
+              controller: photoViewControllers[index],
+              minScale: PhotoViewComputedScale.contained * 1.0,
+              maxScale: PhotoViewComputedScale.covered * 10.0,
+              child: buildPageImages(pageImages),
+            );
+          }
+        },
+        pageController: controller,
+        loadingBuilder: (context, event) => Center(
+          child: SizedBox(
+            width: 20.0,
+            height: 20.0,
+            child: CircularProgressIndicator(
+              backgroundColor: context.colorScheme.surfaceContainerHigh,
+              value: event == null || event.expectedTotalBytes == null
+                  ? null
+                  : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+            ),
           ),
         ),
+        onPageChanged: (i) {
+          if (i == 0) {
+            if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
+              reader.toPage(1);
+            }
+          } else if (i == totalPages + 1) {
+            if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
+              reader.toPage(totalPages);
+            }
+          } else {
+            reader.setPage(i);
+            context.readerScaffold.update();
+          }
+        },
       ),
-      onPageChanged: (i) {
-        if (i == 0) {
-          if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
-            reader.toPage(1);
-          }
-        } else if (i == totalPages + 1) {
-          if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
-            reader.toPage(totalPages);
-          }
-        } else {
-          reader.setPage(i);
-          context.readerScaffold.update();
-        }
-      },
     );
   }
 
@@ -266,7 +292,7 @@ class _GalleryModeState extends State<_GalleryMode>
     } else {
       imageWidgets = images.map((imageKey) {
         ImageProvider imageProvider =
-        _createImageProviderFromKey(imageKey, context);
+            _createImageProviderFromKey(imageKey, context);
         return Expanded(
           child: ComicImage(
             image: imageProvider,
@@ -312,7 +338,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressDown(Offset location) {
-    if (!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom'] || fingers != 1) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
@@ -322,16 +348,18 @@ class _GalleryModeState extends State<_GalleryMode>
       target,
       Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
     );
+    isLongPressing = true;
   }
 
   @override
   void handleLongPressUp(Offset location) {
-    if (!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom'] || !isLongPressing) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
+    isLongPressing = false;
   }
 
   Timer? keyRepeatTimer;
