@@ -43,6 +43,7 @@ dependencies:
     git:
       url: https://github.com/wgh136/flutter_desktop_webview
       path: packages/desktop_webview_window
+      ref: 7801fc582ecf5a7351632887891ecf309a7b2583
   flutter_inappwebview:
     git:
       url: https://github.com/pichillilorenzo/flutter_inappwebview
