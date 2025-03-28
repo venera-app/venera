@@ -306,7 +306,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                 });
               } else {
                 // prevent dirty data
-                var comic = LocalManager().find(c.id, ComicType(c.sourceKey.hashCode))!;
+                var comic = LocalManager().find(c.id, ComicType.fromKey(c.sourceKey))!;
                 comic.read();
               }
             },

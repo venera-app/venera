@@ -281,6 +281,12 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
             context.pop();
           },
         ),
+        if (App.isDesktop && !reader.isLoading)
+          MenuEntry(
+            icon: Icons.copy,
+            text: "Copy Image".tl,
+            onClick: () => copyImage(location),
+          ),
       ],
     );
   }
@@ -303,6 +309,16 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
 
   @override
   Object? get key => "reader_gesture";
+
+  void copyImage(Offset location) async {
+    var controller = reader._imageViewController;
+    var image = await controller!.getImageByOffset(location);
+    if (image != null) {
+      writeImageToClipboard(image);
+    } else {
+      context.showMessage(message: "No Image");
+    }
+  }
 }
 
 class _DragListener {

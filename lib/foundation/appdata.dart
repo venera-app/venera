@@ -17,17 +17,18 @@ class Appdata with Init {
   bool _isSavingData = false;
 
   Future<void> saveData([bool sync = true]) async {
-    if (_isSavingData) {
-      await Future.doWhile(() async {
-        await Future.delayed(const Duration(milliseconds: 20));
-        return _isSavingData;
-      });
+    while (_isSavingData) {
+      await Future.delayed(const Duration(milliseconds: 20));
     }
     _isSavingData = true;
-    var data = jsonEncode(toJson());
-    var file = File(FilePath.join(App.dataPath, 'appdata.json'));
-    await file.writeAsString(data);
-    _isSavingData = false;
+    try {
+      var data = jsonEncode(toJson());
+      var file = File(FilePath.join(App.dataPath, 'appdata.json'));
+      await file.writeAsString(data);
+    }
+    finally {
+      _isSavingData = false;
+    }
     if (sync) {
       DataSync().uploadData();
     }
@@ -85,9 +86,18 @@ class Appdata with Init {
 
   var implicitData = <String, dynamic>{};
 
-  void writeImplicitData() {
-    var file = File(FilePath.join(App.dataPath, 'implicitData.json'));
-    file.writeAsString(jsonEncode(implicitData));
+  void writeImplicitData() async {
+    while (_isSavingData) {
+      await Future.delayed(const Duration(milliseconds: 20));
+    }
+    _isSavingData = true;
+    try {
+      var file = File(FilePath.join(App.dataPath, 'implicitData.json'));
+      await file.writeAsString(jsonEncode(implicitData));
+    }
+    finally {
+      _isSavingData = false;
+    }
   }
 
   @override
@@ -109,7 +119,12 @@ class Appdata with Init {
     searchHistory = List.from(json['searchHistory']);
     var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
     if (await implicitDataFile.exists()) {
-      implicitData = jsonDecode(await implicitDataFile.readAsString());
+      try {
+        implicitData = jsonDecode(await implicitDataFile.readAsString());
+      }
+      catch(_) {
+        // ignore
+      }
     }
   }
 }
@@ -168,6 +183,7 @@ class Settings with ChangeNotifier {
     'followUpdatesFolder': null,
     'initialPage': '0',
     'comicListDisplayMode': 'paging', // paging, continuous
+    'showPageNumberInReader': true,
   };
 
   operator [](String key) {

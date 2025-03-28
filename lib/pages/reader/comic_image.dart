@@ -24,6 +24,8 @@ class ComicImage extends StatefulWidget {
     Map<String, String>? headers,
     int? cacheWidth,
     int? cacheHeight,
+    this.onInit,
+    this.onDispose,
   })  : image = ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, image),
         assert(cacheWidth == null || cacheWidth > 0),
         assert(cacheHeight == null || cacheHeight > 0);
@@ -60,6 +62,10 @@ class ComicImage extends StatefulWidget {
 
   final bool isAntiAlias;
 
+  final void Function(State<ComicImage> state)? onInit;
+
+  final void Function(State<ComicImage> state)? onDispose;
+
   static void clear() => _ComicImageState.clear();
 
   @override
@@ -87,6 +93,7 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scrollAwareContext = DisposableBuildContext<State<ComicImage>>(this);
+    widget.onInit?.call(this);
   }
 
   @override
@@ -97,6 +104,7 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
     _completerHandle?.dispose();
     _scrollAwareContext.dispose();
     _replaceImage(info: null);
+    widget.onDispose?.call(this);
     super.dispose();
   }
 
@@ -134,6 +142,15 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
   void reassemble() {
     _resolveImage(); // in case the image cache was flushed
     super.reassemble();
+  }
+
+  bool containsPoint(Offset point) {
+    if (!mounted) {
+      return false;
+    }
+    var renderBox = context.findRenderObject() as RenderBox;
+    var localPoint = renderBox.globalToLocal(point);
+    return renderBox.paintBounds.contains(localPoint);
   }
 
   void _updateInvertColors() {

@@ -25,8 +25,8 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           title: "Size of comic tile".tl,
           settingsIndex: "comicTileScale",
           interval: 0.05,
-          min: 0.75,
-          max: 1.25,
+          min: 0.5,
+          max: 1.5,
         ).toSliver(),
         _PopupWindowSetting(
           title: "Explore Pages".tl,

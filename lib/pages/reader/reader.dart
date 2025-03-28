@@ -30,6 +30,7 @@ import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/settings/settings_page.dart';
+import 'package:venera/utils/clipboard_image.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
@@ -577,4 +578,6 @@ abstract interface class _ImageViewController {
 
   /// Returns true if the event is handled.
   bool handleOnTap(Offset location);
+
+  Future<Uint8List?> getImageByOffset(Offset offset);
 }

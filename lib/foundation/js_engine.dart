@@ -163,6 +163,13 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
             return "${App.locale.languageCode}_${App.locale.countryCode}";
           case "getPlatform":
             return Platform.operatingSystem;
+          case "setClipboard":
+            return Clipboard.setData(ClipboardData(text: message["text"]));
+          case "getClipboard":
+            return Future.sync(() async {
+              var res = await Clipboard.getData(Clipboard.kTextPlain);
+              return res?.text;
+            });
         }
       }
       return null;

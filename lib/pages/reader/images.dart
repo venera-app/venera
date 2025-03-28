@@ -25,8 +25,8 @@ class _ReaderImagesState extends State<_ReaderImages> {
     if (inProgress) return;
     inProgress = true;
     if (reader.type == ComicType.local ||
-        (LocalManager()
-            .isDownloaded(reader.cid, reader.type, reader.chapter, reader.widget.chapters))) {
+        (LocalManager().isDownloaded(
+            reader.cid, reader.type, reader.chapter, reader.widget.chapters))) {
       try {
         var images = await LocalManager()
             .getImages(reader.cid, reader.type, reader.chapter);
@@ -113,6 +113,12 @@ class _GalleryModeState extends State<_GalleryMode>
 
   int get totalPages => (reader.images!.length / reader.imagesPerPage).ceil();
 
+  var imageStates = <State<ComicImage>>{};
+
+  bool isLongPressing = false;
+
+  int fingers = 0;
+
   @override
   void initState() {
     reader = context.reader;
@@ -142,81 +148,103 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   Widget build(BuildContext context) {
-    return PhotoViewGallery.builder(
-      backgroundDecoration: BoxDecoration(
-        color: context.colorScheme.surface,
-      ),
-      reverse: reader.mode == ReaderMode.galleryRightToLeft,
-      scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
-          ? Axis.vertical
-          : Axis.horizontal,
-      itemCount: totalPages + 2,
-      builder: (BuildContext context, int index) {
-        if (index == 0 || index == totalPages + 1) {
-          return PhotoViewGalleryPageOptions.customChild(
-            child: const SizedBox(),
-          );
-        } else {
-          int pageIndex = index - 1;
-          int startIndex = pageIndex * reader.imagesPerPage;
-          int endIndex = math.min(
-              startIndex + reader.imagesPerPage, reader.images!.length);
-          List<String> pageImages =
-              reader.images!.sublist(startIndex, endIndex);
-
-          cached[index] = true;
-          cache(index);
-
-          photoViewControllers[index] ??= PhotoViewController();
-
-          if (reader.imagesPerPage == 1) {
-            return PhotoViewGalleryPageOptions(
-              filterQuality: FilterQuality.medium,
-              controller: photoViewControllers[index],
-              imageProvider:
-                  _createImageProviderFromKey(pageImages[0], context),
-              fit: BoxFit.contain,
-              errorBuilder: (_, error, s, retry) {
-                return NetworkError(message: error.toString(), retry: retry);
-              },
+    return Listener(
+      onPointerDown: (event) {
+        fingers++;
+      },
+      onPointerUp: (event) {
+        fingers--;
+      },
+      onPointerCancel: (event) {
+        fingers--;
+      },
+      onPointerMove: (event) {
+        if (isLongPressing) {
+          var controller = photoViewControllers[reader.page]!;
+          Offset value = event.delta;
+          if (isLongPressing) {
+            controller.updateMultiple(
+              position: controller.position + value,
             );
           }
-
-          return PhotoViewGalleryPageOptions.customChild(
-            controller: photoViewControllers[index],
-            minScale: PhotoViewComputedScale.contained * 1.0,
-            maxScale: PhotoViewComputedScale.covered * 10.0,
-            child: buildPageImages(pageImages),
-          );
         }
       },
-      pageController: controller,
-      loadingBuilder: (context, event) => Center(
-        child: SizedBox(
-          width: 20.0,
-          height: 20.0,
-          child: CircularProgressIndicator(
-            backgroundColor: context.colorScheme.surfaceContainerHigh,
-            value: event == null || event.expectedTotalBytes == null
-                ? null
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+      child: PhotoViewGallery.builder(
+        backgroundDecoration: BoxDecoration(
+          color: context.colorScheme.surface,
+        ),
+        reverse: reader.mode == ReaderMode.galleryRightToLeft,
+        scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
+            ? Axis.vertical
+            : Axis.horizontal,
+        itemCount: totalPages + 2,
+        builder: (BuildContext context, int index) {
+          if (index == 0 || index == totalPages + 1) {
+            return PhotoViewGalleryPageOptions.customChild(
+              child: const SizedBox(),
+            );
+          } else {
+            int pageIndex = index - 1;
+            int startIndex = pageIndex * reader.imagesPerPage;
+            int endIndex = math.min(
+                startIndex + reader.imagesPerPage, reader.images!.length);
+            List<String> pageImages =
+                reader.images!.sublist(startIndex, endIndex);
+
+            cached[index] = true;
+            cache(index);
+
+            photoViewControllers[index] ??= PhotoViewController();
+
+            if (reader.imagesPerPage == 1) {
+              return PhotoViewGalleryPageOptions(
+                filterQuality: FilterQuality.medium,
+                controller: photoViewControllers[index],
+                imageProvider:
+                    _createImageProviderFromKey(pageImages[0], context),
+                fit: BoxFit.contain,
+                errorBuilder: (_, error, s, retry) {
+                  return NetworkError(message: error.toString(), retry: retry);
+                },
+              );
+            }
+
+            return PhotoViewGalleryPageOptions.customChild(
+              controller: photoViewControllers[index],
+              minScale: PhotoViewComputedScale.contained * 1.0,
+              maxScale: PhotoViewComputedScale.covered * 10.0,
+              child: buildPageImages(pageImages),
+            );
+          }
+        },
+        pageController: controller,
+        loadingBuilder: (context, event) => Center(
+          child: SizedBox(
+            width: 20.0,
+            height: 20.0,
+            child: CircularProgressIndicator(
+              backgroundColor: context.colorScheme.surfaceContainerHigh,
+              value: event == null || event.expectedTotalBytes == null
+                  ? null
+                  : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+            ),
           ),
         ),
+        onPageChanged: (i) {
+          if (i == 0) {
+            if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
+              reader.toPage(1);
+            }
+          } else if (i == totalPages + 1) {
+            if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
+              reader.toPage(totalPages);
+            }
+          } else {
+            reader.setPage(i);
+            context.readerScaffold.update();
+          }
+        },
       ),
-      onPageChanged: (i) {
-        if (i == 0) {
-          if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
-            reader.toPage(1);
-          }
-        } else if (i == totalPages + 1) {
-          if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
-            reader.toPage(totalPages);
-          }
-        } else {
-          reader.setPage(i);
-          context.readerScaffold.update();
-        }
-      },
     );
   }
 
@@ -226,20 +254,54 @@ class _GalleryModeState extends State<_GalleryMode>
         : Axis.horizontal;
 
     bool reverse = reader.mode == ReaderMode.galleryRightToLeft;
-
-    List<Widget> imageWidgets = images.map((imageKey) {
-      ImageProvider imageProvider =
-          _createImageProviderFromKey(imageKey, context);
-      return Expanded(
-        child: ComicImage(
-          image: imageProvider,
-          fit: BoxFit.contain,
-        ),
-      );
-    }).toList();
-
     if (reverse) {
-      imageWidgets = imageWidgets.reversed.toList();
+      images = images.reversed.toList();
+    }
+
+    List<Widget> imageWidgets;
+
+    if (images.length == 2) {
+      imageWidgets = [
+        Expanded(
+          child: ComicImage(
+            width: double.infinity,
+            height: double.infinity,
+            image: _createImageProviderFromKey(images[0], context),
+            fit: BoxFit.contain,
+            alignment: axis == Axis.vertical
+                ? Alignment.bottomCenter
+                : Alignment.centerRight,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        ),
+        Expanded(
+          child: ComicImage(
+            width: double.infinity,
+            height: double.infinity,
+            image: _createImageProviderFromKey(images[1], context),
+            fit: BoxFit.contain,
+            alignment: axis == Axis.vertical
+                ? Alignment.topCenter
+                : Alignment.centerLeft,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        )
+      ];
+    } else {
+      imageWidgets = images.map((imageKey) {
+        ImageProvider imageProvider =
+            _createImageProviderFromKey(imageKey, context);
+        return Expanded(
+          child: ComicImage(
+            image: imageProvider,
+            fit: BoxFit.contain,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
+          ),
+        );
+      }).toList();
     }
 
     return axis == Axis.vertical
@@ -276,7 +338,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   void handleLongPressDown(Offset location) {
-    if (!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom'] || fingers != 1) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
@@ -286,17 +348,21 @@ class _GalleryModeState extends State<_GalleryMode>
       target,
       Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
     );
+    isLongPressing = true;
   }
 
   @override
   void handleLongPressUp(Offset location) {
-    if (!appdata.settings['enableLongPressToZoom']) {
+    if (!appdata.settings['enableLongPressToZoom'] || !isLongPressing) {
       return;
     }
     var photoViewController = photoViewControllers[reader.page]!;
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
+    isLongPressing = false;
   }
+
+  Timer? keyRepeatTimer;
 
   @override
   void handleKeyEvent(KeyEvent event) {
@@ -320,7 +386,11 @@ class _GalleryModeState extends State<_GalleryMode>
         event.logicalKey == LogicalKeyboardKey.arrowRight) {
       forward = false;
     }
-    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+    if (event is KeyDownEvent) {
+      if (keyRepeatTimer != null) {
+        keyRepeatTimer!.cancel();
+        keyRepeatTimer = null;
+      }
       if (forward == true) {
         controller.nextPage(
           duration: const Duration(milliseconds: 200),
@@ -333,11 +403,58 @@ class _GalleryModeState extends State<_GalleryMode>
         );
       }
     }
+    if (event is KeyRepeatEvent && keyRepeatTimer == null) {
+      keyRepeatTimer = Timer.periodic(
+        const Duration(milliseconds: 100),
+        (timer) {
+          if (!mounted) {
+            timer.cancel();
+            return;
+          } else if (forward == true) {
+            controller.nextPage(
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.ease,
+            );
+          } else if (forward == false) {
+            controller.previousPage(
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.ease,
+            );
+          }
+        },
+      );
+    }
+    if (event is KeyUpEvent && keyRepeatTimer != null) {
+      keyRepeatTimer!.cancel();
+      keyRepeatTimer = null;
+    }
   }
 
   @override
   bool handleOnTap(Offset location) {
     return false;
+  }
+
+  @override
+  Future<Uint8List?> getImageByOffset(Offset offset) async {
+    String? imageKey;
+    if (reader.imagesPerPage == 1) {
+      imageKey = reader.images![reader.page - 1];
+    } else {
+      for (var imageState in imageStates) {
+        if ((imageState as _ComicImageState).containsPoint(offset)) {
+          imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+        }
+      }
+    }
+    if (imageKey == null) return null;
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
   }
 }
 
@@ -383,6 +500,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
   /// To handle the tap event, we need to know if the user was scrolling before the delay.
   bool delayedIsScrolling = false;
 
+  var imageStates = <State<ComicImage>>{};
+
   void delayedSetIsScrolling(bool value) {
     Future.delayed(
       const Duration(milliseconds: 300),
@@ -394,6 +513,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
   bool prepareToNextChapter = false;
   bool jumpToNextChapter = false;
   bool jumpToPrevChapter = false;
+
+  bool isZoomedIn = false;
+  bool isLongPressing = false;
 
   @override
   void initState() {
@@ -485,6 +607,16 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
   }
 
+  bool onScaleUpdate([double? scale]) {
+    var isZoomedIn = (scale ?? photoViewController.scale) != 1.0;
+    if (isZoomedIn != this.isZoomedIn) {
+      setState(() {
+        this.isZoomedIn = isZoomedIn;
+      });
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget widget = ScrollablePositionedList.builder(
@@ -506,7 +638,9 @@ class _ContinuousModeState extends State<_ContinuousMode>
       reverse: reader.mode == ReaderMode.continuousRightToLeft,
       physics: isCTRLPressed || _isMouseScrolling || disableScroll
           ? const NeverScrollableScrollPhysics()
-          : const BouncingScrollPhysics(),
+          : isZoomedIn
+              ? const ClampingScrollPhysics()
+              : const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
         if (index == 0 || index == reader.maxPage + 1) {
           return const SizedBox();
@@ -529,6 +663,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
             width: width,
             height: height,
             fit: BoxFit.contain,
+            onInit: (state) => imageStates.add(state),
+            onDispose: (state) => imageStates.remove(state),
           ),
         );
       },
@@ -593,18 +729,23 @@ class _ContinuousModeState extends State<_ContinuousMode>
         if (photoViewController.scale == 1 || fingers != 1) {
           return;
         }
-        if (scrollController.offset !=
-                scrollController.position.maxScrollExtent &&
-            scrollController.offset !=
-                scrollController.position.minScrollExtent) {
+        Offset offset;
+        var sp = scrollController.position;
+        if (sp.pixels < sp.minScrollExtent || sp.pixels > sp.maxScrollExtent) {
+          offset = Offset(value.dx, value.dy);
+        } else {
           if (reader.mode == ReaderMode.continuousTopToBottom) {
-            value = Offset(value.dx, 0);
+            offset = Offset(value.dx, 0);
           } else {
-            value = Offset(0, value.dy);
+            offset = Offset(0, value.dy);
           }
         }
+        if (isLongPressing) {
+          offset += value;
+        }
         photoViewController.updateMultiple(
-            position: photoViewController.position + value);
+          position: photoViewController.position + offset,
+        );
       },
       onPointerSignal: onPointerSignal,
       child: widget,
@@ -676,6 +817,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       maxScale: 2.5,
       strictScale: true,
       controller: photoViewController,
+      onScaleUpdate: onScaleUpdate,
       child: SizedBox(
         width: width,
         height: height,
@@ -731,6 +873,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
       target,
       Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
     );
+    onScaleUpdate(target);
   }
 
   @override
@@ -739,11 +882,12 @@ class _ContinuousModeState extends State<_ContinuousMode>
       return;
     }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
-    var size = MediaQuery.of(context).size;
     photoViewController.animateScale?.call(
       target,
-      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+      Offset(0, 0),
     );
+    onScaleUpdate(target);
+    isLongPressing = true;
   }
 
   @override
@@ -753,6 +897,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
     double target = photoViewController.getInitialScale!.call()!;
     photoViewController.animateScale?.call(target);
+    onScaleUpdate(target);
+    isLongPressing = false;
   }
 
   @override
@@ -817,6 +963,24 @@ class _ContinuousModeState extends State<_ContinuousMode>
       return true;
     }
     return false;
+  }
+
+  @override
+  Future<Uint8List?> getImageByOffset(Offset offset) async {
+    String? imageKey;
+    for (var imageState in imageStates) {
+      if ((imageState as _ComicImageState).containsPoint(offset)) {
+        imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+      }
+    }
+    if (imageKey == null) return null;
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
   }
 }
 
