@@ -100,6 +100,7 @@ class DataSync with ChangeNotifier {
           rhttp.ClientSettings(
             proxySettings:
                 proxy == null ? null : rhttp.ProxySettings.proxy(proxy),
+            userAgent: "venera v${App.version}",
           ),
         ),
       );
@@ -172,6 +173,7 @@ class DataSync with ChangeNotifier {
           rhttp.ClientSettings(
             proxySettings:
                 proxy == null ? null : rhttp.ProxySettings.proxy(proxy),
+            userAgent: "venera v${App.version}",
           ),
         ),
       );
