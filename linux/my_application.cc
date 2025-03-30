@@ -80,6 +80,7 @@ static void my_application_activate(GApplication* application) {
   gtk_window_set_default_size(window, 1280, 720);
   GdkVisual* visual;
   gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+  gtk_window_set_decorated(window, FALSE);
   visual = gdk_screen_get_rgba_visual(screen);
   if (visual != NULL && gdk_screen_is_composited(screen)) {
     gtk_widget_set_visual(GTK_WIDGET(window), visual);
