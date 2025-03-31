@@ -82,10 +82,7 @@ class _WindowFrameState extends State<WindowFrame> {
         return;
       }
     }
-    windowManager.close().then((_) {
-      // Make sure the app exits when the window is closed.
-      exit(0);
-    });
+    exit(0);
   }
 
   @override
