@@ -35,8 +35,14 @@ void main(List<String> args) {
           }
           await windowManager.setMinimumSize(const Size(500, 600));
           var placement = await WindowPlacement.loadFromFile();
-          await placement.applyToWindow();
-          await windowManager.show();
+          if (App.isLinux) {
+            await windowManager.show();
+            await placement.applyToWindow();
+          } else {
+            await placement.applyToWindow();
+            await windowManager.show();
+          }
+
           WindowPlacement.loop();
         });
       }
