@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -132,25 +131,28 @@ extension DirectoryExtension on Directory {
 }
 
 /// Sanitize the file name. Remove invalid characters and trim the file name.
-String sanitizeFileName(String fileName) {
+String sanitizeFileName(String fileName, {String? dir, int? maxLength}) {
   if (fileName.endsWith('.')) {
     fileName = fileName.substring(0, fileName.length - 1);
   }
-  const maxLength = 255;
+  var maxLength = 255;
+  if (dir != null) {
+    if (!dir.endsWith('/') && !dir.endsWith('\\')) {
+      dir = "$dir/";
+    }
+    maxLength -= dir.length;
+  }
   final invalidChars = RegExp(r'[<>:"/\\|?*]');
   final sanitizedFileName = fileName.replaceAll(invalidChars, ' ');
   var trimmedFileName = sanitizedFileName.trim();
   if (trimmedFileName.isEmpty) {
     throw Exception('Invalid File Name: Empty length.');
   }
-  while (true) {
-    final bytes = utf8.encode(trimmedFileName);
-    if (bytes.length > maxLength) {
-      trimmedFileName =
-          trimmedFileName.substring(0, trimmedFileName.length - 1);
-    } else {
-      break;
-    }
+  if (maxLength <= 0) {
+    throw Exception('Invalid File Name: Max length is less than 0.');
+  }
+  if (trimmedFileName.length > maxLength) {
+    trimmedFileName = trimmedFileName.substring(0, maxLength);
   }
   return trimmedFileName;
 }
