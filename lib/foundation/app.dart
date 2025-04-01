@@ -47,6 +47,7 @@ class _App {
 
   late String dataPath;
   late String cachePath;
+  String? externalStoragePath;
 
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -77,6 +78,9 @@ class _App {
   Future<void> init() async {
     cachePath = (await getApplicationCacheDirectory()).path;
     dataPath = (await getApplicationSupportDirectory()).path;
+    if (isAndroid) {
+      externalStoragePath = (await getExternalStorageDirectory())!.path;
+    }
   }
 
   Future<void> initComponents() async {
