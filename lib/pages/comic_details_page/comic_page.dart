@@ -461,7 +461,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     if (comic.tags.isEmpty &&
         comic.uploader == null &&
         comic.uploadTime == null &&
-        comic.uploadTime == null) {
+        comic.uploadTime == null &&
+        comic.maxPage == null) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
 
@@ -623,6 +624,13 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               children: [
                 buildTag(text: 'Update Time'.tl, isTitle: true),
                 buildTag(text: formatTime(comic.updateTime!)),
+              ],
+            ),
+          if (comic.maxPage != null)
+            buildWrap(
+              children: [
+                buildTag(text: 'Pages'.tl, isTitle: true),
+                buildTag(text: comic.maxPage.toString()),
               ],
             ),
           const SizedBox(height: 12),

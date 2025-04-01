@@ -380,7 +380,8 @@
     "Copy Image": "复制图片",
     "A valid WebDav directory URL": "有效的WebDav目录URL",
     "Shut Down": "关闭",
-    "Uploading data...": "正在上传数据..."
+    "Uploading data...": "正在上传数据...",
+    "Pages": "页数"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -763,6 +764,7 @@
     "Copy Image": "複製圖片",
     "A valid WebDav directory URL": "有效的WebDav目錄URL",
     "Shut Down": "關閉",
-    "Uploading data...": "正在上傳數據..."
+    "Uploading data...": "正在上傳數據...",
+    "Pages": "頁數"
   }
 }
