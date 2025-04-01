@@ -72,7 +72,7 @@ dependencies:
   flutter_saf:
     git: 
       url: https://github.com/venera-app/flutter_saf
-      ref: 690a03a954f1603e0149cfd479c8961b88f21336
+      ref: 34e157e4c2b248d5463231b28b1f07927591705d
   dynamic_color: ^1.7.0
   shimmer_animation: ^2.1.0
   flutter_memory_info: ^0.0.1

@@ -67,7 +67,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.github.wgh136.venera"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
@@ -125,6 +124,6 @@ flutter {
 }
 
 dependencies {
-    implementation "androidx.activity:activity-ktx:1.9.2"
+    implementation "androidx.activity:activity-ktx:1.10.1"
     implementation 'androidx.documentfile:documentfile:1.0.1'
 }
