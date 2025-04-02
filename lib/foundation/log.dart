@@ -39,18 +39,6 @@ class Log {
   }
 
   static IOSink? _file;
-  static bool _isFlushing = false;
-
-  static void _tryFlush() async {
-    if (_file != null) {
-      while (_isFlushing) {
-        await Future.delayed(const Duration(milliseconds: 20));
-      }
-      _isFlushing = true;
-      await _file!.flush();
-      _isFlushing = false;
-    }
-  }
 
   static void addLog(LogLevel level, String title, String content) {
     if (_file == null) {
@@ -88,7 +76,6 @@ class Log {
     _logs.add(newLog);
     if(_file != null) {
       _file!.write(newLog.toString());
-      _tryFlush();
     }
     if (_logs.length > maxLogNumber) {
       var res = _logs.remove(
