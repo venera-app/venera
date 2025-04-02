@@ -343,10 +343,19 @@ class _GalleryModeState extends State<_GalleryMode>
     }
     var photoViewController = photoViewControllers[reader.page]!;
     double target = photoViewController.getInitialScale!.call()! * 1.75;
-    var size = MediaQuery.of(context).size;
+    var size = reader.size;
+    Offset zoomPosition;
+    if (appdata.settings['longPressZoomPosition'] != 'center') {
+      zoomPosition = Offset(
+        size.width / 2 - location.dx,
+        size.height / 2 - location.dy,
+      );
+    } else {
+      zoomPosition = Offset(0, 0);
+    }
     photoViewController.animateScale?.call(
       target,
-      Offset(size.width / 2 - location.dx, size.height / 2 - location.dy),
+      zoomPosition,
     );
     isLongPressing = true;
   }
@@ -608,6 +617,13 @@ class _ContinuousModeState extends State<_ContinuousMode>
   }
 
   bool onScaleUpdate([double? scale]) {
+    if (prepareToNextChapter || prepareToPrevChapter) {
+      setState(() {
+        prepareToPrevChapter = false;
+        prepareToNextChapter = false;
+      });
+      context.readerScaffold.setFloatingButton(0);
+    }
     var isZoomedIn = (scale ?? photoViewController.scale) != 1.0;
     if (isZoomedIn != this.isZoomedIn) {
       setState(() {
@@ -731,7 +747,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
         Offset offset;
         var sp = scrollController.position;
-        if (sp.pixels < sp.minScrollExtent || sp.pixels > sp.maxScrollExtent) {
+        if (sp.pixels <= sp.minScrollExtent || sp.pixels >= sp.maxScrollExtent) {
           offset = Offset(value.dx, value.dy);
         } else {
           if (reader.mode == ReaderMode.continuousTopToBottom) {
@@ -759,7 +775,10 @@ class _ContinuousModeState extends State<_ContinuousMode>
           delayedSetIsScrolling(false);
         }
 
-        if (notification is ScrollUpdateNotification) {
+        var scale = photoViewController.scale ?? 1.0;
+
+        if (notification is ScrollUpdateNotification &&
+            (scale - 1).abs() < 0.05) {
           if (!scrollController.hasClients) return false;
           if (scrollController.position.pixels <=
                   scrollController.position.minScrollExtent &&
@@ -800,8 +819,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
       },
       child: widget,
     );
-    var width = MediaQuery.of(context).size.width;
-    var height = MediaQuery.of(context).size.height;
+    var width = reader.size.width;
+    var height = reader.size.height;
     if (appdata.settings['limitImageWidth'] &&
         width / height > 0.7 &&
         reader.mode == ReaderMode.continuousTopToBottom) {
@@ -882,9 +901,19 @@ class _ContinuousModeState extends State<_ContinuousMode>
       return;
     }
     double target = photoViewController.getInitialScale!.call()! * 1.75;
+    var size = reader.size;
+    Offset zoomPosition;
+    if (appdata.settings['longPressZoomPosition'] != 'center') {
+      zoomPosition = Offset(
+        size.width / 2 - location.dx,
+        size.height / 2 - location.dy,
+      );
+    } else {
+      zoomPosition = Offset(0, 0);
+    }
     photoViewController.animateScale?.call(
       target,
-      Offset(0, 0),
+      zoomPosition,
     );
     onScaleUpdate(target);
     isLongPressing = true;

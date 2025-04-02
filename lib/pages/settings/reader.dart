@@ -48,6 +48,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             "continuousTopToBottom": "Continuous (Top to Bottom)".tl,
           },
           onChanged: () {
+            setState(() {});
             var readerMode = appdata.settings['readerMode'];
             if (readerMode?.toLowerCase().startsWith('continuous') ?? false) {
               appdata.settings['readerScreenPicNumberForLandscape'] = 1;
@@ -68,67 +69,55 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("autoPageTurningInterval");
           },
         ).toSliver(),
-        SliverToBoxAdapter(
-          child: AbsorbPointer(
-            absorbing: (appdata.settings['readerMode']
-                    ?.toLowerCase()
-                    .startsWith('continuous') ??
-                false),
-            child: AnimatedOpacity(
-              opacity: (appdata.settings['readerMode']
-                          ?.toLowerCase()
-                          .startsWith('continuous') ??
-                      false)
-                  ? 0.5
-                  : 1.0,
-              duration: Duration(milliseconds: 300),
-              child: _SliderSetting(
-                title: "The number of pic in screen for landscape (Only Gallery Mode)".tl,
-                settingsIndex: "readerScreenPicNumberForLandscape",
-                interval: 1,
-                min: 1,
-                max: 5,
-                onChanged: () {
-                  widget.onChanged?.call("readerScreenPicNumberForLandscape");
-                },
-              ),
-            ),
+        SliverAnimatedVisibility(
+          visible: appdata.settings['readerMode']!.startsWith('gallery'),
+          child: _SliderSetting(
+            title:
+                "The number of pic in screen for landscape (Only Gallery Mode)"
+                    .tl,
+            settingsIndex: "readerScreenPicNumberForLandscape",
+            interval: 1,
+            min: 1,
+            max: 5,
+            onChanged: () {
+              widget.onChanged?.call("readerScreenPicNumberForLandscape");
+            },
           ),
         ),
-        SliverToBoxAdapter(
-          child: AbsorbPointer(
-            absorbing: (appdata.settings['readerMode']
-                ?.toLowerCase()
-                .startsWith('continuous') ??
-                false),
-            child: AnimatedOpacity(
-              opacity: (appdata.settings['readerMode']
-                  ?.toLowerCase()
-                  .startsWith('continuous') ??
-                  false)
-                  ? 0.5
-                  : 1.0,
-              duration: Duration(milliseconds: 300),
-              child: _SliderSetting(
-                title: "The number of pic in screen for portrait (Only Gallery Mode)".tl,
-                settingsIndex: "readerScreenPicNumberForPortrait",
-                interval: 1,
-                min: 1,
-                max: 5,
-                onChanged: () {
-                  widget.onChanged?.call("readerScreenPicNumberForPortrait");
-                },
-              ),
-            ),
+        SliverAnimatedVisibility(
+          visible: appdata.settings['readerMode']!.startsWith('gallery'),
+          child: _SliderSetting(
+            title:
+                "The number of pic in screen for portrait (Only Gallery Mode)"
+                    .tl,
+            settingsIndex: "readerScreenPicNumberForPortrait",
+            interval: 1,
+            min: 1,
+            max: 5,
+            onChanged: () {
+              widget.onChanged?.call("readerScreenPicNumberForPortrait");
+            },
           ),
         ),
         _SwitchSetting(
           title: 'Long press to zoom'.tl,
           settingKey: 'enableLongPressToZoom',
           onChanged: () {
+            setState(() {});
             widget.onChanged?.call('enableLongPressToZoom');
           },
         ).toSliver(),
+        SliverAnimatedVisibility(
+          visible: appdata.settings['enableLongPressToZoom'] == true,
+          child: SelectSetting(
+            title: "Long press zoom position".tl,
+            settingKey: "longPressZoomPosition",
+            optionTranslation: {
+              "press": "Press position".tl,
+              "center": "Screen center".tl,
+            },
+          ),
+        ),
         _SwitchSetting(
           title: 'Limit image width'.tl,
           subtitle: 'When using Continuous(Top to Bottom) mode'.tl,

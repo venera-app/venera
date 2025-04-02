@@ -309,6 +309,13 @@ class _ReaderState extends State<Reader>
     }
     return chapter == maxChapter;
   }
+
+  /// Get the size of the reader.
+  /// The size is not always the same as the size of the screen.
+  Size get size {
+    var renderBox = context.findRenderObject() as RenderBox;
+    return renderBox.size;
+  }
 }
 
 abstract mixin class _ImagePerPageHandler {

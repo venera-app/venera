@@ -381,7 +381,10 @@
     "A valid WebDav directory URL": "有效的WebDav目录URL",
     "Shut Down": "关闭",
     "Uploading data...": "正在上传数据...",
-    "Pages": "页数"
+    "Pages": "页数",
+    "Long press zoom position": "长按缩放位置",
+    "Press position": "按压位置",
+    "Screen center": "屏幕中心"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -765,6 +768,9 @@
     "A valid WebDav directory URL": "有效的WebDav目錄URL",
     "Shut Down": "關閉",
     "Uploading data...": "正在上傳數據...",
-    "Pages": "頁數"
+    "Pages": "頁數",
+    "Long press zoom position": "長按縮放位置",
+    "Press position": "按壓位置",
+    "Screen center": "螢幕中心"
   }
 }

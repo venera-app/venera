@@ -163,3 +163,29 @@ class SliverLazyToBoxAdapter extends StatelessWidget {
     ]);
   }
 }
+
+class SliverAnimatedVisibility extends StatelessWidget {
+  const SliverAnimatedVisibility({
+    super.key,
+    required this.visible,
+    required this.child,
+  });
+
+  final bool visible;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    var child = visible ? this.child : const SizedBox.shrink();
+
+    return SliverToBoxAdapter(
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: child,
+      ),
+    );
+  }
+}
