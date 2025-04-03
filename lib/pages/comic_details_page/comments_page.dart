@@ -99,61 +99,67 @@ class _CommentsPageState extends State<CommentsPage> {
       return Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              primary: false,
-              padding: EdgeInsets.zero,
-              itemCount: _comments!.length + 2,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  if (widget.replyComment != null) {
-                    return Column(
-                      children: [
-                        _CommentTile(
-                          comment: widget.replyComment!,
-                          source: widget.source,
-                          comic: widget.data,
-                          showAvatar: showAvatar,
-                          showActions: false,
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: context.colorScheme.outlineVariant,
-                                width: 0.6,
+            child: SmoothScrollProvider(
+              builder: (context, controller, physics) {
+                return ListView.builder(
+                  controller: controller,
+                  physics: physics,
+                  primary: false,
+                  padding: EdgeInsets.zero,
+                  itemCount: _comments!.length + 2,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      if (widget.replyComment != null) {
+                        return Column(
+                          children: [
+                            _CommentTile(
+                              comment: widget.replyComment!,
+                              source: widget.source,
+                              comic: widget.data,
+                              showAvatar: showAvatar,
+                              showActions: false,
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                    color: context.colorScheme.outlineVariant,
+                                    width: 0.6,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                "Replies".tl,
+                                style: ts.s18,
                               ),
                             ),
-                          ),
-                          child: Text(
-                            "Replies".tl,
-                            style: ts.s18,
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      } else {
+                        return const SizedBox();
+                      }
+                    }
+                    index--;
+
+                    if (index == _comments!.length) {
+                      if (_page < (maxPage ?? _page + 1)) {
+                        loadMore();
+                        return const ListLoadingIndicator();
+                      } else {
+                        return const SizedBox();
+                      }
+                    }
+
+                    return _CommentTile(
+                      comment: _comments![index],
+                      source: widget.source,
+                      comic: widget.data,
+                      showAvatar: showAvatar,
                     );
-                  } else {
-                    return const SizedBox();
-                  }
-                }
-                index--;
-
-                if (index == _comments!.length) {
-                  if (_page < (maxPage ?? _page + 1)) {
-                    loadMore();
-                    return const ListLoadingIndicator();
-                  } else {
-                    return const SizedBox();
-                  }
-                }
-
-                return _CommentTile(
-                  comment: _comments![index],
-                  source: widget.source,
-                  comic: widget.data,
-                  showAvatar: showAvatar,
+                  },
                 );
               },
             ),
