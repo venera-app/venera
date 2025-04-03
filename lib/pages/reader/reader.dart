@@ -370,7 +370,23 @@ abstract mixin class _VolumeListener {
 
   bool toPrevPage();
 
+  bool toNextChapter();
+
+  bool toPrevChapter();
+
   VolumeListener? volumeListener;
+
+  void onDown() {
+    if (!toNextPage()) {
+      toNextChapter();
+    }
+  }
+
+  void onUp() {
+    if (!toPrevPage()) {
+      toPrevChapter();
+    }
+  }
 
   void handleVolumeEvent() {
     if (!App.isAndroid) {
@@ -381,8 +397,8 @@ abstract mixin class _VolumeListener {
       volumeListener?.cancel();
     }
     volumeListener = VolumeListener(
-      onDown: toNextPage,
-      onUp: toPrevPage,
+      onDown: onDown,
+      onUp: onUp,
     )..listen();
   }
 
