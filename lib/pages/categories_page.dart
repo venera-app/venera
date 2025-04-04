@@ -4,12 +4,10 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/pages/ranking_page.dart';
-import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
-import 'category_comics_page.dart';
 import 'comic_source_page.dart';
 
 class CategoriesPage extends StatefulWidget {
@@ -147,43 +145,6 @@ class _CategoryPage extends StatelessWidget {
     return "";
   }
 
-  void handleClick(
-    String tag,
-    String? param,
-    String type,
-    String namespace,
-    String categoryKey,
-  ) {
-    if (type == 'search') {
-      App.mainNavigatorKey?.currentContext?.to(
-        () => SearchResultPage(
-          text: tag,
-          options: const [],
-          sourceKey: findComicSourceKey(),
-        ),
-      );
-    } else if (type == "search_with_namespace") {
-      if (tag.contains(" ")) {
-        tag = '"$tag"';
-      }
-      App.mainNavigatorKey?.currentContext?.to(
-        () => SearchResultPage(
-          text: "$namespace:$tag",
-          options: const [],
-          sourceKey: findComicSourceKey(),
-        ),
-      );
-    } else if (type == "category") {
-      App.mainNavigatorKey!.currentContext!.to(
-        () => CategoryComicsPage(
-          category: tag,
-          categoryKey: categoryKey,
-          param: param,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     var children = <Widget>[];
@@ -194,11 +155,11 @@ class _CategoryPage extends StatelessWidget {
         child: Wrap(
           children: [
             if (data.enableRankingPage)
-              buildTag("Ranking".tl, (p0, p1) {
+              buildTag("Ranking".tl, () {
                 context.to(() => RankingPage(categoryKey: data.key));
               }),
             for (var buttonData in data.buttons)
-              buildTag(buttonData.label.tl, (p0, p1) => buttonData.onTap())
+              buildTag(buttonData.label.tl, buttonData.onTap)
           ],
         ),
       ));
@@ -212,36 +173,14 @@ class _CategoryPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buildTitleWithRefresh(part.title, () => updater(() {})),
-              buildTagsWithParams(
-                part.categories,
-                part.categoryParams,
-                part.title,
-                (key, param) => handleClick(
-                  key,
-                  param,
-                  part.categoryType,
-                  part.title,
-                  category,
-                ),
-              )
+              buildTags(part.categories)
             ],
           );
         }));
       } else {
         children.add(buildTitle(part.title));
         children.add(
-          buildTagsWithParams(
-            part.categories,
-            part.categoryParams,
-            part.title,
-            (tag, param) => handleClick(
-              tag,
-              param,
-              part.categoryType,
-              part.title,
-              data.key,
-            ),
-          ),
+          buildTags(part.categories),
         );
       }
     }
@@ -280,30 +219,28 @@ class _CategoryPage extends StatelessWidget {
     );
   }
 
-  Widget buildTagsWithParams(
-    List<String> tags,
-    List<String>? params,
-    String? namespace,
-    ClickTagCallback onClick,
+  Widget buildTags(
+    List<CategoryItem> categories,
   ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
       child: Wrap(
         children: List<Widget>.generate(
-          tags.length,
-          (index) => buildTag(
-            tags[index],
-            onClick,
-            namespace,
-            params?.elementAtOrNull(index),
-          ),
+          categories.length,
+          (index) => buildCategory(categories[index]),
         ),
       ),
     );
   }
 
-  Widget buildTag(String tag, ClickTagCallback onClick,
-      [String? namespace, String? param]) {
+  Widget buildCategory(CategoryItem c) {
+    return buildTag(c.label, () {
+      var context = App.mainNavigatorKey!.currentContext!;
+      c.target.jump(context);
+    });
+  }
+
+  Widget buildTag(String label, VoidCallback onClick) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       child: Builder(
@@ -313,10 +250,10 @@ class _CategoryPage extends StatelessWidget {
             color: context.colorScheme.primaryContainer.toOpacity(0.72),
             child: InkWell(
               borderRadius: const BorderRadius.all(Radius.circular(8)),
-              onTap: () => onClick(tag, param),
+              onTap: onClick,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Text(tag),
+                child: Text(label),
               ),
             ),
           );

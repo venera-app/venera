@@ -300,21 +300,8 @@ abstract mixin class _ComicPageActions {
           'keyword': tag,
         };
     var context = App.mainNavigatorKey!.currentContext!;
-    if (config['action'] == 'search') {
-      context.to(() => SearchResultPage(
-            text: config['keyword'] ?? '',
-            sourceKey: comicSource.key,
-            options: const [],
-          ));
-    } else if (config['action'] == 'category') {
-      context.to(
-        () => CategoryComicsPage(
-          category: config['keyword'] ?? '',
-          categoryKey: comicSource.categoryData!.key,
-          param: config['param'],
-        ),
-      );
-    }
+    var target = PageJumpTarget.parse(comicSource.key, config);
+    target.jump(context);
   }
 
   void showMoreActions() {

@@ -9,6 +9,7 @@ class CategoryComicsPage extends StatefulWidget {
     required this.category,
     this.param,
     required this.categoryKey,
+    this.options,
     super.key,
   });
 
@@ -17,6 +18,8 @@ class CategoryComicsPage extends StatefulWidget {
   final String? param;
 
   final String categoryKey;
+
+  final List<String>? options;
 
   @override
   State<CategoryComicsPage> createState() => _CategoryComicsPageState();
@@ -40,7 +43,16 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
           }
           return true;
         }).toList();
-        optionsValue = options.map((e) => e.options.keys.first).toList();
+        var defaultOptionsValue =
+            options.map((e) => e.options.keys.first).toList();
+        if (optionsValue.length != options.length) {
+          var newOptionsValue = List<String>.filled(options.length, "");
+          for (var i = 0; i < options.length; i++) {
+            newOptionsValue[i] =
+                optionsValue.elementAtOrNull(i) ?? defaultOptionsValue[i];
+          }
+          optionsValue = newOptionsValue;
+        }
         sourceKey = source.key;
         return;
       }
@@ -50,6 +62,11 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
 
   @override
   void initState() {
+    if (widget.options != null) {
+      optionsValue = widget.options!;
+    } else {
+      optionsValue = [];
+    }
     findData();
     super.initState();
   }

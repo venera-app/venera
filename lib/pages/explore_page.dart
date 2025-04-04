@@ -6,12 +6,9 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/global_state.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/comic_source_page.dart';
-import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
-
-import 'category_comics_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -445,30 +442,7 @@ Iterable<Widget> _buildExplorePagePart(
                 TextButton(
                   onPressed: () {
                     var context = App.mainNavigatorKey!.currentContext!;
-                    if (part.viewMore!.startsWith("search:")) {
-                      context.to(
-                        () => SearchResultPage(
-                          text: part.viewMore!.replaceFirst("search:", ""),
-                          options: const [],
-                          sourceKey: sourceKey,
-                        ),
-                      );
-                    } else if (part.viewMore!.startsWith("category:")) {
-                      var cp = part.viewMore!.replaceFirst("category:", "");
-                      var c = cp.split('@').first;
-                      String? p = cp.split('@').last;
-                      if (p == c) {
-                        p = null;
-                      }
-                      context.to(
-                        () => CategoryComicsPage(
-                          category: c,
-                          categoryKey:
-                              ComicSource.find(sourceKey)!.categoryData!.key,
-                          param: p,
-                        ),
-                      );
-                    }
+                    part.viewMore!.jump(context);
                   },
                   child: Text("View more".tl),
                 )

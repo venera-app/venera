@@ -461,6 +461,7 @@ void _addAllPagesWithComicSource(ComicSource source) {
   var explorePages = appdata.settings['explore_pages'];
   var categoryPages = appdata.settings['categories'];
   var networkFavorites = appdata.settings['favorites'];
+  var searchPages = appdata.settings['searchSources'];
 
   if (source.explorePages.isNotEmpty) {
     for (var page in source.explorePages) {
@@ -477,10 +478,15 @@ void _addAllPagesWithComicSource(ComicSource source) {
       !networkFavorites.contains(source.favoriteData!.key)) {
     networkFavorites.add(source.favoriteData!.key);
   }
+  if (source.searchPageData != null &&
+      !searchPages.contains(source.key)) {
+    searchPages.add(source.key);
+  }
 
   appdata.settings['explore_pages'] = explorePages.toSet().toList();
   appdata.settings['categories'] = categoryPages.toSet().toList();
   appdata.settings['favorites'] = networkFavorites.toSet().toList();
+  appdata.settings['searchSources'] = searchPages.toSet().toList();
 
   appdata.saveData();
 }
