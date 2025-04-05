@@ -334,7 +334,12 @@ class ComicTile extends StatelessWidget {
                         }
 
                         var children = <Widget>[];
-                        for (var line in text.split('\n')) {
+                        var lines = text.split('\n');
+                        lines.removeWhere((e) => e.trim().isEmpty);
+                        if (lines.length > 3) {
+                          lines = lines.sublist(0, 3);
+                        }
+                        for (var line in lines) {
                           children.add(Container(
                             margin: const EdgeInsets.fromLTRB(2, 0, 2, 2),
                             padding: constraints.maxWidth < 80

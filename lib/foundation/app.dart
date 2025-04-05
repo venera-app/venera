@@ -13,7 +13,7 @@ export "widget_utils.dart";
 export "context.dart";
 
 class _App {
-  final version = "1.3.4";
+  final version = "1.4.0";
 
   bool get isAndroid => Platform.isAndroid;
 
@@ -47,6 +47,7 @@ class _App {
 
   late String dataPath;
   late String cachePath;
+  String? externalStoragePath;
 
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -77,6 +78,9 @@ class _App {
   Future<void> init() async {
     cachePath = (await getApplicationCacheDirectory()).path;
     dataPath = (await getApplicationSupportDirectory()).path;
+    if (isAndroid) {
+      externalStoragePath = (await getExternalStorageDirectory())!.path;
+    }
   }
 
   Future<void> initComponents() async {

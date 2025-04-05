@@ -161,6 +161,7 @@ class Settings with ChangeNotifier {
     'cacheSize': 2048, // in MB
     'downloadThreads': 5,
     'enableLongPressToZoom': true,
+    'longPressZoomPosition': "press", // press, center
     'checkUpdateOnStart': false,
     'limitImageWidth': true,
     'webdav': [], // empty means not configured

@@ -30,6 +30,7 @@ part 'local_favorites.dart';
 part 'app.dart';
 part 'about.dart';
 part 'network.dart';
+part 'debug.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({this.initialPage = -1, super.key});
@@ -55,6 +56,7 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
     "APP",
     "Network",
     "About",
+    "Debug"
   ];
 
   final icons = <IconData>[
@@ -64,7 +66,8 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
     Icons.collections_bookmark_rounded,
     Icons.apps,
     Icons.public,
-    Icons.info
+    Icons.info,
+    Icons.bug_report,
   ];
 
   double offset = 0;
@@ -246,6 +249,9 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
   }
 
   void handlePointerDown(PointerDownEvent event) {
+    if (!App.isIOS) {
+      return;
+    }
     if (event.position.dx < 20) {
       gestureRecognizer.addPointer(event);
     }
@@ -350,6 +356,7 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
       4 => const AppSettings(),
       5 => const NetworkSettings(),
       6 => const AboutSettings(),
+      7 => const DebugPage(),
       _ => throw UnimplementedError()
     };
   }

@@ -294,27 +294,9 @@ abstract mixin class _ComicPageActions {
   }
 
   void onTapTag(String tag, String namespace) {
-    var config = comicSource.handleClickTagEvent?.call(namespace, tag) ??
-        {
-          'action': 'search',
-          'keyword': tag,
-        };
+    var target = comicSource.handleClickTagEvent?.call(namespace, tag);
     var context = App.mainNavigatorKey!.currentContext!;
-    if (config['action'] == 'search') {
-      context.to(() => SearchResultPage(
-            text: config['keyword'] ?? '',
-            sourceKey: comicSource.key,
-            options: const [],
-          ));
-    } else if (config['action'] == 'category') {
-      context.to(
-        () => CategoryComicsPage(
-          category: config['keyword'] ?? '',
-          categoryKey: comicSource.categoryData!.key,
-          param: config['param'],
-        ),
-      );
-    }
+    target?.jump(context);
   }
 
   void showMoreActions() {

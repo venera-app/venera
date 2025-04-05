@@ -34,16 +34,20 @@ class CategoryButtonData {
   });
 }
 
+class CategoryItem {
+  final String label;
+
+  final PageJumpTarget target;
+
+  const CategoryItem(this.label, this.target);
+}
+
 abstract class BaseCategoryPart {
   String get title;
 
-  List<String> get categories;
-
-  List<String>? get categoryParams => null;
+  List<CategoryItem> get categories;
 
   bool get enableRandom;
-
-  String get categoryType;
 
   /// Data class for building a part of category page.
   const BaseCategoryPart();
@@ -51,7 +55,7 @@ abstract class BaseCategoryPart {
 
 class FixedCategoryPart extends BaseCategoryPart {
   @override
-  final List<String> categories;
+  final List<CategoryItem> categories;
 
   @override
   bool get enableRandom => false;
@@ -59,19 +63,12 @@ class FixedCategoryPart extends BaseCategoryPart {
   @override
   final String title;
 
-  @override
-  final String categoryType;
-
-  @override
-  final List<String>? categoryParams;
-
   /// A [BaseCategoryPart] that show fixed tags on category page.
-  const FixedCategoryPart(this.title, this.categories, this.categoryType,
-      [this.categoryParams]);
+  const FixedCategoryPart(this.title, this.categories);
 }
 
 class RandomCategoryPart extends BaseCategoryPart {
-  final List<String> tags;
+  final List<CategoryItem> all;
 
   final int randomNumber;
 
@@ -81,67 +78,59 @@ class RandomCategoryPart extends BaseCategoryPart {
   @override
   bool get enableRandom => true;
 
-  @override
-  final String categoryType;
-
-  List<String> _categories() {
-    if (randomNumber >= tags.length) {
-      return tags;
+  List<CategoryItem> _categories() {
+    if (randomNumber >= all.length) {
+      return all;
     }
-    var start = math.Random().nextInt(tags.length - randomNumber);
-    return tags.sublist(start, start + randomNumber);
+    var start = math.Random().nextInt(all.length - randomNumber);
+    return all.sublist(start, start + randomNumber);
   }
 
   @override
-  List<String> get categories => _categories();
+  List<CategoryItem> get categories => _categories();
 
-  /// A [BaseCategoryPart] that show random tags on category page.
+  /// A [BaseCategoryPart] that show a part of random tags on category page.
   const RandomCategoryPart(
-      this.title, this.tags, this.randomNumber, this.categoryType);
+    this.title,
+    this.all,
+    this.randomNumber,
+  );
 }
 
-class RandomCategoryPartWithRuntimeData extends BaseCategoryPart {
-  final Iterable<String> Function() loadTags;
+class DynamicCategoryPart extends BaseCategoryPart {
+  final JSAutoFreeFunction loader;
 
-  final int randomNumber;
-
-  @override
-  final String title;
+  final String sourceKey;
 
   @override
-  bool get enableRandom => true;
-
-  @override
-  final String categoryType;
-
-  static final random = math.Random();
-
-  List<String> _categories() {
-    var tags = loadTags();
-    if (randomNumber >= tags.length) {
-      return tags.toList();
+  List<CategoryItem> get categories {
+    var data = loader([]);
+    if (data is! List) {
+      throw "DynamicCategoryPart loader must return a List";
     }
-    final start = random.nextInt(tags.length - randomNumber);
-    var res = List.filled(randomNumber, '');
-    int index = -1;
-    for (var s in tags) {
-      index++;
-      if (start > index) {
-        continue;
-      } else if (index == start + randomNumber) {
-        break;
+    var res = <CategoryItem>[];
+    for (var item in data) {
+      if (item is! Map) {
+        throw "DynamicCategoryPart loader must return a List of Map";
       }
-      res[index - start] = s;
+      var label = item['label'];
+      var target = PageJumpTarget.parse(sourceKey, item['target']);
+      if (label is! String) {
+        throw "Category label must be a String";
+      }
+      res.add(CategoryItem(label, target));
     }
     return res;
   }
 
   @override
-  List<String> get categories => _categories();
+  bool get enableRandom => false;
 
-  /// A [BaseCategoryPart] that show random tags on category page.
-  RandomCategoryPartWithRuntimeData(
-      this.title, this.loadTags, this.randomNumber, this.categoryType);
+  @override
+  final String title;
+
+  /// A [BaseCategoryPart] that show dynamic tags on category page.
+  const DynamicCategoryPart(this.title, this.loader, this.sourceKey);
 }
 
 CategoryData getCategoryDataWithKey(String key) {

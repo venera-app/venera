@@ -2,11 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Venera"
-#define MyAppVersion "1.3.4"
+#define MyAppVersion "{{version}}"
 #define MyAppPublisher "nyne"
 #define MyAppURL "https://github.com/venera-app/venera"
 #define MyAppExeName "venera.exe"
-#define RootPath "D:\code\venera"
+#define RootPath "{{root_path}}"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.

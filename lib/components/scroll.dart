@@ -51,10 +51,32 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
 
   static bool _isMouseScroll = App.isDesktop;
 
+  late int id;
+
+  static int _id = 0;
+
+  var activeChildren = <int>{};
+
+  ScrollState? parent;
+
   @override
   void initState() {
     _controller = widget.controller ?? ScrollController();
     super.initState();
+    id = _id;
+    _id++;
+  }
+
+  @override
+  void didChangeDependencies() {
+    parent = ScrollState.maybeOf(context);
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    parent?.onChildInactive(id);
+    super.dispose();
   }
 
   @override
@@ -66,8 +88,7 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
         const BouncingScrollPhysics(),
       );
     }
-    return Listener(
-      behavior: HitTestBehavior.translucent,
+    var child = Listener(
       onPointerDown: (event) {
         _futurePosition = null;
         if (_isMouseScroll) {
@@ -77,6 +98,9 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
         }
       },
       onPointerSignal: (pointerSignal) {
+        if (activeChildren.isNotEmpty) {
+          return;
+        }
         if (pointerSignal is PointerScrollEvent) {
           if (HardwareKeyboard.instance.isShiftPressed) {
             return;
@@ -113,8 +137,14 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
           });
         }
       },
-      child: ScrollControllerProvider._(
+      child: ScrollState._(
         controller: _controller,
+        onChildActive: (id) {
+          activeChildren.add(id);
+        },
+        onChildInactive: (id) {
+          activeChildren.remove(id);
+        },
         child: widget.builder(
           context,
           _controller,
@@ -124,25 +154,49 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
         ),
       ),
     );
+
+    if (parent != null) {
+      return MouseRegion(
+        onEnter: (_) {
+          parent!.onChildActive(id);
+        },
+        onExit: (_) {
+          parent!.onChildInactive(id);
+        },
+        child: child,
+      );
+    }
+
+    return child;
   }
 }
 
-class ScrollControllerProvider extends InheritedWidget {
-  const ScrollControllerProvider._({
+class ScrollState extends InheritedWidget {
+  const ScrollState._({
     required this.controller,
     required super.child,
+    required this.onChildActive,
+    required this.onChildInactive,
   });
 
   final ScrollController controller;
 
-  static ScrollController of(BuildContext context) {
-    final ScrollControllerProvider? provider =
-        context.dependOnInheritedWidgetOfExactType<ScrollControllerProvider>();
-    return provider!.controller;
+  final void Function(int id) onChildActive;
+
+  final void Function(int id) onChildInactive;
+
+  static ScrollState of(BuildContext context) {
+    final ScrollState? provider =
+        context.dependOnInheritedWidgetOfExactType<ScrollState>();
+    return provider!;
+  }
+
+  static ScrollState? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<ScrollState>();
   }
 
   @override
-  bool updateShouldNotify(ScrollControllerProvider oldWidget) {
+  bool updateShouldNotify(ScrollState oldWidget) {
     return oldWidget.controller != controller;
   }
 }

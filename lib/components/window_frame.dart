@@ -82,10 +82,7 @@ class _WindowFrameState extends State<WindowFrame> {
         return;
       }
     }
-    windowManager.close().then((_) {
-      // Make sure the app exits when the window is closed.
-      exit(0);
-    });
+    exit(0);
   }
 
   @override
@@ -564,20 +561,19 @@ class _VirtualWindowFrameState extends State<VirtualWindowFrame>
 
   Widget _buildVirtualWindowFrame(BuildContext context) {
     return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(_isMaximized ? 0 : 8),
-          color: Colors.transparent,
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-                color: Colors.black.toOpacity(_isFocused ? 0.4 : 0.2),
-                offset: Offset(0.0, 2),
-                blurRadius: 4,
-              )
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: widget.child,
-      );
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_isMaximized ? 0 : 8),
+        color: Colors.transparent,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.toOpacity(_isFocused ? 0.4 : 0.2),
+            blurRadius: 4,
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: widget.child,
+    );
   }
 
   @override

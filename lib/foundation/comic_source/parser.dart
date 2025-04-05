@@ -80,9 +80,8 @@ class ComicSourceParser {
 
   Future<ComicSource> parse(String js, String filePath) async {
     js = js.replaceAll("\r\n", "\n");
-    var line1 = js
-        .split('\n')
-        .firstWhereOrNull((e) => e.trim().startsWith("class "));
+    var line1 =
+        js.split('\n').firstWhereOrNull((e) => e.trim().startsWith("class "));
     if (line1 == null ||
         !line1.startsWith("class ") ||
         !line1.contains("extends ComicSource")) {
@@ -336,7 +335,7 @@ class ComicSourceParser {
                     (e['comics'] as List).map((e) {
                       return Comic.fromJson(e, _key!);
                     }).toList(),
-                    e['viewMore'],
+                    PageJumpTarget.parse(_key!, e['viewMore']),
                   );
                 }),
               ),
@@ -404,21 +403,91 @@ class ComicSourceParser {
     var categoryParts = <BaseCategoryPart>[];
 
     for (var c in doc["parts"]) {
-      final String name = c["name"];
-      final String type = c["type"];
-      final List<String> tags = List.from(c["categories"]);
-      final String itemType = c["itemType"];
-      List<String>? categoryParams = ListOrNull.from(c["categoryParams"]);
-      final String? groupParam = c["groupParam"];
-      if (groupParam != null) {
-        categoryParams = List.filled(tags.length, groupParam);
+      if (c["categories"] != null && c["categories"] is! List) {
+        continue;
       }
-      if (type == "fixed") {
-        categoryParts
-            .add(FixedCategoryPart(name, tags, itemType, categoryParams));
-      } else if (type == "random") {
-        categoryParts.add(
-            RandomCategoryPart(name, tags, c["randomNumber"] ?? 1, itemType));
+      List? categories = c["categories"];
+      if (categories == null || categories[0] is Map) {
+        // new format
+        final String name = c["name"];
+        final String type = c["type"];
+        final cs = categories
+            ?.map(
+              (e) => CategoryItem(
+                e['label'],
+                PageJumpTarget.parse(_key!, e['target']),
+              ),
+            )
+            .toList();
+        if (type != "dynamic" && (cs == null || cs.isEmpty)) {
+          continue;
+        }
+        if (type == "fixed") {
+          categoryParts.add(FixedCategoryPart(name, cs!));
+        } else if (type == "random") {
+          categoryParts
+              .add(RandomCategoryPart(name, cs!, c["randomNumber"] ?? 1));
+        } else if (type == "dynamic" && categories == null) {
+          var loader = c["loader"];
+          if (loader is! JSInvokable) {
+            throw "DynamicCategoryPart loader must be a function";
+          }
+          categoryParts.add(DynamicCategoryPart(
+            name,
+            JSAutoFreeFunction(loader),
+            _key!,
+          ));
+        }
+      } else {
+        // old format
+        final String name = c["name"];
+        final String type = c["type"];
+        final List<String> tags = List.from(c["categories"]);
+        final String itemType = c["itemType"];
+        List<String>? categoryParams = ListOrNull.from(c["categoryParams"]);
+        final String? groupParam = c["groupParam"];
+        if (groupParam != null) {
+          categoryParams = List.filled(tags.length, groupParam);
+        }
+        var cs = <CategoryItem>[];
+        for (int i = 0; i < tags.length; i++) {
+          PageJumpTarget target;
+          if (itemType == 'category') {
+            target = PageJumpTarget(
+              _key!,
+              'category',
+              {
+                "category": tags[i],
+                "param": categoryParams?.elementAtOrNull(i),
+              },
+            );
+          } else if (itemType == 'search') {
+            target = PageJumpTarget(
+              _key!,
+              'search',
+              {
+                "keyword": tags[i],
+              },
+            );
+          } else if (itemType == 'search_with_namespace') {
+            target = PageJumpTarget(
+              _key!,
+              'search',
+              {
+                "keyword": "$name:$tags[i]",
+              },
+            );
+          } else {
+            target = PageJumpTarget(_key!, itemType, null);
+          }
+          cs.add(CategoryItem(tags[i], target));
+        }
+        if (type == "fixed") {
+          categoryParts.add(FixedCategoryPart(name, cs));
+        } else if (type == "random") {
+          categoryParts
+              .add(RandomCategoryPart(name, cs, c["randomNumber"] ?? 1));
+        }
       }
     }
 
@@ -620,7 +689,8 @@ class ComicSourceParser {
 
     final bool multiFolder = _getValue("favorites.multiFolder");
     final bool? isOldToNewSort = _getValue("favorites.isOldToNewSort");
-    final bool? singleFolderForSingleComic = _getValue("favorites.singleFolderForSingleComic");
+    final bool? singleFolderForSingleComic =
+        _getValue("favorites.singleFolderForSingleComic");
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async {
       if (!ComicSource.find(_key!)!.isLogged) {
@@ -978,9 +1048,12 @@ class ComicSourceParser {
       var res = JsEngine().runCode("""
           ComicSource.sources.$_key.comic.onClickTag(${jsonEncode(namespace)}, ${jsonEncode(tag)})
         """);
-      var r = Map<String, String?>.from(res);
+      if (res is! Map) {
+        return null;
+      }
+      var r = Map<String, dynamic>.from(res);
       r.removeWhere((key, value) => value == null);
-      return Map.from(r);
+      return PageJumpTarget.parse(_key!, r);
     };
   }
 

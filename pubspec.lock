@@ -433,8 +433,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "690a03a954f1603e0149cfd479c8961b88f21336"
-      resolved-ref: "690a03a954f1603e0149cfd479c8961b88f21336"
+      ref: fe182cdf40e5fa6230f451bc1d643b860f610d13
+      resolved-ref: fe182cdf40e5fa6230f451bc1d643b860f610d13
       url: "https://github.com/venera-app/flutter_saf"
     source: git
     version: "0.0.1"
