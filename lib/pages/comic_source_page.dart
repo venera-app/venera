@@ -374,8 +374,35 @@ class _ComicSourceListState extends State<_ComicSourceList> {
     } else {
       var currentKey = ComicSource.all().map((e) => e.key).toList();
       return ListView.builder(
-        itemCount: json!.length,
+        itemCount: json!.length + 1,
         itemBuilder: (context, index) {
+          if (index == 0) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: context.colorScheme.primaryContainer,
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Do not report any issues related to sources to App repo.".tl),
+                        Text("Click the setting icon to change the source list url.".tl),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          index--;
+
           var key = json![index]["key"];
           var action = currentKey.contains(key)
               ? const Icon(Icons.check, size: 20).paddingRight(8)
@@ -403,9 +430,14 @@ class _ComicSourceListState extends State<_ComicSourceList> {
                   },
                 ).fixHeight(32);
 
+          var description = json![index]["version"];
+          if (json![index]["description"] != null) {
+            description = "$description\n${json![index]["description"]}";
+          }
+
           return ListTile(
             title: Text(json![index]["name"]),
-            subtitle: Text(json![index]["version"]),
+            subtitle: Text(description),
             trailing: action,
           );
         },

@@ -385,7 +385,9 @@
     "Long press zoom position": "长按缩放位置",
     "Press position": "按压位置",
     "Screen center": "屏幕中心",
-    "Suggestions": "建议"
+    "Suggestions": "建议",
+    "Do not report any issues related to sources to App repo.": "请不要向App仓库报告任何与源相关的问题",
+    "Click the setting icon to change the source list url.": "点击设置图标更改源列表URL"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -773,6 +775,8 @@
     "Long press zoom position": "長按縮放位置",
     "Press position": "按壓位置",
     "Screen center": "螢幕中心",
-    "Suggestions": "建議"
+    "Suggestions": "建議",
+    "Do not report any issues related to sources to App repo.": "請不要向App倉庫報告任何與源相關的問題",
+    "Click the setting icon to change the source list url.": "點擊設定圖示更改源列表URL"
   }
 }
