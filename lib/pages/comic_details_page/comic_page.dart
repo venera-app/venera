@@ -17,10 +17,8 @@ import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
-import 'package:venera/pages/category_comics_page.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
-import 'package:venera/pages/search_result_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
@@ -411,14 +409,20 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                       var group = history!.group;
                       String text;
                       if (haveChapter) {
-                        var epName = group == null
-                            ? comic.chapters!.titles.elementAt(
-                                math.min(ep - 1, comic.chapters!.length - 1),
-                              )
-                            : comic.chapters!
-                                .getGroupByIndex(group - 1)
-                                .values
-                                .elementAt(ep - 1);
+                        var epName = "E$ep";
+                        try {
+                          epName = group == null
+                              ? comic.chapters!.titles.elementAt(
+                            math.min(ep - 1, comic.chapters!.length - 1),
+                          )
+                              : comic.chapters!
+                              .getGroupByIndex(group - 1)
+                              .values
+                              .elementAt(ep - 1);
+                        }
+                        catch(e) {
+                          // ignore
+                        }
                         text = "${"Last Reading".tl}: $epName P$page";
                       } else {
                         text = "${"Last Reading".tl}: P$page";

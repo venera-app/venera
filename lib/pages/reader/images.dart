@@ -43,9 +43,10 @@ class _ReaderImagesState extends State<_ReaderImages> {
         });
       }
     } else {
+      var cp = reader.widget.chapters?.ids.elementAtOrNull(reader.chapter - 1);
       var res = await reader.type.comicSource!.loadComicPages!(
         reader.widget.cid,
-        reader.widget.chapters?.ids.elementAt(reader.chapter - 1),
+        cp,
       );
       if (res.error) {
         setState(() {
@@ -747,7 +748,8 @@ class _ContinuousModeState extends State<_ContinuousMode>
         }
         Offset offset;
         var sp = scrollController.position;
-        if (sp.pixels <= sp.minScrollExtent || sp.pixels >= sp.maxScrollExtent) {
+        if (sp.pixels <= sp.minScrollExtent ||
+            sp.pixels >= sp.maxScrollExtent) {
           offset = Offset(value.dx, value.dy);
         } else {
           if (reader.mode == ReaderMode.continuousTopToBottom) {
