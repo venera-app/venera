@@ -141,17 +141,6 @@ class _AppSettingsState extends State<AppSettings> {
           actionTitle: 'Set'.tl,
         ).toSliver(),
         _SettingPartTitle(
-          title: "Log".tl,
-          icon: Icons.error_outline,
-        ),
-        _CallbackSetting(
-          title: "Open Log".tl,
-          callback: () {
-            context.to(() => const LogsPage());
-          },
-          actionTitle: 'Open'.tl,
-        ).toSliver(),
-        _SettingPartTitle(
           title: "User".tl,
           icon: Icons.person_outline,
         ),
