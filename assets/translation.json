@@ -384,7 +384,8 @@
     "Pages": "页数",
     "Long press zoom position": "长按缩放位置",
     "Press position": "按压位置",
-    "Screen center": "屏幕中心"
+    "Screen center": "屏幕中心",
+    "Suggestions": "建议"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -771,6 +772,7 @@
     "Pages": "頁數",
     "Long press zoom position": "長按縮放位置",
     "Press position": "按壓位置",
-    "Screen center": "螢幕中心"
+    "Screen center": "螢幕中心",
+    "Suggestions": "建議"
   }
 }

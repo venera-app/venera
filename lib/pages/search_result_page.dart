@@ -441,6 +441,11 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    var sources = ComicSource.all();
+    var enabled = appdata.settings['searchSources'] as List;
+    sources.removeWhere((e) {
+      return !enabled.contains(e.key);
+    });
     return ContentDialog(
       title: "Settings".tl,
       content: Column(
@@ -452,7 +457,7 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ComicSource.all().map((e) {
+            children: sources.map((e) {
               return OptionChip(
                 text: e.name.tl,
                 isSelected: searchTarget == e.key,
