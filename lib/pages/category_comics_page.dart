@@ -34,6 +34,9 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
   void findData() {
     for (final source in ComicSource.all()) {
       if (source.categoryData?.key == widget.categoryKey) {
+        if (source.categoryComicsData == null) {
+          throw "The comic source ${source.name} does not support category comics";
+        }
         data = source.categoryComicsData!;
         options = data.options.where((element) {
           if (element.notShowWhen.contains(widget.category)) {

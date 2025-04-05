@@ -403,27 +403,40 @@ class ComicSourceParser {
     var categoryParts = <BaseCategoryPart>[];
 
     for (var c in doc["parts"]) {
-      if (c["categories"] is! List || c["categories"].isEmpty) {
+      if (c["categories"] != null && c["categories"] is! List) {
         continue;
       }
-      List categories = c["categories"];
-      if (categories[0] is Map) {
+      List? categories = c["categories"];
+      if (categories == null || categories[0] is Map) {
         // new format
         final String name = c["name"];
         final String type = c["type"];
         final cs = categories
-            .map(
+            ?.map(
               (e) => CategoryItem(
                 e['label'],
                 PageJumpTarget.parse(_key!, e['target']),
               ),
             )
             .toList();
+        if (type != "dynamic" && (cs == null || cs.isEmpty)) {
+          continue;
+        }
         if (type == "fixed") {
-          categoryParts.add(FixedCategoryPart(name, cs));
+          categoryParts.add(FixedCategoryPart(name, cs!));
         } else if (type == "random") {
           categoryParts
-              .add(RandomCategoryPart(name, cs, c["randomNumber"] ?? 1));
+              .add(RandomCategoryPart(name, cs!, c["randomNumber"] ?? 1));
+        } else if (type == "dynamic" && categories == null) {
+          var loader = c["loader"];
+          if (loader is! JSInvokable) {
+            throw "DynamicCategoryPart loader must be a function";
+          }
+          categoryParts.add(DynamicCategoryPart(
+            name,
+            JSAutoFreeFunction(loader),
+            _key!,
+          ));
         }
       } else {
         // old format

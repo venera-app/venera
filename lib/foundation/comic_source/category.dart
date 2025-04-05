@@ -97,6 +97,43 @@ class RandomCategoryPart extends BaseCategoryPart {
   );
 }
 
+class DynamicCategoryPart extends BaseCategoryPart {
+  final JSAutoFreeFunction loader;
+
+  final String sourceKey;
+
+  @override
+  List<CategoryItem> get categories {
+    var data = loader([]);
+    print(data);
+    if (data is! List) {
+      throw "DynamicCategoryPart loader must return a List";
+    }
+    var res = <CategoryItem>[];
+    for (var item in data) {
+      if (item is! Map) {
+        throw "DynamicCategoryPart loader must return a List of Map";
+      }
+      var label = item['label'];
+      var target = PageJumpTarget.parse(sourceKey, item['target']);
+      if (label is! String) {
+        throw "Category label must be a String";
+      }
+      res.add(CategoryItem(label, target));
+    }
+    return res;
+  }
+
+  @override
+  bool get enableRandom => false;
+
+  @override
+  final String title;
+
+  /// A [BaseCategoryPart] that show dynamic tags on category page.
+  const DynamicCategoryPart(this.title, this.loader, this.sourceKey);
+}
+
 CategoryData getCategoryDataWithKey(String key) {
   for (var source in ComicSource.all()) {
     if (source.categoryData?.key == key) {
