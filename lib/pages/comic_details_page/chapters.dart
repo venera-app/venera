@@ -105,7 +105,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
                   var value = chapters[key]!;
                   bool visited = (history?.readEpisode ?? {}).contains(i + 1);
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
                     child: Material(
                       color: context.colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(16),
@@ -113,7 +113,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
                         onTap: () => state.read(i + 1),
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Center(
                             child: Text(
                               value,
@@ -134,7 +134,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
                 },
               ),
               gridDelegate: const SliverGridDelegateWithFixedHeight(
-                maxCrossAxisExtent: 200,
+                maxCrossAxisExtent: 250,
                 itemHeight: 48,
               ),
             ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
@@ -300,15 +300,15 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
                         history!.readEpisode.contains(rawIndex);
                   }
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
                     child: Material(
-                      color: context.colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(16),
+                      color: context.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         onTap: () => state.read(chapterIndex + 1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Center(
                             child: Text(
                               value,
@@ -329,7 +329,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
                 },
               ),
               gridDelegate: const SliverGridDelegateWithFixedHeight(
-                maxCrossAxisExtent: 200,
+                maxCrossAxisExtent: 250,
                 itemHeight: 48,
               ),
             ).sliverPadding(const EdgeInsets.symmetric(horizontal: 8)),
