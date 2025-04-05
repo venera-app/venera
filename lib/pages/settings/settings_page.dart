@@ -249,6 +249,9 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
   }
 
   void handlePointerDown(PointerDownEvent event) {
+    if (!App.isIOS) {
+      return;
+    }
     if (event.position.dx < 20) {
       gestureRecognizer.addPointer(event);
     }
