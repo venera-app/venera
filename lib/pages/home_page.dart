@@ -942,7 +942,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
           displayType = type;
         });
         await Future.delayed(const Duration(milliseconds: 20));
-        var scrollController = ScrollControllerProvider.of(context);
+        var scrollController = ScrollState.of(context).controller;
         scrollController.animateTo(
           scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 200),
