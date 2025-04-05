@@ -105,7 +105,6 @@ class DynamicCategoryPart extends BaseCategoryPart {
   @override
   List<CategoryItem> get categories {
     var data = loader([]);
-    print(data);
     if (data is! List) {
       throw "DynamicCategoryPart loader must return a List";
     }
