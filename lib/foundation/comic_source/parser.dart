@@ -1035,9 +1035,12 @@ class ComicSourceParser {
       var res = JsEngine().runCode("""
           ComicSource.sources.$_key.comic.onClickTag(${jsonEncode(namespace)}, ${jsonEncode(tag)})
         """);
-      var r = Map<String, String?>.from(res);
+      if (res is! Map) {
+        return null;
+      }
+      var r = Map<String, dynamic>.from(res);
       r.removeWhere((key, value) => value == null);
-      return Map.from(r);
+      return PageJumpTarget.parse(_key!, r);
     };
   }
 

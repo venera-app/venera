@@ -294,14 +294,9 @@ abstract mixin class _ComicPageActions {
   }
 
   void onTapTag(String tag, String namespace) {
-    var config = comicSource.handleClickTagEvent?.call(namespace, tag) ??
-        {
-          'action': 'search',
-          'keyword': tag,
-        };
+    var target = comicSource.handleClickTagEvent?.call(namespace, tag);
     var context = App.mainNavigatorKey!.currentContext!;
-    var target = PageJumpTarget.parse(comicSource.key, config);
-    target.jump(context);
+    target?.jump(context);
   }
 
   void showMoreActions() {
