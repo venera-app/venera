@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_qjs/flutter_qjs.dart';
@@ -8,7 +9,7 @@ import 'package:venera/utils/image.dart';
 
 import 'app_dio.dart';
 
-class ImageDownloader {
+abstract class ImageDownloader {
   static Stream<ImageDownloadProgress> loadThumbnail(
       String url, String? sourceKey,
       [String? cid]) async* {
@@ -82,7 +83,35 @@ class ImageDownloader {
     );
   }
 
+  static final _loadingImages = <String, _StreamWrapper<ImageDownloadProgress>>{};
+
+  /// Cancel all loading images.
+  static void cancelAllLoadingImages() {
+    for (var wrapper in _loadingImages.values) {
+      wrapper.cancel();
+    }
+    _loadingImages.clear();
+  }
+
+  /// Load a comic image from the network or cache.
+  /// The function will prevent multiple requests for the same image.
   static Stream<ImageDownloadProgress> loadComicImage(
+      String imageKey, String? sourceKey, String cid, String eid) {
+    final cacheKey = "$imageKey@$sourceKey@$cid@$eid";
+    if (_loadingImages.containsKey(cacheKey)) {
+      return _loadingImages[cacheKey]!.stream;
+    }
+    final stream = _StreamWrapper<ImageDownloadProgress>(
+      _loadComicImage(imageKey, sourceKey, cid, eid),
+      (wrapper) {
+        _loadingImages.remove(cacheKey);
+      },
+    );
+    _loadingImages[cacheKey] = stream;
+    return stream.stream;
+  }
+
+  static Stream<ImageDownloadProgress> _loadComicImage(
       String imageKey, String? sourceKey, String cid, String eid) async* {
     final cacheKey = "$imageKey@$sourceKey@$cid@$eid";
     final cache = await CacheManager().findCache(cacheKey);
@@ -186,6 +215,63 @@ class ImageDownloader {
         }
       }
     }
+  }
+}
+
+/// A wrapper class for a stream that
+/// allows multiple listeners to listen to the same stream.
+class _StreamWrapper<T> {
+  final Stream<T> _stream;
+
+  final List<StreamController> controllers = [];
+
+  final void Function(_StreamWrapper<T> wrapper) onClosed;
+
+  bool isClosed = false;
+
+  _StreamWrapper(this._stream, this.onClosed) {
+    _listen();
+  }
+
+  void _listen() async {
+    await for (var data in _stream) {
+      if (isClosed) {
+        break;
+      }
+      for (var controller in controllers) {
+        if (!controller.isClosed) {
+          controller.add(data);
+        }
+      }
+    }
+    for (var controller in controllers) {
+      if (!controller.isClosed) {
+        controller.close();
+      }
+    }
+    controllers.clear();
+    isClosed = true;
+    onClosed(this);
+  }
+
+  Stream<T> get stream {
+    if (isClosed) {
+      throw Exception('Stream is closed');
+    }
+    var controller = StreamController<T>();
+    controllers.add(controller);
+    controller.onCancel = () {
+      controllers.remove(controller);
+    };
+    return controller.stream;
+  }
+
+  void cancel() {
+    for (var controller in controllers) {
+      controller.close();
+    }
+    controllers.clear();
+    isClosed = true;
   }
 }
 

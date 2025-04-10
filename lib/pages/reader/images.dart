@@ -21,6 +21,12 @@ class _ReaderImagesState extends State<_ReaderImages> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    ImageDownloader.cancelAllLoadingImages();
+  }
+
   void load() async {
     if (inProgress) return;
     inProgress = true;
@@ -104,14 +110,14 @@ class _GalleryModeState extends State<_GalleryMode>
     implements _ImageViewController {
   late PageController controller;
 
-  late List<bool> cached;
-
   int get preCacheCount => appdata.settings["preloadImageCount"];
 
   var photoViewControllers = <int, PhotoViewController>{};
 
   late _ReaderState reader;
 
+  /// [totalPages] is the total number of pages in the current chapter.
+  /// More than one images can be displayed on one page.
   int get totalPages => (reader.images!.length / reader.imagesPerPage).ceil();
 
   var imageStates = <State<ComicImage>>{};
@@ -125,24 +131,36 @@ class _GalleryModeState extends State<_GalleryMode>
     reader = context.reader;
     controller = PageController(initialPage: reader.page);
     reader._imageViewController = this;
-    cached = List.filled(reader.maxPage + 2, false);
     Future.microtask(() {
       context.readerScaffold.setFloatingButton(0);
     });
     super.initState();
   }
 
-  void cache(int current) {
-    for (int i = current + 1; i <= current + preCacheCount; i++) {
-      if (i <= totalPages && !cached[i]) {
-        int startIndex = (i - 1) * reader.imagesPerPage;
-        int endIndex =
-            math.min(startIndex + reader.imagesPerPage, reader.images!.length);
-        for (int i = startIndex; i < endIndex; i++) {
-          precacheImage(
-              _createImageProviderFromKey(reader.images![i], context), context);
-        }
-        cached[i] = true;
+  /// [cache] is used to cache the images.
+  /// The count of images to cache is determined by the [preCacheCount] setting.
+  /// For previous page and next page, it will do a memory cache.
+  /// For current page, it will do nothing because it is already on the screen.
+  /// For other pages, it will do a pre-download cache.
+  void cache(int startPage) {
+    print("Cache page $startPage");
+    for (int i = startPage - 1; i <= startPage + preCacheCount; i++) {
+      if (i == startPage || i <= 0 || i > totalPages) continue;
+      bool shouldPreCache = i == startPage + 1 || i == startPage - 1;
+      _cachePage(i, shouldPreCache);
+    }
+  }
+
+  void _cachePage(int page, bool shouldPreCache) {
+    int startIndex = (page - 1) * reader.imagesPerPage;
+    int endIndex =
+    math.min(startIndex + reader.imagesPerPage, reader.images!.length);
+    print("Cache page $page: $startIndex-$endIndex");
+    for (int i = startIndex; i < endIndex; i++) {
+      if (shouldPreCache) {
+        _precacheImage(i+1, context);
+      } else {
+        _preDownloadImage(i+1, context);
       }
     }
   }
@@ -192,7 +210,6 @@ class _GalleryModeState extends State<_GalleryMode>
             List<String> pageImages =
                 reader.images!.sublist(startIndex, endIndex);
 
-            cached[index] = true;
             cache(index);
 
             photoViewControllers[index] ??= PhotoViewController();
@@ -201,8 +218,11 @@ class _GalleryModeState extends State<_GalleryMode>
               return PhotoViewGalleryPageOptions(
                 filterQuality: FilterQuality.medium,
                 controller: photoViewControllers[index],
-                imageProvider:
-                    _createImageProviderFromKey(pageImages[0], context),
+                imageProvider: _createImageProviderFromKey(
+                  pageImages[0],
+                  context,
+                  startIndex + 1,
+                ),
                 fit: BoxFit.contain,
                 errorBuilder: (_, error, s, retry) {
                   return NetworkError(message: error.toString(), retry: retry);
@@ -214,7 +234,7 @@ class _GalleryModeState extends State<_GalleryMode>
               controller: photoViewControllers[index],
               minScale: PhotoViewComputedScale.contained * 1.0,
               maxScale: PhotoViewComputedScale.covered * 10.0,
-              child: buildPageImages(pageImages),
+              child: buildPageImages(pageImages, startIndex),
             );
           }
         },
@@ -249,7 +269,7 @@ class _GalleryModeState extends State<_GalleryMode>
     );
   }
 
-  Widget buildPageImages(List<String> images) {
+  Widget buildPageImages(List<String> images, int startIndex) {
     Axis axis = (reader.mode == ReaderMode.galleryTopToBottom)
         ? Axis.vertical
         : Axis.horizontal;
@@ -267,7 +287,11 @@ class _GalleryModeState extends State<_GalleryMode>
           child: ComicImage(
             width: double.infinity,
             height: double.infinity,
-            image: _createImageProviderFromKey(images[0], context),
+            image: _createImageProviderFromKey(
+              images[0],
+              context,
+              startIndex + 1,
+            ),
             fit: BoxFit.contain,
             alignment: axis == Axis.vertical
                 ? Alignment.bottomCenter
@@ -280,7 +304,11 @@ class _GalleryModeState extends State<_GalleryMode>
           child: ComicImage(
             width: double.infinity,
             height: double.infinity,
-            image: _createImageProviderFromKey(images[1], context),
+            image: _createImageProviderFromKey(
+              images[1],
+              context,
+              startIndex + 2,
+            ),
             fit: BoxFit.contain,
             alignment: axis == Axis.vertical
                 ? Alignment.topCenter
@@ -292,8 +320,9 @@ class _GalleryModeState extends State<_GalleryMode>
       ];
     } else {
       imageWidgets = images.map((imageKey) {
+        startIndex++;
         ImageProvider imageProvider =
-            _createImageProviderFromKey(imageKey, context);
+            _createImageProviderFromKey(imageKey, context, startIndex);
         return Expanded(
           child: ComicImage(
             image: imageProvider,
@@ -402,34 +431,22 @@ class _GalleryModeState extends State<_GalleryMode>
         keyRepeatTimer = null;
       }
       if (forward == true) {
-        controller.nextPage(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.ease,
-        );
+        reader.toPage(reader.page+1);
       } else if (forward == false) {
-        controller.previousPage(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.ease,
-        );
+        reader.toPage(reader.page-1);
       }
     }
     if (event is KeyRepeatEvent && keyRepeatTimer == null) {
       keyRepeatTimer = Timer.periodic(
-        const Duration(milliseconds: 100),
+        const Duration(milliseconds: 200),
         (timer) {
           if (!mounted) {
             timer.cancel();
             return;
           } else if (forward == true) {
-            controller.nextPage(
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.ease,
-            );
+            reader.toPage(reader.page+1);
           } else if (forward == false) {
-            controller.previousPage(
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.ease,
-            );
+            reader.toPage(reader.page-1);
           }
         },
       );
@@ -599,7 +616,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   void cacheImages(int current) {
     for (int i = current + 1; i <= current + preCacheCount; i++) {
       if (i <= reader.maxPage && !cached[i]) {
-        _precacheImage(i, context);
+        _preDownloadImage(i, context);
         cached[i] = true;
       }
     }
@@ -1016,7 +1033,10 @@ class _ContinuousModeState extends State<_ContinuousMode>
 }
 
 ImageProvider _createImageProviderFromKey(
-    String imageKey, BuildContext context) {
+  String imageKey,
+  BuildContext context,
+  int page,
+) {
   var reader = context.reader;
   return ReaderImageProvider(
     imageKey,
@@ -1030,14 +1050,36 @@ ImageProvider _createImageProviderFromKey(
 ImageProvider _createImageProvider(int page, BuildContext context) {
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
-  return _createImageProviderFromKey(imageKey, context);
+  return _createImageProviderFromKey(imageKey, context, page);
 }
 
+/// [_precacheImage] is used to precache the image for the given page.
+/// The image is cached using the flutter's [precacheImage] method.
+/// The image will be downloaded and decoded into memory.
 void _precacheImage(int page, BuildContext context) {
+  if (page <= 0 || page > context.reader.images!.length) {
+    return;
+  }
+  print("Precache image for page $page");
   precacheImage(
     _createImageProvider(page, context),
     context,
   );
+}
+
+/// [_preDownloadImage] is used to download the image for the given page.
+/// The image is downloaded using the [CacheManager] and saved to the local storage.
+void _preDownloadImage(int page, BuildContext context) {
+  if (page <= 0 || page > context.reader.images!.length) {
+    return;
+  }
+  print("Preload image for page $page");
+  var reader = context.reader;
+  var imageKey = reader.images![page - 1];
+  var cid = reader.cid;
+  var eid = reader.eid;
+  var sourceKey = reader.type.comicSource?.key;
+  ImageDownloader.loadComicImage(imageKey, sourceKey, cid, eid);
 }
 
 class _SwipeChangeChapterProgress extends StatefulWidget {
