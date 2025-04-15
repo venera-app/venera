@@ -129,6 +129,27 @@ jobs:
         with:
           name: windows_build
           path: build/windows/Venera-*
+  Build_Windows_Arm64:
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v3
+      - name: install dependencies
+        run: |
+          choco install yq -y
+          pip install httpx
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "master"
+          # Only master branch supports windows arm64
+          # flutter-version-file: pubspec.yaml
+      - name: build
+        run: |
+          flutter pub get
+          python windows/build_arm64.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows_arm64_build
+          path: build/windows/Venera-*
   Build_Linux:
     runs-on: ubuntu-22.04
     steps:
@@ -256,7 +277,7 @@ jobs:
 
   Release:
     runs-on: ubuntu-22.04
-    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Linux, Build_Linux_ARM64]
+    needs: [Build_MacOS, Build_IOS, Build_Android, Build_Windows, Build_Windows_Arm64, Build_Linux, Build_Linux_ARM64]
     if: github.event_name == 'release'  # 仅在 push 事件时执行
     steps:
       - uses: actions/download-artifact@v4
@@ -274,6 +295,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: windows_build
+          path: outputs
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows_arm64_build
           path: outputs
       - uses: actions/download-artifact@v4
         with:
