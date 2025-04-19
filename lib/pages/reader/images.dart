@@ -143,7 +143,6 @@ class _GalleryModeState extends State<_GalleryMode>
   /// For current page, it will do nothing because it is already on the screen.
   /// For other pages, it will do a pre-download cache.
   void cache(int startPage) {
-    print("Cache page $startPage");
     for (int i = startPage - 1; i <= startPage + preCacheCount; i++) {
       if (i == startPage || i <= 0 || i > totalPages) continue;
       bool shouldPreCache = i == startPage + 1 || i == startPage - 1;
@@ -155,7 +154,6 @@ class _GalleryModeState extends State<_GalleryMode>
     int startIndex = (page - 1) * reader.imagesPerPage;
     int endIndex =
     math.min(startIndex + reader.imagesPerPage, reader.images!.length);
-    print("Cache page $page: $startIndex-$endIndex");
     for (int i = startIndex; i < endIndex; i++) {
       if (shouldPreCache) {
         _precacheImage(i+1, context);
@@ -263,6 +261,13 @@ class _GalleryModeState extends State<_GalleryMode>
           } else {
             reader.setPage(i);
             context.readerScaffold.update();
+          }
+          // Remove other pages' controllers to reset their state.
+          var keys = photoViewControllers.keys.toList();
+          for (var key in keys) {
+            if (key != i) {
+              photoViewControllers.remove(key);
+            }
           }
         },
       ),
@@ -1060,7 +1065,6 @@ void _precacheImage(int page, BuildContext context) {
   if (page <= 0 || page > context.reader.images!.length) {
     return;
   }
-  print("Precache image for page $page");
   precacheImage(
     _createImageProvider(page, context),
     context,
@@ -1073,7 +1077,6 @@ void _preDownloadImage(int page, BuildContext context) {
   if (page <= 0 || page > context.reader.images!.length) {
     return;
   }
-  print("Preload image for page $page");
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
   var cid = reader.cid;
