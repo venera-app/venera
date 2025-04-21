@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/io.dart';
 import 'package:venera/network/app_dio.dart';
+import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/ext.dart';
 
 class FileDownloader {
@@ -105,7 +106,7 @@ class FileDownloader {
 
   void _download(StreamController<DownloadingStatus> resultStream) async {
     try {
-      var proxy = await AppDio.getProxy();
+      var proxy = await getProxy();
       _dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
           return HttpClient()
