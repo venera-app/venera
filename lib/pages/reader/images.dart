@@ -999,13 +999,13 @@ class _ContinuousModeState extends State<_ContinuousMode>
     }
     if (forward == true) {
       scrollController.animateTo(
-        scrollController.offset + context.height,
+        scrollController.offset + context.height * 0.25,
         duration: const Duration(milliseconds: 200),
         curve: Curves.ease,
       );
     } else if (forward == false) {
       scrollController.animateTo(
-        scrollController.offset - context.height,
+        scrollController.offset - context.height * 0.25,
         duration: const Duration(milliseconds: 200),
         curve: Curves.ease,
       );
