@@ -443,7 +443,9 @@ class _GalleryModeState extends State<_GalleryMode>
     }
     if (event is KeyRepeatEvent && keyRepeatTimer == null) {
       keyRepeatTimer = Timer.periodic(
-        const Duration(milliseconds: 200),
+        reader.enablePageAnimation
+            ? const Duration(milliseconds: 200)
+            : const Duration(milliseconds: 50),
         (timer) {
           if (!mounted) {
             timer.cancel();
