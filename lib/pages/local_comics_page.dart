@@ -306,7 +306,8 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                 });
               } else {
                 // prevent dirty data
-                var comic = LocalManager().find(c.id, ComicType.fromKey(c.sourceKey))!;
+                var comic =
+                    LocalManager().find(c.id, ComicType.fromKey(c.sourceKey))!;
                 comic.read();
               }
             },
@@ -444,7 +445,10 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
       var fileName = "";
       // For each comic, export it to a file
       for (var comic in comics) {
-        fileName = FilePath.join(cacheDir, sanitizeFileName(comic.title) + ext);
+        fileName = FilePath.join(
+          cacheDir,
+          sanitizeFileName(comic.title, maxLength: 100) + ext,
+        );
         await export(comic, fileName);
         current++;
         if (comics.length > 1) {

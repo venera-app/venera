@@ -112,7 +112,7 @@ abstract class CBZ {
       var ext = e.path.split('.').last;
       return !['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'].contains(ext);
     });
-    if(files.isEmpty) {
+    if (files.isEmpty) {
       cache.deleteSync(recursive: true);
       throw Exception('No images found in the archive');
     }
@@ -141,8 +141,7 @@ abstract class CBZ {
       FilePath.join(LocalManager().path, sanitizeFileName(metaData.title)),
     );
     dest.createSync();
-    coverFile.copyMem(
-        FilePath.join(dest.path, 'cover.${coverFile.extension}'));
+    coverFile.copyMem(FilePath.join(dest.path, 'cover.${coverFile.extension}'));
     if (metaData.chapters == null) {
       for (var i = 0; i < files.length; i++) {
         var src = files[i];
@@ -233,17 +232,19 @@ abstract class CBZ {
       }
     }
     var cover = comic.coverFile;
-    await cover
-        .copyMem(FilePath.join(cache.path, 'cover.${cover.path.split('.').last}'));
+    await cover.copyMem(
+        FilePath.join(cache.path, 'cover.${cover.path.split('.').last}'));
+    final metaData = ComicMetaData(
+      title: comic.title,
+      author: comic.subtitle,
+      tags: comic.tags,
+      chapters: chapters,
+    );
     await File(FilePath.join(cache.path, 'metadata.json')).writeAsString(
-      jsonEncode(
-        ComicMetaData(
-          title: comic.title,
-          author: comic.subtitle,
-          tags: comic.tags,
-          chapters: chapters,
-        ).toJson(),
-      ),
+      jsonEncode(metaData),
+    );
+    await File(FilePath.join(cache.path, 'ComicInfo.xml')).writeAsString(
+      _buildComicInfoXml(metaData),
     );
     var cbz = File(outFilePath);
     if (cbz.existsSync()) cbz.deleteSync();
@@ -252,7 +253,54 @@ abstract class CBZ {
     return cbz;
   }
 
+  static String _buildComicInfoXml(ComicMetaData data) {
+    final buffer = StringBuffer();
+    buffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
+    buffer.writeln('<ComicInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
+
+    buffer.writeln('  <Title>${_escapeXml(data.title)}</Title>');
+    buffer.writeln('  <Series>${_escapeXml(data.title)}</Series>');
+
+    if (data.author.isNotEmpty) {
+      buffer.writeln('  <Writer>${_escapeXml(data.author)}</Writer>');
+    }
+
+    if (data.tags.isNotEmpty) {
+      var tags = data.tags;
+      if (tags.length > 5) {
+        tags = tags.sublist(0, 5);
+      }
+      buffer.writeln('  <Genre>${_escapeXml(tags.join(', '))}</Genre>');
+    }
+
+    if (data.chapters != null && data.chapters!.isNotEmpty) {
+      final chaptersInfo = data.chapters!.map((chapter) =>
+        '${_escapeXml(chapter.title)}: ${chapter.start}-${chapter.end}'
+      ).join('; ');
+      buffer.writeln('  <Notes>Chapters: $chaptersInfo</Notes>');
+    }
+
+    buffer.writeln('  <Manga>Unknown</Manga>');
+    buffer.writeln('  <BlackAndWhite>Unknown</BlackAndWhite>');
+
+    final now = DateTime.now();
+    buffer.writeln('  <Year>${now.year}</Year>');
+
+    buffer.writeln('</ComicInfo>');
+    return buffer.toString();
+  }
+
+  static String _escapeXml(String text) {
+    return text
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
+  }
+
   static _compress(String src, String dst) async {
     await ZipFile.compressFolderAsync(src, dst, 4);
   }
 }
+

@@ -135,12 +135,12 @@ String sanitizeFileName(String fileName, {String? dir, int? maxLength}) {
   if (fileName.endsWith('.')) {
     fileName = fileName.substring(0, fileName.length - 1);
   }
-  var maxLength = 255;
+  var length = maxLength ?? 255;
   if (dir != null) {
     if (!dir.endsWith('/') && !dir.endsWith('\\')) {
       dir = "$dir/";
     }
-    maxLength -= dir.length;
+    length -= dir.length;
   }
   final invalidChars = RegExp(r'[<>:"/\\|?*]');
   final sanitizedFileName = fileName.replaceAll(invalidChars, ' ');
@@ -148,11 +148,11 @@ String sanitizeFileName(String fileName, {String? dir, int? maxLength}) {
   if (trimmedFileName.isEmpty) {
     throw Exception('Invalid File Name: Empty length.');
   }
-  if (maxLength <= 0) {
+  if (length <= 0) {
     throw Exception('Invalid File Name: Max length is less than 0.');
   }
-  if (trimmedFileName.length > maxLength) {
-    trimmedFileName = trimmedFileName.substring(0, maxLength);
+  if (trimmedFileName.length > length) {
+    trimmedFileName = trimmedFileName.substring(0, length);
   }
   return trimmedFileName;
 }
