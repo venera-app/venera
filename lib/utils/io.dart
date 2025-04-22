@@ -132,7 +132,7 @@ extension DirectoryExtension on Directory {
 
 /// Sanitize the file name. Remove invalid characters and trim the file name.
 String sanitizeFileName(String fileName, {String? dir, int? maxLength}) {
-  if (fileName.endsWith('.')) {
+  while (fileName.endsWith('.')) {
     fileName = fileName.substring(0, fileName.length - 1);
   }
   var length = maxLength ?? 255;
