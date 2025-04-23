@@ -958,7 +958,7 @@ class _SelectImageOverlayContentState extends State<_SelectImageOverlayContent> 
         child: Align(
           alignment: Alignment(
             0,
-            -0.6,
+            -0.8,
           ),
           child: Container(
             width: 232,

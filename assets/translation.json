@@ -388,7 +388,8 @@
     "Suggestions": "建议",
     "Do not report any issues related to sources to App repo.": "请不要向App仓库报告任何与源相关的问题",
     "Click the setting icon to change the source list url.": "点击设置图标更改源列表URL",
-    "Show single image on first page": "在首页显示单张图片"
+    "Show single image on first page": "在首页显示单张图片",
+    "Click to select an image": "点击选择一张图片"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -779,6 +780,7 @@
     "Suggestions": "建議",
     "Do not report any issues related to sources to App repo.": "請不要向App倉庫報告任何與源相關的問題",
     "Click the setting icon to change the source list url.": "點擊設定圖示更改源列表URL",
-    "Show single image on first page": "在首頁顯示單張圖片"
+    "Show single image on first page": "在首頁顯示單張圖片",
+    "Click to select an image": "點擊選擇一張圖片"
   }
 }
