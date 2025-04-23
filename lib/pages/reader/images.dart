@@ -494,6 +494,19 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   Future<Uint8List?> getImageByOffset(Offset offset) async {
+    var imageKey = getImageKeyByOffset(offset);
+    if (imageKey == null) return null;
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
+  }
+
+  @override
+  String? getImageKeyByOffset(Offset offset) {
     String? imageKey;
     if (reader.imagesPerPage == 1) {
       imageKey = reader.images![reader.page - 1];
@@ -504,14 +517,7 @@ class _GalleryModeState extends State<_GalleryMode>
         }
       }
     }
-    if (imageKey == null) return null;
-    if (imageKey.startsWith("file://")) {
-      return await File(imageKey.substring(7)).readAsBytes();
-    } else {
-      return (await CacheManager().findCache(
-              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
-          .readAsBytes();
-    }
+    return imageKey;
   }
 }
 
@@ -1045,12 +1051,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
 
   @override
   Future<Uint8List?> getImageByOffset(Offset offset) async {
-    String? imageKey;
-    for (var imageState in imageStates) {
-      if ((imageState as _ComicImageState).containsPoint(offset)) {
-        imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
-      }
-    }
+    var imageKey = getImageKeyByOffset(offset);
     if (imageKey == null) return null;
     if (imageKey.startsWith("file://")) {
       return await File(imageKey.substring(7)).readAsBytes();
@@ -1059,6 +1060,17 @@ class _ContinuousModeState extends State<_ContinuousMode>
               "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
           .readAsBytes();
     }
+  }
+
+  @override
+  String? getImageKeyByOffset(Offset offset) {
+    String? imageKey;
+    for (var imageState in imageStates) {
+      if ((imageState as _ComicImageState).containsPoint(offset)) {
+        imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+      }
+    }
+    return imageKey;
   }
 }
 

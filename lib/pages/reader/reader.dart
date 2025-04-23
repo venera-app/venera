@@ -217,10 +217,16 @@ class _ReaderState extends State<Reader>
       focusNode: focusNode,
       autofocus: true,
       onKeyEvent: onKeyEvent,
-      child: _ReaderScaffold(
-        child: _ReaderGestureDetector(
-          child: _ReaderImages(key: Key(chapter.toString())),
-        ),
+      child: Overlay(
+        initialEntries: [
+          OverlayEntry(builder: (context) {
+            return _ReaderScaffold(
+              child: _ReaderGestureDetector(
+                child: _ReaderImages(key: Key(chapter.toString())),
+              ),
+            );
+          })
+        ],
       ),
     );
   }
@@ -604,4 +610,6 @@ abstract interface class _ImageViewController {
   bool handleOnTap(Offset location);
 
   Future<Uint8List?> getImageByOffset(Offset offset);
+
+  String? getImageKeyByOffset(Offset offset);
 }
