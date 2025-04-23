@@ -378,11 +378,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               Tooltip(
                 message: "Collect the image".tl,
                 child: IconButton(
-                    icon: Icon(
-                        isLiked() ? Icons.favorite : Icons.favorite_border),
-                    onPressed: addImageFavorite),
+                  icon:
+                      Icon(isLiked() ? Icons.favorite : Icons.favorite_border),
+                  onPressed: addImageFavorite,
+                ),
               ),
-              if (App.isWindows)
+              if (App.isDesktop)
                 Tooltip(
                   message: "${"Full Screen".tl}(F12)",
                   child: IconButton(
@@ -750,9 +751,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       ? Icons.arrow_forward_ios
                       : Icons.arrow_back_ios_outlined,
                   size: 24,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onPrimaryContainer,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
