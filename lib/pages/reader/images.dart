@@ -118,7 +118,14 @@ class _GalleryModeState extends State<_GalleryMode>
 
   /// [totalPages] is the total number of pages in the current chapter.
   /// More than one images can be displayed on one page.
-  int get totalPages => (reader.images!.length / reader.imagesPerPage).ceil();
+  int get totalPages {
+    if (!showSingleImageOnFirstPage) {
+      return (reader.images!.length / reader.imagesPerPage).ceil();
+    } else {
+      return 1 +
+          ((reader.images!.length - 1) / reader.imagesPerPage).ceil();
+    }
+  }
 
   var imageStates = <State<ComicImage>>{};
 
@@ -137,6 +144,27 @@ class _GalleryModeState extends State<_GalleryMode>
     super.initState();
   }
 
+  bool get showSingleImageOnFirstPage => appdata.settings["showSingleImageOnFirstPage"];
+
+  /// Get the range of images for the given page. [page] is 1-based.
+  (int start, int end) getPageImagesRange(int page) {
+    if (showSingleImageOnFirstPage) {
+      if (page == 1) {
+        return (0, 1);
+      } else {
+        int startIndex = (page - 2) * reader.imagesPerPage + 1;
+        int endIndex = math.min(
+            startIndex + reader.imagesPerPage, reader.images!.length);
+        return (startIndex, endIndex);
+      }
+    } else {
+      int startIndex = (page - 1) * reader.imagesPerPage;
+      int endIndex = math.min(
+          startIndex + reader.imagesPerPage, reader.images!.length);
+      return (startIndex, endIndex);
+    }
+  }
+
   /// [cache] is used to cache the images.
   /// The count of images to cache is determined by the [preCacheCount] setting.
   /// For previous page and next page, it will do a memory cache.
@@ -151,9 +179,7 @@ class _GalleryModeState extends State<_GalleryMode>
   }
 
   void _cachePage(int page, bool shouldPreCache) {
-    int startIndex = (page - 1) * reader.imagesPerPage;
-    int endIndex =
-    math.min(startIndex + reader.imagesPerPage, reader.images!.length);
+    var (startIndex, endIndex) = getPageImagesRange(page);
     for (int i = startIndex; i < endIndex; i++) {
       if (shouldPreCache) {
         _precacheImage(i+1, context);
@@ -201,10 +227,7 @@ class _GalleryModeState extends State<_GalleryMode>
               child: const SizedBox(),
             );
           } else {
-            int pageIndex = index - 1;
-            int startIndex = pageIndex * reader.imagesPerPage;
-            int endIndex = math.min(
-                startIndex + reader.imagesPerPage, reader.images!.length);
+            var (startIndex, endIndex) = getPageImagesRange(index);
             List<String> pageImages =
                 reader.images!.sublist(startIndex, endIndex);
 
@@ -1081,6 +1104,9 @@ void _preDownloadImage(int page, BuildContext context) {
   }
   var reader = context.reader;
   var imageKey = reader.images![page - 1];
+  if (imageKey.startsWith("file://")) {
+    return;
+  }
   var cid = reader.cid;
   var eid = reader.eid;
   var sourceKey = reader.type.comicSource?.key;

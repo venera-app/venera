@@ -66,6 +66,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           min: 1,
           max: 20,
           onChanged: () {
+            setState(() {});
             widget.onChanged?.call("autoPageTurningInterval");
           },
         ).toSliver(),
@@ -80,6 +81,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             min: 1,
             max: 5,
             onChanged: () {
+              setState(() {});
               widget.onChanged?.call("readerScreenPicNumberForLandscape");
             },
           ),
@@ -96,6 +98,18 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             max: 5,
             onChanged: () {
               widget.onChanged?.call("readerScreenPicNumberForPortrait");
+            },
+          ),
+        ),
+        SliverAnimatedVisibility(
+          visible: appdata.settings['readerMode']!.startsWith('gallery') &&
+              (appdata.settings['readerScreenPicNumberForLandscape'] > 1 ||
+                  appdata.settings['readerScreenPicNumberForPortrait'] > 1),
+          child: _SwitchSetting(
+            title: "Show single image on first page".tl,
+            settingKey: "showSingleImageOnFirstPage",
+            onChanged: () {
+              widget.onChanged?.call("showSingleImageOnFirstPage");
             },
           ),
         ),

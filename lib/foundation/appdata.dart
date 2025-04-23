@@ -185,6 +185,7 @@ class Settings with ChangeNotifier {
     'initialPage': '0',
     'comicListDisplayMode': 'paging', // paging, continuous
     'showPageNumberInReader': true,
+    'showSingleImageOnFirstPage': false,
   };
 
   operator [](String key) {
