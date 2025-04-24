@@ -46,9 +46,9 @@ dependencies:
       ref: 7801fc582ecf5a7351632887891ecf309a7b2583
   flutter_inappwebview:
     git:
-      url: https://github.com/pichillilorenzo/flutter_inappwebview
+      url: https://github.com/venera-app/flutter_inappwebview
       path: flutter_inappwebview
-      ref: 0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676
+      ref: 3ef899b3db57c911b080979f1392253b835f98ab
   app_links: ^6.4.0
   sliver_tools: ^0.2.12
   flutter_file_dialog: ^3.0.2

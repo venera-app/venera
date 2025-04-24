@@ -308,18 +308,18 @@ packages:
     dependency: "direct main"
     description:
       path: flutter_inappwebview
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "6.2.0-beta.3"
   flutter_inappwebview_android:
     dependency: transitive
     description:
       path: flutter_inappwebview_android
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "1.2.0-beta.3"
   flutter_inappwebview_internal_annotations:
@@ -334,45 +334,45 @@ packages:
     dependency: transitive
     description:
       path: flutter_inappwebview_ios
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "1.2.0-beta.3"
   flutter_inappwebview_macos:
     dependency: transitive
     description:
       path: flutter_inappwebview_macos
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "1.2.0-beta.3"
   flutter_inappwebview_platform_interface:
     dependency: transitive
     description:
       path: flutter_inappwebview_platform_interface
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "1.4.0-beta.3"
   flutter_inappwebview_web:
     dependency: transitive
     description:
       path: flutter_inappwebview_web
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "1.2.0-beta.3"
   flutter_inappwebview_windows:
     dependency: transitive
     description:
       path: flutter_inappwebview_windows
-      ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      resolved-ref: "0aaf7a0bfc01d61a4d1453cefb57fb6783b6e676"
-      url: "https://github.com/pichillilorenzo/flutter_inappwebview"
+      ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      resolved-ref: "3ef899b3db57c911b080979f1392253b835f98ab"
+      url: "https://github.com/venera-app/flutter_inappwebview"
     source: git
     version: "0.7.0-beta.3"
   flutter_lints:
