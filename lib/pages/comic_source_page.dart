@@ -322,127 +322,168 @@ class _ComicSourceList extends StatefulWidget {
 }
 
 class _ComicSourceListState extends State<_ComicSourceList> {
-  bool loading = true;
   List? json;
+  bool changed = false;
+  var controller = TextEditingController();
 
   void load() async {
-    var dio = AppDio();
-    var res = await dio.get<String>(appdata.settings['comicSourceListUrl']);
-    if (res.statusCode != 200) {
-      context.showMessage(message: "Network error".tl);
-      return;
+    if (json != null) {
+      setState(() {
+        json = null;
+      });
     }
-    setState(() {
-      json = jsonDecode(res.data!);
-      loading = false;
-    });
+    var dio = AppDio();
+    try {
+      var res = await dio.get<String>(controller.text);
+      if (res.statusCode != 200) {
+        throw "error";
+      }
+      if (mounted) {
+        setState(() {
+          json = jsonDecode(res.data!);
+        });
+      }
+    }
+    catch(e) {
+      context.showMessage(message: "Network error".tl);
+      if (mounted) {
+        setState(() {
+          json = [];
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    controller.text = appdata.settings['comicSourceListUrl'];
+    load();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (changed) {
+      appdata.settings['comicSourceListUrl'] = controller.text;
+      appdata.saveData();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "Comic Source".tl,
-      tailing: [
-        IconButton(
-          icon: Icon(Icons.settings),
-          onPressed: () async {
-            await showInputDialog(
-              context: context,
-              title: "Set comic source list url".tl,
-              initialValue: appdata.settings['comicSourceListUrl'],
-              onConfirm: (value) {
-                appdata.settings['comicSourceListUrl'] = value;
-                appdata.saveData();
-                setState(() {
-                  loading = true;
-                  json = null;
-                });
-                return null;
-              },
-            );
-          },
-        )
-      ],
       body: buildBody(),
     );
   }
 
   Widget buildBody() {
-    if (loading) {
-      load();
-      return const Center(child: CircularProgressIndicator());
-    } else {
-      var currentKey = ComicSource.all().map((e) => e.key).toList();
-      return ListView.builder(
-        itemCount: json!.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: context.colorScheme.primaryContainer,
+    var currentKey = ComicSource.all().map((e) => e.key).toList();
+
+    return ListView.builder(
+      itemCount: (json?.length ?? 1) + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 0.6,
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Do not report any issues related to sources to App repo.".tl),
-                        Text("Click the setting icon to change the source list url.".tl),
-                      ],
-                    ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.source_outlined),
+                  title: Text("Source URL".tl),
+                ),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: "URL",
+                    border: const UnderlineInputBorder(),
+                    contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12),
                   ),
-                ],
-              ),
-            );
-          }
-          index--;
-
-          var key = json![index]["key"];
-          var action = currentKey.contains(key)
-              ? const Icon(Icons.check, size: 20).paddingRight(8)
-              : Button.filled(
-                  child: Text("Add".tl),
-                  onPressed: () async {
-                    var fileName = json![index]["fileName"];
-                    var url = json![index]["url"];
-                    if (url == null || !(url.toString()).isURL) {
-                      var listUrl =
-                          appdata.settings['comicSourceListUrl'] as String;
-                      if (listUrl
-                          .replaceFirst("https://", "")
-                          .replaceFirst("http://", "")
-                          .contains("/")) {
-                        url =
-                            listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
-                                fileName;
-                      } else {
-                        url = '$listUrl/$fileName';
-                      }
-                    }
-                    await widget.onAdd(url);
-                    setState(() {});
+                  onChanged: (value) {
+                    changed = true;
                   },
-                ).fixHeight(32);
-
-          var description = json![index]["version"];
-          if (json![index]["description"] != null) {
-            description = "$description\n${json![index]["description"]}";
-          }
-
-          return ListTile(
-            title: Text(json![index]["name"]),
-            subtitle: Text(description),
-            trailing: action,
+                ).paddingHorizontal(16).paddingBottom(8),
+                Text("The URL should point to a 'index.json' file".tl).paddingLeft(16),
+                Text("Do not report any issues related to sources to App repo.".tl).paddingLeft(16),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        controller.text = defaultComicSourceUrl;
+                        changed = true;
+                      },
+                      child: Text("Reset".tl),
+                    ),
+                    FilledButton.tonal(
+                      onPressed: load,
+                      child: Text("Refresh".tl),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           );
-        },
-      );
-    }
+        }
+
+        if (index == 1 && json == null) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        index--;
+
+        var key = json![index]["key"];
+        var action = currentKey.contains(key)
+            ? const Icon(Icons.check, size: 20).paddingRight(8)
+            : Button.filled(
+          child: Text("Add".tl),
+          onPressed: () async {
+            var fileName = json![index]["fileName"];
+            var url = json![index]["url"];
+            if (url == null || !(url.toString()).isURL) {
+              var listUrl =
+              appdata.settings['comicSourceListUrl'] as String;
+              if (listUrl
+                  .replaceFirst("https://", "")
+                  .replaceFirst("http://", "")
+                  .contains("/")) {
+                url =
+                    listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
+                        fileName;
+              } else {
+                url = '$listUrl/$fileName';
+              }
+            }
+            await widget.onAdd(url);
+            setState(() {});
+          },
+        ).fixHeight(32);
+
+        var description = json![index]["version"];
+        if (json![index]["description"] != null) {
+          description = "$description\n${json![index]["description"]}";
+        }
+
+        return ListTile(
+          title: Text(json![index]["name"]),
+          subtitle: Text(description),
+          trailing: action,
+        );
+      },
+    );
   }
 }
 
