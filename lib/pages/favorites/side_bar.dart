@@ -103,13 +103,6 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                         MenuButton(
                           entries: [
                             MenuEntry(
-                              icon: Icons.search,
-                              text: 'Search'.tl,
-                              onClick: () {
-                                context.to(() => const LocalSearchPage());
-                              },
-                            ),
-                            MenuEntry(
                               icon: Icons.add,
                               text: 'Create Folder'.tl,
                               onClick: () {
@@ -138,6 +131,10 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                       ],
                     ).paddingHorizontal(16),
                   );
+                }
+                index--;
+                if (index == 0) {
+                  return buildLocalFolder(_localAllFolderLabel);
                 }
                 index--;
                 if (index < folders.length) {
@@ -214,7 +211,9 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
           ),
         ),
         padding: const EdgeInsets.only(left: 16),
-        child: Text(name),
+        child: Text(name == _localAllFolderLabel
+            ? "All".tl
+            : getFavoriteDataOrNull(name)?.title ?? name),
       ),
     );
   }

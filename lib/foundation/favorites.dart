@@ -234,7 +234,7 @@ class LocalFavoritesManager with ChangeNotifier {
           alter table "$folder"
           add column translated_tags TEXT;
         """);
-        var comics = getAllComics(folder);
+        var comics = getFolderComics(folder);
         for (var comic in comics) {
           var translatedTags = _translateTags(comic.tags);
           _db.execute("""
@@ -349,12 +349,23 @@ class LocalFavoritesManager with ChangeNotifier {
       """).firstOrNull?["min_value"] ?? 0;
   }
 
-  List<FavoriteItem> getAllComics(String folder) {
+  List<FavoriteItem> getFolderComics(String folder) {
     var rows = _db.select("""
         select * from "$folder"
         ORDER BY display_order;
       """);
     return rows.map((element) => FavoriteItem.fromRow(element)).toList();
+  }
+
+  List<FavoriteItem> getAllComics() {
+    var res = <FavoriteItem>{};
+    for (final folder in folderNames) {
+      var comics = _db.select("""
+        select * from "$folder";
+      """);
+      res.addAll(comics.map((element) => FavoriteItem.fromRow(element)));
+    }
+    return res.toList();
   }
 
   void addTagTo(String folder, String id, String tag) {
@@ -736,10 +747,10 @@ class LocalFavoritesManager with ChangeNotifier {
     return comics;
   }
 
-  List<FavoriteItemWithFolderInfo> search(String keyword) {
+  List<FavoriteItem> search(String keyword) {
     var keywordList = keyword.split(" ");
     keyword = keywordList.first;
-    var comics = <FavoriteItemWithFolderInfo>[];
+    var comics = <FavoriteItem>{};
     for (var table in folderNames) {
       keyword = "%$keyword%";
       var res = _db.select("""
@@ -747,15 +758,18 @@ class LocalFavoritesManager with ChangeNotifier {
         WHERE name LIKE ? OR author LIKE ? OR tags LIKE ? OR translated_tags LIKE ?;
       """, [keyword, keyword, keyword, keyword]);
       for (var comic in res) {
-        comics.add(
-            FavoriteItemWithFolderInfo(FavoriteItem.fromRow(comic), table));
+        comics.add(FavoriteItem.fromRow(comic));
       }
       if (comics.length > 200) {
         break;
       }
     }
 
-    bool test(FavoriteItemWithFolderInfo comic, String keyword) {
+    bool test(FavoriteItem comic, String keyword) {
+      keyword = keyword.trim();
+      if (keyword.isEmpty) {
+        return true;
+      }
       if (comic.name.contains(keyword)) {
         return true;
       } else if (comic.author.contains(keyword)) {
@@ -766,12 +780,14 @@ class LocalFavoritesManager with ChangeNotifier {
       return false;
     }
 
-    for (var i = 1; i < keywordList.length; i++) {
-      comics =
-          comics.where((element) => test(element, keywordList[i])).toList();
-    }
-
-    return comics;
+    return comics.where((element) {
+      for (var i = 1; i < keywordList.length; i++) {
+        if (!test(element, keywordList[i])) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
   }
 
   void editTags(String id, String folder, List<String> tags) {

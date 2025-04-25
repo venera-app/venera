@@ -133,7 +133,7 @@ void addFavorite(List<Comic> comics) {
 }
 
 Future<List<FavoriteItem>> updateComicsInfo(String folder) async {
-  var comics = LocalFavoritesManager().getAllComics(folder);
+  var comics = LocalFavoritesManager().getFolderComics(folder);
 
   Future<void> updateSingleComic(int index) async {
     int retry = 3;

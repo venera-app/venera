@@ -1,5 +1,7 @@
 part of 'favorites_page.dart';
 
+const _localAllFolderLabel = '^_^[%local_all%]^_^';
+
 class _LocalFavoritesPage extends StatefulWidget {
   const _LocalFavoritesPage({required this.folder, super.key});
 
@@ -31,14 +33,25 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   int? lastSelectedIndex;
 
+  bool get isAllFolder => widget.folder == _localAllFolderLabel;
+
   void updateComics() {
     if (keyword.isEmpty) {
       setState(() {
-        comics = LocalFavoritesManager().getAllComics(widget.folder);
+        if (isAllFolder) {
+          comics = LocalFavoritesManager().getAllComics();
+        } else {
+          comics = LocalFavoritesManager().getFolderComics(widget.folder);
+        }
       });
     } else {
       setState(() {
-        comics = LocalFavoritesManager().searchInFolder(widget.folder, keyword);
+        if (isAllFolder) {
+          comics = LocalFavoritesManager().search(keyword);
+        } else {
+          comics =
+              LocalFavoritesManager().searchInFolder(widget.folder, keyword);
+        }
       });
     }
   }
@@ -46,10 +59,16 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   @override
   void initState() {
     favPage = context.findAncestorStateOfType<_FavoritesPageState>()!;
-    comics = LocalFavoritesManager().getAllComics(widget.folder);
-    var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
-    networkSource = a;
-    networkFolder = b;
+    if (!isAllFolder) {
+      comics = LocalFavoritesManager().getFolderComics(widget.folder);
+      var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
+      networkSource = a;
+      networkFolder = b;
+    } else {
+      comics = LocalFavoritesManager().getAllComics();
+      networkSource = null;
+      networkFolder = null;
+    }
     LocalFavoritesManager().addListener(updateComics);
     super.initState();
   }
@@ -113,6 +132,11 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    var title = favPage.folder ?? "Unselected".tl;
+    if (title == _localAllFolderLabel) {
+      title = "All".tl;
+    }
+
     Widget body = SmoothCustomScrollView(
       controller: scrollController,
       slivers: [
@@ -135,10 +159,10 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               onTap: context.width < _kTwoPanelChangeWidth
                   ? favPage.showFolderSelector
                   : null,
-              child: Text(favPage.folder ?? "Unselected".tl),
+              child: Text(title),
             ),
             actions: [
-              if (networkSource != null)
+              if (networkSource != null && !isAllFolder)
                 Tooltip(
                   message: "Sync".tl,
                   child: Flyout(
@@ -196,9 +220,10 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   },
                 ),
               ),
-              MenuButton(
-                entries: [
-                  MenuEntry(
+              if (!isAllFolder)
+                MenuButton(
+                  entries: [
+                    MenuEntry(
                       icon: Icons.edit_outlined,
                       text: "Rename".tl,
                       onClick: () {
@@ -220,8 +245,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             return null;
                           },
                         );
-                      }),
-                  MenuEntry(
+                      },
+                    ),
+                    MenuEntry(
                       icon: Icons.reorder,
                       text: "Reorder".tl,
                       onClick: () {
@@ -241,8 +267,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             }
                           },
                         );
-                      }),
-                  MenuEntry(
+                      },
+                    ),
+                    MenuEntry(
                       icon: Icons.upload_file,
                       text: "Export".tl,
                       onClick: () {
@@ -253,8 +280,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                           data: utf8.encode(json),
                           filename: "${widget.folder}.json",
                         );
-                      }),
-                  MenuEntry(
+                      },
+                    ),
+                    MenuEntry(
                       icon: Icons.update,
                       text: "Update Comics Info".tl,
                       onClick: () {
@@ -265,8 +293,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             });
                           }
                         });
-                      }),
-                  MenuEntry(
+                      },
+                    ),
+                    MenuEntry(
                       icon: Icons.delete_outline,
                       text: "Delete Folder".tl,
                       color: context.colorScheme.error,
@@ -284,9 +313,10 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             favPage.folderList?.updateFolders();
                           },
                         );
-                      }),
-                ],
-              ),
+                      },
+                    ),
+                  ],
+                ),
             ],
           )
         else if (multiSelectMode)
@@ -330,22 +360,23 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     icon: Icons.flip,
                     text: "Invert Selection".tl,
                     onClick: invertSelection),
-                MenuEntry(
-                    icon: Icons.delete_outline,
-                    text: "Delete Comic".tl,
-                    color: context.colorScheme.error,
-                    onClick: () {
-                      showConfirmDialog(
-                        context: context,
-                        title: "Delete".tl,
-                        content: "Delete @c comics?"
-                            .tlParams({"c": selectedComics.length}),
-                        btnColor: context.colorScheme.error,
-                        onConfirm: () {
-                          _deleteComicWithId();
-                        },
-                      );
-                    }),
+                if (!isAllFolder)
+                  MenuEntry(
+                      icon: Icons.delete_outline,
+                      text: "Delete Comic".tl,
+                      color: context.colorScheme.error,
+                      onClick: () {
+                        showConfirmDialog(
+                          context: context,
+                          title: "Delete".tl,
+                          content: "Delete @c comics?"
+                              .tlParams({"c": selectedComics.length}),
+                          btnColor: context.colorScheme.error,
+                          onConfirm: () {
+                            _deleteComicWithId();
+                          },
+                        );
+                      }),
                 MenuEntry(
                   icon: Icons.download,
                   text: "Download".tl,
@@ -404,17 +435,18 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           selections: selectedComics,
           menuBuilder: (c) {
             return [
-              MenuEntry(
-                icon: Icons.delete,
-                text: "Delete".tl,
-                onClick: () {
-                  LocalFavoritesManager().deleteComicWithId(
-                    widget.folder,
-                    c.id,
-                    (c as FavoriteItem).type,
-                  );
-                },
-              ),
+              if (!isAllFolder)
+                MenuEntry(
+                  icon: Icons.delete,
+                  text: "Delete".tl,
+                  onClick: () {
+                    LocalFavoritesManager().deleteComicWithId(
+                      widget.folder,
+                      c.id,
+                      (c as FavoriteItem).type,
+                    );
+                  },
+                ),
               MenuEntry(
                 icon: Icons.check,
                 text: "Select".tl,
@@ -725,7 +757,7 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
   final _key = GlobalKey();
   var reorderWidgetKey = UniqueKey();
   final _scrollController = ScrollController();
-  late var comics = LocalFavoritesManager().getAllComics(widget.name);
+  late var comics = LocalFavoritesManager().getFolderComics(widget.name);
   bool changed = false;
 
   static int _floatToInt8(double x) {

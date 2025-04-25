@@ -387,7 +387,10 @@
     "Screen center": "屏幕中心",
     "Suggestions": "建议",
     "Do not report any issues related to sources to App repo.": "请不要向App仓库报告任何与源相关的问题",
-    "Click the setting icon to change the source list url.": "点击设置图标更改源列表URL"
+    "Show single image on first page": "在首页显示单张图片",
+    "Click to select an image": "点击选择一张图片",
+    "Source URL": "源地址",
+    "The URL should point to a 'index.json' file": "该URL应指向一个'index.json'文件"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -777,6 +780,9 @@
     "Screen center": "螢幕中心",
     "Suggestions": "建議",
     "Do not report any issues related to sources to App repo.": "請不要向App倉庫報告任何與源相關的問題",
-    "Click the setting icon to change the source list url.": "點擊設定圖示更改源列表URL"
+    "Show single image on first page": "在首頁顯示單張圖片",
+    "Click to select an image": "點擊選擇一張圖片",
+    "Source URL": "源地址",
+    "The URL should point to a 'index.json' file": "該URL應指向一個'index.json'文件"
   }
 }

@@ -7,7 +7,7 @@ import 'package:rhttp/rhttp.dart' as rhttp;
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cache.dart';
-import 'package:venera/utils/ext.dart';
+import 'package:venera/network/proxy.dart';
 
 import '../foundation/app.dart';
 import 'cloudflare.dart';
@@ -96,9 +96,11 @@ class MyLogInterceptor implements Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    Log.info("Network", "${options.method} ${options.uri}\n"
-        "headers:\n${options.headers}\n"
-        "data:\n${options.data}");
+    Log.info(
+        "Network",
+        "${options.method} ${options.uri}\n"
+            "headers:\n${options.headers}\n"
+            "data:\n${options.data}");
     options.connectTimeout = const Duration(seconds: 15);
     options.receiveTimeout = const Duration(seconds: 15);
     options.sendTimeout = const Duration(seconds: 15);
@@ -107,62 +109,13 @@ class MyLogInterceptor implements Interceptor {
 }
 
 class AppDio with DioMixin {
-  String? _proxy = proxy;
-
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
-    httpClientAdapter = RHttpAdapter(rhttp.ClientSettings(
-      proxySettings: proxy == null
-          ? const rhttp.ProxySettings.noProxy()
-          : rhttp.ProxySettings.proxy(proxy!),
-    ));
+    httpClientAdapter = RHttpAdapter();
     interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
     interceptors.add(NetworkCacheManager());
     interceptors.add(CloudflareInterceptor());
     interceptors.add(MyLogInterceptor());
-  }
-
-  static String? proxy;
-
-  static Future<String?> getProxy() async {
-    if ((appdata.settings['proxy'] as String).removeAllBlank == "direct") {
-      return null;
-    }
-    if (appdata.settings['proxy'] != "system") return appdata.settings['proxy'];
-
-    String res;
-    if (!App.isLinux) {
-      const channel = MethodChannel("venera/method_channel");
-      try {
-        res = await channel.invokeMethod("getProxy");
-      } catch (e) {
-        return null;
-      }
-    } else {
-      res = "No Proxy";
-    }
-    if (res == "No Proxy") return null;
-
-    if (res.contains(";")) {
-      var proxies = res.split(";");
-      for (String proxy in proxies) {
-        proxy = proxy.removeAllBlank;
-        if (proxy.startsWith('https=')) {
-          return proxy.substring(6);
-        }
-      }
-    }
-
-    final RegExp regex = RegExp(
-      r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$',
-      caseSensitive: false,
-      multiLine: false,
-    );
-    if (!regex.hasMatch(res)) {
-      return null;
-    }
-
-    return res;
   }
 
   static final Map<String, bool> _requests = {};
@@ -184,16 +137,6 @@ class AppDio with DioMixin {
       _requests[path] = true;
       options!.headers!.remove('prevent-parallel');
     }
-    proxy = await getProxy();
-    if (_proxy != proxy) {
-      Log.info("Network", "Proxy changed to $proxy");
-      _proxy = proxy;
-      httpClientAdapter = RHttpAdapter(rhttp.ClientSettings(
-        proxySettings: proxy == null
-            ? const rhttp.ProxySettings.noProxy()
-            : rhttp.ProxySettings.proxy(proxy!),
-      ));
-    }
     try {
       return super.request<T>(
         path,
@@ -213,7 +156,26 @@ class AppDio with DioMixin {
 }
 
 class RHttpAdapter implements HttpClientAdapter {
-  rhttp.ClientSettings settings;
+  Future<rhttp.ClientSettings> get settings async {
+    var proxy = await getProxy();
+
+    return rhttp.ClientSettings(
+      proxySettings: proxy == null
+          ? const rhttp.ProxySettings.noProxy()
+          : rhttp.ProxySettings.proxy(proxy),
+      redirectSettings: const rhttp.RedirectSettings.limited(5),
+      timeoutSettings: const rhttp.TimeoutSettings(
+        connectTimeout: Duration(seconds: 15),
+        keepAliveTimeout: Duration(seconds: 60),
+        keepAlivePing: Duration(seconds: 30),
+      ),
+      throwOnStatusCode: false,
+      dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
+      tlsSettings: rhttp.TlsSettings(
+        sni: appdata.settings['sni'] != false,
+      ),
+    );
+  }
 
   static Map<String, List<String>> _getOverrides() {
     if (!appdata.settings['enableDnsOverrides'] == true) {
@@ -231,22 +193,6 @@ class RHttpAdapter implements HttpClientAdapter {
     return result;
   }
 
-  RHttpAdapter([this.settings = const rhttp.ClientSettings()]) {
-    settings = settings.copyWith(
-      redirectSettings: const rhttp.RedirectSettings.limited(5),
-      timeoutSettings: const rhttp.TimeoutSettings(
-        connectTimeout: Duration(seconds: 15),
-        keepAliveTimeout: Duration(seconds: 60),
-        keepAlivePing: Duration(seconds: 30),
-      ),
-      throwOnStatusCode: false,
-      dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
-      tlsSettings: rhttp.TlsSettings(
-        sni: appdata.settings['sni'] != false,
-      ),
-    );
-  }
-
   @override
   void close({bool force = false}) {}
 
@@ -256,10 +202,15 @@ class RHttpAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    if (options.headers['User-Agent'] == null &&
+        options.headers['user-agent'] == null) {
+      options.headers['User-Agent'] = "venera/v${App.version}";
+    }
+
     var res = await rhttp.Rhttp.request(
       method: rhttp.HttpMethod(options.method),
       url: options.uri.toString(),
-      settings: settings,
+      settings: await settings,
       expectBody: rhttp.HttpExpectBody.stream,
       body: requestStream == null ? null : rhttp.HttpBody.stream(requestStream),
       headers: rhttp.HttpHeaders.rawMap(
@@ -289,7 +240,7 @@ class RHttpAdapter implements HttpClientAdapter {
   }
 
   static String _getStatusMessage(int statusCode) {
-    return switch(statusCode) {
+    return switch (statusCode) {
       200 => "OK",
       201 => "Created",
       202 => "Accepted",
@@ -299,9 +250,11 @@ class RHttpAdapter implements HttpClientAdapter {
       302 => "Found",
       400 => "Invalid Status Code 400: The Request is invalid.",
       401 => "Invalid Status Code 401: The Request is unauthorized.",
-      403 => "Invalid Status Code 403: No permission to access the resource. Check your account or network.",
+      403 =>
+        "Invalid Status Code 403: No permission to access the resource. Check your account or network.",
       404 => "Invalid Status Code 404: Not found.",
-      429 => "Invalid Status Code 429: Too many requests. Please try again later.",
+      429 =>
+        "Invalid Status Code 429: Too many requests. Please try again later.",
       _ => "Invalid Status Code $statusCode",
     };
   }

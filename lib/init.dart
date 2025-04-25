@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_saf/flutter_saf.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:venera/foundation/app.dart';
@@ -51,6 +54,14 @@ Future<void> init() async {
   FlutterError.onError = (details) {
     Log.error("Unhandled Exception", "${details.exception}\n${details.stack}");
   };
+  if (App.isWindows) {
+    // Report to the monitor thread that the app is running
+    // https://github.com/venera-app/venera/issues/343
+    Timer.periodic(const Duration(seconds: 1), (_) {
+      const methodChannel = MethodChannel('venera/method_channel');
+      methodChannel.invokeMethod("heartBeat");
+    });
+  }
 }
 
 void _checkOldConfigs() {

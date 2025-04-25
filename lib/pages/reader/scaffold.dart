@@ -208,7 +208,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
-  void addImageFavorite() {
+  void addImageFavorite() async {
     try {
       if (context.reader.images![0].contains('file://')) {
         showToast(
@@ -222,7 +222,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       String title = context.reader.history!.title;
       String subTitle = context.reader.history!.subtitle;
       int maxPage = context.reader.images!.length;
-      int page = context.reader.page;
+      int? page = await selectImage();
+      if (page == null) return;
+      page += 1;
       String sourceKey = context.reader.type.sourceKey;
       String imageKey = context.reader.images![page - 1];
       List<String> tags = context.reader.widget.tags;
@@ -378,11 +380,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               Tooltip(
                 message: "Collect the image".tl,
                 child: IconButton(
-                    icon: Icon(
-                        isLiked() ? Icons.favorite : Icons.favorite_border),
-                    onPressed: addImageFavorite),
+                  icon:
+                      Icon(isLiked() ? Icons.favorite : Icons.favorite_border),
+                  onPressed: addImageFavorite,
+                ),
               ),
-              if (App.isWindows)
+              if (App.isDesktop)
                 Tooltip(
                   message: "${"Full Screen".tl}(F12)",
                   child: IconButton(
@@ -570,94 +573,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     );
   }
 
-  Future<Uint8List?> _getCurrentImageData() async {
-    var imageKey = context.reader.images![context.reader.page - 1];
-    var reader = context.reader;
-    if (context.reader.mode.isContinuous) {
-      var continuesState =
-          context.reader._imageViewController as _ContinuousModeState;
-      var imagesOnScreen =
-          continuesState.itemPositionsListener.itemPositions.value;
-      var images = imagesOnScreen
-          .map((e) => context.reader.images!.elementAtOrNull(e.index - 1))
-          .whereType<String>()
-          .toList();
-      String? selected;
-      if (images.length > 1) {
-        await showPopUpWidget(
-          context,
-          PopUpWidgetScaffold(
-            title: "Select an image on screen".tl,
-            body: GridView.builder(
-              itemCount: images.length,
-              itemBuilder: (context, index) {
-                ImageProvider image;
-                var imageKey = images[index];
-                if (imageKey.startsWith('file://')) {
-                  image = FileImage(File(imageKey.replaceFirst("file://", '')));
-                } else {
-                  image = ReaderImageProvider(
-                    imageKey,
-                    reader.type.comicSource!.key,
-                    reader.cid,
-                    reader.eid,
-                    reader.page,
-                  );
-                }
-                return InkWell(
-                  borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  onTap: () {
-                    selected = images[index];
-                    App.rootContext.pop();
-                  },
-                  child: Container(
-                    foregroundDecoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Image(
-                      width: double.infinity,
-                      height: double.infinity,
-                      image: image,
-                    ),
-                  ),
-                ).padding(const EdgeInsets.all(8));
-              },
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 0.7,
-              ),
-            ),
-          ),
-        );
-      } else {
-        selected = images.first;
-      }
-      if (selected == null) {
-        return null;
-      } else {
-        imageKey = selected!;
-      }
-    }
-    if (imageKey.startsWith("file://")) {
-      return await File(imageKey.substring(7)).readAsBytes();
-    } else {
-      return (await CacheManager().findCache(
-              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
-          .readAsBytes();
-    }
-  }
-
   void saveCurrentImage() async {
-    var data = await _getCurrentImageData();
+    var data = await selectImageToData();
     if (data == null) {
       return;
     }
@@ -667,7 +584,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void share() async {
-    var data = await _getCurrentImageData();
+    var data = await selectImageToData();
     if (data == null) {
       return;
     }
@@ -750,9 +667,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       ? Icons.arrow_forward_ios
                       : Icons.arrow_back_ios_outlined,
                   size: 24,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onPrimaryContainer,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -760,6 +675,74 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         );
     }
     return const SizedBox();
+  }
+
+  /// If there is only one image on screen, return it.
+  ///
+  /// If there are multiple images on screen,
+  /// show an overlay to let the user select an image.
+  ///
+  /// The return value is the index of the selected image.
+  Future<int?> selectImage() async {
+    var reader = context.reader;
+    var imageViewController = context.reader._imageViewController;
+    if (imageViewController is _GalleryModeState && reader.imagesPerPage == 1) {
+      return reader.page - 1;
+    } else {
+      var location = await _showSelectImageOverlay();
+      if (location == null) {
+        return null;
+      }
+      var imageKey = imageViewController!.getImageKeyByOffset(location);
+      if (imageKey == null) {
+        return null;
+      }
+      return reader.images!.indexOf(imageKey);
+    }
+  }
+
+  /// Same as [selectImage], but return the image data.
+  Future<Uint8List?> selectImageToData() async {
+    var i = await selectImage();
+    if (i == null) {
+      return null;
+    }
+    var imageKey = context.reader.images![i];
+    if (imageKey.startsWith("file://")) {
+      return await File(imageKey.substring(7)).readAsBytes();
+    } else {
+      return (await CacheManager().findCache(
+              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
+          .readAsBytes();
+    }
+  }
+
+  Future<Offset?> _showSelectImageOverlay() {
+    if (_isOpen) {
+      openOrClose();
+    }
+
+    var completer = Completer<Offset?>();
+
+    var overlay = Overlay.of(context);
+    OverlayEntry? entry;
+    entry = OverlayEntry(
+      builder: (context) {
+        return Positioned.fill(
+          child: _SelectImageOverlayContent(onTap: (offset) {
+            completer.complete(offset);
+            entry!.remove();
+          }, onDispose: () {
+            if (!completer.isCompleted) {
+              completer.complete(null);
+            }
+          }),
+        );
+      },
+    );
+    overlay.insert(entry);
+
+    return completer.future;
   }
 }
 
@@ -938,6 +921,72 @@ class _ClockWidgetState extends State<_ClockWidget> {
         ),
         Text(_currentTime),
       ],
+    );
+  }
+}
+
+class _SelectImageOverlayContent extends StatefulWidget {
+  const _SelectImageOverlayContent({
+    required this.onTap,
+    required this.onDispose,
+  });
+
+  final void Function(Offset) onTap;
+
+  final void Function() onDispose;
+
+  @override
+  State<_SelectImageOverlayContent> createState() => _SelectImageOverlayContentState();
+}
+
+class _SelectImageOverlayContentState extends State<_SelectImageOverlayContent> {
+  @override
+  void dispose() {
+    widget.onDispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapUp: (details) {
+        widget.onTap(details.globalPosition);
+      },
+      child: Container(
+        color: Colors.black.withAlpha(50),
+        child: Align(
+          alignment: Alignment(
+            0,
+            -0.8,
+          ),
+          child: Container(
+            width: 232,
+            height: 42,
+            decoration: BoxDecoration(
+              color: context.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: context.colorScheme.outlineVariant,
+              ),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 8),
+                const Icon(Icons.info_outline),
+                const SizedBox(width: 16),
+                Text(
+                  "Click to select an image".tl,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: context.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

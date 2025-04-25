@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
-import 'package:venera/network/app_dio.dart';
+import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 import 'dart:io' as io;
@@ -308,7 +308,7 @@ class DesktopWebview {
       useWindowPositionAndSize: true,
       userDataFolderWindows: "${App.dataPath}\\webview",
       title: "webview",
-      proxy: AppDio.proxy,
+      proxy: await getProxy(),
     ));
     _webview!.addOnWebMessageReceivedCallback(onMessage);
     _webview!.setOnNavigation((s) {

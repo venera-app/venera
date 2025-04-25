@@ -10,10 +10,15 @@
 #include <flutter/event_stream_handler_functions.h>
 #include <flutter/standard_method_codec.h>
 #include "flutter/generated_plugin_registrant.h"
+#include <thread>
 
 #define _CRT_SECURE_NO_WARNINGS
 
 std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& mouseEvents = nullptr;
+
+std::atomic<bool> mainThreadAlive(true);
+std::atomic<std::chrono::steady_clock::time_point> lastHeartbeat(std::chrono::steady_clock::now());
+std::thread* monitorThread = nullptr;
 
 char* wideCharToMultiByte(wchar_t* pWCStrKey)
 {
@@ -44,6 +49,22 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
 FlutterWindow::~FlutterWindow() {}
+
+void monitorUIThread() {
+    const auto timeout = std::chrono::seconds(5);
+
+    while (mainThreadAlive.load()) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = now - lastHeartbeat.load();
+
+        if (duration > timeout) {
+            std::cerr << "The UI thread is dead. Terminate the application.";
+            std::exit(0);
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
 
 bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
@@ -77,6 +98,13 @@ bool FlutterWindow::OnCreate() {
         else
           result->Success(flutter::EncodableValue("No Proxy"));
         delete(res);
+      }
+      else if (call.method_name() == "heartBeat") {
+          if (monitorThread == nullptr) {
+              monitorThread = new std::thread{ monitorUIThread };
+          }
+          lastHeartbeat = std::chrono::steady_clock::now();
+          result->Success();
       }
   });
 
@@ -163,6 +191,10 @@ void FlutterWindow::OnDestroy() {
   }
 
   Win32Window::OnDestroy();
+  if (monitorThread != nullptr) {
+      mainThreadAlive = false;
+      monitorThread->join();
+  }
 }
 
 void mouse_side_button_listener(unsigned int input)

@@ -25,6 +25,7 @@ import 'package:venera/components/js_ui.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/init.dart';
 
 import 'comic_source/comic_source.dart';
@@ -194,7 +195,7 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
           responseType: ResponseType.plain,
           validateStatus: (status) => true,
         ));
-        var proxy = await AppDio.getProxy();
+        var proxy = await getProxy();
         dio.httpClientAdapter = IOHttpClientAdapter(
           createHttpClient: () {
             return HttpClient()

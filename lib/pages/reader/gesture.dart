@@ -287,6 +287,12 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
             text: "Copy Image".tl,
             onClick: () => copyImage(location),
           ),
+        if (!reader.isLoading)
+          MenuEntry(
+            icon: Icons.download_outlined,
+            text: "Save Image".tl,
+            onClick: () => saveImage(location),
+          ),
       ],
     );
   }
@@ -315,6 +321,17 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     var image = await controller!.getImageByOffset(location);
     if (image != null) {
       writeImageToClipboard(image);
+    } else {
+      context.showMessage(message: "No Image");
+    }
+  }
+
+  void saveImage(Offset location) async {
+    var controller = reader._imageViewController;
+    var image = await controller!.getImageByOffset(location);
+    if (image != null) {
+      var filetype = detectFileType(image);
+      saveFile(filename: "image${filetype.ext}", data: image);
     } else {
       context.showMessage(message: "No Image");
     }
