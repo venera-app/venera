@@ -86,51 +86,10 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
               padding: widget.withAppbar
                   ? EdgeInsets.zero
                   : EdgeInsets.only(top: context.padding.top),
-              itemCount: folders.length + networkFolders.length + 2,
+              itemCount: folders.length + networkFolders.length + 3,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.local_activity,
-                          color: context.colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 12),
-                        Text("Local".tl),
-                        const Spacer(),
-                        MenuButton(
-                          entries: [
-                            MenuEntry(
-                              icon: Icons.add,
-                              text: 'Create Folder'.tl,
-                              onClick: () {
-                                newFolder().then((value) {
-                                  setState(() {
-                                    folders =
-                                        LocalFavoritesManager().folderNames;
-                                  });
-                                });
-                              },
-                            ),
-                            MenuEntry(
-                              icon: Icons.reorder,
-                              text: 'Sort'.tl,
-                              onClick: () {
-                                sortFolders().then((value) {
-                                  setState(() {
-                                    folders =
-                                        LocalFavoritesManager().folderNames;
-                                  });
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ).paddingHorizontal(16),
-                  );
+                  return buildLocalTitle();
                 }
                 index--;
                 if (index == 0) {
@@ -142,38 +101,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                 }
                 index -= folders.length;
                 if (index == 0) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    margin: const EdgeInsets.only(top: 8),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                          color: context.colorScheme.outlineVariant,
-                          width: 0.6,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.cloud,
-                          color: context.colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 12),
-                        Text("Network".tl),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.settings),
-                          onPressed: () {
-                            showPopUpWidget(
-                              App.rootContext,
-                              setFavoritesPagesWidget(),
-                            );
-                          },
-                        ),
-                      ],
-                    ).paddingHorizontal(16),
-                  );
+                  return buildNetworkTitle();
                 }
                 index--;
                 return buildNetworkFolder(networkFolders[index]);
@@ -182,6 +110,86 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
           )
         ],
       ),
+    );
+  }
+
+  Widget buildLocalTitle() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            Icons.local_activity,
+            color: context.colorScheme.secondary,
+          ),
+          const SizedBox(width: 12),
+          Text("Local".tl),
+          const Spacer(),
+          MenuButton(
+            entries: [
+              MenuEntry(
+                icon: Icons.add,
+                text: 'Create Folder'.tl,
+                onClick: () {
+                  newFolder().then((value) {
+                    setState(() {
+                      folders =
+                          LocalFavoritesManager().folderNames;
+                    });
+                  });
+                },
+              ),
+              MenuEntry(
+                icon: Icons.reorder,
+                text: 'Sort'.tl,
+                onClick: () {
+                  sortFolders().then((value) {
+                    setState(() {
+                      folders =
+                          LocalFavoritesManager().folderNames;
+                    });
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
+      ).paddingHorizontal(16),
+    );
+  }
+
+  Widget buildNetworkTitle() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: context.colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.cloud,
+            color: context.colorScheme.secondary,
+          ),
+          const SizedBox(width: 12),
+          Text("Network".tl),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              showPopUpWidget(
+                App.rootContext,
+                setFavoritesPagesWidget(),
+              );
+            },
+          ),
+        ],
+      ).paddingHorizontal(16),
     );
   }
 
