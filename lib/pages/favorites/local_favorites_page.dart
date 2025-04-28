@@ -4,7 +4,7 @@ const _localAllFolderLabel = '^_^[%local_all%]^_^';
 
 /// If the number of comics in a folder exceeds this limit, it will be
 /// fetched asynchronously.
-const _asyncDataFetchLimit = 200;
+const _asyncDataFetchLimit = 500;
 
 class _LocalFavoritesPage extends StatefulWidget {
   const _LocalFavoritesPage({required this.folder, super.key});

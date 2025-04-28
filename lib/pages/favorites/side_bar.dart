@@ -133,8 +133,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                 onClick: () {
                   newFolder().then((value) {
                     setState(() {
-                      folders =
-                          LocalFavoritesManager().folderNames;
+                      folders = LocalFavoritesManager().folderNames;
                     });
                   });
                 },
@@ -145,8 +144,7 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
                 onClick: () {
                   sortFolders().then((value) {
                     setState(() {
-                      folders =
-                          LocalFavoritesManager().folderNames;
+                      folders = LocalFavoritesManager().folderNames;
                     });
                   });
                 },
@@ -195,6 +193,15 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
 
   Widget buildLocalFolder(String name) {
     bool isSelected = name == favPage.folder && !favPage.isNetwork;
+    int count = 0;
+    if (name == _localAllFolderLabel) {
+      count = LocalFavoritesManager().totalComics;
+    } else {
+      count = LocalFavoritesManager().folderComics(name);
+    }
+    var folderName = name == _localAllFolderLabel
+        ? "All".tl
+        : getFavoriteDataOrNull(name)?.title ?? name;
     return InkWell(
       onTap: () {
         if (isSelected) {
@@ -219,9 +226,25 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
           ),
         ),
         padding: const EdgeInsets.only(left: 16),
-        child: Text(name == _localAllFolderLabel
-            ? "All".tl
-            : getFavoriteDataOrNull(name)?.title ?? name),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(folderName),
+            ),
+            Container(
+              margin: EdgeInsets.only(right: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: context.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(count.toString()),
+            ),
+          ],
+        ),
       ),
     );
   }
