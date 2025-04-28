@@ -111,7 +111,13 @@ class _ReaderState extends State<Reader>
   }
 
   @override
-  int get maxPage => ((images?.length ?? 1) / imagesPerPage).ceil();
+  int get maxPage {
+    if (!showSingleImageOnFirstPage) {
+      return (images!.length / imagesPerPage).ceil();
+    } else {
+      return 1 + ((images!.length - 1) / imagesPerPage).ceil();
+    }
+  }
 
   ComicType get type => widget.type;
 
@@ -125,7 +131,8 @@ class _ReaderState extends State<Reader>
   late ReaderMode mode;
 
   @override
-  bool get isPortrait => MediaQuery.of(context).orientation == Orientation.portrait;
+  bool get isPortrait =>
+      MediaQuery.of(context).orientation == Orientation.portrait;
 
   History? history;
 
@@ -342,6 +349,9 @@ abstract mixin class _ImagePerPageHandler {
       page = (initialPage / imagesPerPage).ceil();
     }
   }
+
+  bool get showSingleImageOnFirstPage =>
+      appdata.settings["showSingleImageOnFirstPage"];
 
   /// The number of images displayed on one screen
   int get imagesPerPage {
