@@ -18,7 +18,9 @@ import 'package:venera/network/download.dart';
 import 'package:venera/pages/comic_details_page/comic_page.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/pages/settings/settings_page.dart';
+import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 
 part 'favorite_actions.dart';
