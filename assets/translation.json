@@ -390,7 +390,8 @@
     "Show single image on first page": "在首页显示单张图片",
     "Click to select an image": "点击选择一张图片",
     "Source URL": "源地址",
-    "The URL should point to a 'index.json' file": "该URL应指向一个'index.json'文件"
+    "The URL should point to a 'index.json' file": "该URL应指向一个'index.json'文件",
+    "Double tap to zoom": "双击缩放"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -783,6 +784,7 @@
     "Show single image on first page": "在首頁顯示單張圖片",
     "Click to select an image": "點擊選擇一張圖片",
     "Source URL": "源地址",
-    "The URL should point to a 'index.json' file": "該URL應指向一個'index.json'文件"
+    "The URL should point to a 'index.json' file": "該URL應指向一個'index.json'文件",
+    "Double tap to zoom": "雙擊縮放"
   }
 }
