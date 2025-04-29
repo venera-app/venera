@@ -119,7 +119,7 @@ class _GalleryModeState extends State<_GalleryMode>
   /// [totalPages] is the total number of pages in the current chapter.
   /// More than one images can be displayed on one page.
   int get totalPages {
-    if (!showSingleImageOnFirstPage) {
+    if (!reader.showSingleImageOnFirstPage) {
       return (reader.images!.length / reader.imagesPerPage).ceil();
     } else {
       return 1 +
@@ -144,11 +144,9 @@ class _GalleryModeState extends State<_GalleryMode>
     super.initState();
   }
 
-  bool get showSingleImageOnFirstPage => appdata.settings["showSingleImageOnFirstPage"];
-
   /// Get the range of images for the given page. [page] is 1-based.
   (int start, int end) getPageImagesRange(int page) {
-    if (showSingleImageOnFirstPage) {
+    if (reader.showSingleImageOnFirstPage) {
       if (page == 1) {
         return (0, 1);
       } else {
@@ -252,6 +250,7 @@ class _GalleryModeState extends State<_GalleryMode>
             }
 
             return PhotoViewGalleryPageOptions.customChild(
+              childSize: reader.size * 2,
               controller: photoViewControllers[index],
               minScale: PhotoViewComputedScale.contained * 1.0,
               maxScale: PhotoViewComputedScale.covered * 10.0,

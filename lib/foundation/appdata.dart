@@ -185,6 +185,7 @@ class Settings with ChangeNotifier {
     'comicListDisplayMode': 'paging', // paging, continuous
     'showPageNumberInReader': true,
     'showSingleImageOnFirstPage': false,
+    'enableDoubleTapToZoom': true,
   };
 
   operator [](String key) {

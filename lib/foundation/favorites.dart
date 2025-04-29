@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -209,7 +211,22 @@ class LocalFavoritesManager with ChangeNotifier {
 
   late Database _db;
 
+  late Map<String, int> counts;
+
+  int get totalComics {
+    int total = 0;
+    for (var t in counts.values) {
+      total += t;
+    }
+    return total;
+  }
+
+  int folderComics(String folder) {
+    return counts[folder] ?? 0;
+  }
+
   Future<void> init() async {
+    counts = {};
     _db = sqlite3.open("${App.dataPath}/local_favorite.db");
     _db.execute("""
       create table if not exists folder_order (
@@ -255,6 +272,13 @@ class LocalFavoritesManager with ChangeNotifier {
       prepareTableForFollowUpdates(followUpdateFolder, false);
     } else {
       appdata.settings['followUpdatesFolder'] = null;
+    }
+    initCounts();
+  }
+
+  void initCounts() {
+    for (var folder in folderNames) {
+      counts[folder] = count(folder);
     }
   }
 
@@ -357,6 +381,23 @@ class LocalFavoritesManager with ChangeNotifier {
     return rows.map((element) => FavoriteItem.fromRow(element)).toList();
   }
 
+  static Future<List<FavoriteItem>> _getFolderComicsAsync(
+      String folder, Pointer<void> p) {
+    return Isolate.run(() {
+      var db = sqlite3.fromPointer(p);
+      var rows = db.select("""
+        select * from "$folder"
+        ORDER BY display_order;
+      """);
+      return rows.map((element) => FavoriteItem.fromRow(element)).toList();
+    });
+  }
+
+  /// Start a new isolate to get the comics in the folder
+  Future<List<FavoriteItem>> getFolderComicsAsync(String folder) {
+    return _getFolderComicsAsync(folder, _db.handle);
+  }
+
   List<FavoriteItem> getAllComics() {
     var res = <FavoriteItem>{};
     for (final folder in folderNames) {
@@ -366,6 +407,26 @@ class LocalFavoritesManager with ChangeNotifier {
       res.addAll(comics.map((element) => FavoriteItem.fromRow(element)));
     }
     return res.toList();
+  }
+
+  static Future<List<FavoriteItem>> _getAllComicsAsync(
+      List<String> folders, Pointer<void> p) {
+    return Isolate.run(() {
+      var db = sqlite3.fromPointer(p);
+      var res = <FavoriteItem>{};
+      for (final folder in folders) {
+        var comics = db.select("""
+          select * from "$folder";
+        """);
+        res.addAll(comics.map((element) => FavoriteItem.fromRow(element)));
+      }
+      return res.toList();
+    });
+  }
+
+  /// Start a new isolate to get all the comics
+  Future<List<FavoriteItem>> getAllComicsAsync() {
+    return _getAllComicsAsync(folderNames, _db.handle);
   }
 
   void addTagTo(String folder, String id, String tag) {
@@ -433,6 +494,7 @@ class LocalFavoritesManager with ChangeNotifier {
       );
     """);
     notifyListeners();
+    counts[name] = 0;
     return name;
   }
 
@@ -547,6 +609,11 @@ class LocalFavoritesManager with ChangeNotifier {
         """, [updateTime, comic.id, comic.type.value]);
       }
     }
+    if (counts[folder] == null) {
+      counts[folder] = count(folder);
+    } else {
+      counts[folder] = counts[folder]! + 1;
+    }
     notifyListeners();
     return true;
   }
@@ -596,6 +663,7 @@ class LocalFavoritesManager with ChangeNotifier {
       delete from folder_order
       where folder_name == ?;
     """, [name]);
+    counts.remove(name);
     notifyListeners();
   }
 
@@ -611,6 +679,11 @@ class LocalFavoritesManager with ChangeNotifier {
       delete from "$folder"
       where id == ? and type == ?;
     """, [id, type.value]);
+    if (counts[folder] != null) {
+      counts[folder] = counts[folder]! - 1;
+    } else {
+      counts[folder] = count(folder);
+    }
     notifyListeners();
   }
 
