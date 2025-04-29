@@ -114,6 +114,14 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           ),
         ),
         _SwitchSetting(
+          title: 'Double tap to zoom'.tl,
+          settingKey: 'enableDoubleTapToZoom',
+          onChanged: () {
+            setState(() {});
+            widget.onChanged?.call('enableDoubleTapToZoom');
+          },
+        ).toSliver(),
+        _SwitchSetting(
           title: 'Long press to zoom'.tl,
           settingKey: 'enableLongPressToZoom',
           onChanged: () {

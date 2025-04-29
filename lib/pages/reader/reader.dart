@@ -112,6 +112,9 @@ class _ReaderState extends State<Reader>
 
   @override
   int get maxPage {
+    if (images == null) {
+      return 1;
+    }
     if (!showSingleImageOnFirstPage) {
       return (images!.length / imagesPerPage).ceil();
     } else {

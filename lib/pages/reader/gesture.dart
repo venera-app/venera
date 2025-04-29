@@ -152,12 +152,18 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
 
   bool _dragInProgress = false;
 
+  bool get _enableDoubleTapToZoom => appdata.settings["enableDoubleTapToZoom"];
+
   void onTapUp(TapUpDetails event) {
     if (_longPressInProgress) {
       _longPressInProgress = false;
       return;
     }
     final location = event.globalPosition;
+    if (!_enableDoubleTapToZoom) {
+      onTap(location);
+      return;
+    }
     final previousLocation = _previousEvent?.globalPosition;
     if (previousLocation != null) {
       if ((location - previousLocation).distanceSquared <
