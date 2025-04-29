@@ -46,12 +46,14 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-  	<string>Choose images</string>
+  <string>Choose images</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
-    <string>Ensure that the operation is being performed by the user themselves.</string>
+  <string>Ensure that the operation is being performed by the user themselves.</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.books</string>
 </dict>
 </plist>
