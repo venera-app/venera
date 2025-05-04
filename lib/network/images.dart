@@ -234,19 +234,30 @@ class _StreamWrapper<T> {
   }
 
   void _listen() async {
-    await for (var data in _stream) {
-      if (isClosed) {
-        break;
-      }
-      for (var controller in controllers) {
-        if (!controller.isClosed) {
-          controller.add(data);
+    try {
+      await for (var data in _stream) {
+        if (isClosed) {
+          break;
+        }
+        for (var controller in controllers) {
+          if (!controller.isClosed) {
+            controller.add(data);
+          }
         }
       }
     }
-    for (var controller in controllers) {
-      if (!controller.isClosed) {
-        controller.close();
+    catch (e) {
+      for (var controller in controllers) {
+        if (!controller.isClosed) {
+          controller.addError(e);
+        }
+      }
+    }
+    finally {
+      for (var controller in controllers) {
+        if (!controller.isClosed) {
+          controller.close();
+        }
       }
     }
     controllers.clear();
