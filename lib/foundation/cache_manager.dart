@@ -1,5 +1,7 @@
+import 'dart:ffi';
+import 'dart:isolate';
+
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/utils/io.dart';
 
@@ -21,6 +23,51 @@ class CacheManager {
 
   int _limitSize = 2 * 1024 * 1024 * 1024;
 
+  static Future<int> _scanDir(Pointer<void> dbP, String dir) async {
+    var res = await Isolate.run(() async {
+      int totalSize = 0;
+      List<String> unmanagedFiles = [];
+      var db = sqlite3.fromPointer(dbP);
+      await for (var file in Directory(dir).list(recursive: true)) {
+        if (file is File) {
+          var size = await file.length();
+          var segments = file.uri.pathSegments;
+          var name = segments.last;
+          var dir = segments.elementAtOrNull(segments.length - 2) ?? "*";
+          var res = db.select('''
+            SELECT * FROM cache
+            WHERE dir = ? AND name = ?
+          ''', [dir, name]);
+          if (res.isEmpty) {
+            unmanagedFiles.add(file.path);
+          } else {
+            totalSize += size;
+          }
+        }
+      }
+      return {
+        'totalSize': totalSize,
+        'unmanagedFiles': unmanagedFiles,
+      };
+    });
+    // delete unmanaged files
+    // Only modify the database in the main isolate to avoid deadlock
+    for (var filePath in res['unmanagedFiles'] as List<String>) {
+      var file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      var segments = file.uri.pathSegments;
+      var name = segments.last;
+      var dir = segments.elementAtOrNull(segments.length - 2) ?? "*";
+      CacheManager()._db.execute('''
+        DELETE FROM cache
+        WHERE dir = ? AND name = ?
+      ''', [dir, name]);
+    }
+    return res['totalSize'] as int;
+  }
+
   CacheManager._create() {
     Directory(cachePath).createSync(recursive: true);
     _db = sqlite3.open('${App.dataPath}/cache.db');
@@ -33,7 +80,7 @@ class CacheManager {
         type TEXT
       )
     ''');
-    compute((path) => Directory(path).size, cachePath).then((value) {
+    _scanDir(_db.handle, cachePath).then((value) {
       _currentSize = value;
       checkCache();
     });
@@ -50,6 +97,7 @@ class CacheManager {
   /// Write cache to disk.
   Future<void> writeCache(String key, List<int> data,
       [int duration = 7 * 24 * 60 * 60 * 1000]) async {
+    await delete(key);
     this.dir++;
     this.dir %= 100;
     var dir = this.dir;
@@ -146,10 +194,12 @@ class CacheManager {
         await file.delete();
       }
     }
-    _db.execute('''
+    if (res.isNotEmpty) {
+      _db.execute('''
       DELETE FROM cache
       WHERE expires < ?
     ''', [DateTime.now().millisecondsSinceEpoch]);
+    }
 
     while (_currentSize != null && _currentSize! > _limitSize) {
       var res = _db.select('''
@@ -157,6 +207,13 @@ class CacheManager {
         ORDER BY expires ASC
         limit 10
       ''');
+      if (res.isEmpty) {
+        // There are many files unmanaged by the cache manager.
+        // Clear all cache.
+        await Directory(cachePath).delete(recursive: true);
+        Directory(cachePath).createSync(recursive: true);
+        break;
+      }
       for (var row in res) {
         var key = row[0] as String;
         var dir = row[1] as String;
