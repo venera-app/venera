@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart';
 import 'package:dio/io.dart';
+import 'package:enough_convert/enough_convert.dart';
 import 'package:flutter/foundation.dart' show protected;
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html;
@@ -372,6 +373,11 @@ mixin class _JSEngineApi {
       switch (type) {
         case "utf8":
           return isEncode ? utf8.encode(value) : utf8.decode(value);
+        case "gbk":
+          final codec = const GbkCodec();
+          return isEncode
+              ? Uint8List.fromList(codec.encode(value))
+              : codec.decode(value);
         case "base64":
           return isEncode ? base64Encode(value) : base64Decode(value);
         case "md5":

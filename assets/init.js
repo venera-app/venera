@@ -40,6 +40,32 @@ let Convert = {
     },
 
     /**
+     * @param str {string}
+     * @returns {ArrayBuffer}
+     */
+    encodeGbk: (str) => {
+        return sendMessage({
+            method: "convert",
+            type: "gbk",
+            value: str,
+            isEncode: true
+        });
+    },
+
+    /**
+     * @param value {ArrayBuffer}
+     * @returns {string}
+     */
+    decodeGbk: (value) => {
+        return sendMessage({
+            method: "convert",
+            type: "gbk",
+            value: value,
+            isEncode: false
+        });
+    },
+
+    /**
      * @param {ArrayBuffer} value
      * @returns {string}
      */
