@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/init.dart';
 import 'package:venera/utils/io.dart';
@@ -110,21 +111,31 @@ class Appdata with Init {
     if (!await file.exists()) {
       return;
     }
-    var json = jsonDecode(await file.readAsString());
-    for (var key in (json['settings'] as Map<String, dynamic>).keys) {
-      if (json['settings'][key] != null) {
-        settings[key] = json['settings'][key];
+    try {
+      var json = jsonDecode(await file.readAsString());
+      for (var key in (json['settings'] as Map<String, dynamic>).keys) {
+        if (json['settings'][key] != null) {
+          settings[key] = json['settings'][key];
+        }
       }
+      searchHistory = List.from(json['searchHistory']);
     }
-    searchHistory = List.from(json['searchHistory']);
-    var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
-    if (await implicitDataFile.exists()) {
-      try {
+    catch(e) {
+      Log.error("Appdata", "Failed to load appdata", e);
+      Log.info("Appdata", "Resetting appdata");
+      file.deleteIgnoreError();
+    }
+    try {
+      var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
+      if (await implicitDataFile.exists()) {
         implicitData = jsonDecode(await implicitDataFile.readAsString());
       }
-      catch(_) {
-        // ignore
-      }
+    }
+    catch (e) {
+      Log.error("Appdata", "Failed to load implicit data", e);
+      Log.info("Appdata", "Resetting implicit data");
+      var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
+      implicitDataFile.deleteIgnoreError();
     }
   }
 }
