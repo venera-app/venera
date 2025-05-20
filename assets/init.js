@@ -202,7 +202,7 @@ let Convert = {
     decryptAesCbc: (value, key, iv) => {
         return sendMessage({
             method: "convert",
-            type: "aes-ecb",
+            type: "aes-cbc",
             value: value,
             key: key,
             iv: iv,
