@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/ext.dart';
@@ -303,6 +304,22 @@ class HistoryManager with ChangeNotifier {
     _db.execute("delete from history;");
     updateCache();
     notifyListeners();
+  }
+
+  void clearUnfavoritedHistory() {
+    final idAndTypes = _db.select("""
+      select id, type from history;
+    """);
+    for (var element in idAndTypes) {
+      final id = element["id"] as String;
+      final type = ComicType(element["type"] as int);
+      if (!LocalFavoritesManager().isExist(id, type)) {
+        _db.execute("""
+          delete from history
+          where id == ? and type == ?;
+        """, [id, type.value]);
+      }
+    }
   }
 
   void remove(String id, ComicType type) async {
