@@ -205,7 +205,9 @@ class Settings with ChangeNotifier {
 
   operator []=(String key, dynamic value) {
     _data[key] = value;
-    notifyListeners();
+    if (key != "dataVersion") {
+      notifyListeners();
+    }
   }
 
   @override

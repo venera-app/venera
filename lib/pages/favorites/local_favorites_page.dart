@@ -864,7 +864,10 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
   @override
   void dispose() {
     if (changed) {
-      LocalFavoritesManager().reorder(comics, widget.name);
+      // Delay to ensure navigation is completed
+      Future.delayed(const Duration(milliseconds: 200), () {
+        LocalFavoritesManager().reorder(comics, widget.name);
+      });
     }
     super.dispose();
   }
@@ -899,27 +902,31 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
       appBar: Appbar(
         title: Text("Reorder".tl),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              showInfoDialog(
-                context: context,
-                title: "Reorder".tl,
-                content: "Long press and drag to reorder.".tl,
-              );
-            },
+          Tooltip(
+            message: "Information".tl,
+            child: IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showInfoDialog(
+                  context: context,
+                  title: "Reorder".tl,
+                  content: "Long press and drag to reorder.".tl,
+                );
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.swap_vert),
-            onPressed: () {
-              setState(() {
-                comics = comics.reversed.toList();
-                changed = true;
-                showToast(
-                    message: "Reversed successfully".tl, context: context);
-              });
-            },
-          ),
+          Tooltip(
+            message: "Reverse".tl,
+            child: IconButton(
+              icon: const Icon(Icons.swap_vert),
+              onPressed: () {
+                setState(() {
+                  comics = comics.reversed.toList();
+                  changed = true;
+                });
+              },
+            ),
+          )
         ],
       ),
       body: ReorderableBuilder<FavoriteItem>(

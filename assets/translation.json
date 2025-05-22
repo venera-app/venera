@@ -392,7 +392,8 @@
     "Source URL": "源地址",
     "The URL should point to a 'index.json' file": "该URL应指向一个'index.json'文件",
     "Double tap to zoom": "双击缩放",
-    "Clear Unfavorited": "清除未收藏"
+    "Clear Unfavorited": "清除未收藏",
+    "Reverse": "反转"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -787,6 +788,7 @@
     "Source URL": "源地址",
     "The URL should point to a 'index.json' file": "該URL應指向一個'index.json'文件",
     "Double tap to zoom": "雙擊縮放",
-    "Clear Unfavorited": "清除未收藏"
+    "Clear Unfavorited": "清除未收藏",
+    "Reverse": "反轉"
   }
 }

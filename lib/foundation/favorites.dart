@@ -714,11 +714,26 @@ class LocalFavoritesManager with ChangeNotifier {
     if (!existsFolder(folder)) {
       throw Exception("Failed to reorder: folder not found");
     }
-    deleteFolder(folder);
-    createFolder(folder);
-    for (int i = 0; i < newFolder.length; i++) {
-      addComic(folder, newFolder[i], i);
+    _db.execute("BEGIN TRANSACTION");
+    try {
+      for (int i = 0; i < newFolder.length; i++) {
+        _db.execute("""
+          update "$folder"
+          set display_order = ?
+          where id == ? and type == ?;
+        """, [
+          i,
+          newFolder[i].id,
+          newFolder[i].type.value
+        ]);
+      }
     }
+    catch (e) {
+      Log.error("Reorder", e.toString());
+      _db.execute("ROLLBACK");
+      return;
+    }
+    _db.execute("COMMIT");
     notifyListeners();
   }
 
