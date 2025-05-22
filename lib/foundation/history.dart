@@ -320,6 +320,8 @@ class HistoryManager with ChangeNotifier {
         """, [id, type.value]);
       }
     }
+    updateCache();
+    notifyListeners();
   }
 
   void remove(String id, ComicType type) async {
