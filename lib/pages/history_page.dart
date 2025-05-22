@@ -147,6 +147,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   },
                   child: Text('Clear Unfavorited'.tl),
                 ),
+                const SizedBox(width: 4),
                 Button.filled(
                   color: context.colorScheme.error,
                   onPressed: () {

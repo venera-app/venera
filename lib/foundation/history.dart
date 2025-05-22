@@ -306,7 +306,9 @@ class HistoryManager with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearUnfavoritedHistory() {
+void clearUnfavoritedHistory() {
+  _db.execute('BEGIN TRANSACTION;');
+  try {
     final idAndTypes = _db.select("""
       select id, type from history;
     """);
@@ -320,9 +322,14 @@ class HistoryManager with ChangeNotifier {
         """, [id, type.value]);
       }
     }
-    updateCache();
-    notifyListeners();
+    _db.execute('COMMIT;');
+  } catch (e) {
+    _db.execute('ROLLBACK;');
+    rethrow;
   }
+  updateCache();
+  notifyListeners();
+}
 
   void remove(String id, ComicType type) async {
     _db.execute("""
