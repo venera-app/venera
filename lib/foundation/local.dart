@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:path_provider/path_provider.dart';
@@ -545,6 +546,59 @@ class LocalManager with ChangeNotifier {
     }
     remove(c.id, c.comicType);
     notifyListeners();
+  }
+
+  void batchDeleteComics(List<LocalComic> comics, [bool removeFileOnDisk = true]) {
+    if (comics.isEmpty) {
+      return;
+    }
+
+    var shouldRemovedDirs = <Directory>[];
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      for (var c in comics) {
+        if (removeFileOnDisk) {
+          var dir = Directory(FilePath.join(path, c.directory));
+          if (dir.existsSync()) {
+            shouldRemovedDirs.add(dir);
+          }
+        }
+        _db.execute(
+          'DELETE FROM comics WHERE id = ? AND comic_type = ?;',
+          [c.id, c.comicType.value],
+        );
+      }
+    }
+    catch(e, s) {
+      Log.error("LocalManager", "Failed to batch delete comics: $e", s);
+      _db.execute('ROLLBACK;');
+      return;
+    }
+    _db.execute('COMMIT;');
+
+    var comicIDs = comics.map((e) => ComicID(e.comicType, e.id)).toList();
+    LocalFavoritesManager().batchDeleteComicsInAllFolders(comicIDs);
+    HistoryManager().batchDeleteHistories(comicIDs);
+
+    notifyListeners();
+
+    if (removeFileOnDisk) {
+      _deleteDirectories(shouldRemovedDirs);
+    }
+  }
+
+  static void _deleteDirectories(List<Directory> directories) {
+    Isolate.run(() async {
+      for (var dir in directories) {
+        try {
+          if (dir.existsSync()) {
+            await dir.delete(recursive: true);
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    });
   }
 }
 

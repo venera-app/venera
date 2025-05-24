@@ -653,6 +653,102 @@ class LocalFavoritesManager with ChangeNotifier {
     notifyListeners();
   }
 
+  void batchMoveFavorites(
+      String sourceFolder, String targetFolder, List<FavoriteItem> items) {
+    _modifiedAfterLastCache = true;
+
+    if (!existsFolder(sourceFolder)) {
+      throw Exception("Source folder does not exist");
+    }
+    if (!existsFolder(targetFolder)) {
+      throw Exception("Target folder does not exist");
+    }
+
+    _db.execute("BEGIN TRANSACTION");
+    var displayOrder = maxValue(targetFolder) + 1;
+    try {
+      for (var item in items) {
+        _db.execute("""
+          insert or ignore into "$targetFolder" (id, name, author, type, tags, cover_path, time, display_order)
+          select id, name, author, type, tags, cover_path, time, ?
+          from "$sourceFolder"
+          where id == ? and type == ?;
+        """, [displayOrder, item.id, item.type.value]);
+
+        _db.execute("""
+          delete from "$sourceFolder"
+          where id == ? and type == ?;
+        """, [item.id, item.type.value]);
+
+        displayOrder++;
+      }
+      notifyListeners();
+    } catch (e) {
+      Log.error("Batch Move Favorites", e.toString());
+      _db.execute("ROLLBACK");
+      return;
+    }
+    _db.execute("COMMIT");
+
+    // Update counts
+    if (counts[targetFolder] == null) {
+      counts[targetFolder] = count(targetFolder);
+    } else {
+      counts[targetFolder] = counts[targetFolder]! + items.length;
+    }
+
+    if (counts[sourceFolder] != null) {
+      counts[sourceFolder] = counts[sourceFolder]! - items.length;
+    } else {
+      counts[sourceFolder] = count(sourceFolder);
+    }
+
+    notifyListeners();
+  }
+
+  void batchCopyFavorites(
+      String sourceFolder, String targetFolder, List<FavoriteItem> items) {
+    _modifiedAfterLastCache = true;
+
+    if (!existsFolder(sourceFolder)) {
+      throw Exception("Source folder does not exist");
+    }
+    if (!existsFolder(targetFolder)) {
+      throw Exception("Target folder does not exist");
+    }
+
+    _db.execute("BEGIN TRANSACTION");
+    var displayOrder = maxValue(targetFolder) + 1;
+    try {
+      for (var item in items) {
+        _db.execute("""
+          insert or ignore into "$targetFolder" (id, name, author, type, tags, cover_path, time, display_order)
+          select id, name, author, type, tags, cover_path, time, ?
+          from "$sourceFolder"
+          where id == ? and type == ?;
+        """, [displayOrder, item.id, item.type.value]);
+
+        displayOrder++;
+      }
+      notifyListeners();
+    } catch (e) {
+      Log.error("Batch Copy Favorites", e.toString());
+      _db.execute("ROLLBACK");
+      return;
+    }
+
+    _db.execute("COMMIT");
+
+    // Update counts
+    if (counts[targetFolder] == null) {
+      counts[targetFolder] = count(targetFolder);
+    } else {
+      counts[targetFolder] = counts[targetFolder]! + items.length;
+    }
+
+    notifyListeners();
+  }
+
   /// delete a folder
   void deleteFolder(String name) {
     _modifiedAfterLastCache = true;
@@ -667,11 +763,6 @@ class LocalFavoritesManager with ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteComic(String folder, FavoriteItem comic) {
-    _modifiedAfterLastCache = true;
-    deleteComicWithId(folder, comic.id, comic.type);
-  }
-
   void deleteComicWithId(String folder, String id, ComicType type) {
     _modifiedAfterLastCache = true;
     LocalFavoriteImageProvider.delete(id, type.value);
@@ -684,6 +775,55 @@ class LocalFavoritesManager with ChangeNotifier {
     } else {
       counts[folder] = count(folder);
     }
+    notifyListeners();
+  }
+
+  void batchDeleteComics(String folder, List<FavoriteItem> comics) {
+    _modifiedAfterLastCache = true;
+    _db.execute("BEGIN TRANSACTION");
+    try {
+      for (var comic in comics) {
+        LocalFavoriteImageProvider.delete(comic.id, comic.type.value);
+        _db.execute("""
+          delete from "$folder"
+          where id == ? and type == ?;
+        """, [comic.id, comic.type.value]);
+      }
+      if (counts[folder] != null) {
+        counts[folder] = counts[folder]! - comics.length;
+      } else {
+        counts[folder] = count(folder);
+      }
+    } catch (e) {
+      Log.error("Batch Delete Comics", e.toString());
+      _db.execute("ROLLBACK");
+      return;
+    }
+    _db.execute("COMMIT");
+    notifyListeners();
+  }
+
+  void batchDeleteComicsInAllFolders(List<ComicID> comics) {
+    _modifiedAfterLastCache = true;
+    _db.execute("BEGIN TRANSACTION");
+    var folderNames = _getFolderNamesWithDB();
+    try {
+      for (var comic in comics) {
+        LocalFavoriteImageProvider.delete(comic.id, comic.type.value);
+        for (var folder in folderNames) {
+          _db.execute("""
+            delete from "$folder"
+            where id == ? and type == ?;
+          """, [comic.id, comic.type.value]);
+        }
+      }
+    } catch (e) {
+      Log.error("Batch Delete Comics in All Folders", e.toString());
+      _db.execute("ROLLBACK");
+      return;
+    }
+    initCounts();
+    _db.execute("COMMIT");
     notifyListeners();
   }
 

@@ -377,12 +377,10 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
               FilledButton(
                 onPressed: () {
                   context.pop();
-                  for (var comic in comics) {
-                    LocalManager().deleteComic(
-                      comic,
-                      removeComicFile,
-                    );
-                  }
+                  LocalManager().batchDeleteComics(
+                    comics,
+                    removeComicFile,
+                  );
                   isDeleted = true;
                 },
                 child: Text("Confirm".tl),

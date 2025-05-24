@@ -406,4 +406,23 @@ void clearUnfavoritedHistory() {
     isInitialized = false;
     _db.dispose();
   }
+
+  void batchDeleteHistories(List<ComicID> histories) {
+    if (histories.isEmpty) return;
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      for (var history in histories) {
+        _db.execute("""
+          delete from history
+          where id == ? and type == ?;
+        """, [history.id, history.type.value]);
+      }
+      _db.execute('COMMIT;');
+    } catch (e) {
+      _db.execute('ROLLBACK;');
+      rethrow;
+    }
+    updateCache();
+    notifyListeners();
+  }
 }

@@ -116,6 +116,26 @@ class Comic {
   toString() => "$sourceKey@$id";
 }
 
+class ComicID {
+  final ComicType type;
+
+  final String id;
+
+  const ComicID(this.type, this.id);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! ComicID) return false;
+    return other.type == type && other.id == id;
+  }
+
+  @override
+  int get hashCode => type.hashCode ^ id.hashCode;
+
+  @override
+  String toString() => "$type@$id";
+}
+
 class ComicDetails with HistoryMixin {
   @override
   final String title;

@@ -416,10 +416,12 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                 "Selected @c comics".tlParams({"c": selectedComics.length})),
             actions: [
               MenuButton(entries: [
+                if (!isAllFolder)
                 MenuEntry(
                     icon: Icons.drive_file_move,
                     text: "Move to folder".tl,
                     onClick: () => favoriteOption('move')),
+                if (!isAllFolder)
                 MenuEntry(
                     icon: Icons.copy,
                     text: "Copy to folder".tl,
@@ -756,32 +758,26 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             return;
                           }
                           if (option == 'move') {
-                            for (var c in selectedComics.keys) {
-                              for (var s in selectedLocalFolders) {
-                                LocalFavoritesManager().moveFavorite(
-                                    favPage.folder as String,
-                                    s,
-                                    c.id,
-                                    (c as FavoriteItem).type);
-                              }
+                            var comics = selectedComics.keys
+                                .map((e) => e as FavoriteItem)
+                                .toList();
+                            for (var f in selectedLocalFolders) {
+                              LocalFavoritesManager().batchMoveFavorites(
+                                favPage.folder as String,
+                                f,
+                                comics,
+                              );
                             }
                           } else {
-                            for (var c in selectedComics.keys) {
-                              for (var s in selectedLocalFolders) {
-                                LocalFavoritesManager().addComic(
-                                  s,
-                                  FavoriteItem(
-                                    id: c.id,
-                                    name: c.title,
-                                    coverPath: c.cover,
-                                    author: c.subtitle ?? '',
-                                    type: ComicType((c.sourceKey == 'local'
-                                        ? 0
-                                        : c.sourceKey.hashCode)),
-                                    tags: c.tags ?? [],
-                                  ),
-                                );
-                              }
+                            var comics = selectedComics.keys
+                                .map((e) => e as FavoriteItem)
+                                .toList();
+                            for (var f in selectedLocalFolders) {
+                              LocalFavoritesManager().batchCopyFavorites(
+                                favPage.folder as String,
+                                f,
+                                comics,
+                              );
                             }
                           }
                           App.rootContext.pop();
@@ -817,13 +813,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   }
 
   void _deleteComicWithId() {
-    for (var c in selectedComics.keys) {
-      LocalFavoritesManager().deleteComicWithId(
-        widget.folder,
-        c.id,
-        (c as FavoriteItem).type,
-      );
-    }
+    var toBeDeleted = selectedComics.keys.map((e) => e as FavoriteItem).toList();
+    LocalFavoritesManager().batchDeleteComics(widget.folder, toBeDeleted);
     _cancel();
   }
 }
