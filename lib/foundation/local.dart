@@ -548,6 +548,41 @@ class LocalManager with ChangeNotifier {
     notifyListeners();
   }
 
+  void deleteComicChapters(LocalComic c, List<String> chapters) {
+    if (chapters.isEmpty) {
+      return;
+    }
+    var newDownloadedChapters = c.downloadedChapters
+        .where((e) => !chapters.contains(e))
+        .toList();
+    if (newDownloadedChapters.isNotEmpty) {
+      _db.execute(
+        'UPDATE comics SET downloadedChapters = ? WHERE id = ? AND comic_type = ?;',
+        [
+          jsonEncode(newDownloadedChapters),
+          c.id,
+          c.comicType.value,
+        ],
+      );
+    } else {
+      _db.execute(
+        'DELETE FROM comics WHERE id = ? AND comic_type = ?;',
+        [c.id, c.comicType.value],
+      );
+    }
+    var shouldRemovedDirs = <Directory>[];
+    for (var chapter in chapters) {
+      var dir = Directory(FilePath.join(c.baseDir, chapter));
+      if (dir.existsSync()) {
+        shouldRemovedDirs.add(dir);
+      }
+    }
+    if (shouldRemovedDirs.isNotEmpty) {
+      _deleteDirectories(shouldRemovedDirs);
+    }
+    notifyListeners();
+  }
+
   void batchDeleteComics(List<LocalComic> comics, [bool removeFileOnDisk = true]) {
     if (comics.isEmpty) {
       return;
@@ -587,6 +622,7 @@ class LocalManager with ChangeNotifier {
     }
   }
 
+  /// Deletes the directories in a separate isolate to avoid blocking the UI thread.
   static void _deleteDirectories(List<Directory> directories) {
     Isolate.run(() async {
       for (var dir in directories) {
