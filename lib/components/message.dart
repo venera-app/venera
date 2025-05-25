@@ -290,28 +290,30 @@ class ContentDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var content = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        title != null
-            ? Appbar(
-                leading: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: dismissible ? context.pop : null,
-                ),
-                title: Text(title!),
-                backgroundColor: Colors.transparent,
-              )
-            : const SizedBox.shrink(),
-        this.content,
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: actions,
-        ).paddingRight(12),
-        const SizedBox(height: 16),
-      ],
+    var content = SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          title != null
+              ? Appbar(
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: dismissible ? context.pop : null,
+            ),
+            title: Text(title!),
+            backgroundColor: Colors.transparent,
+          )
+              : const SizedBox.shrink(),
+          this.content,
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: actions,
+          ).paddingRight(12),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
     return Dialog(
       shape: RoundedRectangleBorder(
