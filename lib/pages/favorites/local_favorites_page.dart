@@ -155,16 +155,33 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   void selectAll() {
     setState(() {
-      selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      if (searchMode) {
+        selectedComics = searchResults.asMap().map((k, v) => MapEntry(v, true));
+      } else {
+        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      }
     });
   }
 
   void invertSelection() {
     setState(() {
-      comics.asMap().forEach((k, v) {
-        selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
-      });
-      selectedComics.removeWhere((k, v) => !v);
+      if (searchMode) {
+        for (var c in searchResults) {
+          if (selectedComics.containsKey(c)) {
+            selectedComics.remove(c);
+          } else {
+            selectedComics[c] = true;
+          }
+        }
+      } else {
+        for (var c in comics) {
+          if (selectedComics.containsKey(c)) {
+            selectedComics.remove(c);
+          } else {
+            selectedComics[c] = true;
+          }
+        }
+      }
     });
   }
 
