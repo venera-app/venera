@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/ext.dart';
@@ -305,6 +306,31 @@ class HistoryManager with ChangeNotifier {
     notifyListeners();
   }
 
+void clearUnfavoritedHistory() {
+  _db.execute('BEGIN TRANSACTION;');
+  try {
+    final idAndTypes = _db.select("""
+      select id, type from history;
+    """);
+    for (var element in idAndTypes) {
+      final id = element["id"] as String;
+      final type = ComicType(element["type"] as int);
+      if (!LocalFavoritesManager().isExist(id, type)) {
+        _db.execute("""
+          delete from history
+          where id == ? and type == ?;
+        """, [id, type.value]);
+      }
+    }
+    _db.execute('COMMIT;');
+  } catch (e) {
+    _db.execute('ROLLBACK;');
+    rethrow;
+  }
+  updateCache();
+  notifyListeners();
+}
+
   void remove(String id, ComicType type) async {
     _db.execute("""
       delete from history
@@ -379,5 +405,24 @@ class HistoryManager with ChangeNotifier {
   void close() {
     isInitialized = false;
     _db.dispose();
+  }
+
+  void batchDeleteHistories(List<ComicID> histories) {
+    if (histories.isEmpty) return;
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      for (var history in histories) {
+        _db.execute("""
+          delete from history
+          where id == ? and type == ?;
+        """, [history.id, history.type.value]);
+      }
+      _db.execute('COMMIT;');
+    } catch (e) {
+      _db.execute('ROLLBACK;');
+      rethrow;
+    }
+    updateCache();
+    notifyListeners();
   }
 }

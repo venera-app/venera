@@ -155,16 +155,33 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   void selectAll() {
     setState(() {
-      selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      if (searchMode) {
+        selectedComics = searchResults.asMap().map((k, v) => MapEntry(v, true));
+      } else {
+        selectedComics = comics.asMap().map((k, v) => MapEntry(v, true));
+      }
     });
   }
 
   void invertSelection() {
     setState(() {
-      comics.asMap().forEach((k, v) {
-        selectedComics[v] = !selectedComics.putIfAbsent(v, () => false);
-      });
-      selectedComics.removeWhere((k, v) => !v);
+      if (searchMode) {
+        for (var c in searchResults) {
+          if (selectedComics.containsKey(c)) {
+            selectedComics.remove(c);
+          } else {
+            selectedComics[c] = true;
+          }
+        }
+      } else {
+        for (var c in comics) {
+          if (selectedComics.containsKey(c)) {
+            selectedComics.remove(c);
+          } else {
+            selectedComics[c] = true;
+          }
+        }
+      }
     });
   }
 
@@ -416,10 +433,12 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                 "Selected @c comics".tlParams({"c": selectedComics.length})),
             actions: [
               MenuButton(entries: [
+                if (!isAllFolder)
                 MenuEntry(
                     icon: Icons.drive_file_move,
                     text: "Move to folder".tl,
                     onClick: () => favoriteOption('move')),
+                if (!isAllFolder)
                 MenuEntry(
                     icon: Icons.copy,
                     text: "Copy to folder".tl,
@@ -756,32 +775,26 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                             return;
                           }
                           if (option == 'move') {
-                            for (var c in selectedComics.keys) {
-                              for (var s in selectedLocalFolders) {
-                                LocalFavoritesManager().moveFavorite(
-                                    favPage.folder as String,
-                                    s,
-                                    c.id,
-                                    (c as FavoriteItem).type);
-                              }
+                            var comics = selectedComics.keys
+                                .map((e) => e as FavoriteItem)
+                                .toList();
+                            for (var f in selectedLocalFolders) {
+                              LocalFavoritesManager().batchMoveFavorites(
+                                favPage.folder as String,
+                                f,
+                                comics,
+                              );
                             }
                           } else {
-                            for (var c in selectedComics.keys) {
-                              for (var s in selectedLocalFolders) {
-                                LocalFavoritesManager().addComic(
-                                  s,
-                                  FavoriteItem(
-                                    id: c.id,
-                                    name: c.title,
-                                    coverPath: c.cover,
-                                    author: c.subtitle ?? '',
-                                    type: ComicType((c.sourceKey == 'local'
-                                        ? 0
-                                        : c.sourceKey.hashCode)),
-                                    tags: c.tags ?? [],
-                                  ),
-                                );
-                              }
+                            var comics = selectedComics.keys
+                                .map((e) => e as FavoriteItem)
+                                .toList();
+                            for (var f in selectedLocalFolders) {
+                              LocalFavoritesManager().batchCopyFavorites(
+                                favPage.folder as String,
+                                f,
+                                comics,
+                              );
                             }
                           }
                           App.rootContext.pop();
@@ -817,13 +830,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   }
 
   void _deleteComicWithId() {
-    for (var c in selectedComics.keys) {
-      LocalFavoritesManager().deleteComicWithId(
-        widget.folder,
-        c.id,
-        (c as FavoriteItem).type,
-      );
-    }
+    var toBeDeleted = selectedComics.keys.map((e) => e as FavoriteItem).toList();
+    LocalFavoritesManager().batchDeleteComics(widget.folder, toBeDeleted);
     _cancel();
   }
 }
@@ -864,7 +872,10 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
   @override
   void dispose() {
     if (changed) {
-      LocalFavoritesManager().reorder(comics, widget.name);
+      // Delay to ensure navigation is completed
+      Future.delayed(const Duration(milliseconds: 200), () {
+        LocalFavoritesManager().reorder(comics, widget.name);
+      });
     }
     super.dispose();
   }
@@ -899,27 +910,31 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
       appBar: Appbar(
         title: Text("Reorder".tl),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              showInfoDialog(
-                context: context,
-                title: "Reorder".tl,
-                content: "Long press and drag to reorder.".tl,
-              );
-            },
+          Tooltip(
+            message: "Information".tl,
+            child: IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showInfoDialog(
+                  context: context,
+                  title: "Reorder".tl,
+                  content: "Long press and drag to reorder.".tl,
+                );
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.swap_vert),
-            onPressed: () {
-              setState(() {
-                comics = comics.reversed.toList();
-                changed = true;
-                showToast(
-                    message: "Reversed successfully".tl, context: context);
-              });
-            },
-          ),
+          Tooltip(
+            message: "Reverse".tl,
+            child: IconButton(
+              icon: const Icon(Icons.swap_vert),
+              onPressed: () {
+                setState(() {
+                  comics = comics.reversed.toList();
+                  changed = true;
+                });
+              },
+            ),
+          )
         ],
       ),
       body: ReorderableBuilder<FavoriteItem>(

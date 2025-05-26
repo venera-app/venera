@@ -140,6 +140,14 @@ class _HistoryPageState extends State<HistoryPage> {
               title: 'Clear History'.tl,
               content: Text('Are you sure you want to clear your history?'.tl),
               actions: [
+                Button.outlined(
+                  onPressed: () {
+                    HistoryManager().clearUnfavoritedHistory();
+                    context.pop();
+                  },
+                  child: Text('Clear Unfavorited'.tl),
+                ),
+                const SizedBox(width: 4),
                 Button.filled(
                   color: context.colorScheme.error,
                   onPressed: () {

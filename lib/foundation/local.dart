@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
 import 'package:path_provider/path_provider.dart';
@@ -461,7 +462,7 @@ class LocalManager with ChangeNotifier {
     if (comic != null) {
       return Directory(FilePath.join(path, comic.directory));
     }
-    const comicDirectoryMaxLength = 128;
+    const comicDirectoryMaxLength = 80;
     if (name.length > comicDirectoryMaxLength) {
       name = name.substring(0, comicDirectoryMaxLength);
     }
@@ -545,6 +546,95 @@ class LocalManager with ChangeNotifier {
     }
     remove(c.id, c.comicType);
     notifyListeners();
+  }
+
+  void deleteComicChapters(LocalComic c, List<String> chapters) {
+    if (chapters.isEmpty) {
+      return;
+    }
+    var newDownloadedChapters = c.downloadedChapters
+        .where((e) => !chapters.contains(e))
+        .toList();
+    if (newDownloadedChapters.isNotEmpty) {
+      _db.execute(
+        'UPDATE comics SET downloadedChapters = ? WHERE id = ? AND comic_type = ?;',
+        [
+          jsonEncode(newDownloadedChapters),
+          c.id,
+          c.comicType.value,
+        ],
+      );
+    } else {
+      _db.execute(
+        'DELETE FROM comics WHERE id = ? AND comic_type = ?;',
+        [c.id, c.comicType.value],
+      );
+    }
+    var shouldRemovedDirs = <Directory>[];
+    for (var chapter in chapters) {
+      var dir = Directory(FilePath.join(c.baseDir, chapter));
+      if (dir.existsSync()) {
+        shouldRemovedDirs.add(dir);
+      }
+    }
+    if (shouldRemovedDirs.isNotEmpty) {
+      _deleteDirectories(shouldRemovedDirs);
+    }
+    notifyListeners();
+  }
+
+  void batchDeleteComics(List<LocalComic> comics, [bool removeFileOnDisk = true]) {
+    if (comics.isEmpty) {
+      return;
+    }
+
+    var shouldRemovedDirs = <Directory>[];
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      for (var c in comics) {
+        if (removeFileOnDisk) {
+          var dir = Directory(FilePath.join(path, c.directory));
+          if (dir.existsSync()) {
+            shouldRemovedDirs.add(dir);
+          }
+        }
+        _db.execute(
+          'DELETE FROM comics WHERE id = ? AND comic_type = ?;',
+          [c.id, c.comicType.value],
+        );
+      }
+    }
+    catch(e, s) {
+      Log.error("LocalManager", "Failed to batch delete comics: $e", s);
+      _db.execute('ROLLBACK;');
+      return;
+    }
+    _db.execute('COMMIT;');
+
+    var comicIDs = comics.map((e) => ComicID(e.comicType, e.id)).toList();
+    LocalFavoritesManager().batchDeleteComicsInAllFolders(comicIDs);
+    HistoryManager().batchDeleteHistories(comicIDs);
+
+    notifyListeners();
+
+    if (removeFileOnDisk) {
+      _deleteDirectories(shouldRemovedDirs);
+    }
+  }
+
+  /// Deletes the directories in a separate isolate to avoid blocking the UI thread.
+  static void _deleteDirectories(List<Directory> directories) {
+    Isolate.run(() async {
+      for (var dir in directories) {
+        try {
+          if (dir.existsSync()) {
+            await dir.delete(recursive: true);
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    });
   }
 }
 
