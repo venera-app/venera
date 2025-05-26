@@ -58,10 +58,10 @@ dependencies:
     git:
       url: https://github.com/venera-app/lodepng_flutter
       ref: ac7d05dde32e8d728102a9ff66e6b55f05d94ba1
-  rhttp: 
-    git: 
+  rhttp:
+    git:
       url: https://github.com/wgh136/rhttp
-      ref: e7dca15ca543b5df49f3ada06016e874b79bce36
+      ref: 1f0ff50336062c5f809c256726dc55cd30b9ce59
       path: rhttp
   webdav_client:
     git:
