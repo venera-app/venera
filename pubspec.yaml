@@ -2,11 +2,11 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.4.3+143
+version: 1.4.4+144
 
 environment:
-  sdk: '>=3.6.0 <4.0.0'
-  flutter: 3.29.3
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: 3.32.0
 
 dependencies:
   flutter:
