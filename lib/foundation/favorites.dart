@@ -898,6 +898,8 @@ class LocalFavoritesManager with ChangeNotifier {
       set folder_name = ?
       where folder_name == ?;
     """, [after, before]);
+    counts[after] = counts[before] ?? 0;
+    counts.remove(before);
     notifyListeners();
   }
 
