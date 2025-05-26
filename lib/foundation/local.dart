@@ -462,7 +462,7 @@ class LocalManager with ChangeNotifier {
     if (comic != null) {
       return Directory(FilePath.join(path, comic.directory));
     }
-    const comicDirectoryMaxLength = 128;
+    const comicDirectoryMaxLength = 80;
     if (name.length > comicDirectoryMaxLength) {
       name = name.substring(0, comicDirectoryMaxLength);
     }
