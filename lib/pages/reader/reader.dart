@@ -349,7 +349,11 @@ abstract mixin class _ImagePerPageHandler {
   void initImagesPerPage(int initialPage) {
     _lastImagesPerPage = imagesPerPage;
     if (imagesPerPage != 1) {
-      page = (initialPage / imagesPerPage).ceil();
+      if (showSingleImageOnFirstPage) {
+        page = ((initialPage - 1) / imagesPerPage).ceil() + 1;
+      } else {
+        page = (initialPage / imagesPerPage).ceil();
+      }
     }
   }
 
