@@ -40,6 +40,9 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = images;
           reader.isLoading = false;
           inProgress = false;
+          Future.microtask(() {
+            reader.updateHistory();
+          });
         });
       } catch (e) {
         setState(() {
@@ -65,6 +68,9 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = res.data;
           reader.isLoading = false;
           inProgress = false;
+          Future.microtask(() {
+            reader.updateHistory();
+          });
         });
       }
     }
