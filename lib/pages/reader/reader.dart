@@ -267,7 +267,15 @@ class _ReaderState extends State<Reader>
         history!.page = images?.length ?? 1;
       } else {
         /// Record the first image of the page
-        history!.page = (page - 1) * imagesPerPage + 1;
+        if (!showSingleImageOnFirstPage || imagesPerPage == 1) {
+          history!.page = (page - 1) * imagesPerPage + 1;
+        } else {
+          if (page == 1) {
+            history!.page = 1;
+          } else {
+            history!.page = (page - 2) * imagesPerPage + 2;
+          }
+        }
       }
       history!.maxPage = images?.length ?? 1;
       if (widget.chapters?.isGrouped ?? false) {
