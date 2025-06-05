@@ -376,11 +376,20 @@ class _SearchPageState extends State<SearchPage> {
         controller.text =
             controller.text.replaceLast(words[words.length - 1], "");
       }
-      if (type != null) {
-        controller.text += "${type.name}:$text ";
-      } else {
-        controller.text += "$text ";
+      String? insert = ComicSource
+          .find(searchTarget)!
+          .searchPageData
+          ?.onTagSuggestionSelected
+          ?.call(type?.name ?? '', text);
+      if (insert == null) {
+        var v = text;
+        if (type != null) {
+          insert = "${type.name}:$v";
+        } else {
+          insert = v;
+        }
       }
+      controller.text += "$insert ";
       suggestions.clear();
       update();
       focusNode.requestFocus();

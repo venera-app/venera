@@ -400,14 +400,23 @@ class _SuggestionsState extends State<_Suggestions> {
       controller.text =
           controller.text.replaceLast(words[words.length - 1], "");
     }
-    if (text.contains(' ')) {
-      text = "'$text'";
+    String? insert = ComicSource
+        .find(widget.sourceKey)!
+        .searchPageData
+        ?.onTagSuggestionSelected
+        ?.call(type?.name ?? '', text);
+    if (insert == null) {
+      var v = text;
+      if (v.contains(' ')) {
+        v = "'$v'";
+      }
+      if (type != null) {
+        insert = "${type.name}:$v";
+      } else {
+        insert = v;
+      }
     }
-    if (type != null) {
-      controller.text += "${type.name}:$text ";
-    } else {
-      controller.text += "$text ";
-    }
+    controller.text += "$insert ";
     widget.controller.suggestions.clear();
     widget.controller.remove();
   }

@@ -186,6 +186,8 @@ class ComicSource {
 
   final LinkHandler? linkHandler;
 
+  final TagSuggestionSelectedFunc? onTagSuggestionSelected;
+
   final bool enableTagsSuggestions;
 
   final bool enableTagsTranslate;
@@ -260,6 +262,7 @@ class ComicSource {
     this.translations,
     this.handleClickTagEvent,
     this.linkHandler,
+    this.onTagSuggestionSelected,
     this.enableTagsSuggestions,
     this.enableTagsTranslate,
     this.starRatingFunc,
@@ -377,7 +380,10 @@ class SearchPageData {
 
   final SearchNextFunction? loadNext;
 
-  const SearchPageData(this.searchOptions, this.loadPage, this.loadNext);
+  final TagSuggestionSelectedFunc? onTagSuggestionSelected;
+
+  const SearchPageData(this.searchOptions, this.loadPage, this.loadNext,
+      this.onTagSuggestionSelected);
 }
 
 class SearchOptions {

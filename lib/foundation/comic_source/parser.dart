@@ -614,6 +614,7 @@ class ComicSourceParser {
     SearchFunction? loadPage;
 
     SearchNextFunction? loadNext;
+    TagSuggestionSelectedFunc? onTagSuggestionSelected;
 
     if (_checkExists('search.load')) {
       loadPage = (keyword, page, searchOption) async {
@@ -649,8 +650,9 @@ class ComicSourceParser {
         }
       };
     }
+    onTagSuggestionSelected = _parseTagSuggestionSelected();
 
-    return SearchPageData(options, loadPage, loadNext);
+    return SearchPageData(options, loadPage, loadNext, onTagSuggestionSelected);
   }
 
   LoadComicFunc? _parseLoadComicFunc() {
@@ -1070,6 +1072,18 @@ class ComicSourceParser {
     }
 
     return LinkHandler(domains, linkToId);
+  }
+
+  TagSuggestionSelectedFunc? _parseTagSuggestionSelected() {
+    if (!_checkExists('search.onTagSuggestionSelected')) {
+      return null;
+    }
+    return (namespace, value) {
+      var res = JsEngine().runCode(
+        "ComicSource.sources.\$_key.search.onTagSuggestionSelected(${jsonEncode(namespace)}, ${jsonEncode(value)})",
+      );
+      return res?.toString();
+    };
   }
 
   StarRatingFunc? _parseStarRatingFunc() {

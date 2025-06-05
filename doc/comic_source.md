@@ -331,6 +331,16 @@ This part is used to load comics of a category.
 
         // enable tags suggestions
         enableTagsSuggestions: false,
+
+        /**
+         * [Optional] handle tag suggestion click
+         * @param namespace {string}
+         * @param value {string}
+         * @returns {string} - text added to search bar
+         */
+        onTagSuggestionSelected: (namespace, value) => {
+            return `${namespace}:${value}`
+        },
     }
 ```
 
