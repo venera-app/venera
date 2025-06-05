@@ -76,6 +76,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
             child: Material(
               child: _Suggestions(
                 controller: suggestionsController,
+                sourceKey: sourceKey,
               ),
             ),
           );
@@ -274,9 +275,13 @@ class _SuggestionsController {
 }
 
 class _Suggestions extends StatefulWidget {
-  const _Suggestions({required this.controller});
+  const _Suggestions({
+    required this.controller,
+    required this.sourceKey,
+  });
 
   final _SuggestionsController controller;
+  final String sourceKey;
 
   @override
   State<_Suggestions> createState() => _SuggestionsState();

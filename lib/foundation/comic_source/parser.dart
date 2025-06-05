@@ -149,6 +149,7 @@ class ComicSourceParser {
       _parseTranslation(),
       _parseClickTagEvent(),
       _parseLinkHandler(),
+      _parseTagSuggestionSelected(),
       _getValue("search.enableTagsSuggestions") ?? false,
       _getValue("comic.enableTagsTranslate") ?? false,
       _parseStarRatingFunc(),
