@@ -35,8 +35,10 @@ extension TagsTranslation on String{
   /// 对tag进行处理后进行翻译: 代表'或'的分割符'|', namespace.
   static String _translateTags(String tag){
     if (tag.contains('|')) {
-      var splits = tag.split(' | ');
-      return enTagsTranslations[splits[0]]??enTagsTranslations[splits[1]]??tag;
+      var splits = tag.split('|');
+      return enTagsTranslations[splits[0].trim()]
+          ?? enTagsTranslations[splits[1].trim()]
+          ?? tag;
     } else if(tag.contains(':')) {
       var splits = tag.split(':');
       if(_haveNamespace(splits[0])) {
