@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -625,6 +626,7 @@ class LocalManager with ChangeNotifier {
   /// Deletes the directories in a separate isolate to avoid blocking the UI thread.
   static void _deleteDirectories(List<Directory> directories) {
     Isolate.run(() async {
+      await SAFTaskWorker().init();
       for (var dir in directories) {
         try {
           if (dir.existsSync()) {
