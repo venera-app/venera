@@ -96,10 +96,13 @@ Future<bool> checkUpdate() async {
   return false;
 }
 
-Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true]) async {
+Future<void> checkUpdateUi([bool showMessageIfNoUpdate = true, bool delay = false]) async {
   try {
     var value = await checkUpdate();
     if (value) {
+      if (delay) {
+        await Future.delayed(const Duration(seconds: 2));
+      }
       showDialog(
           context: App.rootContext,
           builder: (context) {
