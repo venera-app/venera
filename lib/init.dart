@@ -95,8 +95,7 @@ Future<void> _checkAppUpdates() async {
   appdata.writeImplicitData();
   ComicSourcePage.checkComicSourceUpdate();
   if (appdata.settings['checkUpdateOnStart']) {
-    await Future.delayed(const Duration(milliseconds: 300));
-    await checkUpdateUi(false);
+    await checkUpdateUi(false, true);
   }
 }
 

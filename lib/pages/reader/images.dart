@@ -40,6 +40,9 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = images;
           reader.isLoading = false;
           inProgress = false;
+          Future.microtask(() {
+            reader.updateHistory();
+          });
         });
       } catch (e) {
         setState(() {
@@ -65,6 +68,9 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = res.data;
           reader.isLoading = false;
           inProgress = false;
+          Future.microtask(() {
+            reader.updateHistory();
+          });
         });
       }
     }
@@ -233,7 +239,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             photoViewControllers[index] ??= PhotoViewController();
 
-            if (reader.imagesPerPage == 1) {
+            if (reader.imagesPerPage == 1 || pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
                 filterQuality: FilterQuality.medium,
                 controller: photoViewControllers[index],

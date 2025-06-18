@@ -552,7 +552,7 @@ class _ImageDownloadWrapper {
   void start() async {
     int lastBytes = 0;
     try {
-      await for (var p in ImageDownloader.loadComicImage(
+      await for (var p in ImageDownloader.loadComicImageUnwrapped(
           image, task.source.key, task.comicId, chapter)) {
         if (isCancelled) {
           return;

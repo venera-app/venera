@@ -66,6 +66,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
       folder = data['name'];
       isNetwork = data['isNetwork'] ?? false;
     }
+    if (folder != null
+        && !isNetwork
+        && !LocalFavoritesManager().existsFolder(folder!)) {
+      folder = null;
+    }
     super.initState();
   }
 

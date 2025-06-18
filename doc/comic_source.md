@@ -9,13 +9,45 @@ Venera uses [flutter_qjs](https://github.com/wgh136/flutter_qjs) as js engine wh
 
 This document will describe how to write a comic source for Venera.
 
-## Preparation
+## Comic Source List
+
+Venera can display a list of comic sources in the app.
+
+You should provide a repository url to let the app load the comic source list.
+The url should point to a JSON file that contains the list of comic sources.
+
+The JSON file should have the following format:
+
+```json
+[
+  {
+    "name": "Source Name",
+    "url": "https://example.com/source.js",
+    "filename": "Relative path to the source file",
+    "version": "1.0.0",
+    "description": "A brief description of the source"
+  }
+]
+```
+
+Only one of `url` and `filename` should be provided.
+The description field is optional.
+
+Currently, you can use the following repo url:
+```
+https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json
+```
+The repo is maintained by the Venera team, and you can submit a pull request to add your comic source.
+
+## Create a Comic Source
+
+### Preparation
 
 - Install Venera. Using flutter to run the project is recommended since it's easier to debug.
 - An editor that supports javascript.
 - Download template and venera javascript api from [here](https://github.com/venera-app/venera-configs).
 
-## Start Writing
+### Start Writing
 
 The template contains detailed comments and examples. You can refer to it when writing your own comic source.
 
@@ -23,7 +55,7 @@ Here is a brief introduction to the template:
 
 > Note: Javascript api document is [here](js_api.md).
 
-### Write basic information
+#### Write basic information
 
 ```javascript
 class NewComicSource extends ComicSource {
@@ -49,7 +81,7 @@ In this part, you need to do the following:
 - Change the class name to your source name.
 - Fill in the name, key, version, minAppVersion, and url fields.
 
-### init function
+#### init function
 
 ```javascript
     /**
@@ -64,7 +96,7 @@ The function will be called when the source is initialized. You can do some init
 
 Remove this function if not used.
 
-### Account
+#### Account
 
 ```javascript
 // [Optional] account related
@@ -140,7 +172,7 @@ In this part, you can implement login, logout, and register functions.
 
 Remove this part if not used.
 
-### Explore page
+#### Explore page
 
 ```javascript
     // explore page list
@@ -185,7 +217,7 @@ There are three types of explore pages:
 - multiPageComicList: An explore page contains multiple comics, the comics are loaded page by page.
 - mixed: An explore page contains multiple parts, each part can be a list of comics or a block of comics which have a title and a view more button.
 
-### Category Page
+#### Category Page
 
 ```javascript
     // categories
@@ -227,7 +259,7 @@ Category page is a static page that contains multiple parts, each part contains 
 
 A comic source can only have one category page.
 
-### Category Comics Page
+#### Category Comics Page
 
 ```javascript
     /// category comic loading related
@@ -280,7 +312,7 @@ When user clicks on a category, the category comics page will be displayed.
 
 This part is used to load comics of a category.
 
-### Search
+#### Search
 
 ```javascript
     /// search related
@@ -339,7 +371,7 @@ This part is used to load search results.
 `load` and `loadNext` functions are used to load search results. 
 If `load` function is implemented, `loadNext` function will be ignored.
 
-### Favorites
+#### Favorites
 
 ```javascript
     // favorite related
@@ -411,7 +443,7 @@ This part is used to manage network favorites of the source.
 `load` and `loadNext` functions are used to load search results.
 If `load` function is implemented, `loadNext` function will be ignored.
 
-### Comic Details
+#### Comic Details
 
 ```javascript
     /// single comic related
@@ -576,7 +608,7 @@ If `load` function is implemented, `loadNext` function will be ignored.
 
 This part is used to load comic details.
 
-### Settings
+#### Settings
 
 ```javascript
     /*
@@ -635,7 +667,7 @@ This part is used to load comic details.
 This part is used to provide settings for the source.
 
 
-### Translations
+#### Translations
 
 ```javascript
     // [Optional] translations for the strings in this config

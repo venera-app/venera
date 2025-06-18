@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart' show ChangeNotifier;
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -108,15 +109,42 @@ class LocalComic with HistoryMixin implements Comic {
 
   void read() {
     var history = HistoryManager().find(id, comicType);
+    int? firstDownloadedChapter;
+    int? firstDownloadedChapterGroup;
+    if (downloadedChapters.isNotEmpty && chapters != null) {
+      final chapters = this.chapters!;
+      if (chapters.isGrouped) {
+        for (int i=0; i<chapters.groupCount; i++) {
+          var group = chapters.getGroupByIndex(i);
+          var keys = group.keys.toList();
+          for (int j=0; j<keys.length; j++) {
+            var chapterId = keys[j];
+            if (downloadedChapters.contains(chapterId)) {
+              firstDownloadedChapter = j + 1;
+              firstDownloadedChapterGroup = i + 1;
+              break;
+            }
+          }
+        }
+      } else {
+        var keys = chapters.allChapters.keys;
+        for (int i = 0; i < keys.length; i++) {
+          if (downloadedChapters.contains(keys.elementAt(i))) {
+            firstDownloadedChapter = i + 1;
+            break;
+          }
+        }
+      }
+    }
     App.rootContext.to(
       () => Reader(
         type: comicType,
         cid: id,
         name: title,
         chapters: chapters,
-        initialChapter: history?.ep,
+        initialChapter: history?.ep ?? firstDownloadedChapter,
         initialPage: history?.page,
-        initialChapterGroup: history?.group,
+        initialChapterGroup: history?.group ?? firstDownloadedChapterGroup,
         history: history ??
             History.fromModel(
               model: this,
@@ -625,6 +653,7 @@ class LocalManager with ChangeNotifier {
   /// Deletes the directories in a separate isolate to avoid blocking the UI thread.
   static void _deleteDirectories(List<Directory> directories) {
     Isolate.run(() async {
+      await SAFTaskWorker().init();
       for (var dir in directories) {
         try {
           if (dir.existsSync()) {

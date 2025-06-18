@@ -111,6 +111,11 @@ abstract class ImageDownloader {
     return stream.stream;
   }
 
+  static Stream<ImageDownloadProgress> loadComicImageUnwrapped(
+      String imageKey, String? sourceKey, String cid, String eid) {
+    return _loadComicImage(imageKey, sourceKey, cid, eid);
+  }
+
   static Stream<ImageDownloadProgress> _loadComicImage(
       String imageKey, String? sourceKey, String cid, String eid) async* {
     final cacheKey = "$imageKey@$sourceKey@$cid@$eid";

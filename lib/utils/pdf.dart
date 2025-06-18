@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
+import 'package:flutter_saf/flutter_saf.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/utils/image.dart';
@@ -74,6 +75,9 @@ Future<Isolate> _runIsolate(
   return Isolate.spawn<SendPort>(
     (sendPort) => overrideIO(
       () async {
+        if (App.isAndroid) {
+          await SAFTaskWorker().init();
+        }
         var receivePort = ReceivePort();
         sendPort.send(receivePort.sendPort);
 
