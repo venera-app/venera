@@ -51,9 +51,7 @@ class ComicSourcePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: const _Body(),
-    );
+    return Scaffold(body: const _Body());
   }
 }
 
@@ -87,10 +85,7 @@ class _BodyState extends State<_Body> {
   Widget build(BuildContext context) {
     return SmoothCustomScrollView(
       slivers: [
-        SliverAppbar(
-          title: Text('Comic Source'.tl),
-          style: AppbarStyle.shadow,
-        ),
+        SliverAppbar(title: Text('Comic Source'.tl), style: AppbarStyle.shadow),
         buildCard(context),
         for (var source in ComicSource.all())
           _SliverComicSource(
@@ -109,9 +104,7 @@ class _BodyState extends State<_Body> {
     showConfirmDialog(
       context: App.rootContext,
       title: "Delete".tl,
-      content: "Delete comic source '@n' ?".tlParams({
-        "n": source.name,
-      }),
+      content: "Delete comic source '@n' ?".tlParams({"n": source.name}),
       btnColor: context.colorScheme.error,
       onConfirm: () {
         var file = File(source.filePath);
@@ -133,14 +126,16 @@ class _BodyState extends State<_Body> {
             title: const Text("Reload Configs"),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("cancel")),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("cancel"),
+              ),
               TextButton(
-                  onPressed: () async {
-                    await ComicSourceManager().reload();
-                    App.forceRebuild();
-                  },
-                  child: const Text("continue")),
+                onPressed: () async {
+                  await ComicSourceManager().reload();
+                  App.forceRebuild();
+                },
+                child: const Text("continue"),
+              ),
             ],
           ),
         );
@@ -157,8 +152,10 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  static Future<void> update(ComicSource source,
-      [bool showLoading = true]) async {
+  static Future<void> update(
+    ComicSource source, [
+    bool showLoading = true,
+  ]) async {
     if (!source.url.isURL) {
       App.rootContext.showMessage(message: "Invalid url config");
       return;
@@ -174,8 +171,10 @@ class _BodyState extends State<_Body> {
       );
     }
     try {
-      var res = await AppDio().get<String>(source.url,
-          options: Options(responseType: ResponseType.plain));
+      var res = await AppDio().get<String>(
+        source.url,
+        options: Options(responseType: ResponseType.plain),
+      );
       if (cancel) return;
       controller?.close();
       await ComicSourceParser().parse(res.data!, source.filePath);
@@ -192,12 +191,11 @@ class _BodyState extends State<_Body> {
   }
 
   Widget buildCard(BuildContext context) {
-    Widget buildButton(
-        {required Widget child, required VoidCallback onPressed}) {
-      return Button.normal(
-        onPressed: onPressed,
-        child: child,
-      ).fixHeight(32);
+    Widget buildButton({
+      required Widget child,
+      required VoidCallback onPressed,
+    }) {
+      return Button.normal(onPressed: onPressed, child: child).fixHeight(32);
     }
 
     return SliverToBoxAdapter(
@@ -213,12 +211,14 @@ class _BodyState extends State<_Body> {
             ),
             TextField(
               decoration: InputDecoration(
-                  hintText: "URL",
-                  border: const UnderlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  suffix: IconButton(
-                      onPressed: () => handleAddSource(url),
-                      icon: const Icon(Icons.check))),
+                hintText: "URL",
+                border: const UnderlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                suffix: IconButton(
+                  onPressed: () => handleAddSource(url),
+                  icon: const Icon(Icons.check),
+                ),
+              ),
               onChanged: (value) {
                 url = value;
               },
@@ -245,10 +245,7 @@ class _BodyState extends State<_Body> {
             ),
             ListTile(
               title: Text("Help".tl),
-              trailing: buildButton(
-                onPressed: help,
-                child: Text("Open".tl),
-              ),
+              trailing: buildButton(onPressed: help, child: Text("Open".tl)),
             ),
             ListTile(
               title: Text("Check updates".tl),
@@ -277,7 +274,8 @@ class _BodyState extends State<_Body> {
 
   void help() {
     launchUrlString(
-        "https://github.com/venera-app/venera/blob/master/doc/comic_source.md");
+      "https://github.com/venera-app/venera/blob/master/doc/comic_source.md",
+    );
   }
 
   Future<void> handleAddSource(String url) async {
@@ -288,11 +286,16 @@ class _BodyState extends State<_Body> {
     splits.removeWhere((element) => element == "");
     var fileName = splits.last;
     bool cancel = false;
-    var controller = showLoadingDialog(App.rootContext,
-        onCancel: () => cancel = true, barrierDismissible: false);
+    var controller = showLoadingDialog(
+      App.rootContext,
+      onCancel: () => cancel = true,
+      barrierDismissible: false,
+    );
     try {
-      var res = await AppDio()
-          .get<String>(url, options: Options(responseType: ResponseType.plain));
+      var res = await AppDio().get<String>(
+        url,
+        options: Options(responseType: ResponseType.plain),
+      );
       if (cancel) return;
       controller.close();
       await addSource(res.data!, fileName);
@@ -332,6 +335,12 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         json = null;
       });
     }
+    if (controller.text.isEmpty) {
+      setState(() {
+        json = [];
+      });
+      return;
+    }
     var dio = AppDio();
     try {
       var res = await dio.get<String>(controller.text);
@@ -343,8 +352,7 @@ class _ComicSourceListState extends State<_ComicSourceList> {
           json = jsonDecode(res.data!);
         });
       }
-    }
-    catch(e) {
+    } catch (e) {
       context.showMessage(message: "Network error".tl);
       if (mounted) {
         setState(() {
@@ -372,10 +380,7 @@ class _ComicSourceListState extends State<_ComicSourceList> {
 
   @override
   Widget build(BuildContext context) {
-    return PopUpWidgetScaffold(
-      title: "Comic Source".tl,
-      body: buildBody(),
-    );
+    return PopUpWidgetScaffold(title: "Comic Source".tl, body: buildBody());
   }
 
   Widget buildBody() {
@@ -399,32 +404,36 @@ class _ComicSourceListState extends State<_ComicSourceList> {
               children: [
                 ListTile(
                   leading: Icon(Icons.source_outlined),
-                  title: Text("Source URL".tl),
+                  title: Text("Repo URL".tl),
                 ),
                 TextField(
                   controller: controller,
                   decoration: InputDecoration(
                     hintText: "URL",
                     border: const UnderlineInputBorder(),
-                    contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                   onChanged: (value) {
                     changed = true;
                   },
                 ).paddingHorizontal(16).paddingBottom(8),
-                Text("The URL should point to a 'index.json' file".tl).paddingLeft(16),
-                Text("Do not report any issues related to sources to App repo.".tl).paddingLeft(16),
+                Text(
+                  "The URL should point to a 'index.json' file".tl,
+                ).paddingLeft(16),
+                Text(
+                  "Do not report any issues related to sources to App repo.".tl,
+                ).paddingLeft(16),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
                       onPressed: () {
-                        controller.text = defaultComicSourceUrl;
-                        changed = true;
+                        launchUrlString(
+                          "https://github.com/venera-app/venera/blob/master/doc/comic_source.md",
+                        );
                       },
-                      child: Text("Reset".tl),
+                      child: Text("Help".tl),
                     ),
                     FilledButton.tonal(
                       onPressed: load,
@@ -440,7 +449,11 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         }
 
         if (index == 1 && json == null) {
-          return Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+            ).fixWidth(24).fixHeight(24),
+          );
         }
 
         index--;
@@ -449,28 +462,28 @@ class _ComicSourceListState extends State<_ComicSourceList> {
         var action = currentKey.contains(key)
             ? const Icon(Icons.check, size: 20).paddingRight(8)
             : Button.filled(
-          child: Text("Add".tl),
-          onPressed: () async {
-            var fileName = json![index]["fileName"];
-            var url = json![index]["url"];
-            if (url == null || !(url.toString()).isURL) {
-              var listUrl =
-              appdata.settings['comicSourceListUrl'] as String;
-              if (listUrl
-                  .replaceFirst("https://", "")
-                  .replaceFirst("http://", "")
-                  .contains("/")) {
-                url =
-                    listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
-                        fileName;
-              } else {
-                url = '$listUrl/$fileName';
-              }
-            }
-            await widget.onAdd(url);
-            setState(() {});
-          },
-        ).fixHeight(32);
+                child: Text("Add".tl),
+                onPressed: () async {
+                  var fileName = json![index]["fileName"];
+                  var url = json![index]["url"];
+                  if (url == null || !(url.toString()).isURL) {
+                    var listUrl =
+                        appdata.settings['comicSourceListUrl'] as String;
+                    if (listUrl
+                        .replaceFirst("https://", "")
+                        .replaceFirst("http://", "")
+                        .contains("/")) {
+                      url =
+                          listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
+                          fileName;
+                    } else {
+                      url = '$listUrl/$fileName';
+                    }
+                  }
+                  await widget.onAdd(url);
+                  setState(() {});
+                },
+              ).fixHeight(32);
 
         var description = json![index]["version"];
         if (json![index]["description"] != null) {
@@ -551,8 +564,7 @@ void _addAllPagesWithComicSource(ComicSource source) {
       !networkFavorites.contains(source.favoriteData!.key)) {
     networkFavorites.add(source.favoriteData!.key);
   }
-  if (source.searchPageData != null &&
-      !searchPages.contains(source.key)) {
+  if (source.searchPageData != null && !searchPages.contains(source.key)) {
     searchPages.add(source.key);
   }
 
@@ -594,15 +606,10 @@ class __EditFilePageState extends State<_EditFilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar(
-        title: Text("Edit".tl),
-      ),
+      appBar: Appbar(title: Text("Edit".tl)),
       body: Column(
         children: [
-          Container(
-            height: 0.6,
-            color: context.colorScheme.outlineVariant,
-          ),
+          Container(height: 0.6, color: context.colorScheme.outlineVariant),
           Expanded(
             child: CodeEditor(
               initialValue: current,
@@ -643,9 +650,11 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
   }
 
   void showUpdateDialog() async {
-    var text = ComicSourceManager().availableUpdates.entries.map((e) {
-      return "${ComicSource.find(e.key)!.name}: ${e.value}";
-    }).join("\n");
+    var text = ComicSourceManager().availableUpdates.entries
+        .map((e) {
+          return "${ComicSource.find(e.key)!.name}: ${e.value}";
+        })
+        .join("\n");
     bool doUpdate = false;
     await showDialog(
       context: App.rootContext,
@@ -783,10 +792,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
           child: ListTile(
             title: Row(
               children: [
-                Text(
-                  source.name,
-                  style: ts.s18,
-                ),
+                Text(source.name, style: ts.s18),
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -819,7 +825,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
-                  ).paddingLeft(4)
+                  ).paddingLeft(4),
               ],
             ),
             trailing: Row(
@@ -864,15 +870,9 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
           ),
         ),
         SliverToBoxAdapter(
-          child: Column(
-            children: buildSourceSettings().toList(),
-          ),
+          child: Column(children: buildSourceSettings().toList()),
         ),
-        SliverToBoxAdapter(
-          child: Column(
-            children: _buildAccount().toList(),
-          ),
-        ),
+        SliverToBoxAdapter(child: Column(children: _buildAccount().toList())),
       ],
     );
   }
@@ -898,8 +898,10 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
               }
             }
           } else {
-            current = item.value['options']
-                    .firstWhere((e) => e['value'] == current)['text'] ??
+            current =
+                item.value['options'].firstWhere(
+                  (e) => e['value'] == current,
+                )['text'] ??
                 current;
           }
           yield ListTile(
@@ -907,8 +909,9 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             trailing: Select(
               current: (current as String).ts(source.key),
               values: (item.value['options'] as List)
-                  .map<String>((e) =>
-                      ((e['text'] ?? e['value']) as String).ts(source.key))
+                  .map<String>(
+                    (e) => ((e['text'] ?? e['value']) as String).ts(source.key),
+                  )
                   .toList(),
               onTap: (i) {
                 source.data['settings'][key] =
@@ -936,8 +939,11 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
               source.data['settings'][key] ?? item.value['default'] ?? '';
           yield ListTile(
             title: Text((item.value['title'] as String).ts(source.key)),
-            subtitle:
-                Text(current, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(
+              current,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             trailing: IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
@@ -978,10 +984,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
         trailing: const Icon(Icons.arrow_right),
         onTap: () async {
           await context.to(
-            () => _LoginPage(
-              config: source.account!,
-              source: source,
-            ),
+            () => _LoginPage(config: source.account!, source: source),
           );
           source.saveData();
           setState(() {});
@@ -1027,9 +1030,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
           trailing: loading
               ? const SizedBox.square(
                   dimension: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.refresh),
         );
@@ -1070,9 +1071,7 @@ class _LoginPageState extends State<_LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const Appbar(
-        title: Text(''),
-      ),
+      appBar: const Appbar(title: Text('')),
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -1200,8 +1199,9 @@ class _LoginPageState extends State<_LoginPage> {
       setState(() {
         loading = true;
       });
-      var cookies =
-          widget.config.cookieFields!.map((e) => _cookies[e] ?? '').toList();
+      var cookies = widget.config.cookieFields!
+          .map((e) => _cookies[e] ?? '')
+          .toList();
       widget.config.validateCookies!(cookies).then((value) {
         if (value) {
           widget.source.data['account'] = 'ok';
