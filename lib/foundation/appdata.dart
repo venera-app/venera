@@ -197,6 +197,7 @@ class Settings with ChangeNotifier {
     'showPageNumberInReader': true,
     'showSingleImageOnFirstPage': false,
     'enableDoubleTapToZoom': true,
+    'showSystemStatusBar': false,
   };
 
   operator [](String key) {
