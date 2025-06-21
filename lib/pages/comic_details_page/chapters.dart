@@ -27,7 +27,7 @@ class _NormalComicChapters extends StatefulWidget {
 class _NormalComicChaptersState extends State<_NormalComicChapters> {
   late _ComicPageState state;
 
-  bool reverse = false;
+  late bool reverse;
 
   bool showAll = false;
 
@@ -38,6 +38,7 @@ class _NormalComicChaptersState extends State<_NormalComicChapters> {
   @override
   void initState() {
     super.initState();
+    reverse = appdata.settings["reverseChapterOrder"] ?? false;
     history = widget.history;
   }
 
@@ -176,7 +177,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
     with SingleTickerProviderStateMixin {
   late _ComicPageState state;
 
-  bool reverse = false;
+  late bool reverse;
 
   bool showAll = false;
 
@@ -191,6 +192,7 @@ class _GroupedComicChaptersState extends State<_GroupedComicChapters>
   @override
   void initState() {
     super.initState();
+    reverse = appdata.settings["reverseChapterOrder"] ?? false;
     history = widget.history;
     if (history?.group != null) {
       index = history!.group! - 1;
