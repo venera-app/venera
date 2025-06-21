@@ -164,7 +164,9 @@ class _ReaderState extends State<Reader>
     }
     mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     history = widget.history;
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    if (!appdata.settings['showSystemStatusBar']) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    }
     if (appdata.settings['enableTurnPageByVolumeKey']) {
       handleVolumeEvent();
     }

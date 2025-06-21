@@ -107,7 +107,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     if (!_isOpen) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     } else {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+      if (!appdata.settings['showSystemStatusBar']) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+      } else {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
     }
     setState(() {
       _isOpen = !_isOpen;
