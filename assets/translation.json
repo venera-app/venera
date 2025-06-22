@@ -395,7 +395,8 @@
     "Double tap to zoom": "双击缩放",
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反转",
-    "Delete Chapters": "删除章节"
+    "Delete Chapters": "删除章节",
+    "Path copied to clipboard": "路径已复制到剪贴板"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -793,6 +794,7 @@
     "Double tap to zoom": "雙擊縮放",
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反轉",
-    "Delete Chapters": "刪除章節"
+    "Delete Chapters": "刪除章節",
+    "Path copied to clipboard": "路徑已複製到剪貼簿"
   }
 }
