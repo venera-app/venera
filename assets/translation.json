@@ -234,6 +234,7 @@
     "Please add some sources": "请添加一些源",
     "Please check your settings": "请检查您的设置",
     "No Category Pages": "没有分类页面",
+    "Group @group": "第 @group 组",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 页",
     "Remove local favorite and history": "删除本地收藏和历史记录",
@@ -389,6 +390,7 @@
     "Suggestions": "建议",
     "Do not report any issues related to sources to App repo.": "请不要向App仓库报告任何与源相关的问题",
     "Show single image on first page": "在首页显示单张图片",
+    "Show system status bar": "显示系统状态栏",
     "Click to select an image": "点击选择一张图片",
     "Repo URL": "仓库地址",
     "The URL should point to a 'index.json' file": "该URL应指向一个'index.json'文件",
@@ -396,7 +398,8 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反转",
     "Delete Chapters": "删除章节",
-    "Path copied to clipboard": "路径已复制到剪贴板"
+    "Path copied to clipboard": "路径已复制到剪贴板",
+    "Reverse default chapter order": "反转默认章节顺序"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -633,6 +636,7 @@
     "Please add some sources": "請添加一些源",
     "Please check your settings": "請檢查您的設定",
     "No Category Pages": "沒有分類頁面",
+    "Group @group": "第 @group 組",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 頁",
     "Remove local favorite and history": "刪除本機收藏和歷史記錄",
@@ -788,6 +792,7 @@
     "Suggestions": "建議",
     "Do not report any issues related to sources to App repo.": "請不要向App倉庫報告任何與源相關的問題",
     "Show single image on first page": "在首頁顯示單張圖片",
+    "Show system status bar": "顯示系統狀態欄",
     "Click to select an image": "點擊選擇一張圖片",
     "Repo URL": "倉庫地址",
     "The URL should point to a 'index.json' file": "該URL應指向一個'index.json'文件",
@@ -795,6 +800,7 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反轉",
     "Delete Chapters": "刪除章節",
-    "Path copied to clipboard": "路徑已複製到剪貼簿"
+    "Path copied to clipboard": "路徑已複製到剪貼簿",
+    "Reverse default chapter order": "反轉預設章節順序"
   }
 }
