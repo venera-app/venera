@@ -133,6 +133,11 @@ class History implements Comic {
   @override
   String get description {
     var res = "";
+    if (group != null){
+      res += "${"Group @group".tlParams({
+        "group": group!,
+      })} - ";
+    }
     if (ep >= 1) {
       res += "Chapter @ep".tlParams({
         "ep": ep,
