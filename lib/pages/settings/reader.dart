@@ -163,6 +163,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             widget.onChanged?.call("enableClockAndBatteryInfoInReader");
           },
         ).toSliver(),
+        _SwitchSetting(
+          title: "Show system status bar".tl,
+          settingKey: "showSystemStatusBar",
+          onChanged: () {
+            widget.onChanged?.call("showSystemStatusBar");
+          },
+        ).toSliver(),
         SelectSetting(
           title: "Quick collect image".tl,
           settingKey: "quickCollectImage",
