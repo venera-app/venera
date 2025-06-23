@@ -52,6 +52,10 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           title: "Show history on comic tile".tl,
           settingKey: "showHistoryStatusOnTile",
         ).toSliver(),
+        _SwitchSetting(
+          title: "Reverse default chapter order".tl,
+          settingKey: "reverseChapterOrder",
+        ).toSliver(),
         _PopupWindowSetting(
           title: "Keyword blocking".tl,
           builder: () => const _ManageBlockingWordView(),

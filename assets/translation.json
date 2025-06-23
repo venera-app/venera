@@ -395,7 +395,8 @@
     "Double tap to zoom": "双击缩放",
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反转",
-    "Delete Chapters": "删除章节"
+    "Delete Chapters": "删除章节",
+    "Reverse default chapter order": "反转默认章节顺序"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -793,6 +794,7 @@
     "Double tap to zoom": "雙擊縮放",
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反轉",
-    "Delete Chapters": "刪除章節"
+    "Delete Chapters": "刪除章節",
+    "Reverse default chapter order": "反轉預設章節順序"
   }
 }
