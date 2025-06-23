@@ -361,17 +361,31 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
       context: App.rootContext,
       builder: (context) {
         bool removeComicFile = true;
+        bool removeFavoriteAndHistory = true;
         return StatefulBuilder(builder: (context, state) {
           return ContentDialog(
             title: "Delete".tl,
-            content: CheckboxListTile(
-              title: Text("Also remove files on disk".tl),
-              value: removeComicFile,
-              onChanged: (v) {
-                state(() {
-                  removeComicFile = !removeComicFile;
-                });
-              },
+            content: Column(
+              children: [
+                CheckboxListTile(
+                  title: Text("Remove local favorite and history".tl),
+                  value: removeFavoriteAndHistory,
+                  onChanged: (v) {
+                    state(() {
+                      removeFavoriteAndHistory = !removeFavoriteAndHistory;
+                    });
+                  },
+                ),
+                CheckboxListTile(
+                  title: Text("Also remove files on disk".tl),
+                  value: removeComicFile,
+                  onChanged: (v) {
+                    state(() {
+                      removeComicFile = !removeComicFile;
+                    });
+                  },
+                )
+              ],
             ),
             actions: [
               if (comics.length == 1 && comics.first.hasChapters)
@@ -388,6 +402,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
                   LocalManager().batchDeleteComics(
                     comics,
                     removeComicFile,
+                    removeFavoriteAndHistory,
                   );
                   isDeleted = true;
                 },

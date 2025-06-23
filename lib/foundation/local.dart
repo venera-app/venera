@@ -611,7 +611,7 @@ class LocalManager with ChangeNotifier {
     notifyListeners();
   }
 
-  void batchDeleteComics(List<LocalComic> comics, [bool removeFileOnDisk = true]) {
+  void batchDeleteComics(List<LocalComic> comics, [bool removeFileOnDisk = true, bool removeFavoriteAndHistory = true]) {
     if (comics.isEmpty) {
       return;
     }
@@ -640,8 +640,11 @@ class LocalManager with ChangeNotifier {
     _db.execute('COMMIT;');
 
     var comicIDs = comics.map((e) => ComicID(e.comicType, e.id)).toList();
-    LocalFavoritesManager().batchDeleteComicsInAllFolders(comicIDs);
-    HistoryManager().batchDeleteHistories(comicIDs);
+
+    if (removeFavoriteAndHistory) {
+      LocalFavoritesManager().batchDeleteComicsInAllFolders(comicIDs);
+      HistoryManager().batchDeleteHistories(comicIDs);
+    }
 
     notifyListeners();
 

@@ -237,6 +237,7 @@
     "Group @group": "第 @group 组",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 页",
+    "Remove local favorite and history": "删除本地收藏和历史记录",
     "Also remove files on disk": "同时删除磁盘上的文件",
     "Copy to app local path": "将漫画复制到本地存储目录中",
     "Delete all unavailable local favorite items": "删除所有无效的本地收藏",
@@ -397,6 +398,7 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反转",
     "Delete Chapters": "删除章节",
+    "Path copied to clipboard": "路径已复制到剪贴板",
     "Reverse default chapter order": "反转默认章节顺序"
   },
   "zh_TW": {
@@ -637,6 +639,7 @@
     "Group @group": "第 @group 組",
     "Chapter @ep": "第 @ep 章",
     "Page @page": "第 @page 頁",
+    "Remove local favorite and history": "刪除本機收藏和歷史記錄",
     "Also remove files on disk": "同時刪除磁碟上的文件",
     "Copy to app local path": "將漫畫複製到本機儲存目錄中",
     "Delete all unavailable local favorite items": "刪除所有無效的本機收藏",
@@ -797,6 +800,7 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反轉",
     "Delete Chapters": "刪除章節",
+    "Path copied to clipboard": "路徑已複製到剪貼簿",
     "Reverse default chapter order": "反轉預設章節順序"
   }
 }
