@@ -198,6 +198,7 @@ class Settings with ChangeNotifier {
     'showSingleImageOnFirstPage': false,
     'enableDoubleTapToZoom': true,
     'reverseChapterOrder': false,
+    'showSystemStatusBar': false,
   };
 
   operator [](String key) {
