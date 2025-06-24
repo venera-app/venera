@@ -363,6 +363,11 @@ This part is used to load comics of a category.
 
         // enable tags suggestions
         enableTagsSuggestions: false,
+        // [Optional] handle tag suggestion click
+        onTagSuggestionSelected: (namespace, tag) => {
+            // return the text to insert into search box
+            return `${namespace}:${tag}`
+        },
     }
 ```
 
