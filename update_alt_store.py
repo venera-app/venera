@@ -140,7 +140,7 @@ def main():
 
     try:
         fetched_data_latest = fetch_latest_release(repo_url)
-        json_file = "apps.json"
+        json_file = "alt_store.json"
         update_json_file_release(json_file, fetched_data_latest)
     except Exception as e:
         print(f"An error occurred: {e}")

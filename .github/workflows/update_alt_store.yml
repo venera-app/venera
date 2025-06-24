@@ -33,10 +33,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        python update_json.py
+        python update_alt_store.py
         git config --global user.name 'GitHub Action'
         git config --global user.email 'action@github.com'
-        git add apps.json
+        git add alt_store.json
         if git diff --staged --quiet; then
           echo "changes=false" >> $GITHUB_OUTPUT
         else
@@ -59,12 +59,12 @@ jobs:
           echo "## Update Altstore Source Summary 🚀" >> $GITHUB_STEP_SUMMARY
           echo "✅ Changes Detected and Applied" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The apps.json file has been updated with the latest release information." >> $GITHUB_STEP_SUMMARY
+          echo "The alt_store.json file has been updated with the latest release information." >> $GITHUB_STEP_SUMMARY
         else
           echo "## Update Altstore Source Summary 🚀" >> $GITHUB_STEP_SUMMARY
           echo "🔍 No Changes Detected" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The apps.json file is up to date. No changes were necessary." >> $GITHUB_STEP_SUMMARY
+          echo "The alt_store.json file is up to date. No changes were necessary." >> $GITHUB_STEP_SUMMARY
         fi
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "🕐 Execution Time" >> $GITHUB_STEP_SUMMARY
