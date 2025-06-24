@@ -177,10 +177,18 @@ class _ReaderState extends State<Reader>
     super.initState();
   }
 
+  bool _isInitialized = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    initImagesPerPage(widget.initialPage ?? 1);
+    if (!_isInitialized) {
+      initImagesPerPage(widget.initialPage ?? 1);
+      _isInitialized = true;
+    } else {
+      // For orientation changed
+      _checkImagesPerPageChange();
+    }
     initReaderWindow();
   }
 
@@ -345,6 +353,8 @@ class _ReaderState extends State<Reader>
 abstract mixin class _ImagePerPageHandler {
   late int _lastImagesPerPage;
 
+  late bool _lastOrientation;
+
   bool get isPortrait;
 
   int get page;
@@ -355,6 +365,7 @@ abstract mixin class _ImagePerPageHandler {
 
   void initImagesPerPage(int initialPage) {
     _lastImagesPerPage = imagesPerPage;
+    _lastOrientation = isPortrait;
     if (imagesPerPage != 1) {
       if (showSingleImageOnFirstPage) {
         page = ((initialPage - 1) / imagesPerPage).ceil() + 1;
@@ -380,19 +391,42 @@ abstract mixin class _ImagePerPageHandler {
   /// Check if the number of images per page has changed
   void _checkImagesPerPageChange() {
     int currentImagesPerPage = imagesPerPage;
-    if (_lastImagesPerPage != currentImagesPerPage) {
+    bool currentOrientation = isPortrait;
+
+    if (_lastImagesPerPage != currentImagesPerPage || _lastOrientation != currentOrientation) {
       _adjustPageForImagesPerPageChange(
           _lastImagesPerPage, currentImagesPerPage);
       _lastImagesPerPage = currentImagesPerPage;
+      _lastOrientation = currentOrientation;
     }
   }
 
   /// Adjust the page number when the number of images per page changes
   void _adjustPageForImagesPerPageChange(
       int oldImagesPerPage, int newImagesPerPage) {
-    int previousImageIndex = (page - 1) * oldImagesPerPage;
-    int newPage = (previousImageIndex ~/ newImagesPerPage) + 1;
-    page = newPage;
+    int previousImageIndex = 1;
+    if (!showSingleImageOnFirstPage || oldImagesPerPage == 1) {
+      previousImageIndex = (page - 1) * oldImagesPerPage + 1;
+    } else {
+      if (page == 1) {
+        previousImageIndex = 1;
+      } else {
+        previousImageIndex = (page - 2) * oldImagesPerPage + 2;
+      }
+    }
+
+    int newPage;
+    if (newImagesPerPage != 1) {
+      if (showSingleImageOnFirstPage) {
+        newPage = ((previousImageIndex - 1) / newImagesPerPage).ceil() + 1;
+      } else {
+        newPage = (previousImageIndex / newImagesPerPage).ceil();
+      }
+    } else {
+      newPage = previousImageIndex;
+    }
+
+    page = newPage>0 ? newPage : 1;
   }
 }
 
