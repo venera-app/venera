@@ -399,7 +399,12 @@
     "Reverse": "反转",
     "Delete Chapters": "删除章节",
     "Path copied to clipboard": "路径已复制到剪贴板",
-    "Reverse default chapter order": "反转默认章节顺序"
+    "Reverse default chapter order": "反转默认章节顺序",
+    "Reload Configs": "重新加载配置文件",
+    "Reload": "重载",
+    "Disable Length Limitation": "禁用长度限制",
+    "Only valid for this run": "仅对本次运行有效",
+    "Logs": "日志"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -801,6 +806,11 @@
     "Reverse": "反轉",
     "Delete Chapters": "刪除章節",
     "Path copied to clipboard": "路徑已複製到剪貼簿",
-    "Reverse default chapter order": "反轉預設章節順序"
+    "Reverse default chapter order": "反轉預設章節順序",
+    "Reload Configs": "重新載入設定檔",
+    "Reload": "重載",
+    "Disable Length Limitation": "禁用長度限制",
+    "Only valid for this run": "僅對本次運行有效",
+    "Logs": "日誌"
   }
 }
