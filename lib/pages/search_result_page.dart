@@ -124,7 +124,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
     options = widget.options ?? const [];
     validateOptions();
     appdata.addSearchHistory(text);
-    suggestionsController = _SuggestionsController(controller);
+    suggestionsController = _SuggestionsController(controller, sourceKey);
     super.initState();
   }
 
@@ -213,6 +213,8 @@ class _SuggestionsController {
 
   final SearchBarController controller;
 
+  final String sourceKey;
+
   OverlayEntry? entry;
 
   void updateWidget() {
@@ -270,7 +272,7 @@ class _SuggestionsController {
     find(TagsTranslation.cosplayerTags, TranslationType.cosplayer);
   }
 
-  _SuggestionsController(this.controller);
+  _SuggestionsController(this.controller, this.sourceKey);
 }
 
 class _Suggestions extends StatefulWidget {
@@ -400,14 +402,16 @@ class _SuggestionsState extends State<_Suggestions> {
       controller.text =
           controller.text.replaceLast(words[words.length - 1], "");
     }
-    if (text.contains(' ')) {
-      text = "'$text'";
-    }
-    if (type != null) {
-      controller.text += "${type.name}:$text ";
+    final source = ComicSource.find(widget.controller.sourceKey);
+    String insert;
+    if (source?.onTagSuggestionSelected != null) {
+      insert = source!.onTagSuggestionSelected!(type?.name ?? '', text);
     } else {
-      controller.text += "$text ";
+      var t = text;
+      if (t.contains(' ')) t = "'$t'";
+      insert = type != null ? "${type.name}:$t" : t;
     }
+    controller.text += "$insert ";
     widget.controller.suggestions.clear();
     widget.controller.remove();
   }

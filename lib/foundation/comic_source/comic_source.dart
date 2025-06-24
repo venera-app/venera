@@ -184,6 +184,9 @@ class ComicSource {
 
   final HandleClickTagEvent? handleClickTagEvent;
 
+  /// Callback when a tag suggestion is selected in search.
+  final TagSuggestionSelectFunc? onTagSuggestionSelected;
+
   final LinkHandler? linkHandler;
 
   final bool enableTagsSuggestions;
@@ -259,6 +262,7 @@ class ComicSource {
     this.idMatcher,
     this.translations,
     this.handleClickTagEvent,
+    this.onTagSuggestionSelected,
     this.linkHandler,
     this.enableTagsSuggestions,
     this.enableTagsTranslate,

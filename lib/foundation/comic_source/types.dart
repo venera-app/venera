@@ -44,5 +44,10 @@ typedef VoteCommentFunc = Future<Res<int?>> Function(
 typedef HandleClickTagEvent = PageJumpTarget? Function(
     String namespace, String tag);
 
+/// Handle tag suggestion selection event. Should return the text to insert
+/// into the search field.
+typedef TagSuggestionSelectFunc = String Function(
+    String namespace, String tag);
+
 /// [rating] is the rating value, 0-10. 1 represents 0.5 star.
 typedef StarRatingFunc = Future<Res<bool>> Function(String comicId, int rating);

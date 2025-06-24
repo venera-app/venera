@@ -148,6 +148,7 @@ class ComicSourceParser {
       _parseIdMatch(),
       _parseTranslation(),
       _parseClickTagEvent(),
+      _parseTagSuggestionSelectFunc(),
       _parseLinkHandler(),
       _getValue("search.enableTagsSuggestions") ?? false,
       _getValue("comic.enableTagsTranslate") ?? false,
@@ -1054,6 +1055,19 @@ class ComicSourceParser {
       var r = Map<String, dynamic>.from(res);
       r.removeWhere((key, value) => value == null);
       return PageJumpTarget.parse(_key!, r);
+    };
+  }
+
+  TagSuggestionSelectFunc? _parseTagSuggestionSelectFunc() {
+    if (!_checkExists("search.onTagSuggestionSelected")) {
+      return null;
+    }
+    return (namespace, tag) {
+      var res = JsEngine().runCode("""
+          ComicSource.sources.$_key.search.onTagSuggestionSelected(
+            ${jsonEncode(namespace)}, ${jsonEncode(tag)})
+        """);
+      return res is String ? res : "$namespace:$tag";
     };
   }
 
