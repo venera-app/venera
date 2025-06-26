@@ -193,12 +193,46 @@ class LogsPage extends StatefulWidget {
 }
 
 class _LogsPageState extends State<LogsPage> {
+  String logLevelToShow = "all";
+
   @override
   Widget build(BuildContext context) {
+    var logToShow = logLevelToShow == "all"
+        ? Log.logs
+        : Log.logs.where((log) => log.level.name == logLevelToShow).toList();
     return Scaffold(
       appBar: Appbar(
-        title: const Text("Logs"),
+        title: Text("Logs".tl),
         actions: [
+          IconButton(
+              onPressed: () => setState(() {
+                    final RelativeRect position = RelativeRect.fromLTRB(
+                      MediaQuery.of(context).size.width,
+                      MediaQuery.of(context).padding.top + kToolbarHeight,
+                      0.0,
+                      0.0,
+                    );
+                    showMenu(context: context, position: position, items: [
+                      PopupMenuItem(
+                          child: Text("all"),
+                          onTap: () => setState(() => logLevelToShow = "all")
+                      ),
+                      PopupMenuItem(
+                          child: Text("info"),
+                          onTap: () => setState(() => logLevelToShow = "info")
+                      ),
+                      PopupMenuItem(
+                          child: Text("warning"),
+                          onTap: () => setState(() => logLevelToShow = "warning")
+                      ),
+                      PopupMenuItem(
+                          child: Text("error"),
+                          onTap: () => setState(() => logLevelToShow = "error")
+                      ),
+                    ]);
+              }),
+              icon: const Icon(Icons.filter_list_outlined)
+          ),
           IconButton(
               onPressed: () => setState(() {
                     final RelativeRect position = RelativeRect.fromLTRB(
@@ -217,7 +251,7 @@ class _LogsPageState extends State<LogsPage> {
                         onTap: () {
                           Log.ignoreLimitation = true;
                           context.showMessage(
-                              message: "Only valid for this run");
+                              message: "Only valid for this run".tl);
                         },
                       ),
                       PopupMenuItem(
@@ -232,9 +266,9 @@ class _LogsPageState extends State<LogsPage> {
       body: ListView.builder(
         reverse: true,
         controller: ScrollController(),
-        itemCount: Log.logs.length,
+        itemCount: logToShow.length,
         itemBuilder: (context, index) {
-          index = Log.logs.length - index - 1;
+          index = logToShow.length - index - 1;
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SelectionArea(
@@ -253,7 +287,7 @@ class _LogsPageState extends State<LogsPage> {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
-                          child: Text(Log.logs[index].title),
+                          child: Text(logToShow[index].title),
                         ),
                       ),
                       const SizedBox(
@@ -265,16 +299,16 @@ class _LogsPageState extends State<LogsPage> {
                             Theme.of(context).colorScheme.error,
                             Theme.of(context).colorScheme.errorContainer,
                             Theme.of(context).colorScheme.primaryContainer
-                          ][Log.logs[index].level.index],
+                          ][logToShow[index].level.index],
                           borderRadius:
                               const BorderRadius.all(Radius.circular(16)),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
                           child: Text(
-                            Log.logs[index].level.name,
+                            logToShow[index].level.name,
                             style: TextStyle(
-                                color: Log.logs[index].level.index == 0
+                                color: logToShow[index].level.index == 0
                                     ? Colors.white
                                     : Colors.black),
                           ),
@@ -282,14 +316,14 @@ class _LogsPageState extends State<LogsPage> {
                       ),
                     ],
                   ),
-                  Text(Log.logs[index].content),
-                  Text(Log.logs[index].time
+                  Text(logToShow[index].content),
+                  Text(logToShow[index].time
                       .toString()
                       .replaceAll(RegExp(r"\.\w+"), "")),
                   TextButton(
                     onPressed: () {
                       Clipboard.setData(
-                          ClipboardData(text: Log.logs[index].content));
+                          ClipboardData(text: logToShow[index].content));
                     },
                     child: Text("Copy".tl),
                   ),
