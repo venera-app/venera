@@ -33,8 +33,9 @@
           "com.apple.developer.healthkit.background-delivery"
         ],
         "privacy": {
-          "NSFaceIDUsageDescription": "The guest app is requesting for this permission.",
-          "NSPhotoLibraryAddUsageDescription": "The guest app is requesting for this permission."
+          "NSFaceIDUsageDescription": "Face ID or Touch ID is used to protect your privacy when opening the app, ensuring secure access to your reading content.",
+          "NSPhotoLibraryAddUsageDescription": "Used to save comic images you've favorited or downloaded to your photo library for easy access and sharing.",
+          "NSPhotoLibraryUsageDescription": "Used to select images from your photo library when needed, and to save comic images you've collected to your device."
         }
       },
       "versions": [
