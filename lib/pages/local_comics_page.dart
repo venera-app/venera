@@ -14,6 +14,7 @@ import 'package:venera/utils/io.dart';
 import 'package:venera/utils/pdf.dart';
 import 'package:venera/utils/translations.dart';
 import 'package:zip_flutter/zip_flutter.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class LocalComicsPage extends StatefulWidget {
   const LocalComicsPage({super.key});
@@ -143,6 +144,14 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           addFavorite(selectedComics.keys.toList());
         },
       ),
+      if (selectedComics.length == 1)
+        MenuEntry(
+          icon: Icons.folder_open,
+          text: "Open Folder".tl,
+          onClick: () {
+            openComicFolder(selectedComics.keys.first);
+          },
+        ),
       if (selectedComics.length == 1)
         MenuEntry(
           icon: Icons.chrome_reader_mode_outlined,
@@ -313,6 +322,13 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
             },
             menuBuilder: (c) {
               return [
+                MenuEntry(
+                  icon: Icons.folder_open,
+                  text: "Open Folder".tl,
+                  onClick: () {
+                    openComicFolder(c as LocalComic);
+                  },
+                ),
                 MenuEntry(
                   icon: Icons.delete,
                   text: "Delete".tl,
@@ -518,6 +534,49 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
 
 typedef ExportComicFunc = Future<File> Function(
     LocalComic comic, String outFilePath);
+
+/// Opens the folder containing the comic in the system file explorer
+Future<void> openComicFolder(LocalComic comic) async {
+  try {
+    final folderPath = comic.baseDir;
+
+    if (App.isWindows) {
+      await Process.run('explorer', [folderPath]);
+    } else if (App.isMacOS) {
+      await Process.run('open', [folderPath]);
+    } else if (App.isLinux) {
+      // Try different file managers commonly found on Linux
+      try {
+        await Process.run('xdg-open', [folderPath]);
+      } catch (e) {
+        // Fallback to other common file managers
+        try {
+          await Process.run('nautilus', [folderPath]);
+        } catch (e) {
+          try {
+            await Process.run('dolphin', [folderPath]);
+          } catch (e) {
+            try {
+              await Process.run('thunar', [folderPath]);
+            } catch (e) {
+              // Last resort: use the URL launcher with file:// protocol
+              await launchUrlString('file://$folderPath');
+            }
+          }
+        }
+      }
+    } else {
+      // For mobile platforms, use the URL launcher with file:// protocol
+      await launchUrlString('file://$folderPath');
+    }
+  } catch (e, s) {
+    Log.error("Open Folder", "Failed to open comic folder: $e", s);
+    // Show error message to user
+    if (App.rootContext.mounted) {
+      App.rootContext.showMessage(message: "Failed to open folder: $e");
+    }
+  }
+}
 
 void showDeleteChaptersPopWindow(BuildContext context, LocalComic comic) {
   var chapters = <String>[];

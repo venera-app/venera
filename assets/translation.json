@@ -398,6 +398,7 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反转",
     "Delete Chapters": "删除章节",
+    "Open Folder": "打开文件夹",
     "Path copied to clipboard": "路径已复制到剪贴板",
     "Reverse default chapter order": "反转默认章节顺序"
   },
@@ -800,6 +801,7 @@
     "Clear Unfavorited": "清除未收藏",
     "Reverse": "反轉",
     "Delete Chapters": "刪除章節",
+    "Open Folder": "打開資料夾",
     "Path copied to clipboard": "路徑已複製到剪貼簿",
     "Reverse default chapter order": "反轉預設章節順序"
   }
