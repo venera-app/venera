@@ -16,6 +16,7 @@ import 'package:venera/pages/follow_updates_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/handle_text_share.dart';
+import 'package:venera/utils/opencc.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'foundation/appdata.dart';
@@ -44,6 +45,7 @@ Future<void> init() async {
     TagsTranslation.readData().wait(),
     JsEngine().init().wait(),
     ComicSourceManager().init().wait(),
+    OpenCC.init(),
   ];
   await Future.wait(futures);
   CacheManager().setLimitSize(appdata.settings['cacheSize']);

@@ -103,6 +103,7 @@ flutter:
     - assets/app_icon.png
     - assets/tags.json
     - assets/tags_tw.json
+    - assets/opencc.txt
 
 flutter_to_arch:
   name: Venera

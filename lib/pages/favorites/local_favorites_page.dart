@@ -52,7 +52,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       } else {
         searchResults = [];
         for (var comic in comics) {
-          if (matchKeyword(keyword, comic)) {
+          if (matchKeyword(keyword, comic) ||
+              matchKeywordT(keyword, comic) ||
+              matchKeywordS(keyword, comic)) {
             searchResults.add(comic);
           }
         }
@@ -128,6 +130,24 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
       return false;
     }
     return true;
+  }
+
+  // Convert keyword to traditional Chinese to match comics
+  bool matchKeywordT(String keyword, FavoriteItem comic) {
+    if (!OpenCC.hasChineseSimplified(keyword)) {
+      return false;
+    }
+    keyword = OpenCC.simplifiedToTraditional(keyword);
+    return matchKeyword(keyword, comic);
+  }
+
+  // Convert keyword to simplified Chinese to match comics
+  bool matchKeywordS(String keyword, FavoriteItem comic) {
+    if (!OpenCC.hasChineseTraditional(keyword)) {
+      return false;
+    }
+    keyword = OpenCC.traditionalToSimplified(keyword);
+    return matchKeyword(keyword, comic);
   }
 
   @override
