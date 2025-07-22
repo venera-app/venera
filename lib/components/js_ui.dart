@@ -37,9 +37,11 @@ mixin class JsUiApi {
       case 'showInputDialog':
         var title = message['title'];
         var validator = message['validator'];
+        var image = message['image'];
         if (title is! String) return;
         if (validator != null && validator is! JSInvokable) return;
-        return _showInputDialog(title, validator);
+        if (image != null && image is! String) return;
+        return _showInputDialog(title, validator, image);
       case 'showSelectDialog':
         var title = message['title'];
         var options = message['options'];
@@ -124,12 +126,13 @@ mixin class JsUiApi {
     controller?.close();
   }
 
-  Future<String?> _showInputDialog(String title, JSInvokable? validator) async {
+  Future<String?> _showInputDialog(String title, JSInvokable? validator, String? image) async {
     String? result;
     var func = validator == null ? null : JSAutoFreeFunction(validator);
     await showInputDialog(
       context: App.rootContext,
       title: title,
+      image: image,
       onConfirm: (v) {
         if (func != null) {
           var res = func.call([v]);

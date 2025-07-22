@@ -359,6 +359,7 @@ Future<void> showInputDialog({
   String confirmText = "Confirm",
   String cancelText = "Cancel",
   RegExp? inputValidator,
+  String? image,
 }) {
   var controller = TextEditingController(text: initialValue);
   bool isLoading = false;
@@ -371,14 +372,23 @@ Future<void> showInputDialog({
         builder: (context, setState) {
           return ContentDialog(
             title: title,
-            content: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: hintText,
-                border: const OutlineInputBorder(),
-                errorText: error,
-              ),
-            ).paddingHorizontal(12),
+            content: Column(
+              children: [
+                if (image != null)
+                  SizedBox(
+                    height: 108,
+                    child: Image.network(image, fit: BoxFit.none),
+                  ).paddingBottom(8),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: hintText,
+                    border: const OutlineInputBorder(),
+                    errorText: error,
+                  ),
+                ).paddingHorizontal(12),
+              ],
+            ),
             actions: [
               Button.filled(
                 isLoading: isLoading,
