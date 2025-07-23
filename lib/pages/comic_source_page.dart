@@ -191,13 +191,6 @@ class _BodyState extends State<_Body> {
   }
 
   Widget buildCard(BuildContext context) {
-    Widget buildButton({
-      required Widget child,
-      required VoidCallback onPressed,
-    }) {
-      return Button.normal(onPressed: onPressed, child: child).fixHeight(32);
-    }
-
     return SliverToBoxAdapter(
       child: SizedBox(
         width: double.infinity,
@@ -224,33 +217,33 @@ class _BodyState extends State<_Body> {
               },
               onSubmitted: handleAddSource,
             ).paddingHorizontal(16).paddingBottom(8),
-            ListTile(
-              title: Text("Comic Source list".tl),
-              trailing: buildButton(
-                child: Text("View".tl),
-                onPressed: () {
-                  showPopUpWidget(
-                    App.rootContext,
-                    _ComicSourceList(handleAddSource),
-                  );
-                },
-              ),
-            ),
-            ListTile(
-              title: Text("Use a config file".tl),
-              trailing: buildButton(
-                onPressed: _selectFile,
-                child: Text("Select".tl),
-              ),
-            ),
-            ListTile(
-              title: Text("Help".tl),
-              trailing: buildButton(onPressed: help, child: Text("Open".tl)),
-            ),
-            ListTile(
-              title: Text("Check updates".tl),
-              trailing: _CheckUpdatesButton(),
-            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  icon: Icon(Icons.article_outlined),
+                  label: Text("Comic Source list".tl),
+                  onPressed: () {
+                    showPopUpWidget(
+                      App.rootContext,
+                      _ComicSourceList(handleAddSource),
+                    );
+                  },
+                ),
+                FilledButton.tonalIcon(
+                  icon: Icon(Icons.file_open_outlined),
+                  label: Text("Use a config file".tl),
+                  onPressed: _selectFile,
+                ),
+                FilledButton.tonalIcon(
+                  icon: Icon(Icons.help_outline),
+                  label: Text("Help".tl),
+                  onPressed: help,
+                ),
+                _CheckUpdatesButton(),
+              ],
+            ).paddingHorizontal(12).paddingVertical(8),
             const SizedBox(height: 8),
           ],
         ),
@@ -699,11 +692,15 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Button.normal(
+    return FilledButton.tonalIcon(
+      icon: isLoading ? SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ) : Icon(Icons.update),
+      label: Text("Check updates".tl),
       onPressed: check,
-      isLoading: isLoading,
-      child: Text("Check".tl),
-    ).fixHeight(32);
+    );
   }
 }
 
