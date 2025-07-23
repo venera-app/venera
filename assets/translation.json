@@ -404,7 +404,8 @@
     "Reload": "重载",
     "Disable Length Limitation": "禁用长度限制",
     "Only valid for this run": "仅对本次运行有效",
-    "Logs": "日志"
+    "Logs": "日志",
+    "Export logs": "导出日志"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -811,6 +812,7 @@
     "Reload": "重載",
     "Disable Length Limitation": "禁用長度限制",
     "Only valid for this run": "僅對本次運行有效",
-    "Logs": "日誌"
+    "Logs": "日誌",
+    "Export logs": "匯出日誌"
   }
 }
