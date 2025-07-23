@@ -189,7 +189,7 @@ class Settings with ChangeNotifier {
     'customImageProcessing': defaultCustomImageProcessing,
     'sni': true,
     'autoAddLanguageFilter': 'none', // none, chinese, english, japanese
-    'comicSourceListUrl': '',
+    'comicSourceListUrl': _defaultSourceListUrl,
     'preloadImageCount': 4,
     'followUpdatesFolder': null,
     'initialPage': '0',
@@ -235,3 +235,5 @@ function processImage(image, cid, eid, page, sourceKey) {
     return futureImage;
 }
 ''';
+
+const _defaultSourceListUrl = "https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json";
