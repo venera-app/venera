@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:display_mode/display_mode.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_saf/flutter_saf.dart';
@@ -15,6 +16,7 @@ import 'package:venera/pages/follow_updates_page.dart';
 import 'package:venera/pages/settings/settings_page.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/handle_text_share.dart';
+import 'package:venera/utils/opencc.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
 import 'foundation/appdata.dart';
@@ -43,6 +45,7 @@ Future<void> init() async {
     TagsTranslation.readData().wait(),
     JsEngine().init().wait(),
     ComicSourceManager().init().wait(),
+    OpenCC.init(),
   ];
   await Future.wait(futures);
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
@@ -50,6 +53,11 @@ Future<void> init() async {
   if (App.isAndroid) {
     handleLinks();
     handleTextShare();
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch(e) {
+      Log.error("Display Mode", "Failed to set high refresh rate: $e");
+    }
   }
   FlutterError.onError = (details) {
     Log.error("Unhandled Exception", "${details.exception}\n${details.stack}");

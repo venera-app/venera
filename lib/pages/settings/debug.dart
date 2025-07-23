@@ -18,8 +18,8 @@ class DebugPageState extends State<DebugPage> {
       slivers: [
         SliverAppbar(title: Text("Debug".tl)),
         _CallbackSetting(
-          title: "Reload Configs",
-          actionTitle: "Reload",
+          title: "Reload Configs".tl,
+          actionTitle: "Reload".tl,
           callback: () {
             ComicSourceManager().reload();
           },

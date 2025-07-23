@@ -98,14 +98,20 @@ bool FlutterWindow::OnCreate() {
         else
           result->Success(flutter::EncodableValue("No Proxy"));
         delete(res);
+        return;
       }
+#ifdef NDEBUG
       else if (call.method_name() == "heartBeat") {
+
           if (monitorThread == nullptr) {
               monitorThread = new std::thread{ monitorUIThread };
           }
           lastHeartbeat = std::chrono::steady_clock::now();
           result->Success();
+          return;
       }
+#endif
+      result->Success(); // Default response for unhandled method calls
   });
 
   flutter::EventChannel<> channel2(

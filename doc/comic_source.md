@@ -13,6 +13,14 @@ This document will describe how to write a comic source for Venera.
 
 Venera can display a list of comic sources in the app.
 
+You can use the following repo url:
+```
+https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json
+```
+The repo is maintained by the Venera team.
+
+> The link is a mirror of the original repo. To contribute your comic source, please visit the [original repo](https://github.com/venera-app/venera-configs)
+
 You should provide a repository url to let the app load the comic source list.
 The url should point to a JSON file that contains the list of comic sources.
 
@@ -32,12 +40,6 @@ The JSON file should have the following format:
 
 Only one of `url` and `filename` should be provided.
 The description field is optional.
-
-Currently, you can use the following repo url:
-```
-https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json
-```
-The repo is maintained by the Venera team, and you can submit a pull request to add your comic source.
 
 ## Create a Comic Source
 

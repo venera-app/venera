@@ -85,14 +85,21 @@ class _ReaderImagesState extends State<_ReaderImages> {
         child: CircularProgressIndicator(),
       );
     } else if (error != null) {
-      return NetworkError(
-        message: error!,
-        retry: () {
-          setState(() {
-            reader.isLoading = true;
-            error = null;
-          });
+      return GestureDetector(
+        onTap: () {
+          context.readerScaffold.openOrClose();
         },
+        child: SizedBox.expand(
+          child: NetworkError(
+            message: error!,
+            retry: () {
+              setState(() {
+                reader.isLoading = true;
+                error = null;
+              });
+            },
+          ),
+        ),
       );
     } else {
       if (reader.mode.isGallery) {
