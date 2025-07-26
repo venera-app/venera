@@ -6,6 +6,8 @@ class _SwitchSetting extends StatefulWidget {
     required this.settingKey,
     this.onChanged,
     this.subtitle,
+    this.comicId,
+    this.comicSource,
   });
 
   final String title;
@@ -16,6 +18,10 @@ class _SwitchSetting extends StatefulWidget {
 
   final String? subtitle;
 
+  final String? comicId;
+
+  final String? comicSource;
+
   @override
   State<_SwitchSetting> createState() => _SwitchSettingState();
 }
@@ -23,16 +29,33 @@ class _SwitchSetting extends StatefulWidget {
 class _SwitchSettingState extends State<_SwitchSetting> {
   @override
   Widget build(BuildContext context) {
-    assert(appdata.settings[widget.settingKey] is bool);
+    var value = widget.comicId == null
+        ? appdata.settings[widget.settingKey]
+        : appdata.settings.getReaderSetting(
+            widget.comicId!,
+            widget.comicSource!,
+            widget.settingKey,
+          );
+
+    assert(value is bool);
 
     return ListTile(
       title: Text(widget.title),
       subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
       trailing: Switch(
-        value: appdata.settings[widget.settingKey],
+        value: value,
         onChanged: (value) {
           setState(() {
-            appdata.settings[widget.settingKey] = value;
+            if (widget.comicId == null) {
+              appdata.settings[widget.settingKey] = value;
+            } else {
+              appdata.settings.setReaderSetting(
+                widget.comicId!,
+                widget.comicSource!,
+                widget.settingKey,
+                value,
+              );
+            }
           });
           appdata.saveData().then((_) {
             widget.onChanged?.call();
@@ -51,6 +74,8 @@ class SelectSetting extends StatelessWidget {
     required this.optionTranslation,
     this.onChanged,
     this.help,
+    this.comicId,
+    this.comicSource,
   });
 
   final String title;
@@ -62,6 +87,10 @@ class SelectSetting extends StatelessWidget {
   final VoidCallback? onChanged;
 
   final String? help;
+
+  final String? comicId;
+
+  final String? comicSource;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +105,8 @@ class SelectSetting extends StatelessWidget {
               optionTranslation: optionTranslation,
               onChanged: onChanged,
               help: help,
+              comicId: comicId,
+              comicSource: comicSource,
             );
           } else {
             return _EndSelectorSelectSetting(
@@ -84,6 +115,8 @@ class SelectSetting extends StatelessWidget {
               optionTranslation: optionTranslation,
               onChanged: onChanged,
               help: help,
+              comicId: comicId,
+              comicSource: comicSource,
             );
           }
         },
@@ -99,6 +132,8 @@ class _DoubleLineSelectSettings extends StatefulWidget {
     required this.optionTranslation,
     this.onChanged,
     this.help,
+    this.comicId,
+    this.comicSource,
   });
 
   final String title;
@@ -111,6 +146,10 @@ class _DoubleLineSelectSettings extends StatefulWidget {
 
   final String? help;
 
+  final String? comicId;
+
+  final String? comicSource;
+
   @override
   State<_DoubleLineSelectSettings> createState() =>
       _DoubleLineSelectSettingsState();
@@ -119,6 +158,14 @@ class _DoubleLineSelectSettings extends StatefulWidget {
 class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
   @override
   Widget build(BuildContext context) {
+    var value = widget.comicId == null
+        ? appdata.settings[widget.settingKey]
+        : appdata.settings.getReaderSetting(
+            widget.comicId!,
+            widget.comicSource!,
+            widget.settingKey,
+          );
+
     return ListTile(
       title: Row(
         children: [
@@ -134,9 +181,9 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
                   builder: (context) {
                     return ContentDialog(
                       title: "Help".tl,
-                      content: Text(widget.help!)
-                          .paddingHorizontal(16)
-                          .fixWidth(double.infinity),
+                      content: Text(
+                        widget.help!,
+                      ).paddingHorizontal(16).fixWidth(double.infinity),
                       actions: [
                         Button.filled(
                           onPressed: context.pop,
@@ -150,9 +197,7 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
             ),
         ],
       ),
-      subtitle: Text(
-          widget.optionTranslation[appdata.settings[widget.settingKey]] ??
-              "None"),
+      subtitle: Text(widget.optionTranslation[value] ?? "None"),
       trailing: const Icon(Icons.arrow_drop_down),
       onTap: () {
         var renderBox = context.findRenderObject() as RenderBox;
@@ -170,16 +215,27 @@ class _DoubleLineSelectSettingsState extends State<_DoubleLineSelectSettings> {
             Offset.zero & MediaQuery.of(context).size,
           ),
           items: widget.optionTranslation.keys
-              .map((key) => PopupMenuItem(
-                    value: key,
-                    height: App.isMobile ? 46 : 40,
-                    child: Text(widget.optionTranslation[key]!),
-                  ))
+              .map(
+                (key) => PopupMenuItem(
+                  value: key,
+                  height: App.isMobile ? 46 : 40,
+                  child: Text(widget.optionTranslation[key]!),
+                ),
+              )
               .toList(),
         ).then((value) {
           if (value != null) {
             setState(() {
-              appdata.settings[widget.settingKey] = value;
+              if (widget.comicId == null) {
+                appdata.settings[widget.settingKey] = value;
+              } else {
+                appdata.settings.setReaderSetting(
+                  widget.comicId!,
+                  widget.comicSource!,
+                  widget.settingKey,
+                  value,
+                );
+              }
             });
             appdata.saveData();
             widget.onChanged?.call();
@@ -197,6 +253,8 @@ class _EndSelectorSelectSetting extends StatefulWidget {
     required this.optionTranslation,
     this.onChanged,
     this.help,
+    this.comicId,
+    this.comicSource,
   });
 
   final String title;
@@ -209,6 +267,10 @@ class _EndSelectorSelectSetting extends StatefulWidget {
 
   final String? help;
 
+  final String? comicId;
+
+  final String? comicSource;
+
   @override
   State<_EndSelectorSelectSetting> createState() =>
       _EndSelectorSelectSettingState();
@@ -218,6 +280,13 @@ class _EndSelectorSelectSettingState extends State<_EndSelectorSelectSetting> {
   @override
   Widget build(BuildContext context) {
     var options = widget.optionTranslation;
+    var value = widget.comicId == null
+        ? appdata.settings[widget.settingKey]
+        : appdata.settings.getReaderSetting(
+            widget.comicId!,
+            widget.comicSource!,
+            widget.settingKey,
+          );
     return ListTile(
       title: Row(
         children: [
@@ -233,9 +302,9 @@ class _EndSelectorSelectSettingState extends State<_EndSelectorSelectSetting> {
                   builder: (context) {
                     return ContentDialog(
                       title: "Help".tl,
-                      content: Text(widget.help!)
-                          .paddingHorizontal(16)
-                          .fixWidth(double.infinity),
+                      content: Text(
+                        widget.help!,
+                      ).paddingHorizontal(16).fixWidth(double.infinity),
                       actions: [
                         Button.filled(
                           onPressed: context.pop,
@@ -250,12 +319,22 @@ class _EndSelectorSelectSettingState extends State<_EndSelectorSelectSetting> {
         ],
       ),
       trailing: Select(
-        current: options[appdata.settings[widget.settingKey]],
+        current: options[value],
         values: options.values.toList(),
         minWidth: 64,
         onTap: (index) {
           setState(() {
-            appdata.settings[widget.settingKey] = options.keys.elementAt(index);
+            var value = options.keys.elementAt(index);
+            if (widget.comicId == null) {
+              appdata.settings[widget.settingKey] = value;
+            } else {
+              appdata.settings.setReaderSetting(
+                widget.comicId!,
+                widget.comicSource!,
+                widget.settingKey,
+                value,
+              );
+            }
           });
           appdata.saveData();
           widget.onChanged?.call();
@@ -273,6 +352,8 @@ class _SliderSetting extends StatefulWidget {
     required this.min,
     required this.max,
     this.onChanged,
+    this.comicId,
+    this.comicSource,
   });
 
   final String title;
@@ -287,6 +368,10 @@ class _SliderSetting extends StatefulWidget {
 
   final VoidCallback? onChanged;
 
+  final String? comicId;
+
+  final String? comicSource;
+
   @override
   State<_SliderSetting> createState() => _SliderSettingState();
 }
@@ -294,28 +379,52 @@ class _SliderSetting extends StatefulWidget {
 class _SliderSettingState extends State<_SliderSetting> {
   @override
   Widget build(BuildContext context) {
+    var value =
+        (widget.comicId == null
+                ? appdata.settings[widget.settingsIndex]
+                : appdata.settings.getReaderSetting(
+                    widget.comicId!,
+                    widget.comicSource!,
+                    widget.settingsIndex,
+                  ))
+            .toDouble();
     return ListTile(
       title: Row(
         children: [
           Text(widget.title),
           const Spacer(),
-          Text(
-            appdata.settings[widget.settingsIndex].toString(),
-            style: ts.s12,
-          ),
+          Text(value.toString(), style: ts.s12),
         ],
       ),
       subtitle: Slider(
-        value: appdata.settings[widget.settingsIndex].toDouble(),
+        value: value,
         onChanged: (value) {
           if (value.toInt() == value) {
             setState(() {
-              appdata.settings[widget.settingsIndex] = value.toInt();
+              if (widget.comicId == null) {
+                appdata.settings[widget.settingsIndex] = value.toInt();
+              } else {
+                appdata.settings.setReaderSetting(
+                  widget.comicId!,
+                  widget.comicSource!,
+                  widget.settingsIndex,
+                  value.toInt(),
+                );
+              }
               appdata.saveData();
             });
           } else {
             setState(() {
-              appdata.settings[widget.settingsIndex] = value;
+              if (widget.comicId == null) {
+                appdata.settings[widget.settingsIndex] = value;
+              } else {
+                appdata.settings.setReaderSetting(
+                  widget.comicId!,
+                  widget.comicSource!,
+                  widget.settingsIndex,
+                  value,
+                );
+              }
               appdata.saveData();
             });
           }
@@ -402,10 +511,11 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
         color: Theme.of(context).colorScheme.surfaceContainer,
         boxShadow: const [
           BoxShadow(
-              color: Colors.black12,
-              blurRadius: 5,
-              offset: Offset(0, 2),
-              spreadRadius: 2)
+            color: Colors.black12,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+            spreadRadius: 2,
+          ),
         ],
       ),
       onReorder: (reorderFunc) {
@@ -435,7 +545,7 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
             label: Text("Add".tl),
             icon: const Icon(Icons.add),
             onPressed: showAddDialog,
-          )
+          ),
       ],
       body: view,
     );
@@ -445,12 +555,13 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
     Widget removeButton = Padding(
       padding: const EdgeInsets.only(right: 8),
       child: IconButton(
-          onPressed: () {
-            setState(() {
-              keys.remove(key);
-            });
-          },
-          icon: const Icon(Icons.delete_outline)),
+        onPressed: () {
+          setState(() {
+            keys.remove(key);
+          });
+        },
+        icon: const Icon(Icons.delete_outline),
+      ),
     );
 
     return ListTile(
@@ -458,10 +569,7 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
       key: Key(key),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          removeButton,
-          const Icon(Icons.drag_handle),
-        ],
+        children: [removeButton, const Icon(Icons.drag_handle)],
       ),
     );
   }
@@ -477,64 +585,66 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return ContentDialog(
-            title: "Add".tl,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: canAdd.entries
-                  .map(
-                    (e) => CheckboxListTile(
-                      value: selected.contains(e.key),
-                      title: Text(e.value),
-                      key: Key(e.key),
-                      onChanged: (value) {
-                        setState(() {
-                          if (value!) {
-                            selected.add(e.key);
-                          } else {
-                            selected.remove(e.key);
-                          }
-                        });
-                      },
-                    ),
-                  )
-                  .toList(),
-            ),
-            actions: [
-              if (selected.length < canAdd.length)
-                TextButton(
-                  child: Text("Select All".tl),
-                  onPressed: () {
-                    setState(() {
-                      selected = canAdd.keys.toList();
-                    });
-                  },
-                )
-              else
-                TextButton(
-                  child: Text("Deselect All".tl),
-                  onPressed: () {
-                    setState(() {
-                      selected.clear();
-                    });
-                  },
-                ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: selected.isNotEmpty
-                    ? () {
-                        this.setState(() {
-                          keys.addAll(selected);
-                        });
-                        Navigator.pop(context);
-                      }
-                    : null,
-                child: Text("Add".tl),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return ContentDialog(
+              title: "Add".tl,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: canAdd.entries
+                    .map(
+                      (e) => CheckboxListTile(
+                        value: selected.contains(e.key),
+                        title: Text(e.value),
+                        key: Key(e.key),
+                        onChanged: (value) {
+                          setState(() {
+                            if (value!) {
+                              selected.add(e.key);
+                            } else {
+                              selected.remove(e.key);
+                            }
+                          });
+                        },
+                      ),
+                    )
+                    .toList(),
               ),
-            ],
-          );
-        });
+              actions: [
+                if (selected.length < canAdd.length)
+                  TextButton(
+                    child: Text("Select All".tl),
+                    onPressed: () {
+                      setState(() {
+                        selected = canAdd.keys.toList();
+                      });
+                    },
+                  )
+                else
+                  TextButton(
+                    child: Text("Deselect All".tl),
+                    onPressed: () {
+                      setState(() {
+                        selected.clear();
+                      });
+                    },
+                  ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: selected.isNotEmpty
+                      ? () {
+                          this.setState(() {
+                            keys.addAll(selected);
+                          });
+                          Navigator.pop(context);
+                        }
+                      : null,
+                  child: Text("Add".tl),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
