@@ -117,16 +117,25 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
           _futurePosition ??= currentLocation;
           double k = (_futurePosition! - currentLocation).abs() / 1600 + 1;
           _futurePosition = _futurePosition! + pointerSignal.scrollDelta.dy * k;
+          var beforeOffset = (_futurePosition! - currentLocation).abs();
           _futurePosition = _futurePosition!.clamp(
             _controller.position.minScrollExtent,
             _controller.position.maxScrollExtent,
           );
+          var afterOffset = (_futurePosition! - currentLocation).abs();
           if (_futurePosition == old) return;
           var target = _futurePosition!;
+          var duration = _fastAnimationDuration;
+          if (afterOffset < beforeOffset) {
+            duration = duration * (afterOffset / beforeOffset);
+            if (duration < Duration(milliseconds: 10)) {
+              duration = Duration(milliseconds: 10);
+            }
+          }
           _controller
               .animateTo(
             _futurePosition!,
-            duration: _fastAnimationDuration,
+            duration: duration,
             curve: Curves.linear,
           )
               .then((_) {
