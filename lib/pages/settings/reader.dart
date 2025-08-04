@@ -49,6 +49,13 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           comicId: widget.comicId,
           comicSource: widget.comicSource,
         ).toSliver(),
+        _SwitchSetting(
+          title: "Enable comic specific settings".tl,
+          settingKey: "enableComicSpecificSettings",
+          onChanged: () {
+            widget.onChanged?.call("enableComicSpecificSettings");
+          },
+        ).toSliver(),
         SelectSetting(
           title: "Reading mode".tl,
           settingKey: "readerMode",

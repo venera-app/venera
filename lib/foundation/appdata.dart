@@ -152,6 +152,7 @@ class Settings with ChangeNotifier {
     'blockedWords': [],
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
+    'enableComicSpecificSettings': false,
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
     'readerScreenPicNumberForLandscape': 1, // 1 - 5
     'readerScreenPicNumberForPortrait': 1, // 1 - 5
@@ -211,6 +212,12 @@ class Settings with ChangeNotifier {
   }
 
   dynamic getReaderSetting(String comicId, String sourceKey, String key) {
+    if (key == 'enableComicSpecificSettings') {
+      return _data['enableComicSpecificSettings'];
+    }
+    if (_data['enableComicSpecificSettings'] == false) {
+      return _data[key];
+    }
     return _data['comicSpecificSettings']["$comicId@$sourceKey"]?[key] ??
         _data[key];
   }
@@ -221,6 +228,16 @@ class Settings with ChangeNotifier {
     String key,
     dynamic value,
   ) {
+    if (key == 'enableComicSpecificSettings') {
+      _data['enableComicSpecificSettings'] = value;
+      notifyListeners();
+      return;
+    }
+    if (_data['enableComicSpecificSettings'] == false) {
+      _data[key] = value;
+      notifyListeners();
+      return;
+    }
     (_data['comicSpecificSettings'] as Map<String, dynamic>).putIfAbsent(
       "$comicId@$sourceKey",
       () => <String, dynamic>{},
