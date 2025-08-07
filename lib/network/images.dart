@@ -180,7 +180,7 @@ abstract class ImageDownloader {
         }
 
         if (configs['onResponse'] is JSInvokable) {
-          buffer = (configs['onResponse'] as JSInvokable)([buffer]);
+          buffer = (configs['onResponse'] as JSInvokable)([buffer]).cast<int>();
           (configs['onResponse'] as JSInvokable).free();
         }
 
