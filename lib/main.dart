@@ -237,6 +237,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             );
           };
           if (widget != null) {
+            /// 如果无法检测到状态栏高度设定指定高度
+            /// https://github.com/flutter/flutter/issues/161086
+            var isPaddingCheckError =
+                MediaQuery.of(context).viewPadding.top <= 0 ||
+                MediaQuery.of(context).viewPadding.top > 50;
+
+            if (isPaddingCheckError) {
+              widget = MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    viewPadding: const EdgeInsets.only(
+                      top: 15,
+                      bottom: 15,
+                    ),
+                    padding: const EdgeInsets.only(
+                      top: 15,
+                      bottom: 15,
+                    ),
+                  ),
+                  child: widget);
+            }
+
             widget = OverlayWidget(widget);
             if (App.isDesktop) {
               widget = Shortcuts(
