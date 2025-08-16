@@ -88,7 +88,7 @@ Future<void> runHeadlessMode(List<String> args) async {
           data['comic'] = {
             'id': progress.comic!.id,
             'name': progress.comic!.name,
-            'cover': progress.comic!.coverPath,
+            'coverUrl': progress.comic!.coverPath,
             'author': progress.comic!.author,
             'type': progress.comic!.type.sourceKey,
             'updateTime': progress.comic!.updateTime,

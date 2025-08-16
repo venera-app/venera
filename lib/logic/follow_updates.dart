@@ -133,7 +133,7 @@ Future<String> getUpdatedComicsAsJson(String folder) async {
   var jsonList = updatedComics.map((c) => {
     'id': c.id,
     'name': c.name,
-    'cover': c.coverPath,
+    'coverUrl': c.coverPath,
     'author': c.author,
     'type': c.type.sourceKey,
     'updateTime': c.updateTime,
