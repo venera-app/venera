@@ -9,8 +9,10 @@ class UpdateProgress {
   final int errors;
   final int updated;
   final FavoriteItemWithUpdateInfo? comic;
+  final String? errorMessage;
 
-  UpdateProgress(this.total, this.current, this.errors, this.updated, [this.comic]);
+  UpdateProgress(this.total, this.current, this.errors, this.updated,
+      [this.comic, this.errorMessage]);
 }
 
 void updateFolderBase(
@@ -45,12 +47,12 @@ void updateFolderBase(
   current = 0;
   stream.add(UpdateProgress(total, current, errors, updated));
 
-  Future<void> updateComic(FavoriteItemWithUpdateInfo c) async {
+  Future<String?> updateComic(FavoriteItemWithUpdateInfo c) async {
     int retries = 3;
     while (true) {
       try {
         var comicSource = c.type.comicSource;
-        if (comicSource == null) return;
+        if (comicSource == null) return "Comic source not found";
         var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
 
         var newTags = <String>[];
@@ -90,13 +92,13 @@ void updateFolderBase(
         } else {
           LocalFavoritesManager().updateCheckTime(folder, c.id, c.type);
         }
-        return;
+        return null;
       } catch (e, s) {
         Log.error("Check Updates", e, s);
         retries--;
         if (retries == 0) {
           errors++;
-          return;
+          return e.toString();
         }
       }
     }
@@ -104,9 +106,9 @@ void updateFolderBase(
 
   var futures = <Future>[];
   for (var comic in comicsToUpdate) {
-    var future = updateComic(comic).then((_) {
+    var future = updateComic(comic).then((error) {
       current++;
-      stream.add(UpdateProgress(total, current, errors, updated, comic));
+      stream.add(UpdateProgress(total, current, errors, updated, comic, error));
     });
     futures.add(future);
   }

@@ -79,7 +79,13 @@ Future<void> runHeadlessMode(List<String> args) async {
         cliPrint({'status': 'error', 'message': 'Follow updates folder is not configured.'});
         exit(1);
       }
+      int total = 0;
+      int updated = 0;
+      int errors = 0;
       await for (var progress in updateFolder(folder, true)) {
+        total = progress.total;
+        updated = progress.updated;
+        errors = progress.errors;
         Map<String, dynamic> data = {
           'current': progress.current,
           'total': progress.total,
@@ -95,17 +101,30 @@ Future<void> runHeadlessMode(List<String> args) async {
             'tags': progress.comic!.tags,
           };
         }
+        var message = 'Progress';
+        if (progress.errorMessage != null) {
+          message = 'ProgressError';
+          data['error'] = progress.errorMessage;
+        }
         cliPrint({
           'status': 'running',
-          'message': 'Progress',
+          'message': message,
           'data': data,
         });
       }
-      cliPrint({'status': 'running', 'message': 'Update check complete.'});
+      cliPrint({
+        'status': 'running',
+        'message': 'Update check complete.',
+        'data': {
+          'total': total,
+          'updated': updated,
+          'errors': errors,
+        }
+      });
       await Future.delayed(const Duration(milliseconds: 500));
       var json = await getUpdatedComicsAsJson(folder);
       cliPrint({
-        'status': 'success',
+        'status': errors > 0 ? 'error' : 'success',
         'message': 'Updated comics list.',
         'data': jsonDecode(json),
       });
