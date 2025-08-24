@@ -348,6 +348,99 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       text = "P${context.reader.page}";
     }
 
+    final buttons = [
+      Tooltip(
+        message: "Collect the image".tl,
+        child: IconButton(
+          icon: Icon(isLiked() ? Icons.favorite : Icons.favorite_border),
+          onPressed: addImageFavorite,
+        ),
+      ),
+      if (App.isDesktop)
+        Tooltip(
+          message: "${"Full Screen".tl}(F12)",
+          child: IconButton(
+            icon: const Icon(Icons.fullscreen),
+            onPressed: () {
+              context.reader.fullscreen();
+            },
+          ),
+        ),
+      if (App.isAndroid)
+        Tooltip(
+          message: "Screen Rotation".tl,
+          child: IconButton(
+            icon: () {
+              if (rotation == null) {
+                return const Icon(Icons.screen_rotation);
+              } else if (rotation == false) {
+                return const Icon(Icons.screen_lock_portrait);
+              } else {
+                return const Icon(Icons.screen_lock_landscape);
+              }
+            }.call(),
+            onPressed: () {
+              if (rotation == null) {
+                setState(() {
+                  rotation = false;
+                });
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.portraitUp,
+                  DeviceOrientation.portraitDown,
+                ]);
+              } else if (rotation == false) {
+                setState(() {
+                  rotation = true;
+                });
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.landscapeLeft,
+                  DeviceOrientation.landscapeRight,
+                ]);
+              } else {
+                setState(() {
+                  rotation = null;
+                });
+                SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+              }
+            },
+          ),
+        ),
+      Tooltip(
+        message: "Auto Page Turning".tl,
+        child: IconButton(
+          icon: context.reader.autoPageTurningTimer != null
+              ? const Icon(Icons.timer)
+              : const Icon(Icons.timer_sharp),
+          onPressed: () {
+            context.reader.autoPageTurning(
+              context.reader.cid,
+              context.reader.type,
+            );
+            update();
+          },
+        ),
+      ),
+      if (context.reader.widget.chapters != null)
+        Tooltip(
+          message: "Chapters".tl,
+          child: IconButton(
+            icon: const Icon(Icons.library_books),
+            onPressed: openChapterDrawer,
+          ),
+        ),
+      Tooltip(
+        message: "Save Image".tl,
+        child: IconButton(
+          icon: const Icon(Icons.download),
+          onPressed: saveCurrentImage,
+        ),
+      ),
+      Tooltip(
+        message: "Share".tl,
+        child: IconButton(icon: const Icon(Icons.share), onPressed: share),
+      ),
+    ];
+
     Widget child = SizedBox(
       height: kBottomBarHeight,
       child: Column(
@@ -396,118 +489,26 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               const SizedBox(width: 8),
             ],
           ),
-          Row(
-            children: [
-              const SizedBox(width: 16),
-              Container(
-                height: 24,
-                padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(child: Text(text)),
-              ),
-              const Spacer(),
-              Tooltip(
-                message: "Collect the image".tl,
-                child: IconButton(
-                  icon: Icon(
-                    isLiked() ? Icons.favorite : Icons.favorite_border,
-                  ),
-                  onPressed: addImageFavorite,
-                ),
-              ),
-              if (App.isDesktop)
-                Tooltip(
-                  message: "${"Full Screen".tl}(F12)",
-                  child: IconButton(
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () {
-                      context.reader.fullscreen();
-                    },
-                  ),
-                ),
-              if (App.isAndroid)
-                Tooltip(
-                  message: "Screen Rotation".tl,
-                  child: IconButton(
-                    icon: () {
-                      if (rotation == null) {
-                        return const Icon(Icons.screen_rotation);
-                      } else if (rotation == false) {
-                        return const Icon(Icons.screen_lock_portrait);
-                      } else {
-                        return const Icon(Icons.screen_lock_landscape);
-                      }
-                    }.call(),
-                    onPressed: () {
-                      if (rotation == null) {
-                        setState(() {
-                          rotation = false;
-                        });
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.portraitUp,
-                          DeviceOrientation.portraitDown,
-                        ]);
-                      } else if (rotation == false) {
-                        setState(() {
-                          rotation = true;
-                        });
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.landscapeLeft,
-                          DeviceOrientation.landscapeRight,
-                        ]);
-                      } else {
-                        setState(() {
-                          rotation = null;
-                        });
-                        SystemChrome.setPreferredOrientations(
-                          DeviceOrientation.values,
-                        );
-                      }
-                    },
-                  ),
-                ),
-              Tooltip(
-                message: "Auto Page Turning".tl,
-                child: IconButton(
-                  icon: context.reader.autoPageTurningTimer != null
-                      ? const Icon(Icons.timer)
-                      : const Icon(Icons.timer_sharp),
-                  onPressed: () {
-                    context.reader.autoPageTurning(
-                      context.reader.cid,
-                      context.reader.type,
-                    );
-                    update();
-                  },
-                ),
-              ),
-              if (context.reader.widget.chapters != null)
-                Tooltip(
-                  message: "Chapters".tl,
-                  child: IconButton(
-                    icon: const Icon(Icons.library_books),
-                    onPressed: openChapterDrawer,
-                  ),
-                ),
-              Tooltip(
-                message: "Save Image".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.download),
-                  onPressed: saveCurrentImage,
-                ),
-              ),
-              Tooltip(
-                message: "Share".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: share,
-                ),
-              ),
-              const SizedBox(width: 4),
-            ],
+          LayoutBuilder(
+            builder: (context, constrains) {
+              return Row(
+                children: [
+                  if ((constrains.maxWidth - buttons.length * 42) > 80)
+                    Container(
+                      height: 24,
+                      padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(child: Text(text)),
+                    ).paddingLeft(16),
+                  const Spacer(),
+                  ...buttons,
+                  const SizedBox(width: 4),
+                ],
+              );
+            },
           ),
         ],
       ),
