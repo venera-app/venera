@@ -190,6 +190,7 @@ class Settings with ChangeNotifier {
     'reverseChapterOrder': false,
     'showSystemStatusBar': false,
     'comicSpecificSettings': <String, Map<String, dynamic>>{},
+    'ignoreBadCertificate': false,
   };
 
   operator [](String key) {

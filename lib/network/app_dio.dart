@@ -173,6 +173,7 @@ class RHttpAdapter implements HttpClientAdapter {
       dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
       tlsSettings: rhttp.TlsSettings(
         sni: appdata.settings['sni'] != false,
+        verifyCertificates: appdata.settings['ignoreBadCertificate'] != true,
       ),
     );
   }

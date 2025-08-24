@@ -31,6 +31,10 @@ class DebugPageState extends State<DebugPage> {
           },
           actionTitle: 'Open'.tl,
         ).toSliver(),
+        _SwitchSetting(
+          title: "Ignore Certificate Errors".tl,
+          settingKey: "ignoreBadCertificate",
+        ).toSliver(),
         SliverToBoxAdapter(
           child: Column(
             children: [
