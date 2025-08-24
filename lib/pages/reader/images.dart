@@ -638,27 +638,52 @@ class _ContinuousModeState extends State<_ContinuousMode>
     cacheImages(page);
   }
 
-  double? futurePosition;
+  double? _futurePosition;
 
   void smoothTo(double offset) {
-    futurePosition ??= scrollController.offset;
-    if (futurePosition! > scrollController.position.maxScrollExtent &&
-        offset > 0) {
-      return;
-    } else if (futurePosition! < scrollController.position.minScrollExtent &&
-        offset < 0) {
+    if (HardwareKeyboard.instance.isShiftPressed) {
       return;
     }
-    futurePosition = futurePosition! + offset * 1.2;
-    futurePosition = futurePosition!.clamp(
+    var currentLocation = scrollController.position.pixels;
+    var old = _futurePosition;
+    _futurePosition ??= currentLocation;
+    double k = (_futurePosition! - currentLocation).abs() / 1600 + 1;
+    final customSpeed = appdata.settings.getReaderSetting(
+      context.reader.cid,
+      context.reader.type.sourceKey,
+      "readerScrollSpeed",
+    );
+    if (customSpeed is num) {
+      k *= customSpeed;
+    }
+    _futurePosition = _futurePosition! + offset * k;
+    var beforeOffset = (_futurePosition! - currentLocation).abs();
+    _futurePosition = _futurePosition!.clamp(
       scrollController.position.minScrollExtent,
       scrollController.position.maxScrollExtent,
     );
-    scrollController.animateTo(
-      futurePosition!,
-      duration: const Duration(milliseconds: 200),
+    var afterOffset = (_futurePosition! - currentLocation).abs();
+    if (_futurePosition == old) return;
+    var target = _futurePosition!;
+    var duration = const Duration(milliseconds: 160);
+    if (afterOffset < beforeOffset) {
+      duration = duration * (afterOffset / beforeOffset);
+      if (duration < Duration(milliseconds: 10)) {
+        duration = Duration(milliseconds: 10);
+      }
+    }
+    scrollController
+        .animateTo(
+      _futurePosition!,
+      duration: duration,
       curve: Curves.linear,
-    );
+    )
+        .then((_) {
+      var current = scrollController.position.pixels;
+      if (current == target && current == _futurePosition) {
+        _futurePosition = null;
+      }
+    });
   }
 
   void onPointerSignal(PointerSignalEvent event) {
@@ -787,7 +812,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
             disableScroll = true;
           });
         }
-        futurePosition = null;
+        _futurePosition = null;
         if (_isMouseScrolling) {
           setState(() {
             _isMouseScrolling = false;
@@ -1009,7 +1034,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
   @override
   void toPage(int page) {
     itemScrollController.jumpTo(index: page);
-    futurePosition = null;
+    _futurePosition = null;
   }
 
   @override

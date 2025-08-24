@@ -191,6 +191,7 @@ class Settings with ChangeNotifier {
     'showSystemStatusBar': false,
     'comicSpecificSettings': <String, Map<String, dynamic>>{},
     'ignoreBadCertificate': false,
+    'readerScrollSpeed': 1.0, // 0.5 - 3.0
   };
 
   operator [](String key) {

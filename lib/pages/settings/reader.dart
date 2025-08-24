@@ -177,6 +177,21 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ),
         ),
+        SliverAnimatedVisibility(
+          visible: appdata.settings['readerMode']!.startsWith('continuous'),
+          child: _SliderSetting(
+            title: "Mouse scroll speed".tl,
+            settingsIndex: "readerScrollSpeed",
+            interval: 0.1,
+            min: 0.5,
+            max: 3,
+            onChanged: () {
+              widget.onChanged?.call("readerScrollSpeed");
+            },
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
+          ),
+        ),
         _SwitchSetting(
           title: 'Double tap to zoom'.tl,
           settingKey: 'enableDoubleTapToZoom',
