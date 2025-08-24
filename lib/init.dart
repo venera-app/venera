@@ -35,7 +35,7 @@ extension _FutureInit<T> on Future<T> {
 }
 
 Future<void> init() async {
-  await App.init();
+  await App.init().wait();
   await SingleInstanceCookieJar.createInstance();
   try {
     var futures = [
