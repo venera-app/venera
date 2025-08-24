@@ -41,11 +41,11 @@ Future<void> init() async {
     var futures = [
       Rhttp.init(),
       App.initComponents(),
-      SAFTaskWorker().init(),
-      AppTranslation.init(),
-      TagsTranslation.readData(),
-      JsEngine().init(),
-      ComicSourceManager().init(),
+      SAFTaskWorker().init().wait(),
+      AppTranslation.init().wait(),
+      TagsTranslation.readData().wait(),
+      JsEngine().init().wait(),
+      ComicSourceManager().init().wait(),
       OpenCC.init(),
     ];
     await Future.wait(futures);
