@@ -19,17 +19,57 @@ class ReaderSettings extends StatefulWidget {
 class _ReaderSettingsState extends State<ReaderSettings> {
   @override
   Widget build(BuildContext context) {
+    final comicId = widget.comicId;
+    final sourceKey = widget.comicSource;
+    final key = "$comicId@$sourceKey";
+
+    bool isEnabledSpecificSettings =
+        comicId != null &&
+        appdata.settings.isComicSpecificSettingsEnabled(comicId, sourceKey);
+
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("Reading".tl)),
+        if (comicId != null && sourceKey != null)
+          SliverMainAxisGroup(
+            slivers: [
+              SwitchListTile(
+                title: Text("Enable comic specific settings".tl),
+                value: isEnabledSpecificSettings,
+                onChanged: (b) {
+                  setState(() {
+                    appdata.settings.setEnabledComicSpecificSettings(
+                      comicId,
+                      sourceKey,
+                      b,
+                    );
+                  });
+                },
+              ).toSliver(),
+              if (isEnabledSpecificSettings)
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        appdata.settings.resetComicReaderSettings(key);
+                      });
+                    },
+                    child: Text(
+                      "Clear specific reader settings for this comic".tl,
+                    ),
+                  ),
+                ).toSliver(),
+              Divider().toSliver(),
+            ],
+          ),
         _SwitchSetting(
           title: "Tap to turn Pages".tl,
           settingKey: "enableTapToTurnPages",
           onChanged: () {
             widget.onChanged?.call("enableTapToTurnPages");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SwitchSetting(
           title: "Reverse tap to turn Pages".tl,
@@ -37,8 +77,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call("reverseTapToTurnPages");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SwitchSetting(
           title: "Page animation".tl,
@@ -46,15 +86,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call("enablePageAnimation");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
-        ).toSliver(),
-        _SwitchSetting(
-          title: "Enable comic specific settings".tl,
-          settingKey: "enableComicSpecificSettings",
-          onChanged: () {
-            widget.onChanged?.call("enableComicSpecificSettings");
-          },
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         SelectSetting(
           title: "Reading mode".tl,
@@ -78,8 +111,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             }
             widget.onChanged?.call("readerMode");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SliderSetting(
           title: "Auto page turning interval".tl,
@@ -91,8 +124,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             setState(() {});
             widget.onChanged?.call("autoPageTurningInterval");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         SliverAnimatedVisibility(
           visible: appdata.settings['readerMode']!.startsWith('gallery'),
@@ -108,8 +141,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
               setState(() {});
               widget.onChanged?.call("readerScreenPicNumberForLandscape");
             },
-            comicId: widget.comicId,
-            comicSource: widget.comicSource,
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ),
         ),
         SliverAnimatedVisibility(
@@ -125,8 +158,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             onChanged: () {
               widget.onChanged?.call("readerScreenPicNumberForPortrait");
             },
-            comicId: widget.comicId,
-            comicSource: widget.comicSource,
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ),
         ),
         SliverAnimatedVisibility(
@@ -140,8 +173,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             onChanged: () {
               widget.onChanged?.call("showSingleImageOnFirstPage");
             },
-            comicId: widget.comicId,
-            comicSource: widget.comicSource,
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ),
         ),
         _SwitchSetting(
@@ -151,8 +184,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             setState(() {});
             widget.onChanged?.call('enableDoubleTapToZoom');
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SwitchSetting(
           title: 'Long press to zoom'.tl,
@@ -161,8 +194,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             setState(() {});
             widget.onChanged?.call('enableLongPressToZoom');
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         SliverAnimatedVisibility(
           visible: appdata.settings['enableLongPressToZoom'] == true,
@@ -173,8 +206,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
               "press": "Press position".tl,
               "center": "Screen center".tl,
             },
-            comicId: widget.comicId,
-            comicSource: widget.comicSource,
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ),
         ),
         _SwitchSetting(
@@ -184,8 +217,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call('limitImageWidth');
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         if (App.isAndroid)
           _SwitchSetting(
@@ -194,8 +227,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
             onChanged: () {
               widget.onChanged?.call('enableTurnPageByVolumeKey');
             },
-            comicId: widget.comicId,
-            comicSource: widget.comicSource,
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
           ).toSliver(),
         _SwitchSetting(
           title: "Display time & battery info in reader".tl,
@@ -203,8 +236,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call("enableClockAndBatteryInfoInReader");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SwitchSetting(
           title: "Show system status bar".tl,
@@ -212,8 +245,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call("showSystemStatusBar");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         SelectSetting(
           title: "Quick collect image".tl,
@@ -229,8 +262,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           help:
               "On the image browsing page, you can quickly collect images by sliding horizontally or vertically according to your reading mode"
                   .tl,
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _CallbackSetting(
           title: "Custom Image Processing".tl,
@@ -243,8 +276,8 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           interval: 1,
           min: 1,
           max: 16,
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
         _SwitchSetting(
           title: "Show Page Number".tl,
@@ -252,39 +285,9 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           onChanged: () {
             widget.onChanged?.call("showPageNumberInReader");
           },
-          comicId: widget.comicId,
-          comicSource: widget.comicSource,
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
-        // reset button
-        SliverToBoxAdapter(
-          child: TextButton(
-            onPressed: () {
-              if (widget.comicId == null) {
-                appdata.settings.resetAllComicReaderSettings();
-              } else {
-                var keys = appdata
-                    .settings['comicSpecificSettings']["${widget.comicId}@${widget.comicSource}"]
-                    ?.keys;
-                appdata.settings.resetComicReaderSettings(
-                  widget.comicId!,
-                  widget.comicSource!,
-                );
-                if (keys != null) {
-                  setState(() {});
-                  for (var key in keys) {
-                    widget.onChanged?.call(key);
-                  }
-                }
-              }
-            },
-            child: Text(
-              (widget.comicId == null
-                      ? "Clear specific reader settings for all comics"
-                      : "Clear specific reader settings for this comic")
-                  .tl,
-            ),
-          ),
-        ),
       ],
     );
   }

@@ -409,7 +409,7 @@
     "Export logs": "导出日志",
     "Clear specific reader settings for all comics": "清除所有漫画的特殊阅读设置",
     "Clear specific reader settings for this comic": "清除该漫画的特殊阅读设置",
-    "Enable comic specific settings": "为每本漫画保存特定设置"
+    "Enable comic specific settings": "启用此漫画特定设置"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -821,6 +821,6 @@
     "Export logs": "匯出日誌",
     "Clear specific reader settings for all comics": "清除所有漫畫的特殊閱讀設定",
     "Clear specific reader settings for this comic": "清除該漫畫的特殊閱讀設定",
-    "Enable comic specific settings": "為每本漫畫保存特定設定"
+    "Enable comic specific settings": "啟用此漫畫特定設定"
   }
 }

@@ -138,14 +138,14 @@ class _GalleryModeState extends State<_GalleryMode>
   /// [totalPages] is the total number of pages in the current chapter.
   /// More than one images can be displayed on one page.
   int get totalPages {
-    if (!reader.showSingleImageOnFirstPage(reader.cid, reader.type)) {
+    if (!reader.showSingleImageOnFirstPage()) {
       return (reader.images!.length /
-              reader.imagesPerPage(reader.cid, reader.type))
+              reader.imagesPerPage())
           .ceil();
     } else {
       return 1 +
           ((reader.images!.length - 1) /
-                  reader.imagesPerPage(reader.cid, reader.type))
+                  reader.imagesPerPage())
               .ceil();
     }
   }
@@ -169,8 +169,8 @@ class _GalleryModeState extends State<_GalleryMode>
 
   /// Get the range of images for the given page. [page] is 1-based.
   (int start, int end) getPageImagesRange(int page) {
-    var imagesPerPage = reader.imagesPerPage(reader.cid, reader.type);
-    if (reader.showSingleImageOnFirstPage(reader.cid, reader.type)) {
+    var imagesPerPage = reader.imagesPerPage();
+    if (reader.showSingleImageOnFirstPage()) {
       if (page == 1) {
         return (0, 1);
       } else {
@@ -259,7 +259,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             photoViewControllers[index] ??= PhotoViewController();
 
-            if (reader.imagesPerPage(reader.cid, reader.type) == 1 ||
+            if (reader.imagesPerPage() == 1 ||
                 pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
                 filterQuality: FilterQuality.medium,
@@ -301,11 +301,11 @@ class _GalleryModeState extends State<_GalleryMode>
         onPageChanged: (i) {
           if (i == 0) {
             if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
-              reader.toPage(reader.cid, reader.type, 1);
+              reader.toPage(1);
             }
           } else if (i == totalPages + 1) {
             if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
-              reader.toPage(reader.cid, reader.type, totalPages);
+              reader.toPage(totalPages);
             }
           } else {
             reader.setPage(i);
@@ -485,9 +485,9 @@ class _GalleryModeState extends State<_GalleryMode>
         keyRepeatTimer = null;
       }
       if (forward == true) {
-        reader.toPage(reader.cid, reader.type, reader.page + 1);
+        reader.toPage(reader.page + 1);
       } else if (forward == false) {
-        reader.toPage(reader.cid, reader.type, reader.page - 1);
+        reader.toPage(reader.page - 1);
       }
     }
     if (event is KeyRepeatEvent && keyRepeatTimer == null) {
@@ -500,9 +500,9 @@ class _GalleryModeState extends State<_GalleryMode>
             timer.cancel();
             return;
           } else if (forward == true) {
-            reader.toPage(reader.cid, reader.type, reader.page + 1);
+            reader.toPage(reader.page + 1);
           } else if (forward == false) {
-            reader.toPage(reader.cid, reader.type, reader.page - 1);
+            reader.toPage(reader.page - 1);
           }
         },
       );
@@ -534,7 +534,7 @@ class _GalleryModeState extends State<_GalleryMode>
   @override
   String? getImageKeyByOffset(Offset offset) {
     String? imageKey;
-    if (reader.imagesPerPage(reader.cid, reader.type) == 1) {
+    if (reader.imagesPerPage() == 1) {
       imageKey = reader.images![reader.page - 1];
     } else {
       for (var imageState in imageStates) {

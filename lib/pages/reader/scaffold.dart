@@ -453,18 +453,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 onPressed: () => !isReversed
                     ? context.reader.chapter > 1
                           ? context.reader.toPrevChapter()
-                          : context.reader.toPage(
-                              context.reader.cid,
-                              context.reader.type,
-                              1,
-                            )
+                          : context.reader.toPage(1)
                     : context.reader.chapter < context.reader.maxChapter
                     ? context.reader.toNextChapter()
-                    : context.reader.toPage(
-                        context.reader.cid,
-                        context.reader.type,
-                        context.reader.maxPage,
-                      ),
+                    : context.reader.toPage(context.reader.maxPage),
                 icon: const Icon(Icons.first_page),
               ),
               Expanded(child: buildSlider()),
@@ -472,18 +464,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                 onPressed: () => !isReversed
                     ? context.reader.chapter < context.reader.maxChapter
                           ? context.reader.toNextChapter()
-                          : context.reader.toPage(
-                              context.reader.cid,
-                              context.reader.type,
-                              context.reader.maxPage,
-                            )
+                          : context.reader.toPage(context.reader.maxPage)
                     : context.reader.chapter > 1
                     ? context.reader.toPrevChapter()
-                    : context.reader.toPage(
-                        context.reader.cid,
-                        context.reader.type,
-                        1,
-                      ),
+                    : context.reader.toPage(1),
                 icon: const Icon(Icons.last_page),
               ),
               const SizedBox(width: 8),
@@ -546,11 +530,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       reversed: isReversed,
       divisions: (context.reader.maxPage - 1).clamp(2, 1 << 16),
       onChanged: (i) {
-        context.reader.toPage(
-          context.reader.cid,
-          context.reader.type,
-          i.toInt(),
-        );
+        context.reader.toPage(i.toInt());
       },
     );
   }
@@ -660,10 +640,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               context.reader.type.sourceKey,
               key,
             )) {
-              context.reader.handleVolumeEvent(
-                context.reader.cid,
-                context.reader.type,
-              );
+              context.reader.handleVolumeEvent();
             } else {
               context.reader.stopVolumeEvent();
             }

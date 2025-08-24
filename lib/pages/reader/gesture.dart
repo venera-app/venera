@@ -131,11 +131,11 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     }
     if (context.reader.mode.key.startsWith('gallery')) {
       if (forward) {
-        if (!context.reader.toNextPage(reader.cid, reader.type) && !context.reader.isLastChapterOfGroup) {
+        if (!context.reader.toNextPage() && !context.reader.isLastChapterOfGroup) {
           context.reader.toNextChapter();
         }
       } else {
-        if (!context.reader.toPrevPage(reader.cid, reader.type) && !context.reader.isFirstChapterOfGroup) {
+        if (!context.reader.toPrevPage() && !context.reader.isFirstChapterOfGroup) {
           context.reader.toPrevChapter();
         }
       }
@@ -209,12 +209,12 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
           isBottom = true;
         }
         bool isCenter = false;
-        var prev = () => context.reader.toPrevPage(context.reader.cid, context.reader.type);
-        var next = () => context.reader.toNextPage(context.reader.cid, context.reader.type);
+        var prev = () => context.reader.toPrevPage();
+        var next = () => context.reader.toNextPage();
         if (appdata.settings.getReaderSetting(
             reader.cid, reader.type.sourceKey, 'reverseTapToTurnPages')) {
-          prev = () => context.reader.toNextPage(context.reader.cid, context.reader.type);
-          next = () => context.reader.toPrevPage(context.reader.cid, context.reader.type);
+          prev = () => context.reader.toNextPage();
+          next = () => context.reader.toPrevPage();
         }
         switch (context.reader.mode) {
           case ReaderMode.galleryLeftToRight:
