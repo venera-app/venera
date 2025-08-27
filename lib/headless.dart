@@ -8,6 +8,7 @@ import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/init.dart';
 import 'package:venera/logic/follow_updates.dart';
 import 'package:venera/foundation/appdata.dart';
+import 'package:venera/foundation/favorites.dart';
 
 void cliPrint(Map<String, dynamic> data) {
   print('[CLI PRINT] ${jsonEncode(data)}');
@@ -79,55 +80,110 @@ Future<void> runHeadlessMode(List<String> args) async {
         cliPrint({'status': 'error', 'message': 'Follow updates folder is not configured.'});
         exit(1);
       }
-      int total = 0;
-      int updated = 0;
-      int errors = 0;
-      await for (var progress in updateFolder(folder, true)) {
-        total = progress.total;
-        updated = progress.updated;
-        errors = progress.errors;
+
+      var updateIndex = args.indexOf('--update-comic-by-id-type');
+      if (updateIndex != -1) {
+        var id = args[updateIndex + 1];
+        var type = args[updateIndex + 2];
+        var comics = LocalFavoritesManager().getComicsWithUpdatesInfo(folder);
+        var comic = comics.firstWhere((c) => c.id == id && c.type.sourceKey == type);
+        
+        var result = await updateComic(comic, folder);
+        
         Map<String, dynamic> data = {
-          'current': progress.current,
-          'total': progress.total,
+          'current': 1,
+          'total': 1,
+          'comic': {
+            'id': comic.id,
+            'name': comic.name,
+            'coverUrl': comic.coverPath,
+            'author': comic.author,
+            'type': comic.type.sourceKey,
+            'updateTime': comic.updateTime,
+            'tags': comic.tags,
+          }
         };
-        if (progress.comic != null) {
-          data['comic'] = {
-            'id': progress.comic!.id,
-            'name': progress.comic!.name,
-            'coverUrl': progress.comic!.coverPath,
-            'author': progress.comic!.author,
-            'type': progress.comic!.type.sourceKey,
-            'updateTime': progress.comic!.updateTime,
-            'tags': progress.comic!.tags,
-          };
-        }
+
         var message = 'Progress';
-        if (progress.errorMessage != null) {
+        if (result.errorMessage != null) {
           message = 'ProgressError';
-          data['error'] = progress.errorMessage;
+          data['error'] = result.errorMessage;
         }
+
         cliPrint({
           'status': 'running',
           'message': message,
           'data': data,
         });
-      }
-      cliPrint({
-        'status': 'running',
-        'message': 'Update check complete.',
-        'data': {
-          'total': total,
-          'updated': updated,
-          'errors': errors,
+
+        cliPrint({
+          'status': 'running',
+          'message': 'Update check complete.',
+          'data': {
+            'total': 1,
+            'updated': result.updated ? 1 : 0,
+            'errors': result.errorMessage != null ? 1 : 0,
+          }
+        });
+
+        await Future.delayed(const Duration(milliseconds: 500));
+        var json = await getUpdatedComicsAsJson(folder);
+        cliPrint({
+          'status': result.errorMessage != null ? 'error' : 'success',
+          'message': 'Updated comics list.',
+          'data': jsonDecode(json),
+        });
+      } else {
+        int total = 0;
+        int updated = 0;
+        int errors = 0;
+        await for (var progress in updateFolder(folder, true)) {
+          total = progress.total;
+          updated = progress.updated;
+          errors = progress.errors;
+          Map<String, dynamic> data = {
+            'current': progress.current,
+            'total': progress.total,
+          };
+          if (progress.comic != null) {
+            data['comic'] = {
+              'id': progress.comic!.id,
+              'name': progress.comic!.name,
+              'coverUrl': progress.comic!.coverPath,
+              'author': progress.comic!.author,
+              'type': progress.comic!.type.sourceKey,
+              'updateTime': progress.comic!.updateTime,
+              'tags': progress.comic!.tags,
+            };
+          }
+          var message = 'Progress';
+          if (progress.errorMessage != null) {
+            message = 'ProgressError';
+            data['error'] = progress.errorMessage;
+          }
+          cliPrint({
+            'status': 'running',
+            'message': message,
+            'data': data,
+          });
         }
-      });
-      await Future.delayed(const Duration(milliseconds: 500));
-      var json = await getUpdatedComicsAsJson(folder);
-      cliPrint({
-        'status': errors > 0 ? 'error' : 'success',
-        'message': 'Updated comics list.',
-        'data': jsonDecode(json),
-      });
+        cliPrint({
+          'status': 'running',
+          'message': 'Update check complete.',
+          'data': {
+            'total': total,
+            'updated': updated,
+            'errors': errors,
+          }
+        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        var json = await getUpdatedComicsAsJson(folder);
+        cliPrint({
+          'status': errors > 0 ? 'error' : 'success',
+          'message': 'Updated comics list.',
+          'data': jsonDecode(json),
+        });
+      }
       break;
     default:
       cliPrint({'status': 'error', 'message': 'Unknown command: $command'});

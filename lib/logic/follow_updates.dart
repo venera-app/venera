@@ -3,6 +3,73 @@ import 'dart:convert';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/log.dart';
 
+class ComicUpdateResult {
+  final bool updated;
+  final String? errorMessage;
+
+  ComicUpdateResult(this.updated, this.errorMessage);
+}
+
+Future<ComicUpdateResult> updateComic(
+    FavoriteItemWithUpdateInfo c, String folder) async {
+  int retries = 3;
+  while (true) {
+    try {
+      var comicSource = c.type.comicSource;
+      if (comicSource == null) {
+        return ComicUpdateResult(false, "Comic source not found");
+      }
+      var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
+
+      var newTags = <String>[];
+      for (var entry in newInfo.tags.entries) {
+        const shouldIgnore = ['author', 'artist', 'time'];
+        var namespace = entry.key;
+        if (shouldIgnore.contains(namespace.toLowerCase())) {
+          continue;
+        }
+        for (var tag in entry.value) {
+          newTags.add("$namespace:$tag");
+        }
+      }
+
+      var item = FavoriteItem(
+        id: c.id,
+        name: newInfo.title,
+        coverPath: newInfo.cover,
+        author: newInfo.subTitle ??
+            newInfo.tags['author']?.firstOrNull ??
+            c.author,
+        type: c.type,
+        tags: newTags,
+      );
+
+      LocalFavoritesManager().updateInfo(folder, item, false);
+
+      var updated = false;
+      var updateTime = newInfo.findUpdateTime();
+      if (updateTime != null && updateTime != c.updateTime) {
+        LocalFavoritesManager().updateUpdateTime(
+          folder,
+          c.id,
+          c.type,
+          updateTime,
+        );
+        updated = true;
+      } else {
+        LocalFavoritesManager().updateCheckTime(folder, c.id, c.type);
+      }
+      return ComicUpdateResult(updated, null);
+    } catch (e, s) {
+      Log.error("Check Updates", e, s);
+      retries--;
+      if (retries == 0) {
+        return ComicUpdateResult(false, e.toString());
+      }
+    }
+  }
+}
+
 class UpdateProgress {
   final int total;
   final int current;
@@ -47,68 +114,18 @@ void updateFolderBase(
   current = 0;
   stream.add(UpdateProgress(total, current, errors, updated));
 
-  Future<String?> updateComic(FavoriteItemWithUpdateInfo c) async {
-    int retries = 3;
-    while (true) {
-      try {
-        var comicSource = c.type.comicSource;
-        if (comicSource == null) return "Comic source not found";
-        var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
-
-        var newTags = <String>[];
-        for (var entry in newInfo.tags.entries) {
-          const shouldIgnore = ['author', 'artist', 'time'];
-          var namespace = entry.key;
-          if (shouldIgnore.contains(namespace.toLowerCase())) {
-            continue;
-          }
-          for (var tag in entry.value) {
-            newTags.add("$namespace:$tag");
-          }
-        }
-
-        var item = FavoriteItem(
-          id: c.id,
-          name: newInfo.title,
-          coverPath: newInfo.cover,
-          author: newInfo.subTitle ??
-              newInfo.tags['author']?.firstOrNull ??
-              c.author,
-          type: c.type,
-          tags: newTags,
-        );
-
-        LocalFavoritesManager().updateInfo(folder, item, false);
-
-        var updateTime = newInfo.findUpdateTime();
-        if (updateTime != null && updateTime != c.updateTime) {
-          LocalFavoritesManager().updateUpdateTime(
-            folder,
-            c.id,
-            c.type,
-            updateTime,
-          );
-          updated++;
-        } else {
-          LocalFavoritesManager().updateCheckTime(folder, c.id, c.type);
-        }
-        return null;
-      } catch (e, s) {
-        Log.error("Check Updates", e, s);
-        retries--;
-        if (retries == 0) {
-          errors++;
-          return e.toString();
-        }
-      }
-    }
-  }
-
   var futures = <Future>[];
   for (var comic in comicsToUpdate) {
-    var future = updateComic(comic).then((error) {
+    var future = updateComic(comic, folder).then((result) {
       current++;
-      stream.add(UpdateProgress(total, current, errors, updated, comic, error));
+      if (result.updated) {
+        updated++;
+      }
+      if (result.errorMessage != null) {
+        errors++;
+      }
+      stream.add(
+          UpdateProgress(total, current, errors, updated, comic, result.errorMessage));
     });
     futures.add(future);
   }
