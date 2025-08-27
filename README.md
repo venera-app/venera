@@ -34,4 +34,7 @@ See [Comic Source](doc/comic_source.md)
 ### Tags Translation
 [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=EhTagTranslation&repo=Database)](https://github.com/EhTagTranslation/Database)
 
+## Headless Mode
+See [Headless Doc](doc/headless_doc.md)
+
 The Chinese translation of the manga tags is from this project.
