@@ -56,8 +56,12 @@ abstract mixin class _ComicPageActions {
         type: comic.comicType,
         isFavorite: isFavorite,
         onFavorite: (local, network) {
-          isFavorite = network ?? isFavorite;
-          isAddToLocalFav = local ?? isAddToLocalFav;
+          if (network != null) {
+            isFavorite = network;
+          }
+          if (local != null) {
+            isAddToLocalFav = local;
+          }
           update();
         },
         favoriteItem: _toFavoriteItem(),

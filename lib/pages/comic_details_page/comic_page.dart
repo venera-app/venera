@@ -17,6 +17,7 @@ import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
+import 'package:venera/network/cache.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/app_links.dart';
@@ -256,6 +257,18 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   Future<void> onDataLoaded() async {
     isLiked = comic.isLiked ?? false;
     isFavorite = comic.isFavorite ?? false;
+    // For sources with multi-folder favorites, prefer querying folders to get accurate favorite status
+    // Some sources may not set isFavorite reliably when multi-folder is enabled
+    if (comicSource.favoriteData?.loadFolders != null && comicSource.isLogged) {
+      var res = await comicSource.favoriteData!.loadFolders!(comic.id);
+      if (!res.error) {
+        if (res.subData is List) {
+          var list = List<String>.from(res.subData);
+          isFavorite = list.isNotEmpty;
+          update();
+        }
+      }
+    }
     if (comic.chapters == null) {
       isDownloaded = LocalManager().isDownloaded(comic.id, comic.comicType, 0);
     }

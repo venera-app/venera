@@ -36,6 +36,8 @@ Future<bool> _deleteComic(
                   favId,
                 );
                 if (res.success) {
+                  // Invalidate network cache so next loads fetch fresh data
+                  NetworkCacheManager().clear();
                   context.showMessage(message: "Deleted".tl);
                   result = true;
                   context.pop();
@@ -115,6 +117,8 @@ class _NormalFavoritePageState extends State<_NormalFavoritePage> {
             child: IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
+                // Force refresh bypassing cache
+                NetworkCacheManager().clear();
                 comicListKey.currentState!.refresh();
               },
             ),
