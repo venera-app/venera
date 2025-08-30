@@ -23,8 +23,12 @@ class ComicSourcePage extends StatelessWidget {
     bool showLoading = true,
   ]) async {
     if (!source.url.isURL) {
-      App.rootContext.showMessage(message: "Invalid url config");
-      return;
+      if (showLoading) {
+        App.rootContext.showMessage(message: "Invalid url config");
+        return;
+      } else {
+        throw Exception("Invalid url config");
+      }
     }
     ComicSourceManager().remove(source.key);
     bool cancel = false;
@@ -44,16 +48,22 @@ class ComicSourcePage extends StatelessWidget {
       if (cancel) return;
       controller?.close();
       await ComicSourceParser().parse(res.data!, source.filePath);
-      await File(source.filePath).writeAsString(res.data!);
+      await io.File(source.filePath).writeAsString(res.data!);
       if (ComicSourceManager().availableUpdates.containsKey(source.key)) {
         ComicSourceManager().availableUpdates.remove(source.key);
       }
     } catch (e) {
       if (cancel) return;
-      App.rootContext.showMessage(message: e.toString());
+      if (showLoading) {
+        App.rootContext.showMessage(message: e.toString());
+      } else {
+        rethrow;
+      }
     }
     await ComicSourceManager().reload();
-    App.forceRebuild();
+    if (showLoading) {
+      App.forceRebuild();
+    }
   }
 
   static Future<int> checkComicSourceUpdate() async {

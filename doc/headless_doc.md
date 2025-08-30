@@ -41,6 +41,50 @@ Update comic source scripts.
 venera --headless updatescript all
 ```
 
+**Output Format:**
+
+The `updatescript` command provides detailed progress and a final summary.
+
+**Progress Logs:**
+
+- **`Progress`**: Indicates a successful update for a single script.
+- **`ProgressError`**: Indicates a failure during a script update.
+
+**Example `Progress` Log:**
+
+```json
+{
+  "status": "running",
+  "message": "Progress",
+  "data": {
+    "current": 1,
+    "total": 5,
+    "source": {
+      "key": "source-key",
+      "name": "Source Name",
+      "version": "1.0.0",
+      "url": "https://example.com/source.js"
+    }
+  }
+}
+```
+
+**Final Summary:**
+
+A summary is provided at the end, detailing the total number of scripts, how many were updated, and how many failed.
+
+```json
+{
+  "status": "success",
+  "message": "All scripts updated.",
+  "data": {
+    "total": 5,
+    "updated": 4,
+    "errors": 1
+  }
+}
+```
+
 ### `updatesubscribe`
 
 Update your subscribed comics and retrieve a list of updated comics.

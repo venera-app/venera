@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:js_interop';
 import 'package:flutter/widgets.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -59,15 +58,64 @@ Future<void> runHeadlessMode(List<String> args) async {
         if (updates.isEmpty) {
           cliPrint({'status': 'success', 'message': 'No updates found.'});
         } else {
-          cliPrint({'status': 'running', 'message': 'Updating all comic source scripts...'});
+          var total = updates.length;
+          var current = 0;
+          var errors = 0;
+          var updated = 0;
+          cliPrint({
+            'status': 'running',
+            'message': 'Updating all comic source scripts...',
+            'data': {
+              'total': total,
+              'current': 0,
+              'updated': 0,
+              'errors': 0,
+            }
+          });
           for (var key in updates.keys) {
             var source = ComicSource.find(key);
             if (source != null) {
-              cliPrint({'status': 'running', 'message': 'Updating ${source.name}...',"data":source.jsify()});
-              await ComicSourcePage.update(source, false);
+              current++;
+              var data = {
+                'current': current,
+                'total': total,
+                'source': {
+                  'key': source.key,
+                  'name': source.name,
+                  'version': source.version,
+                  'url': source.url,
+                }
+              };
+              try {
+                await ComicSourcePage.update(source, false);
+                updated++;
+                cliPrint({
+                  'status': 'running',
+                  'message': 'Progress',
+                  'data': data,
+                });
+              } catch (e) {
+                errors++;
+                cliPrint({
+                  'status': 'running',
+                  'message': 'ProgressError',
+                  'data': {
+                    ...data,
+                    'error': e.toString(),
+                  },
+                });
+              }
             }
           }
-          cliPrint({'status': 'success', 'message': 'All scripts updated.'});
+          cliPrint({
+            'status': 'success',
+            'message': 'All scripts updated.',
+            'data': {
+              'total': total,
+              'updated': updated,
+              'errors': errors,
+            }
+          });
         }
       } else {
         cliPrint({'status': 'error', 'message': 'Invalid updatescript command. Use "all".'});
