@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:js_interop';
 import 'package:flutter/widgets.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
@@ -62,7 +63,7 @@ Future<void> runHeadlessMode(List<String> args) async {
           for (var key in updates.keys) {
             var source = ComicSource.find(key);
             if (source != null) {
-              cliPrint({'status': 'running', 'message': 'Updating ${source.name}...'});
+              cliPrint({'status': 'running', 'message': 'Updating ${source.name}...',"data":source.jsify()});
               await ComicSourcePage.update(source, false);
             }
           }
