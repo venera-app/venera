@@ -37,17 +37,21 @@ extension _FutureInit<T> on Future<T> {
 Future<void> init() async {
   await App.init().wait();
   await SingleInstanceCookieJar.createInstance();
-  var futures = [
-    Rhttp.init(),
-    App.initComponents(),
-    SAFTaskWorker().init().wait(),
-    AppTranslation.init().wait(),
-    TagsTranslation.readData().wait(),
-    JsEngine().init().wait(),
-    ComicSourceManager().init().wait(),
-    OpenCC.init(),
-  ];
-  await Future.wait(futures);
+  try {
+    var futures = [
+      Rhttp.init(),
+      App.initComponents(),
+      SAFTaskWorker().init().wait(),
+      AppTranslation.init().wait(),
+      TagsTranslation.readData().wait(),
+      JsEngine().init().wait(),
+      ComicSourceManager().init().wait(),
+      OpenCC.init(),
+    ];
+    await Future.wait(futures);
+  } catch (e, s) {
+    Log.error("init", "$e\n$s");
+  }
   CacheManager().setLimitSize(appdata.settings['cacheSize']);
   _checkOldConfigs();
   if (App.isAndroid) {

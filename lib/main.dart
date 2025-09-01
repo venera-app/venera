@@ -14,9 +14,14 @@ import 'components/components.dart';
 import 'components/window_frame.dart';
 import 'foundation/app.dart';
 import 'foundation/appdata.dart';
+import 'headless.dart';
 import 'init.dart';
 
 void main(List<String> args) {
+  if (args.contains('--headless')) {
+    runHeadlessMode(args);
+    return;
+  }
   if (runWebViewTitleBarWidget(args)) return;
   overrideIO(() {
     runZonedGuarded(() async {
