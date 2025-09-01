@@ -8,7 +8,7 @@ import 'package:venera/foundation/favorites.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/translations.dart';
 import '../foundation/global_state.dart';
-import 'package:venera/logic/follow_updates.dart';
+import 'package:venera/foundation/follow_updates.dart';
 
 class FollowUpdatesWidget extends StatefulWidget {
   const FollowUpdatesWidget({super.key});

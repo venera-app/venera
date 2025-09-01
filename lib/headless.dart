@@ -6,7 +6,7 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/init.dart';
-import 'package:venera/logic/follow_updates.dart';
+import 'package:venera/foundation/follow_updates.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/favorites.dart';
 
