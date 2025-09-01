@@ -71,7 +71,8 @@ abstract class ImageDownloader {
     }
 
     if (configs['onResponse'] is JSInvokable) {
-      buffer = (configs['onResponse'] as JSInvokable)([buffer]);
+      final uint8List = Uint8List.fromList(buffer);
+      buffer = (configs['onResponse'] as JSInvokable)([uint8List]);
       (configs['onResponse'] as JSInvokable).free();
     }
 
