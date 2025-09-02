@@ -43,7 +43,10 @@ class ComicSourcePage extends StatelessWidget {
     try {
       var res = await AppDio().get<String>(
         source.url,
-        options: Options(responseType: ResponseType.plain),
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {"cache-time": "no"},
+        ),
       );
       if (cancel) return;
       controller?.close();
@@ -200,10 +203,7 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  void update(
-    ComicSource source, [
-    bool showLoading = true,
-  ]) {
+  void update(ComicSource source, [bool showLoading = true]) {
     ComicSourcePage.update(source, showLoading);
   }
 
@@ -304,7 +304,10 @@ class _BodyState extends State<_Body> {
     try {
       var res = await AppDio().get<String>(
         url,
-        options: Options(responseType: ResponseType.plain),
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {"cache-time": "no"},
+        ),
       );
       if (cancel) return;
       controller.close();
@@ -710,11 +713,13 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
   @override
   Widget build(BuildContext context) {
     return FilledButton.tonalIcon(
-      icon: isLoading ? SizedBox(
-        width: 18,
-        height: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ) : Icon(Icons.update),
+      icon: isLoading
+          ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(Icons.update),
       label: Text("Check updates".tl),
       onPressed: check,
     );
