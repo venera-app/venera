@@ -77,7 +77,7 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
     try {
       _dio ??= AppDio(BaseOptions(
           responseType: ResponseType.plain, validateStatus: (status) => true));
-      _cookieJar ??= SingleInstanceCookieJar.instance!;
+      _cookieJar ??= await SingleInstanceCookieJar.createInstance();
       _closed = false;
       _engine = FlutterQjs();
       _engine!.dispatch();
