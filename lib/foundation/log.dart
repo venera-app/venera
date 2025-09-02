@@ -42,7 +42,7 @@ class Log {
 
   static void addLog(LogLevel level, String title, String content) {
     if (isMuted) return;
-    if (_file == null) {
+    if (_file == null && App.isInitialized) {
       Directory dir;
       if (App.isAndroid) {
         dir = Directory(App.externalStoragePath!);

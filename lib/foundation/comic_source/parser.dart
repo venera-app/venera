@@ -89,8 +89,7 @@ class ComicSourceParser {
     }
     var className = line1.split("class")[1].split("extends ComicSource").first;
     className = className.trim();
-    JsEngine().runCode("""
-      (() => { $js
+    JsEngine().runCode("""(() => { $js
         this['temp'] = new $className()
       }).call()
     """, className);

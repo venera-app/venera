@@ -30,6 +30,10 @@ class _App {
 
   bool get isMobile => Platform.isAndroid || Platform.isIOS;
 
+  // Whether the app has been initialized.
+  // If current Isolate is main Isolate, this value is always true.
+  bool isInitialized = false;
+
   Locale get locale {
     Locale deviceLocale = PlatformDispatcher.instance.locale;
     if (deviceLocale.languageCode == "zh" &&
@@ -81,6 +85,7 @@ class _App {
     if (isAndroid) {
       externalStoragePath = (await getExternalStorageDirectory())!.path;
     }
+    isInitialized = true;
   }
 
   Future<void> initComponents() async {

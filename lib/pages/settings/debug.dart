@@ -62,7 +62,7 @@ class DebugPageState extends State<DebugPage> {
               TextButton(
                 onPressed: () {
                   try {
-                    var res = JsEngine().runCode(controller.text);
+                    var res = JsEngine().runCode(controller.text, "<debug>");
                     setState(() {
                       result = res.toString();
                     });
