@@ -24,6 +24,7 @@ import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:venera/components/js_ui.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/js_pool.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/network/proxy.dart';
@@ -68,6 +69,12 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
         responseType: ResponseType.plain, validateStatus: (status) => true));
   }
 
+  static Uint8List? _jsInitCache;
+
+  static void cacheJsInit(Uint8List jsInit) {
+    _jsInitCache = jsInit;
+  }
+
   @override
   @protected
   Future<void> doInit() async {
@@ -75,9 +82,11 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
       return;
     }
     try {
+      if (App.isInitialized) {
+        _cookieJar ??= await SingleInstanceCookieJar.createInstance();
+      }
       _dio ??= AppDio(BaseOptions(
           responseType: ResponseType.plain, validateStatus: (status) => true));
-      _cookieJar ??= SingleInstanceCookieJar.instance!;
       _closed = false;
       _engine = FlutterQjs();
       _engine!.dispatch();
@@ -86,9 +95,15 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
       (setGlobalFunc as JSInvokable)(["sendMessage", _messageReceiver]);
       setGlobalFunc(["appVersion", App.version]);
       setGlobalFunc.free();
-      var jsInit = await rootBundle.load("assets/init.js");
+      Uint8List jsInit;
+      if (_jsInitCache != null) {
+        jsInit = _jsInitCache!;
+      } else {
+        var buffer = await rootBundle.load("assets/init.js");
+        jsInit = buffer.buffer.asUint8List();
+      }
       _engine!
-          .evaluate(utf8.decode(jsInit.buffer.asUint8List()), name: "<init>");
+          .evaluate(utf8.decode(jsInit), name: "<init>");
     } catch (e, s) {
       Log.error('JS Engine', 'JS Engine Init Error:\n$e\n$s');
     }
@@ -97,6 +112,7 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
   Object? _messageReceiver(dynamic message) {
     try {
       if (message is Map<dynamic, dynamic>) {
+        if (message["method"] == null) return null;
         String method = message["method"] as String;
         switch (method) {
           case "log":
@@ -172,6 +188,20 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
               var res = await Clipboard.getData(Clipboard.kTextPlain);
               return res?.text;
             });
+          case "compute":
+            final func = message["function"];
+            final args = message["args"];
+            if (func is JSInvokable) {
+              func.free();
+              throw "Function must be a string";
+            }
+            if (func is! String) {
+              throw "Function must be a string";
+            }
+            if (args != null && args is! List) {
+              throw "Args must be a list";
+            }
+            return JSPool().execute(func, args ?? []);
         }
       }
       return null;

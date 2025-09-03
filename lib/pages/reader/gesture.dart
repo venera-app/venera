@@ -152,7 +152,8 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
 
   bool _dragInProgress = false;
 
-  bool get _enableDoubleTapToZoom => appdata.settings["enableDoubleTapToZoom"];
+  bool get _enableDoubleTapToZoom =>
+      appdata.settings.getReaderSetting(reader.cid, reader.type.sourceKey, 'enableDoubleTapToZoom');
 
   void onTapUp(TapUpDetails event) {
     if (_longPressInProgress) {
@@ -190,7 +191,8 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     } else if (context.readerScaffold.isOpen) {
       context.readerScaffold.openOrClose();
     } else {
-      if (appdata.settings['enableTapToTurnPages']) {
+      if (appdata.settings.getReaderSetting(
+          reader.cid, reader.type.sourceKey, 'enableTapToTurnPages')) {
         bool isLeft = false, isRight = false, isTop = false, isBottom = false;
         final width = context.width;
         final height = context.height;
@@ -207,11 +209,12 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
           isBottom = true;
         }
         bool isCenter = false;
-        var prev = context.reader.toPrevPage;
-        var next = context.reader.toNextPage;
-        if (appdata.settings['reverseTapToTurnPages']) {
-          prev = context.reader.toNextPage;
-          next = context.reader.toPrevPage;
+        var prev = () => context.reader.toPrevPage();
+        var next = () => context.reader.toNextPage();
+        if (appdata.settings.getReaderSetting(
+            reader.cid, reader.type.sourceKey, 'reverseTapToTurnPages')) {
+          prev = () => context.reader.toNextPage();
+          next = () => context.reader.toPrevPage();
         }
         switch (context.reader.mode) {
           case ReaderMode.galleryLeftToRight:

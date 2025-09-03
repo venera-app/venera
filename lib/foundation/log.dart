@@ -28,6 +28,8 @@ class Log {
 
   static bool ignoreLimitation = false;
 
+  static bool isMuted = false;
+
   static void printWarning(String text) {
     debugPrint('\x1B[33m$text\x1B[0m');
   }
@@ -39,7 +41,8 @@ class Log {
   static IOSink? _file;
 
   static void addLog(LogLevel level, String title, String content) {
-    if (_file == null) {
+    if (isMuted) return;
+    if (_file == null && App.isInitialized) {
       Directory dir;
       if (App.isAndroid) {
         dir = Directory(App.externalStoragePath!);

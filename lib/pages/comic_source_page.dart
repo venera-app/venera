@@ -18,6 +18,57 @@ import 'package:venera/utils/translations.dart';
 class ComicSourcePage extends StatelessWidget {
   const ComicSourcePage({super.key});
 
+  static Future<void> update(
+    ComicSource source, [
+    bool showLoading = true,
+  ]) async {
+    if (!source.url.isURL) {
+      if (showLoading) {
+        App.rootContext.showMessage(message: "Invalid url config");
+        return;
+      } else {
+        throw Exception("Invalid url config");
+      }
+    }
+    ComicSourceManager().remove(source.key);
+    bool cancel = false;
+    LoadingDialogController? controller;
+    if (showLoading) {
+      controller = showLoadingDialog(
+        App.rootContext,
+        onCancel: () => cancel = true,
+        barrierDismissible: false,
+      );
+    }
+    try {
+      var res = await AppDio().get<String>(
+        source.url,
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {"cache-time": "no"},
+        ),
+      );
+      if (cancel) return;
+      controller?.close();
+      await ComicSourceParser().parse(res.data!, source.filePath);
+      await io.File(source.filePath).writeAsString(res.data!);
+      if (ComicSourceManager().availableUpdates.containsKey(source.key)) {
+        ComicSourceManager().availableUpdates.remove(source.key);
+      }
+    } catch (e) {
+      if (cancel) return;
+      if (showLoading) {
+        App.rootContext.showMessage(message: e.toString());
+      } else {
+        rethrow;
+      }
+    }
+    await ComicSourceManager().reload();
+    if (showLoading) {
+      App.forceRebuild();
+    }
+  }
+
   static Future<int> checkComicSourceUpdate() async {
     if (ComicSource.all().isEmpty) {
       return 0;
@@ -152,42 +203,8 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  static Future<void> update(
-    ComicSource source, [
-    bool showLoading = true,
-  ]) async {
-    if (!source.url.isURL) {
-      App.rootContext.showMessage(message: "Invalid url config");
-      return;
-    }
-    ComicSourceManager().remove(source.key);
-    bool cancel = false;
-    LoadingDialogController? controller;
-    if (showLoading) {
-      controller = showLoadingDialog(
-        App.rootContext,
-        onCancel: () => cancel = true,
-        barrierDismissible: false,
-      );
-    }
-    try {
-      var res = await AppDio().get<String>(
-        source.url,
-        options: Options(responseType: ResponseType.plain),
-      );
-      if (cancel) return;
-      controller?.close();
-      await ComicSourceParser().parse(res.data!, source.filePath);
-      await File(source.filePath).writeAsString(res.data!);
-      if (ComicSourceManager().availableUpdates.containsKey(source.key)) {
-        ComicSourceManager().availableUpdates.remove(source.key);
-      }
-    } catch (e) {
-      if (cancel) return;
-      App.rootContext.showMessage(message: e.toString());
-    }
-    await ComicSourceManager().reload();
-    App.forceRebuild();
+  void update(ComicSource source, [bool showLoading = true]) {
+    ComicSourcePage.update(source, showLoading);
   }
 
   Widget buildCard(BuildContext context) {
@@ -287,7 +304,10 @@ class _BodyState extends State<_Body> {
     try {
       var res = await AppDio().get<String>(
         url,
-        options: Options(responseType: ResponseType.plain),
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {"cache-time": "no"},
+        ),
       );
       if (cancel) return;
       controller.close();
@@ -679,7 +699,7 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
         var shouldUpdate = ComicSourceManager().availableUpdates.keys.toList();
         for (var key in shouldUpdate) {
           var source = ComicSource.find(key)!;
-          await _BodyState.update(source, false);
+          await ComicSourcePage.update(source, false);
           current++;
           loadingController.setProgress(current / total);
         }
@@ -693,11 +713,13 @@ class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
   @override
   Widget build(BuildContext context) {
     return FilledButton.tonalIcon(
-      icon: isLoading ? SizedBox(
-        width: 18,
-        height: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ) : Icon(Icons.update),
+      icon: isLoading
+          ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(Icons.update),
       label: Text("Check updates".tl),
       onPressed: check,
     );

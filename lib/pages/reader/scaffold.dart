@@ -128,9 +128,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(
-          child: widget.child,
-        ),
+        Positioned.fill(child: widget.child),
         if (appdata.settings['showPageNumberInReader'] == true)
           buildPageInfoText(),
         buildStatusInfo(),
@@ -168,10 +166,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         decoration: BoxDecoration(
           color: context.colorScheme.surface.toOpacity(0.92),
           border: Border(
-            bottom: BorderSide(
-              color: Colors.grey.toOpacity(0.5),
-              width: 0.5,
-            ),
+            bottom: BorderSide(color: Colors.grey.toOpacity(0.5), width: 0.5),
           ),
         ),
         child: Row(
@@ -216,8 +211,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     try {
       if (context.reader.images![0].contains('file://')) {
         showToast(
-            message: "Local comic collection is not supported at present".tl,
-            context: context);
+          message: "Local comic collection is not supported at present".tl,
+          context: context,
+        );
         return;
       }
       String id = context.reader.cid;
@@ -234,8 +230,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       List<String> tags = context.reader.widget.tags;
       String author = context.reader.widget.author;
 
-      var epName = context.reader.widget.chapters?.titles
-              .elementAtOrNull(context.reader.chapter - 1) ??
+      var epName =
+          context.reader.widget.chapters?.titles.elementAtOrNull(
+            context.reader.chapter - 1,
+          ) ??
           "E${context.reader.chapter}";
       var translatedTags = tags.map((e) => e.translateTagsToCN).toList();
 
@@ -248,7 +246,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           return;
         }
         ImageFavoriteManager().deleteImageFavorite([
-          ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName)
+          ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName),
         ]);
         showToast(
           message: "Uncollected the image".tl,
@@ -256,7 +254,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           seconds: 1,
         );
       } else {
-        var imageFavoritesComic = ImageFavoriteManager().find(id, sourceKey) ??
+        var imageFavoritesComic =
+            ImageFavoriteManager().find(id, sourceKey) ??
             ImageFavoritesComic(
               id,
               [],
@@ -270,12 +269,21 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               subTitle,
               maxPage,
             );
-        ImageFavorite imageFavorite =
-            ImageFavorite(page, imageKey, null, eid, id, ep, sourceKey, epName);
-        ImageFavoritesEp? imageFavoritesEp =
-            imageFavoritesComic.imageFavoritesEp.firstWhereOrNull((e) {
-          return e.ep == ep;
-        });
+        ImageFavorite imageFavorite = ImageFavorite(
+          page,
+          imageKey,
+          null,
+          eid,
+          id,
+          ep,
+          sourceKey,
+          epName,
+        );
+        ImageFavoritesEp? imageFavoritesEp = imageFavoritesComic
+            .imageFavoritesEp
+            .firstWhereOrNull((e) {
+              return e.ep == ep;
+            });
         if (imageFavoritesEp == null) {
           if (page != firstPage) {
             var copy = imageFavorite.copyWith(
@@ -285,10 +293,20 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
             );
             // 不是第一页的话, 自动塞一个封面进去
             imageFavoritesEp = ImageFavoritesEp(
-                eid, ep, [copy, imageFavorite], epName, maxPage);
+              eid,
+              ep,
+              [copy, imageFavorite],
+              epName,
+              maxPage,
+            );
           } else {
-            imageFavoritesEp =
-                ImageFavoritesEp(eid, ep, [imageFavorite], epName, maxPage);
+            imageFavoritesEp = ImageFavoritesEp(
+              eid,
+              ep,
+              [imageFavorite],
+              epName,
+              maxPage,
+            );
           }
           imageFavoritesComic.imageFavoritesEp.add(imageFavoritesEp);
         } else {
@@ -312,7 +330,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
         ImageFavoriteManager().addOrUpdateOrDelete(imageFavoritesComic);
         showToast(
-            message: "Successfully collected".tl, context: context, seconds: 1);
+          message: "Successfully collected".tl,
+          context: context,
+          seconds: 1,
+        );
       }
       update();
     } catch (e, stackTrace) {
@@ -327,155 +348,152 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       text = "P${context.reader.page}";
     }
 
+    final buttons = [
+      Tooltip(
+        message: "Collect the image".tl,
+        child: IconButton(
+          icon: Icon(isLiked() ? Icons.favorite : Icons.favorite_border),
+          onPressed: addImageFavorite,
+        ),
+      ),
+      if (App.isDesktop)
+        Tooltip(
+          message: "${"Full Screen".tl}(F12)",
+          child: IconButton(
+            icon: const Icon(Icons.fullscreen),
+            onPressed: () {
+              context.reader.fullscreen();
+            },
+          ),
+        ),
+      if (App.isAndroid)
+        Tooltip(
+          message: "Screen Rotation".tl,
+          child: IconButton(
+            icon: () {
+              if (rotation == null) {
+                return const Icon(Icons.screen_rotation);
+              } else if (rotation == false) {
+                return const Icon(Icons.screen_lock_portrait);
+              } else {
+                return const Icon(Icons.screen_lock_landscape);
+              }
+            }.call(),
+            onPressed: () {
+              if (rotation == null) {
+                setState(() {
+                  rotation = false;
+                });
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.portraitUp,
+                  DeviceOrientation.portraitDown,
+                ]);
+              } else if (rotation == false) {
+                setState(() {
+                  rotation = true;
+                });
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.landscapeLeft,
+                  DeviceOrientation.landscapeRight,
+                ]);
+              } else {
+                setState(() {
+                  rotation = null;
+                });
+                SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+              }
+            },
+          ),
+        ),
+      Tooltip(
+        message: "Auto Page Turning".tl,
+        child: IconButton(
+          icon: context.reader.autoPageTurningTimer != null
+              ? const Icon(Icons.timer)
+              : const Icon(Icons.timer_sharp),
+          onPressed: () {
+            context.reader.autoPageTurning(
+              context.reader.cid,
+              context.reader.type,
+            );
+            update();
+          },
+        ),
+      ),
+      if (context.reader.widget.chapters != null)
+        Tooltip(
+          message: "Chapters".tl,
+          child: IconButton(
+            icon: const Icon(Icons.library_books),
+            onPressed: openChapterDrawer,
+          ),
+        ),
+      Tooltip(
+        message: "Save Image".tl,
+        child: IconButton(
+          icon: const Icon(Icons.download),
+          onPressed: saveCurrentImage,
+        ),
+      ),
+      Tooltip(
+        message: "Share".tl,
+        child: IconButton(icon: const Icon(Icons.share), onPressed: share),
+      ),
+    ];
+
     Widget child = SizedBox(
       height: kBottomBarHeight,
       child: Column(
         children: [
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Row(
             children: [
               const SizedBox(width: 8),
               IconButton.filledTonal(
                 onPressed: () => !isReversed
                     ? context.reader.chapter > 1
-                        ? context.reader.toPrevChapter()
-                        : context.reader.toPage(1)
+                          ? context.reader.toPrevChapter()
+                          : context.reader.toPage(1)
                     : context.reader.chapter < context.reader.maxChapter
-                        ? context.reader.toNextChapter()
-                        : context.reader.toPage(context.reader.maxPage),
+                    ? context.reader.toNextChapter()
+                    : context.reader.toPage(context.reader.maxPage),
                 icon: const Icon(Icons.first_page),
               ),
-              Expanded(
-                child: buildSlider(),
-              ),
+              Expanded(child: buildSlider()),
               IconButton.filledTonal(
-                  onPressed: () => !isReversed
-                      ? context.reader.chapter < context.reader.maxChapter
+                onPressed: () => !isReversed
+                    ? context.reader.chapter < context.reader.maxChapter
                           ? context.reader.toNextChapter()
                           : context.reader.toPage(context.reader.maxPage)
-                      : context.reader.chapter > 1
-                          ? context.reader.toPrevChapter()
-                          : context.reader.toPage(1),
-                  icon: const Icon(Icons.last_page)),
-              const SizedBox(
-                width: 8,
+                    : context.reader.chapter > 1
+                    ? context.reader.toPrevChapter()
+                    : context.reader.toPage(1),
+                icon: const Icon(Icons.last_page),
               ),
+              const SizedBox(width: 8),
             ],
           ),
-          Row(
-            children: [
-              const SizedBox(
-                width: 16,
-              ),
-              Container(
-                height: 24,
-                padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(text),
-                ),
-              ),
-              const Spacer(),
-              Tooltip(
-                message: "Collect the image".tl,
-                child: IconButton(
-                  icon:
-                      Icon(isLiked() ? Icons.favorite : Icons.favorite_border),
-                  onPressed: addImageFavorite,
-                ),
-              ),
-              if (App.isDesktop)
-                Tooltip(
-                  message: "${"Full Screen".tl}(F12)",
-                  child: IconButton(
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () {
-                      context.reader.fullscreen();
-                    },
-                  ),
-                ),
-              if (App.isAndroid)
-                Tooltip(
-                  message: "Screen Rotation".tl,
-                  child: IconButton(
-                    icon: () {
-                      if (rotation == null) {
-                        return const Icon(Icons.screen_rotation);
-                      } else if (rotation == false) {
-                        return const Icon(Icons.screen_lock_portrait);
-                      } else {
-                        return const Icon(Icons.screen_lock_landscape);
-                      }
-                    }.call(),
-                    onPressed: () {
-                      if (rotation == null) {
-                        setState(() {
-                          rotation = false;
-                        });
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.portraitUp,
-                          DeviceOrientation.portraitDown,
-                        ]);
-                      } else if (rotation == false) {
-                        setState(() {
-                          rotation = true;
-                        });
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.landscapeLeft,
-                          DeviceOrientation.landscapeRight
-                        ]);
-                      } else {
-                        setState(() {
-                          rotation = null;
-                        });
-                        SystemChrome.setPreferredOrientations(
-                            DeviceOrientation.values);
-                      }
-                    },
-                  ),
-                ),
-              Tooltip(
-                message: "Auto Page Turning".tl,
-                child: IconButton(
-                  icon: context.reader.autoPageTurningTimer != null
-                      ? const Icon(Icons.timer)
-                      : const Icon(Icons.timer_sharp),
-                  onPressed: () {
-                    context.reader.autoPageTurning();
-                    update();
-                  },
-                ),
-              ),
-              if (context.reader.widget.chapters != null)
-                Tooltip(
-                  message: "Chapters".tl,
-                  child: IconButton(
-                    icon: const Icon(Icons.library_books),
-                    onPressed: openChapterDrawer,
-                  ),
-                ),
-              Tooltip(
-                message: "Save Image".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.download),
-                  onPressed: saveCurrentImage,
-                ),
-              ),
-              Tooltip(
-                message: "Share".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: share,
-                ),
-              ),
-              const SizedBox(width: 4)
-            ],
-          )
+          LayoutBuilder(
+            builder: (context, constrains) {
+              return Row(
+                children: [
+                  if ((constrains.maxWidth - buttons.length * 42) > 80)
+                    Container(
+                      height: 24,
+                      padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(child: Text(text)),
+                    ).paddingLeft(16),
+                  const Spacer(),
+                  ...buttons,
+                  const SizedBox(width: 4),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
@@ -506,8 +524,9 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       focusNode: sliderFocus,
       value: context.reader.page.toDouble(),
       min: 1,
-      max:
-          context.reader.maxPage.clamp(context.reader.page, 1 << 16).toDouble(),
+      max: context.reader.maxPage
+          .clamp(context.reader.page, 1 << 16)
+          .toDouble(),
       reversed: isReversed,
       divisions: (context.reader.maxPage - 1).clamp(2, 1 << 16),
       onChanged: (i) {
@@ -517,8 +536,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildPageInfoText() {
-    var epName = context.reader.widget.chapters?.titles
-            .elementAtOrNull(context.reader.chapter - 1) ??
+    var epName =
+        context.reader.widget.chapters?.titles.elementAtOrNull(
+          context.reader.chapter - 1,
+        ) ??
         "E${context.reader.chapter}";
     if (epName.length > 8) {
       epName = "${epName.substring(0, 8)}...";
@@ -594,23 +615,31 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
     var fileType = detectFileType(data);
     var filename = "${context.reader.page}${fileType.ext}";
-    Share.shareFile(
-      data: data,
-      filename: filename,
-      mime: fileType.mime,
-    );
+    Share.shareFile(data: data, filename: filename, mime: fileType.mime);
   }
 
   void openSetting() {
     showSideBar(
       context,
       ReaderSettings(
+        comicId: context.reader.cid,
+        comicSource: context.reader.type.sourceKey,
         onChanged: (key) {
           if (key == "readerMode") {
-            context.reader.mode = ReaderMode.fromKey(appdata.settings[key]);
+            context.reader.mode = ReaderMode.fromKey(
+              appdata.settings.getReaderSetting(
+                context.reader.cid,
+                context.reader.type.sourceKey,
+                key,
+              ),
+            );
           }
           if (key == "enableTurnPageByVolumeKey") {
-            if (appdata.settings[key]) {
+            if (appdata.settings.getReaderSetting(
+              context.reader.cid,
+              context.reader.type.sourceKey,
+              key,
+            )) {
               context.reader.handleVolumeEvent();
             } else {
               context.reader.stopVolumeEvent();
@@ -716,8 +745,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       return await File(imageKey.substring(7)).readAsBytes();
     } else {
       return (await CacheManager().findCache(
-              "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}"))!
-          .readAsBytes();
+        "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}",
+      ))!.readAsBytes();
     }
   }
 
@@ -733,14 +762,17 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     entry = OverlayEntry(
       builder: (context) {
         return Positioned.fill(
-          child: _SelectImageOverlayContent(onTap: (offset) {
-            completer.complete(offset);
-            entry!.remove();
-          }, onDispose: () {
-            if (!completer.isCompleted) {
-              completer.complete(null);
-            }
-          }),
+          child: _SelectImageOverlayContent(
+            onTap: (offset) {
+              completer.complete(offset);
+              entry!.remove();
+            },
+            onDispose: () {
+              if (!completer.isCompleted) {
+                completer.complete(null);
+              }
+            },
+          ),
         );
       },
     );
@@ -840,20 +872,17 @@ class _BatteryWidgetState extends State<_BatteryWidget> {
           size: 16,
           color: batteryColor,
           // Stroke
-          shadows: List.generate(
-            9,
-            (index) {
-              if (index == 4) {
-                return null;
-              }
-              double offsetX = (index % 3 - 1) * 0.8;
-              double offsetY = ((index / 3).floor() - 1) * 0.8;
-              return Shadow(
-                color: context.colorScheme.onInverseSurface,
-                offset: Offset(offsetX, offsetY),
-              );
-            },
-          ).whereType<Shadow>().toList(),
+          shadows: List.generate(9, (index) {
+            if (index == 4) {
+              return null;
+            }
+            double offsetX = (index % 3 - 1) * 0.8;
+            double offsetY = ((index / 3).floor() - 1) * 0.8;
+            return Shadow(
+              color: context.colorScheme.onInverseSurface,
+              offset: Offset(offsetX, offsetY),
+            );
+          }).whereType<Shadow>().toList(),
         ),
         Stack(
           children: [
@@ -940,10 +969,12 @@ class _SelectImageOverlayContent extends StatefulWidget {
   final void Function() onDispose;
 
   @override
-  State<_SelectImageOverlayContent> createState() => _SelectImageOverlayContentState();
+  State<_SelectImageOverlayContent> createState() =>
+      _SelectImageOverlayContentState();
 }
 
-class _SelectImageOverlayContentState extends State<_SelectImageOverlayContent> {
+class _SelectImageOverlayContentState
+    extends State<_SelectImageOverlayContent> {
   @override
   void dispose() {
     widget.onDispose();
@@ -960,19 +991,14 @@ class _SelectImageOverlayContentState extends State<_SelectImageOverlayContent> 
       child: Container(
         color: Colors.black.withAlpha(50),
         child: Align(
-          alignment: Alignment(
-            0,
-            -0.8,
-          ),
+          alignment: Alignment(0, -0.8),
           child: Container(
             width: 232,
             height: 42,
             decoration: BoxDecoration(
               color: context.colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: context.colorScheme.outlineVariant,
-              ),
+              border: Border.all(color: context.colorScheme.outlineVariant),
             ),
             child: Row(
               children: [

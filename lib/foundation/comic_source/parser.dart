@@ -64,8 +64,13 @@ class ComicSourceParser {
     if (file.existsSync()) {
       int i = 0;
       while (file.existsSync()) {
-        file = File(FilePath.join(App.dataPath, "comic_source",
-            "${fileName.split('.').first}($i).js"));
+        file = File(
+          FilePath.join(
+            App.dataPath,
+            "comic_source",
+            "${fileName.split('.').first}($i).js",
+          ),
+        );
         i++;
       }
     }
@@ -80,8 +85,9 @@ class ComicSourceParser {
 
   Future<ComicSource> parse(String js, String filePath) async {
     js = js.replaceAll("\r\n", "\n");
-    var line1 =
-        js.split('\n').firstWhereOrNull((e) => e.trim().startsWith("class "));
+    var line1 = js
+        .split('\n')
+        .firstWhereOrNull((e) => e.trim().startsWith("class "));
     if (line1 == null ||
         !line1.startsWith("class ") ||
         !line1.contains("extends ComicSource")) {
@@ -89,24 +95,27 @@ class ComicSourceParser {
     }
     var className = line1.split("class")[1].split("extends ComicSource").first;
     className = className.trim();
-    JsEngine().runCode("""
-      (() => { $js
+    JsEngine().runCode("""(() => { $js
         this['temp'] = new $className()
       }).call()
     """, className);
-    _name = JsEngine().runCode("this['temp'].name") ??
+    _name =
+        JsEngine().runCode("this['temp'].name") ??
         (throw ComicSourceParseException('name is required'));
-    var key = JsEngine().runCode("this['temp'].key") ??
+    var key =
+        JsEngine().runCode("this['temp'].key") ??
         (throw ComicSourceParseException('key is required'));
-    var version = JsEngine().runCode("this['temp'].version") ??
+    var version =
+        JsEngine().runCode("this['temp'].version") ??
         (throw ComicSourceParseException('version is required'));
     var minAppVersion = JsEngine().runCode("this['temp'].minAppVersion");
     var url = JsEngine().runCode("this['temp'].url");
     if (minAppVersion != null) {
       if (compareSemVer(minAppVersion, App.version.split('-').first)) {
         throw ComicSourceParseException(
-          "minAppVersion @version is required"
-              .tlParams({"version": minAppVersion}),
+          "minAppVersion @version is required".tlParams({
+            "version": minAppVersion,
+          }),
         );
       }
     }
@@ -175,8 +184,10 @@ class ComicSourceParser {
   }
 
   bool _checkExists(String index) {
-    return JsEngine().runCode("ComicSource.sources.$_key.$index !== null "
-        "&& ComicSource.sources.$_key.$index !== undefined");
+    return JsEngine().runCode(
+      "ComicSource.sources.$_key.$index !== null "
+      "&& ComicSource.sources.$_key.$index !== undefined",
+    );
   }
 
   dynamic _getValue(String index) {
@@ -277,16 +288,24 @@ class ComicSourceParser {
       if (type == "singlePageWithMultiPart") {
         loadMultiPart = () async {
           try {
-            var res = await JsEngine()
-                .runCode("ComicSource.sources.$_key.explore[$i].load()");
-            return Res(List.from(res.keys
-                .map((e) => ExplorePagePart(
-                    e,
-                    (res[e] as List)
-                        .map<Comic>((e) => Comic.fromJson(e, _key!))
-                        .toList(),
-                    null))
-                .toList()));
+            var res = await JsEngine().runCode(
+              "ComicSource.sources.$_key.explore[$i].load()",
+            );
+            return Res(
+              List.from(
+                res.keys
+                    .map(
+                      (e) => ExplorePagePart(
+                        e,
+                        (res[e] as List)
+                            .map<Comic>((e) => Comic.fromJson(e, _key!))
+                            .toList(),
+                        null,
+                      ),
+                    )
+                    .toList(),
+              ),
+            );
           } catch (e, s) {
             Log.error("Data Analysis", "$e\n$s");
             return Res.error(e.toString());
@@ -297,11 +316,15 @@ class ComicSourceParser {
           loadPage = (int page) async {
             try {
               var res = await JsEngine().runCode(
-                  "ComicSource.sources.$_key.explore[$i].load(${jsonEncode(page)})");
+                "ComicSource.sources.$_key.explore[$i].load(${jsonEncode(page)})",
+              );
               return Res(
-                  List.generate(res["comics"].length,
-                      (index) => Comic.fromJson(res["comics"][index], _key!)),
-                  subData: res["maxPage"]);
+                List.generate(
+                  res["comics"].length,
+                  (index) => Comic.fromJson(res["comics"][index], _key!),
+                ),
+                subData: res["maxPage"],
+              );
             } catch (e, s) {
               Log.error("Network", "$e\n$s");
               return Res.error(e.toString());
@@ -311,10 +334,13 @@ class ComicSourceParser {
           loadNext = (next) async {
             try {
               var res = await JsEngine().runCode(
-                  "ComicSource.sources.$_key.explore[$i].loadNext(${jsonEncode(next)})");
+                "ComicSource.sources.$_key.explore[$i].loadNext(${jsonEncode(next)})",
+              );
               return Res(
-                List.generate(res["comics"].length,
-                    (index) => Comic.fromJson(res["comics"][index], _key!)),
+                List.generate(
+                  res["comics"].length,
+                  (index) => Comic.fromJson(res["comics"][index], _key!),
+                ),
                 subData: res["next"],
               );
             } catch (e, s) {
@@ -326,8 +352,9 @@ class ComicSourceParser {
       } else if (type == "multiPartPage") {
         loadMultiPart = () async {
           try {
-            var res = await JsEngine()
-                .runCode("ComicSource.sources.$_key.explore[$i].load()");
+            var res = await JsEngine().runCode(
+              "ComicSource.sources.$_key.explore[$i].load()",
+            );
             return Res(
               List.from(
                 (res as List).map((e) {
@@ -350,19 +377,22 @@ class ComicSourceParser {
         loadMixed = (index) async {
           try {
             var res = await JsEngine().runCode(
-                "ComicSource.sources.$_key.explore[$i].load(${jsonEncode(index)})");
+              "ComicSource.sources.$_key.explore[$i].load(${jsonEncode(index)})",
+            );
             var list = <Object>[];
             for (var data in (res['data'] as List)) {
               if (data is List) {
                 list.add(data.map((e) => Comic.fromJson(e, _key!)).toList());
               } else if (data is Map) {
-                list.add(ExplorePagePart(
-                  data['title'],
-                  (data['comics'] as List).map((e) {
-                    return Comic.fromJson(e, _key!);
-                  }).toList(),
-                  data['viewMore'],
-                ));
+                list.add(
+                  ExplorePagePart(
+                    data['title'],
+                    (data['comics'] as List).map((e) {
+                      return Comic.fromJson(e, _key!);
+                    }).toList(),
+                    data['viewMore'],
+                  ),
+                );
               }
             }
             return Res(list, subData: res['maxPage']);
@@ -372,21 +402,25 @@ class ComicSourceParser {
           }
         };
       }
-      pages.add(ExplorePageData(
-        title,
-        switch (type) {
-          "singlePageWithMultiPart" => ExplorePageType.singlePageWithMultiPart,
-          "multiPartPage" => ExplorePageType.singlePageWithMultiPart,
-          "multiPageComicList" => ExplorePageType.multiPageComicList,
-          "mixed" => ExplorePageType.mixed,
-          _ =>
-            throw ComicSourceParseException("Unknown explore page type $type")
-        },
-        loadPage,
-        loadNext,
-        loadMultiPart,
-        loadMixed,
-      ));
+      pages.add(
+        ExplorePageData(
+          title,
+          switch (type) {
+            "singlePageWithMultiPart" =>
+              ExplorePageType.singlePageWithMultiPart,
+            "multiPartPage" => ExplorePageType.singlePageWithMultiPart,
+            "multiPageComicList" => ExplorePageType.multiPageComicList,
+            "mixed" => ExplorePageType.mixed,
+            _ => throw ComicSourceParseException(
+              "Unknown explore page type $type",
+            ),
+          },
+          loadPage,
+          loadNext,
+          loadMultiPart,
+          loadMixed,
+        ),
+      );
     }
     return pages;
   }
@@ -426,18 +460,17 @@ class ComicSourceParser {
         if (type == "fixed") {
           categoryParts.add(FixedCategoryPart(name, cs!));
         } else if (type == "random") {
-          categoryParts
-              .add(RandomCategoryPart(name, cs!, c["randomNumber"] ?? 1));
+          categoryParts.add(
+            RandomCategoryPart(name, cs!, c["randomNumber"] ?? 1),
+          );
         } else if (type == "dynamic" && categories == null) {
           var loader = c["loader"];
           if (loader is! JSInvokable) {
             throw "DynamicCategoryPart loader must be a function";
           }
-          categoryParts.add(DynamicCategoryPart(
-            name,
-            JSAutoFreeFunction(loader),
-            _key!,
-          ));
+          categoryParts.add(
+            DynamicCategoryPart(name, JSAutoFreeFunction(loader), _key!),
+          );
         }
       } else {
         // old format
@@ -454,30 +487,16 @@ class ComicSourceParser {
         for (int i = 0; i < tags.length; i++) {
           PageJumpTarget target;
           if (itemType == 'category') {
-            target = PageJumpTarget(
-              _key!,
-              'category',
-              {
-                "category": tags[i],
-                "param": categoryParams?.elementAtOrNull(i),
-              },
-            );
+            target = PageJumpTarget(_key!, 'category', {
+              "category": tags[i],
+              "param": categoryParams?.elementAtOrNull(i),
+            });
           } else if (itemType == 'search') {
-            target = PageJumpTarget(
-              _key!,
-              'search',
-              {
-                "keyword": tags[i],
-              },
-            );
+            target = PageJumpTarget(_key!, 'search', {"keyword": tags[i]});
           } else if (itemType == 'search_with_namespace') {
-            target = PageJumpTarget(
-              _key!,
-              'search',
-              {
-                "keyword": "$name:$tags[i]",
-              },
-            );
+            target = PageJumpTarget(_key!, 'search', {
+              "keyword": "$name:$tags[i]",
+            });
           } else {
             target = PageJumpTarget(_key!, itemType, null);
           }
@@ -486,38 +505,96 @@ class ComicSourceParser {
         if (type == "fixed") {
           categoryParts.add(FixedCategoryPart(name, cs));
         } else if (type == "random") {
-          categoryParts
-              .add(RandomCategoryPart(name, cs, c["randomNumber"] ?? 1));
+          categoryParts.add(
+            RandomCategoryPart(name, cs, c["randomNumber"] ?? 1),
+          );
         }
       }
     }
 
     return CategoryData(
-        title: title,
-        categories: categoryParts,
-        enableRankingPage: enableRankingPage ?? false,
-        key: title);
+      title: title,
+      categories: categoryParts,
+      enableRankingPage: enableRankingPage ?? false,
+      key: title,
+    );
   }
 
   CategoryComicsData? _loadCategoryComicsData() {
     if (!_checkExists("categoryComics")) return null;
-    var options = <CategoryComicsOptions>[];
-    for (var element in _getValue("categoryComics.optionList") ?? []) {
-      LinkedHashMap<String, String> map = LinkedHashMap<String, String>();
-      for (var option in element["options"]) {
-        if (option.isEmpty || !option.contains("-")) {
-          continue;
+
+    List<CategoryComicsOptions>? options;
+    if (_checkExists("categoryComics.optionList")) {
+      options = <CategoryComicsOptions>[];
+      for (var element in _getValue("categoryComics.optionList") ?? []) {
+        LinkedHashMap<String, String> map = LinkedHashMap<String, String>();
+        for (var option in element["options"]) {
+          if (option.isEmpty || !option.contains("-")) {
+            continue;
+          }
+          var split = option.split("-");
+          var key = split.removeAt(0);
+          var value = split.join("-");
+          map[key] = value;
         }
-        var split = option.split("-");
-        var key = split.removeAt(0);
-        var value = split.join("-");
-        map[key] = value;
+        options.add(
+          CategoryComicsOptions(
+            element["label"] ?? "",
+            map,
+            List.from(element["notShowWhen"] ?? []),
+            element["showWhen"] == null ? null : List.from(element["showWhen"]),
+          ),
+        );
       }
-      options.add(CategoryComicsOptions(
-          map,
-          List.from(element["notShowWhen"] ?? []),
-          element["showWhen"] == null ? null : List.from(element["showWhen"])));
     }
+
+    CategoryOptionsLoader? optionLoader;
+    if (_checkExists("categoryComics.optionLoader")) {
+      optionLoader = (category, param) async {
+        try {
+          dynamic res = JsEngine().runCode("""
+          ComicSource.sources.$_key.categoryComics.optionLoader(
+            ${jsonEncode(category)}, ${jsonEncode(param)})
+        """);
+          if (res is Future) {
+            res = await res;
+          }
+          if (res is! List) {
+            return Res.error("Invalid data:\nExpected: List\nGot: ${res.runtimeType}");
+          }
+          var options = <CategoryComicsOptions>[];
+          for (var element in res) {
+            if (element is! Map) {
+              return Res.error("Invalid option data:\nExpected: Map\nGot: ${element.runtimeType}");
+            }
+            LinkedHashMap<String, String> map = LinkedHashMap<String, String>();
+            for (var option in element["options"] ?? []) {
+              if (option.isEmpty || !option.contains("-")) {
+                continue;
+              }
+              var split = option.split("-");
+              var key = split.removeAt(0);
+              var value = split.join("-");
+              map[key] = value;
+            }
+            options.add(
+              CategoryComicsOptions(
+                element["label"] ?? "",
+                map,
+                List.from(element["notShowWhen"] ?? []),
+                element["showWhen"] == null ? null : List.from(element["showWhen"]),
+              ),
+            );
+          }
+          return Res(options);
+        }
+        catch(e) {
+          Log.error("Data Analysis", "Failed to load category options.\n$e");
+          return Res.error(e.toString());
+        }
+      };
+    }
+
     RankingData? rankingData;
     if (_checkExists("categoryComics.ranking")) {
       var options = <String, String>{};
@@ -532,7 +609,7 @@ class ComicSourceParser {
       }
       Future<Res<List<Comic>>> Function(String option, int page)? load;
       Future<Res<List<Comic>>> Function(String option, String? next)?
-          loadWithNext;
+      loadWithNext;
       if (_checkExists("categoryComics.ranking.load")) {
         load = (option, page) async {
           try {
@@ -541,9 +618,12 @@ class ComicSourceParser {
               ${jsonEncode(option)}, ${jsonEncode(page)})
           """);
             return Res(
-                List.generate(res["comics"].length,
-                    (index) => Comic.fromJson(res["comics"][index], _key!)),
-                subData: res["maxPage"]);
+              List.generate(
+                res["comics"].length,
+                (index) => Comic.fromJson(res["comics"][index], _key!),
+              ),
+              subData: res["maxPage"],
+            );
           } catch (e, s) {
             Log.error("Network", "$e\n$s");
             return Res.error(e.toString());
@@ -557,8 +637,10 @@ class ComicSourceParser {
               ${jsonEncode(option)}, ${jsonEncode(next)})
           """);
             return Res(
-              List.generate(res["comics"].length,
-                  (index) => Comic.fromJson(res["comics"][index], _key!)),
+              List.generate(
+                res["comics"].length,
+                (index) => Comic.fromJson(res["comics"][index], _key!),
+              ),
               subData: res["next"],
             );
           } catch (e, s) {
@@ -569,25 +651,38 @@ class ComicSourceParser {
       }
       rankingData = RankingData(options, load, loadWithNext);
     }
-    return CategoryComicsData(options, (category, param, options, page) async {
-      try {
-        var res = await JsEngine().runCode("""
-          ComicSource.sources.$_key.categoryComics.load(
-            ${jsonEncode(category)},
-            ${jsonEncode(param)},
-            ${jsonEncode(options)},
-            ${jsonEncode(page)}
-          )
-        """);
-        return Res(
-            List.generate(res["comics"].length,
-                (index) => Comic.fromJson(res["comics"][index], _key!)),
-            subData: res["maxPage"]);
-      } catch (e, s) {
-        Log.error("Network", "$e\n$s");
-        return Res.error(e.toString());
-      }
-    }, rankingData: rankingData);
+
+    if (options == null && optionLoader == null) {
+      options = [];
+    }
+
+    return CategoryComicsData(
+      options: options,
+      optionsLoader: optionLoader,
+      load: (category, param, options, page) async {
+        try {
+          var res = await JsEngine().runCode("""
+              ComicSource.sources.$_key.categoryComics.load(
+                ${jsonEncode(category)},
+                ${jsonEncode(param)},
+                ${jsonEncode(options)},
+                ${jsonEncode(page)}
+              )
+            """);
+          return Res(
+            List.generate(
+              res["comics"].length,
+              (index) => Comic.fromJson(res["comics"][index], _key!),
+            ),
+            subData: res["maxPage"],
+          );
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      },
+      rankingData: rankingData,
+    );
   }
 
   SearchPageData? _loadSearchData() {
@@ -604,12 +699,14 @@ class ComicSourceParser {
         var value = split.join("-");
         map[key] = value;
       }
-      options.add(SearchOptions(
-        map,
-        element["label"],
-        element['type'] ?? 'select',
-        element['default'] == null ? null : jsonEncode(element['default']),
-      ));
+      options.add(
+        SearchOptions(
+          map,
+          element["label"],
+          element['type'] ?? 'select',
+          element['default'] == null ? null : jsonEncode(element['default']),
+        ),
+      );
     }
 
     SearchFunction? loadPage;
@@ -624,9 +721,12 @@ class ComicSourceParser {
             ${jsonEncode(keyword)}, ${jsonEncode(searchOption)}, ${jsonEncode(page)})
         """);
           return Res(
-              List.generate(res["comics"].length,
-                  (index) => Comic.fromJson(res["comics"][index], _key!)),
-              subData: res["maxPage"]);
+            List.generate(
+              res["comics"].length,
+              (index) => Comic.fromJson(res["comics"][index], _key!),
+            ),
+            subData: res["maxPage"],
+          );
         } catch (e, s) {
           Log.error("Network", "$e\n$s");
           return Res.error(e.toString());
@@ -640,8 +740,10 @@ class ComicSourceParser {
             ${jsonEncode(keyword)}, ${jsonEncode(searchOption)}, ${jsonEncode(next)})
         """);
           return Res(
-            List.generate(res["comics"].length,
-                (index) => Comic.fromJson(res["comics"][index], _key!)),
+            List.generate(
+              res["comics"].length,
+              (index) => Comic.fromJson(res["comics"][index], _key!),
+            ),
             subData: res["next"],
           );
         } catch (e, s) {
@@ -690,8 +792,9 @@ class ComicSourceParser {
 
     final bool multiFolder = _getValue("favorites.multiFolder");
     final bool? isOldToNewSort = _getValue("favorites.isOldToNewSort");
-    final bool? singleFolderForSingleComic =
-        _getValue("favorites.singleFolderForSingleComic");
+    final bool? singleFolderForSingleComic = _getValue(
+      "favorites.singleFolderForSingleComic",
+    );
 
     Future<Res<T>> retryZone<T>(Future<Res<T>> Function() func) async {
       if (!ComicSource.find(_key!)!.isLogged) {
@@ -744,9 +847,12 @@ class ComicSourceParser {
               ${jsonEncode(page)}, ${jsonEncode(folder)})
           """);
             return Res(
-                List.generate(res["comics"].length,
-                    (index) => Comic.fromJson(res["comics"][index], _key!)),
-                subData: res["maxPage"]);
+              List.generate(
+                res["comics"].length,
+                (index) => Comic.fromJson(res["comics"][index], _key!),
+              ),
+              subData: res["maxPage"],
+            );
           } catch (e, s) {
             Log.error("Network", "$e\n$s");
             return Res.error(e.toString());
@@ -766,8 +872,10 @@ class ComicSourceParser {
               ${jsonEncode(next)}, ${jsonEncode(folder)})
           """);
             return Res(
-              List.generate(res["comics"].length,
-                  (index) => Comic.fromJson(res["comics"][index], _key!)),
+              List.generate(
+                res["comics"].length,
+                (index) => Comic.fromJson(res["comics"][index], _key!),
+              ),
               subData: res["next"],
             );
           } catch (e, s) {
@@ -858,8 +966,9 @@ class ComicSourceParser {
             ${jsonEncode(id)}, ${jsonEncode(subId)}, ${jsonEncode(page)}, ${jsonEncode(replyTo)})
         """);
         return Res(
-            (res["comments"] as List).map((e) => Comment.fromJson(e)).toList(),
-            subData: res["maxPage"]);
+          (res["comments"] as List).map((e) => Comment.fromJson(e)).toList(),
+          subData: res["maxPage"],
+        );
       } catch (e, s) {
         Log.error("Network", "$e\n$s");
         return Res.error(e.toString());
@@ -1114,7 +1223,8 @@ class ComicSourceParser {
               ComicSource.sources.$_key.comic.archive.getArchives(${jsonEncode(cid)})
             """);
           return Res(
-              (res as List).map((e) => ArchiveInfo.fromJson(e)).toList());
+            (res as List).map((e) => ArchiveInfo.fromJson(e)).toList(),
+          );
         } catch (e, s) {
           Log.error("Network", "$e\n$s");
           return Res.error(e.toString());

@@ -31,6 +31,10 @@ class DebugPageState extends State<DebugPage> {
           },
           actionTitle: 'Open'.tl,
         ).toSliver(),
+        _SwitchSetting(
+          title: "Ignore Certificate Errors".tl,
+          settingKey: "ignoreBadCertificate",
+        ).toSliver(),
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -58,7 +62,7 @@ class DebugPageState extends State<DebugPage> {
               TextButton(
                 onPressed: () {
                   try {
-                    var res = JsEngine().runCode(controller.text);
+                    var res = JsEngine().runCode(controller.text, "<debug>");
                     setState(() {
                       result = res.toString();
                     });

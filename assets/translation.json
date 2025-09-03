@@ -406,7 +406,12 @@
     "Disable Length Limitation": "禁用长度限制",
     "Only valid for this run": "仅对本次运行有效",
     "Logs": "日志",
-    "Export logs": "导出日志"
+    "Export logs": "导出日志",
+    "Clear specific reader settings for all comics": "清除所有漫画的特殊阅读设置",
+    "Clear specific reader settings for this comic": "清除该漫画的特殊阅读设置",
+    "Enable comic specific settings": "启用此漫画特定设置",
+    "Ignore Certificate Errors": "忽略证书错误",
+    "Mouse scroll speed": "鼠标滚动速度"
   },
   "zh_TW": {
     "Home": "首頁",
@@ -815,6 +820,11 @@
     "Disable Length Limitation": "禁用長度限制",
     "Only valid for this run": "僅對本次運行有效",
     "Logs": "日誌",
-    "Export logs": "匯出日誌"
+    "Export logs": "匯出日誌",
+    "Clear specific reader settings for all comics": "清除所有漫畫的特殊閱讀設定",
+    "Clear specific reader settings for this comic": "清除該漫畫的特殊閱讀設定",
+    "Enable comic specific settings": "啟用此漫畫特定設定",
+    "Ignore Certificate Errors": "忽略證書錯誤",
+    "Mouse scroll speed": "滑鼠滾動速度"
   }
 }

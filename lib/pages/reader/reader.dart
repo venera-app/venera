@@ -115,15 +115,17 @@ class _ReaderState extends State<Reader>
     if (images == null) {
       return 1;
     }
-    if (!showSingleImageOnFirstPage) {
-      return (images!.length / imagesPerPage).ceil();
+    if (!showSingleImageOnFirstPage()) {
+      return (images!.length / imagesPerPage()).ceil();
     } else {
-      return 1 + ((images!.length - 1) / imagesPerPage).ceil();
+      return 1 + ((images!.length - 1) / imagesPerPage()).ceil();
     }
   }
 
+  @override
   ComicType get type => widget.type;
 
+  @override
   String get cid => widget.cid;
 
   String get eid => widget.chapters?.ids.elementAtOrNull(chapter - 1) ?? '0';
@@ -162,12 +164,13 @@ class _ReaderState extends State<Reader>
     if (widget.initialPage != null) {
       page = widget.initialPage!;
     }
-    mode = ReaderMode.fromKey(appdata.settings['readerMode']);
+    // mode = ReaderMode.fromKey(appdata.settings['readerMode']);
+    mode = ReaderMode.fromKey(appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerMode'));
     history = widget.history;
-    if (!appdata.settings['showSystemStatusBar']) {
+    if (!appdata.settings.getReaderSetting(cid, type.sourceKey, 'showSystemStatusBar')) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     }
-    if (appdata.settings['enableTurnPageByVolumeKey']) {
+    if (appdata.settings.getReaderSetting(cid, type.sourceKey, 'enableTurnPageByVolumeKey')) {
       handleVolumeEvent();
     }
     setImageCacheSize();
@@ -274,13 +277,13 @@ class _ReaderState extends State<Reader>
         history!.page = images?.length ?? 1;
       } else {
         /// Record the first image of the page
-        if (!showSingleImageOnFirstPage || imagesPerPage == 1) {
-          history!.page = (page - 1) * imagesPerPage + 1;
+        if (!showSingleImageOnFirstPage() || imagesPerPage() == 1) {
+          history!.page = (page - 1) * imagesPerPage() + 1;
         } else {
           if (page == 1) {
             history!.page = 1;
           } else {
-            history!.page = (page - 2) * imagesPerPage + 2;
+            history!.page = (page - 2) * imagesPerPage() + 2;
           }
         }
       }
@@ -363,49 +366,51 @@ abstract mixin class _ImagePerPageHandler {
 
   ReaderMode get mode;
 
+  String get cid;
+
+  ComicType get type;
+
   void initImagesPerPage(int initialPage) {
-    _lastImagesPerPage = imagesPerPage;
+    _lastImagesPerPage = imagesPerPage();
     _lastOrientation = isPortrait;
-    if (imagesPerPage != 1) {
-      if (showSingleImageOnFirstPage) {
-        page = ((initialPage - 1) / imagesPerPage).ceil() + 1;
+    if (imagesPerPage() != 1) {
+      if (showSingleImageOnFirstPage()) {
+        page = ((initialPage - 1) / imagesPerPage()).ceil() + 1;
       } else {
-        page = (initialPage / imagesPerPage).ceil();
+        page = (initialPage / imagesPerPage()).ceil();
       }
     }
   }
 
-  bool get showSingleImageOnFirstPage =>
-      appdata.settings["showSingleImageOnFirstPage"];
+  bool showSingleImageOnFirstPage() =>
+      appdata.settings.getReaderSetting(cid, type.sourceKey, 'showSingleImageOnFirstPage');
 
   /// The number of images displayed on one screen
-  int get imagesPerPage {
+  int imagesPerPage() {
     if (mode.isContinuous) return 1;
     if (isPortrait) {
-      return appdata.settings['readerScreenPicNumberForPortrait'] ?? 1;
+      return appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerScreenPicNumberForPortrait') ?? 1;
     } else {
-      return appdata.settings['readerScreenPicNumberForLandscape'] ?? 1;
+      return appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerScreenPicNumberForLandscape') ?? 1;
     }
   }
 
   /// Check if the number of images per page has changed
   void _checkImagesPerPageChange() {
-    int currentImagesPerPage = imagesPerPage;
+    int currentImagesPerPage = imagesPerPage();
     bool currentOrientation = isPortrait;
 
     if (_lastImagesPerPage != currentImagesPerPage || _lastOrientation != currentOrientation) {
-      _adjustPageForImagesPerPageChange(
-          _lastImagesPerPage, currentImagesPerPage);
+      _adjustPageForImagesPerPageChange(_lastImagesPerPage, currentImagesPerPage);
       _lastImagesPerPage = currentImagesPerPage;
       _lastOrientation = currentOrientation;
     }
   }
 
   /// Adjust the page number when the number of images per page changes
-  void _adjustPageForImagesPerPageChange(
-      int oldImagesPerPage, int newImagesPerPage) {
+  void _adjustPageForImagesPerPageChange(int oldImagesPerPage, int newImagesPerPage) {
     int previousImageIndex = 1;
-    if (!showSingleImageOnFirstPage || oldImagesPerPage == 1) {
+    if (!showSingleImageOnFirstPage() || oldImagesPerPage == 1) {
       previousImageIndex = (page - 1) * oldImagesPerPage + 1;
     } else {
       if (page == 1) {
@@ -417,7 +422,7 @@ abstract mixin class _ImagePerPageHandler {
 
     int newPage;
     if (newImagesPerPage != 1) {
-      if (showSingleImageOnFirstPage) {
+      if (showSingleImageOnFirstPage()) {
         newPage = ((previousImageIndex - 1) / newImagesPerPage).ceil() + 1;
       } else {
         newPage = (previousImageIndex / newImagesPerPage).ceil();
@@ -493,9 +498,13 @@ abstract mixin class _ReaderLocation {
 
   bool get isLoading;
 
+  String get cid;
+
+  ComicType get type;
+
   void update();
 
-  bool get enablePageAnimation => appdata.settings['enablePageAnimation'];
+  bool enablePageAnimation(String cid, ComicType type) => appdata.settings.getReaderSetting(cid, type.sourceKey, 'enablePageAnimation');
 
   _ImageViewController? _imageViewController;
 
@@ -532,7 +541,7 @@ abstract mixin class _ReaderLocation {
       }
       this.page = page;
       update();
-      if (enablePageAnimation) {
+      if (enablePageAnimation(cid, type)) {
         _animationCount++;
         _imageViewController!.animateToPage(page).then((_) {
           _animationCount--;
@@ -571,12 +580,12 @@ abstract mixin class _ReaderLocation {
 
   Timer? autoPageTurningTimer;
 
-  void autoPageTurning() {
+  void autoPageTurning(String cid, ComicType type) {
     if (autoPageTurningTimer != null) {
       autoPageTurningTimer!.cancel();
       autoPageTurningTimer = null;
     } else {
-      int interval = appdata.settings['autoPageTurningInterval'];
+      int interval = appdata.settings.getReaderSetting(cid, type.sourceKey, 'autoPageTurningInterval');
       autoPageTurningTimer = Timer.periodic(Duration(seconds: interval), (_) {
         if (page == maxPage) {
           autoPageTurningTimer!.cancel();

@@ -14,9 +14,14 @@ import 'components/components.dart';
 import 'components/window_frame.dart';
 import 'foundation/app.dart';
 import 'foundation/appdata.dart';
+import 'headless.dart';
 import 'init.dart';
 
 void main(List<String> args) {
+  if (args.contains('--headless')) {
+    runHeadlessMode(args);
+    return;
+  }
   if (runWebViewTitleBarWidget(args)) return;
   overrideIO(() {
     runZonedGuarded(() async {
@@ -237,6 +242,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             );
           };
           if (widget != null) {
+            /// 如果无法检测到状态栏高度设定指定高度
+            /// https://github.com/flutter/flutter/issues/161086
+            var isPaddingCheckError =
+                MediaQuery.of(context).viewPadding.top <= 0 ||
+                MediaQuery.of(context).viewPadding.top > 50;
+
+            if (isPaddingCheckError) {
+              widget = MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    viewPadding: const EdgeInsets.only(
+                      top: 15,
+                      bottom: 15,
+                    ),
+                    padding: const EdgeInsets.only(
+                      top: 15,
+                      bottom: 15,
+                    ),
+                  ),
+                  child: widget);
+            }
+
             widget = OverlayWidget(widget);
             if (App.isDesktop) {
               widget = Shortcuts(

@@ -5,10 +5,10 @@ import 'package:venera/components/components.dart';
 import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/favorites.dart';
-import 'package:venera/foundation/log.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/utils/translations.dart';
 import '../foundation/global_state.dart';
+import 'package:venera/foundation/follow_updates.dart';
 
 class FollowUpdatesWidget extends StatefulWidget {
   const FollowUpdatesWidget({super.key});
@@ -460,7 +460,7 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
         message: "Updating comics...".tl,
       );
 
-      await for (var progress in _updateFolder(folder, true)) {
+      await for (var progress in updateFolder(folder, true)) {
         if (isCanceled) {
           return;
         }
@@ -497,7 +497,7 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
 
     int updated = 0;
 
-    await for (var progress in _updateFolder(folder!, true)) {
+    await for (var progress in updateFolder(folder!, true)) {
       if (isCanceled) {
         return;
       }
@@ -532,128 +532,6 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
   Object? get key => 'FollowUpdatesPage';
 }
 
-class _UpdateProgress {
-  final int total;
-  final int current;
-  final int errors;
-  final int updated;
-
-  _UpdateProgress(this.total, this.current, this.errors, this.updated);
-}
-
-void _updateFolderBase(
-  String folder,
-  StreamController<_UpdateProgress> stream,
-  bool ignoreCheckTime,
-) async {
-  var comics = LocalFavoritesManager().getComicsWithUpdatesInfo(folder);
-  int current = 0;
-  int errors = 0;
-  int updated = 0;
-  var futures = <Future>[];
-  const maxConcurrent = 5;
-
-  for (int i = 0; i < comics.length; i++) {
-    if (stream.isClosed) {
-      return;
-    }
-    if (!ignoreCheckTime) {
-      var lastCheckTime = comics[i].lastCheckTime;
-      if (lastCheckTime != null &&
-          DateTime.now().difference(lastCheckTime).inDays < 1) {
-        current++;
-        stream.add(_UpdateProgress(comics.length, current, errors, updated));
-        continue;
-      }
-    }
-
-    if (futures.length >= maxConcurrent) {
-      await Future.any(futures);
-    }
-
-    var future = () async {
-      int retries = 3;
-      while (true) {
-        try {
-          var c = comics[i];
-          var comicSource = c.type.comicSource;
-          if (comicSource == null) return;
-          var newInfo = (await comicSource.loadComicInfo!(c.id)).data;
-
-          var newTags = <String>[];
-          for (var entry in newInfo.tags.entries) {
-            const shouldIgnore = ['author', 'artist', 'time'];
-            var namespace = entry.key;
-            if (shouldIgnore.contains(namespace.toLowerCase())) {
-              continue;
-            }
-            for (var tag in entry.value) {
-              newTags.add("$namespace:$tag");
-            }
-          }
-
-          var item = FavoriteItem(
-            id: c.id,
-            name: newInfo.title,
-            coverPath: newInfo.cover,
-            author: newInfo.subTitle ??
-                newInfo.tags['author']?.firstOrNull ??
-                c.author,
-            type: c.type,
-            tags: newTags,
-          );
-
-          LocalFavoritesManager().updateInfo(folder, item, false);
-
-          var updateTime = newInfo.findUpdateTime();
-          if (updateTime != null && updateTime != c.updateTime) {
-            LocalFavoritesManager().updateUpdateTime(
-              folder,
-              c.id,
-              c.type,
-              updateTime,
-            );
-          } else {
-            LocalFavoritesManager().updateCheckTime(folder, c.id, c.type);
-          }
-          updated++;
-          return;
-        } catch (e, s) {
-          Log.error("Check Updates", e, s);
-          retries--;
-          if (retries == 0) {
-            errors++;
-            return;
-          }
-        } finally {
-          current++;
-          stream.add(_UpdateProgress(comics.length, current, errors, updated));
-        }
-      }
-    }();
-
-    future.then((_) {
-      futures.remove(future);
-    });
-
-    futures.add(future);
-  }
-
-  await Future.wait(futures);
-
-  if (updated > 0) {
-    LocalFavoritesManager().notifyChanges();
-  }
-
-  stream.close();
-}
-
-Stream<_UpdateProgress> _updateFolder(String folder, bool ignoreCheckTime) {
-  var stream = StreamController<_UpdateProgress>();
-  _updateFolderBase(folder, stream, ignoreCheckTime);
-  return stream.stream;
-}
-
 /// Background service for checking updates
 abstract class FollowUpdatesService {
   static bool _isChecking = false;
@@ -683,7 +561,7 @@ abstract class FollowUpdatesService {
 
     int updated = 0;
     try {
-      await for (var progress in _updateFolder(folder, false)) {
+      await for (var progress in updateFolder(folder, false)) {
         if (isCanceled) {
           return;
         }

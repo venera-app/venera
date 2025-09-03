@@ -13,7 +13,7 @@ export "widget_utils.dart";
 export "context.dart";
 
 class _App {
-  final version = "1.4.6";
+  final version = "1.5.0";
 
   bool get isAndroid => Platform.isAndroid;
 
@@ -29,6 +29,10 @@ class _App {
       Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
   bool get isMobile => Platform.isAndroid || Platform.isIOS;
+
+  // Whether the app has been initialized.
+  // If current Isolate is main Isolate, this value is always true.
+  bool isInitialized = false;
 
   Locale get locale {
     Locale deviceLocale = PlatformDispatcher.instance.locale;
@@ -81,6 +85,7 @@ class _App {
     if (isAndroid) {
       externalStoragePath = (await getExternalStorageDirectory())!.path;
     }
+    isInitialized = true;
   }
 
   Future<void> initComponents() async {

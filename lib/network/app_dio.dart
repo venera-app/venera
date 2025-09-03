@@ -112,10 +112,12 @@ class AppDio with DioMixin {
   AppDio([BaseOptions? options]) {
     this.options = options ?? BaseOptions();
     httpClientAdapter = RHttpAdapter();
-    interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
-    interceptors.add(NetworkCacheManager());
-    interceptors.add(CloudflareInterceptor());
-    interceptors.add(MyLogInterceptor());
+    if (App.isInitialized) {
+      interceptors.add(CookieManagerSql(SingleInstanceCookieJar.instance!));
+      interceptors.add(NetworkCacheManager());
+      interceptors.add(CloudflareInterceptor());
+      interceptors.add(MyLogInterceptor());
+    }
   }
 
   static final Map<String, bool> _requests = {};
@@ -173,6 +175,7 @@ class RHttpAdapter implements HttpClientAdapter {
       dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
       tlsSettings: rhttp.TlsSettings(
         sni: appdata.settings['sni'] != false,
+        verifyCertificates: appdata.settings['ignoreBadCertificate'] != true,
       ),
     );
   }

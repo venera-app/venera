@@ -401,9 +401,14 @@ class SearchOptions {
 typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(
     String category, String? param, List<String> options, int page);
 
+typedef CategoryOptionsLoader = Future<Res<List<CategoryComicsOptions>>> Function(
+    String category, String? param);
+
 class CategoryComicsData {
   /// options
-  final List<CategoryComicsOptions> options;
+  final List<CategoryComicsOptions>? options;
+
+  final CategoryOptionsLoader? optionsLoader;
 
   /// [category] is the one clicked by the user on the category page.
   ///
@@ -414,7 +419,7 @@ class CategoryComicsData {
 
   final RankingData? rankingData;
 
-  const CategoryComicsData(this.options, this.load, {this.rankingData});
+  const CategoryComicsData({this.options, this.optionsLoader, required this.load, this.rankingData});
 }
 
 class RankingData {
@@ -429,6 +434,9 @@ class RankingData {
 }
 
 class CategoryComicsOptions {
+  // The label will not be displayed if it is empty.
+  final String label;
+
   /// Use a [LinkedHashMap] to describe an option list.
   /// key is for loading comics, value is the name displayed on screen.
   /// Default value will be the first of the Map.
@@ -439,7 +447,7 @@ class CategoryComicsOptions {
 
   final List<String>? showWhen;
 
-  const CategoryComicsOptions(this.options, this.notShowWhen, this.showWhen);
+  const CategoryComicsOptions(this.label, this.options, this.notShowWhen, this.showWhen);
 }
 
 class LinkHandler {

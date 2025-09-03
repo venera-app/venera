@@ -26,8 +26,7 @@ class Appdata with Init {
       var data = jsonEncode(toJson());
       var file = File(FilePath.join(App.dataPath, 'appdata.json'));
       await file.writeAsString(data);
-    }
-    finally {
+    } finally {
       _isSavingData = false;
     }
     if (sync) {
@@ -57,10 +56,7 @@ class Appdata with Init {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'settings': settings._data,
-      'searchHistory': searchHistory,
-    };
+    return {'settings': settings._data, 'searchHistory': searchHistory};
   }
 
   /// Following fields are related to device-specific data and should not be synced.
@@ -95,8 +91,7 @@ class Appdata with Init {
     try {
       var file = File(FilePath.join(App.dataPath, 'implicitData.json'));
       await file.writeAsString(jsonEncode(implicitData));
-    }
-    finally {
+    } finally {
       _isSavingData = false;
     }
   }
@@ -104,10 +99,7 @@ class Appdata with Init {
   @override
   Future<void> doInit() async {
     var dataPath = (await getApplicationSupportDirectory()).path;
-    var file = File(FilePath.join(
-      dataPath,
-      'appdata.json',
-    ));
+    var file = File(FilePath.join(dataPath, 'appdata.json'));
     if (!await file.exists()) {
       return;
     }
@@ -119,8 +111,7 @@ class Appdata with Init {
         }
       }
       searchHistory = List.from(json['searchHistory']);
-    }
-    catch(e) {
+    } catch (e) {
       Log.error("Appdata", "Failed to load appdata", e);
       Log.info("Appdata", "Resetting appdata");
       file.deleteIgnoreError();
@@ -130,8 +121,7 @@ class Appdata with Init {
       if (await implicitDataFile.exists()) {
         implicitData = jsonDecode(await implicitDataFile.readAsString());
       }
-    }
-    catch (e) {
+    } catch (e) {
       Log.error("Appdata", "Failed to load implicit data", e);
       Log.info("Appdata", "Resetting implicit data");
       var implicitDataFile = File(FilePath.join(dataPath, 'implicitData.json'));
@@ -199,6 +189,9 @@ class Settings with ChangeNotifier {
     'enableDoubleTapToZoom': true,
     'reverseChapterOrder': false,
     'showSystemStatusBar': false,
+    'comicSpecificSettings': <String, Map<String, dynamic>>{},
+    'ignoreBadCertificate': false,
+    'readerScrollSpeed': 1.0, // 0.5 - 3.0
   };
 
   operator [](String key) {
@@ -210,6 +203,43 @@ class Settings with ChangeNotifier {
     if (key != "dataVersion") {
       notifyListeners();
     }
+  }
+
+  void setEnabledComicSpecificSettings(String comicId, String sourceKey, bool enabled) {
+    setReaderSetting(comicId, sourceKey, "enabled", enabled);
+  }
+
+  bool isComicSpecificSettingsEnabled(String? comicId, String? sourceKey) {
+    if (comicId == null || sourceKey == null) {
+      return false;
+    }
+    return _data['comicSpecificSettings']["$comicId@$sourceKey"]?["enabled"] == true;
+  }
+
+  dynamic getReaderSetting(String comicId, String sourceKey, String key) {
+    if (!isComicSpecificSettingsEnabled(comicId, sourceKey)) {
+      return _data[key];
+    }
+    return _data['comicSpecificSettings']["$comicId@$sourceKey"]?[key] ??
+        _data[key];
+  }
+
+  void setReaderSetting(
+    String comicId,
+    String sourceKey,
+    String key,
+    dynamic value,
+  ) {
+    (_data['comicSpecificSettings'] as Map<String, dynamic>).putIfAbsent(
+      "$comicId@$sourceKey",
+      () => <String, dynamic>{},
+    )[key] = value;
+    notifyListeners();
+  }
+
+  void resetComicReaderSettings(String key) {
+    (_data['comicSpecificSettings'] as Map).remove(key);
+    notifyListeners();
   }
 
   @override
@@ -236,4 +266,5 @@ function processImage(image, cid, eid, page, sourceKey) {
 }
 ''';
 
-const _defaultSourceListUrl = "https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json";
+const _defaultSourceListUrl =
+    "https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json";
