@@ -181,12 +181,17 @@ abstract class ImageDownloader {
         }
 
         if (configs['onResponse'] is JSInvokable) {
-          buffer = (configs['onResponse'] as JSInvokable)([buffer]);
+          buffer = (configs['onResponse'] as JSInvokable)([Uint8List.fromList(buffer)]);
           (configs['onResponse'] as JSInvokable).free();
         }
 
-        var data = Uint8List.fromList(buffer);
-        buffer.clear();
+        Uint8List data;
+        if (buffer is Uint8List) {
+          data = buffer;
+        } else {
+          data = Uint8List.fromList(buffer);
+          buffer.clear();
+        }
 
         if (configs['modifyImage'] != null) {
           var newData = await modifyImageWithScript(
