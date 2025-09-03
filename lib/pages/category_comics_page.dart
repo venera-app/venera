@@ -27,9 +27,11 @@ class CategoryComicsPage extends StatefulWidget {
 
 class _CategoryComicsPageState extends State<CategoryComicsPage> {
   late final CategoryComicsData data;
-  late final List<CategoryComicsOptions> options;
+  late List<CategoryComicsOptions>? options;
+  late final CategoryOptionsLoader? optionsLoader;
   late List<String> optionsValue;
   late String sourceKey;
+  String? error;
 
   void findData() {
     for (final source in ComicSource.all()) {
@@ -38,29 +40,58 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
           throw "The comic source ${source.name} does not support category comics";
         }
         data = source.categoryComicsData!;
-        options = data.options.where((element) {
-          if (element.notShowWhen.contains(widget.category)) {
-            return false;
-          } else if (element.showWhen != null) {
-            return element.showWhen!.contains(widget.category);
-          }
-          return true;
-        }).toList();
-        var defaultOptionsValue =
-            options.map((e) => e.options.keys.first).toList();
-        if (optionsValue.length != options.length) {
-          var newOptionsValue = List<String>.filled(options.length, "");
-          for (var i = 0; i < options.length; i++) {
-            newOptionsValue[i] =
-                optionsValue.elementAtOrNull(i) ?? defaultOptionsValue[i];
-          }
-          optionsValue = newOptionsValue;
+        if (data.options != null) {
+          options = data.options!.where((element) {
+            if (element.notShowWhen.contains(widget.category)) {
+              return false;
+            } else if (element.showWhen != null) {
+              return element.showWhen!.contains(widget.category);
+            }
+            return true;
+          }).toList();
+        } else {
+          options = null;
         }
+        if (data.optionsLoader != null) {
+          optionsLoader = data.optionsLoader;
+          loadOptions();
+        }
+        resetOptionsValue();
         sourceKey = source.key;
         return;
       }
     }
     throw "${widget.categoryKey} Not found";
+  }
+
+  void resetOptionsValue() {
+    if (options == null) return;
+    var defaultOptionsValue = options!
+        .map((e) => e.options.keys.first)
+        .toList();
+    if (optionsValue.length != options!.length) {
+      var newOptionsValue = List<String>.filled(options!.length, "");
+      for (var i = 0; i < options!.length; i++) {
+        newOptionsValue[i] =
+            optionsValue.elementAtOrNull(i) ?? defaultOptionsValue[i];
+      }
+      optionsValue = newOptionsValue;
+    }
+  }
+
+  void loadOptions() async {
+    final res = await optionsLoader!(widget.category, widget.param);
+    if (res.error) {
+      setState(() {
+        error = res.errorMessage;
+      });
+    } else {
+      setState(() {
+        options = res.data;
+        resetOptionsValue();
+        error = null;
+      });
+    }
   }
 
   @override
@@ -77,27 +108,44 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
   @override
   Widget build(BuildContext context) {
     var topPadding = context.padding.top + 56.0;
+
+    Widget body;
+
+    if (options == null) {
+      body = Center(child: CircularProgressIndicator());
+    } else if (error != null) {
+      body = NetworkError(
+        message: error!,
+        retry: () {
+          setState(() {
+            error = null;
+          });
+          loadOptions();
+        },
+      );
+    } else {
+      body = ComicList(
+        key: Key(widget.category + optionsValue.toString()),
+        errorLeading: buildOptions().paddingTop(topPadding),
+        leadingSliver: buildOptions().paddingTop(topPadding).toSliver(),
+        loadPage: (i) =>
+            data.load(widget.category, widget.param, optionsValue, i),
+      );
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: Appbar(
-        title: Text(widget.category),
-      ),
-      body: ComicList(
-        key: Key(widget.category + optionsValue.toString()),
-        errorLeading: SizedBox(height: topPadding),
-        leadingSliver: buildOptions().paddingTop(topPadding).toSliver(),
-        loadPage: (i) => data.load(
-          widget.category,
-          widget.param,
-          optionsValue,
-          i,
-        ),
-      ),
+      appBar: Appbar(title: Text(widget.category)),
+      body: body,
     );
   }
 
   Widget buildOptionItem(
-      String text, String value, int group, BuildContext context) {
+    String text,
+    String value,
+    int group,
+    BuildContext context,
+  ) {
     return OptionChip(
       text: text.ts(sourceKey),
       isSelected: value == optionsValue[group],
@@ -112,23 +160,57 @@ class _CategoryComicsPageState extends State<CategoryComicsPage> {
 
   Widget buildOptions() {
     List<Widget> children = [];
-    for (var optionList in options) {
-      children.add(Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (var option in optionList.options.entries)
-            buildOptionItem(
-              option.value.tl,
-              option.key,
-              options.indexOf(optionList),
-              context,
-            )
-        ],
-      ));
-      if (options.last != optionList) {
+    var group = 0;
+    for (var optionList in options!) {
+      if (optionList.label.isNotEmpty) {
+        children.add(Padding(
+          padding: const EdgeInsets.only(
+            bottom: 8.0,
+            left: 4.0,
+          ),
+          child: Text(
+            optionList.label.ts(sourceKey),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ));
+      }
+      if (optionList.options.length <= 8) {
+        children.add(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var option in optionList.options.entries)
+                buildOptionItem(
+                  option.value.tl,
+                  option.key,
+                  group,
+                  context,
+                ),
+            ],
+          ),
+        );
+      } else {
+        var g = group;
+        children.add(Select(
+          current: optionList.options[optionsValue[g]],
+          values: optionList.options.values.toList(),
+          onTap: (i) {
+            var key = optionList.options.keys.elementAt(i);
+            if (key == optionsValue[g]) return;
+            setState(() {
+              optionsValue[g] = key;
+            });
+          },
+        ));
+      }
+      if (options!.last != optionList) {
         children.add(const SizedBox(height: 8));
       }
+      group++;
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
