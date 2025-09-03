@@ -1428,11 +1428,11 @@ function getClipboard() {
 /**
  * Compute a function with arguments. The function will be executed in the engine pool which is not in the main thread.
  * @param func {string} - A js code string which can be evaluated to a function. The function will receive the args as its only argument.
- * @param args {any[] | null | undefined} - The arguments to pass to the function.
+ * @param args {any[]} - The arguments to pass to the function.
  * @returns {Promise<any>} - The result of the function.
  * @since 1.5.0
  */
-function compute(func, args) {
+function compute(func, ...args) {
     return sendMessage({
         method: 'compute',
         function: func,
