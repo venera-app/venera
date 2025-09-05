@@ -248,7 +248,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 MediaQuery.of(context).viewPadding.top <= 0 ||
                 MediaQuery.of(context).viewPadding.top > 50;
 
-            if (isPaddingCheckError) {
+            if (isPaddingCheckError && !Platform.isIOS) {
               widget = MediaQuery(
                   data: MediaQuery.of(context).copyWith(
                     viewPadding: const EdgeInsets.only(
