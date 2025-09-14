@@ -512,6 +512,18 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       );
                     },
                   ),
+                if (selectedComics.length == 1)
+                  MenuEntry(
+                    icon: Icons.chrome_reader_mode_outlined,
+                    text: "Read".tl,
+                    onClick: () {
+                      final c = selectedComics.keys.first as FavoriteItem;
+                      App.rootContext.to(() => ReaderWithLoading(
+                        id: c.id,
+                        sourceKey: c.sourceKey,
+                      ));
+                    },
+                  ),
               ]),
             ],
           )
