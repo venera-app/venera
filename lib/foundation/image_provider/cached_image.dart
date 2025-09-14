@@ -1,6 +1,8 @@
 import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:venera/foundation/comic_type.dart';
+import 'package:venera/foundation/local.dart';
 import 'package:venera/network/images.dart';
 import 'package:venera/utils/io.dart';
 import 'base_image_provider.dart';
@@ -11,7 +13,12 @@ class CachedImageProvider
   /// Image provider for normal image.
   ///
   /// [url] is the url of the image. Local file path is also supported.
-  const CachedImageProvider(this.url, {this.headers, this.sourceKey, this.cid});
+  const CachedImageProvider(this.url, {
+    this.headers,
+    this.sourceKey,
+    this.cid,
+    this.fallbackToLocalCover = false,
+  });
 
   final String url;
 
@@ -20,6 +27,9 @@ class CachedImageProvider
   final String? sourceKey;
 
   final String? cid;
+
+  // Use local cover if network image fails to load.
+  final bool fallbackToLocalCover;
 
   static int loadingCount = 0;
 
@@ -48,6 +58,24 @@ class CachedImageProvider
         }
       }
       throw "Error: Empty response body.";
+    }
+    catch(e) {
+      if (fallbackToLocalCover && sourceKey != null && cid != null) {
+        final localComic = LocalManager().find(
+          cid!,
+          ComicType.fromKey(sourceKey!),
+        );
+        if (localComic != null) {
+          var file = localComic.coverFile;
+          if (await file.exists()) {
+            var data = await file.readAsBytes();
+            if (data.isNotEmpty) {
+              return data;
+            }
+          }
+        }
+      }
+      rethrow;
     }
     finally {
       loadingCount--;

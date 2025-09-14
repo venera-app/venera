@@ -7,6 +7,7 @@ class NetworkError extends StatelessWidget {
     this.retry,
     this.withAppbar = true,
     this.buttonText,
+    this.action,
   });
 
   final String message;
@@ -16,6 +17,8 @@ class NetworkError extends StatelessWidget {
   final bool withAppbar;
 
   final String? buttonText;
+
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +70,16 @@ class NetworkError extends StatelessWidget {
                 child: Text('Verify'.tl),
               )
             else
-              FilledButton(
-                onPressed: retry,
-                child: Text(buttonText ?? 'Retry'.tl),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (action != null)
+                    action!.paddingRight(8),
+                  FilledButton(
+                    onPressed: retry,
+                    child: Text(buttonText ?? 'Retry'.tl),
+                  ),
+                ],
               ),
         ],
       ),

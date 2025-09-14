@@ -34,6 +34,12 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion "28.0.13004108"
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     splits{
         abi {
             reset()

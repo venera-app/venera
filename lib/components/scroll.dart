@@ -237,7 +237,7 @@ class _AppScrollBarState extends State<AppScrollBar> {
 
   double viewHeight = 0;
 
-  final _scrollIndicatorSize = App.isDesktop ? 42.0 : 64.0;
+  final _scrollIndicatorSize = App.isDesktop ? 36.0 : 54.0;
 
   late final VerticalDragGestureRecognizer _dragGestureRecognizer;
 
@@ -354,7 +354,7 @@ class _ScrollIndicatorPainter extends CustomPainter {
         Offset(size.width, 0),
         radius: Radius.circular(size.width),
       );
-    canvas.drawShadow(path, shadowColor, 4, true);
+    canvas.drawShadow(path, shadowColor, 2, true);
     var backgroundPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.fill;

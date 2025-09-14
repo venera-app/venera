@@ -77,8 +77,10 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
 
   @override
   void onReadEnd() {
-    history ??=
-        HistoryManager().find(widget.id, ComicType(widget.sourceKey.hashCode));
+    history ??= HistoryManager().find(
+      widget.id,
+      ComicType(widget.sourceKey.hashCode),
+    );
     update();
   }
 
@@ -91,6 +93,32 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       cid: widget.id,
       heroID: widget.heroID,
     );
+  }
+
+  @override
+  Widget buildError() {
+    final isDownloaded = LocalManager().isDownloaded(
+      widget.id,
+      ComicType.fromKey(widget.sourceKey),
+    );
+    Widget? action;
+    if (isDownloaded) {
+      action = FilledButton.tonal(
+        child: Text("Read".tl),
+        onPressed: () {
+          final localComic = LocalManager().find(
+            widget.id,
+            ComicType.fromKey(widget.sourceKey),
+          );
+          if (localComic == null) {
+            context.showMessage(message: "Local comic not found".tl);
+            return;
+          }
+          localComic.read();
+        },
+      );
+    }
+    return NetworkError(message: error!, retry: retry, action: action);
   }
 
   @override
@@ -114,7 +142,8 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   ComicDetails get comic => data!;
 
   void onScroll() {
-    var offset = scrollController.position.pixels -
+    var offset =
+        scrollController.position.pixels -
         scrollController.position.minScrollExtent;
     var showFAB = offset > 0;
     if (showFAB != this.showFAB) {
@@ -145,9 +174,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       floatingActionButton: showFAB
           ? FloatingActionButton(
               onPressed: () {
-                scrollController.animateTo(0,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.ease);
+                scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.ease,
+                );
               },
               child: const Icon(Icons.arrow_upward),
             )
@@ -164,7 +195,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           buildThumbnails(),
           buildRecommend(),
           SliverPadding(
-            padding: EdgeInsets.only(bottom: context.padding.bottom + 80), // Add additional padding for FAB
+            padding: EdgeInsets.only(
+              bottom: context.padding.bottom + 80,
+            ), // Add additional padding for FAB
           ),
         ],
       ),
@@ -190,12 +223,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               initialPage: history?.page,
               initialChapter: history?.ep,
               initialChapterGroup: history?.group,
-              history: history ??
-                  History.fromModel(
-                    model: localComic,
-                    ep: 0,
-                    page: 0,
-                  ),
+              history:
+                  history ??
+                  History.fromModel(model: localComic, ep: 0, page: 0),
               author: localComic.subTitle ?? '',
               tags: localComic.tags,
             );
@@ -215,8 +245,10 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       widget.id,
       ComicType(widget.sourceKey.hashCode),
     );
-    history =
-        HistoryManager().find(widget.id, ComicType(widget.sourceKey.hashCode));
+    history = HistoryManager().find(
+      widget.id,
+      ComicType(widget.sourceKey.hashCode),
+    );
     return comicSource.loadComicInfo!(widget.id);
   }
 
@@ -225,11 +257,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     isLiked = comic.isLiked ?? false;
     isFavorite = comic.isFavorite ?? false;
     if (comic.chapters == null) {
-      isDownloaded = LocalManager().isDownloaded(
-        comic.id,
-        comic.comicType,
-        0,
-      );
+      isDownloaded = LocalManager().isDownloaded(comic.id, comic.comicType, 0);
     }
   }
 
@@ -242,7 +270,9 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       ),
       actions: [
         IconButton(
-            onPressed: showMoreActions, icon: const Icon(Icons.more_horiz))
+          onPressed: showMoreActions,
+          icon: const Icon(Icons.more_horiz),
+        ),
       ],
     );
 
@@ -288,8 +318,10 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               children: [
                 SelectableText(comic.title, style: ts.s18),
                 if (comic.subTitle != null)
-                  SelectableText(comic.subTitle!, style: ts.s14)
-                      .paddingVertical(4),
+                  SelectableText(
+                    comic.subTitle!,
+                    style: ts.s14,
+                  ).paddingVertical(4),
                 Text(
                   (ComicSource.find(comic.sourceKey)?.name) ?? '',
                   style: ts.s12,
@@ -338,10 +370,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                   icon: const Icon(Icons.favorite_border),
                   activeIcon: const Icon(Icons.favorite),
                   isActive: isLiked,
-                  text: ((data!.likesCount != null)
-                          ? (data!.likesCount! + (isLiked ? 1 : 0))
-                          : (isLiked ? 'Liked'.tl : 'Like'.tl))
-                      .toString(),
+                  text:
+                      ((data!.likesCount != null)
+                              ? (data!.likesCount! + (isLiked ? 1 : 0))
+                              : (isLiked ? 'Liked'.tl : 'Like'.tl))
+                          .toString(),
                   isLoading: isLiking,
                   onPressed: likeOrUnlike,
                   iconColor: context.useTextColor(Colors.red),
@@ -383,9 +416,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                 Expanded(
                   child: hasHistory
                       ? FilledButton(
-                          onPressed: continueRead, child: Text("Continue".tl))
+                          onPressed: continueRead,
+                          child: Text("Continue".tl),
+                        )
                       : FilledButton(onPressed: read, child: Text("Read".tl)),
-                )
+                ),
               ],
             ).paddingHorizontal(16).paddingVertical(8),
           if (history != null)
@@ -412,19 +447,20 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
                         var epName = "E$ep";
                         String? groupName;
                         try {
-                          if (group == null){
+                          if (group == null) {
                             epName = comic.chapters!.titles.elementAt(
                               math.min(ep - 1, comic.chapters!.length - 1),
                             );
                           } else {
-                            groupName = comic.chapters!.groups.elementAt(group - 1);
+                            groupName = comic.chapters!.groups.elementAt(
+                              group - 1,
+                            );
                             epName = comic.chapters!
                                 .getGroupByIndex(group - 1)
                                 .values
                                 .elementAt(ep - 1);
                           }
-                        }
-                        catch(e) {
+                        } catch (e) {
                           // ignore
                         }
                         text = groupName == null
@@ -453,9 +489,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     return SliverLazyToBoxAdapter(
       child: Column(
         children: [
-          ListTile(
-            title: Text("Description".tl),
-          ),
+          ListTile(title: Text("Description".tl)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SelectableText(comic.description!).fixWidth(double.infinity),
@@ -539,10 +573,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         );
       } else {
         return Container(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: borderRadius,
-          ),
+          decoration: BoxDecoration(color: color, borderRadius: borderRadius),
           child: Text(text).padding(padding),
         );
       }
@@ -552,13 +583,13 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       if (int.tryParse(time) != null) {
         var t = int.tryParse(time);
         if (t! > 1000000000000) {
-          return DateTime.fromMillisecondsSinceEpoch(t)
-              .toString()
-              .substring(0, 19);
+          return DateTime.fromMillisecondsSinceEpoch(
+            t,
+          ).toString().substring(0, 19);
         } else {
-          return DateTime.fromMillisecondsSinceEpoch(t * 1000)
-              .toString()
-              .substring(0, 19);
+          return DateTime.fromMillisecondsSinceEpoch(
+            t * 1000,
+          ).toString().substring(0, 19);
         }
       }
       if (time.contains('T') || time.contains('Z')) {
@@ -583,17 +614,11 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            title: Text("Information".tl),
-          ),
+          ListTile(title: Text("Information".tl)),
           if (comic.stars != null)
             Row(
               children: [
-                StarRating(
-                  value: comic.stars!,
-                  size: 24,
-                  onTap: starRating,
-                ),
+                StarRating(value: comic.stars!, size: 24, onTap: starRating),
                 const SizedBox(width: 8),
                 Text(comic.stars!.toStringAsFixed(2)),
               ],
@@ -671,24 +696,19 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
     if (comic.recommend == null || comic.recommend!.isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
-    return SliverMainAxisGroup(slivers: [
-      SliverToBoxAdapter(
-        child: ListTile(
-          title: Text("Related".tl),
-        ),
-      ),
-      SliverGridComics(comics: comic.recommend!),
-    ]);
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(child: ListTile(title: Text("Related".tl))),
+        SliverGridComics(comics: comic.recommend!),
+      ],
+    );
   }
 
   Widget buildComments() {
     if (comic.comments == null || comic.comments!.isEmpty) {
       return const SliverPadding(padding: EdgeInsets.zero);
     }
-    return _CommentsPart(
-      comments: comic.comments!,
-      showMore: showComments,
-    );
+    return _CommentsPart(comments: comic.comments!, showMore: showComments);
   }
 }
 
@@ -792,20 +812,21 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
               itemCount: widget.eps.length,
               itemBuilder: (context, i) {
                 return CheckboxListTile(
-                    title: Text(widget.eps[i]),
-                    value: selected.contains(i) ||
-                        widget.downloadedEps.contains(i),
-                    onChanged: widget.downloadedEps.contains(i)
-                        ? null
-                        : (v) {
-                            setState(() {
-                              if (selected.contains(i)) {
-                                selected.remove(i);
-                              } else {
-                                selected.add(i);
-                              }
-                            });
+                  title: Text(widget.eps[i]),
+                  value:
+                      selected.contains(i) || widget.downloadedEps.contains(i),
+                  onChanged: widget.downloadedEps.contains(i)
+                      ? null
+                      : (v) {
+                          setState(() {
+                            if (selected.contains(i)) {
+                              selected.remove(i);
+                            } else {
+                              selected.add(i);
+                            }
                           });
+                        },
+                );
               },
             ),
           ),
@@ -813,9 +834,7 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
             height: 50,
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(
-                  color: context.colorScheme.outlineVariant,
-                ),
+                top: BorderSide(color: context.colorScheme.outlineVariant),
               ),
             ),
             child: Row(
@@ -880,8 +899,12 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget buildContainer(double? width, double? height,
-        {Color? color, double? radius}) {
+    Widget buildContainer(
+      double? width,
+      double? height, {
+      Color? color,
+      double? radius,
+    }) {
       return Container(
         height: height,
         width: width,
@@ -923,13 +946,9 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
           if (context.width < changePoint)
             Row(
               children: [
-                Expanded(
-                  child: buildContainer(null, 36, radius: 18),
-                ),
+                Expanded(child: buildContainer(null, 36, radius: 18)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: buildContainer(null, 36, radius: 18),
-                ),
+                Expanded(child: buildContainer(null, 36, radius: 18)),
               ],
             ).paddingHorizontal(16),
           const Divider(),
@@ -938,7 +957,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2.4,
             ).fixHeight(24).fixWidth(24),
-          )
+          ),
         ],
       ),
     );
@@ -948,11 +967,7 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
     Widget child;
     if (cover != null) {
       child = AnimatedImage(
-        image: CachedImageProvider(
-          cover!,
-          sourceKey: sourceKey,
-          cid: cid,
-        ),
+        image: CachedImageProvider(cover!, sourceKey: sourceKey, cid: cid),
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:venera/foundation/app.dart';
 
 const double _kBackGestureWidth = 20.0;
 const int _kMaxDroppedSwipePageForwardAnimationTime = 800;
@@ -115,7 +116,14 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
-    return SlidePageTransitionBuilder().buildTransitions(
+    PageTransitionsBuilder builder;
+    if (App.isAndroid) {
+      builder = PredictiveBackPageTransitionsBuilder();
+    } else {
+      builder = SlidePageTransitionBuilder();
+    }
+
+    return builder.buildTransitions(
         this,
         context,
         animation,
