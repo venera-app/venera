@@ -17,6 +17,7 @@ ImageProvider? _findImageProvider(Comic comic) {
       comic.cover,
       sourceKey: comic.sourceKey,
       cid: comic.id,
+      fallbackToLocalCover: comic is FavoriteItem,
     );
   }
   return image;
