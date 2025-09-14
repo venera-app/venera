@@ -7,8 +7,11 @@ class PaneItemEntry {
 
   IconData activeIcon;
 
-  PaneItemEntry(
-      {required this.label, required this.icon, required this.activeIcon});
+  PaneItemEntry({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
 }
 
 class PaneActionEntry {
@@ -18,20 +21,24 @@ class PaneActionEntry {
 
   VoidCallback onTap;
 
-  PaneActionEntry(
-      {required this.label, required this.icon, required this.onTap});
+  PaneActionEntry({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 }
 
 class NaviPane extends StatefulWidget {
-  const NaviPane(
-      {required this.paneItems,
-      required this.paneActions,
-      required this.pageBuilder,
-      this.initialPage = 0,
-      this.onPageChanged,
-      required this.observer,
-      required this.navigatorKey,
-      super.key});
+  const NaviPane({
+    required this.paneItems,
+    required this.paneActions,
+    required this.pageBuilder,
+    this.initialPage = 0,
+    this.onPageChanged,
+    required this.observer,
+    required this.navigatorKey,
+    super.key,
+  });
 
   final List<PaneItemEntry> paneItems;
 
@@ -187,7 +194,8 @@ class NaviPaneState extends State<NaviPane>
                 child: buildLeft(),
               ),
               Positioned.fill(
-                left: _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
+                left:
+                    _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
                     (_kSideBarWidth - _kFoldedSideBarWidth) *
                         ((value - 2).clamp(0, 1)),
                 child: buildMainView(),
@@ -202,14 +210,19 @@ class NaviPaneState extends State<NaviPane>
   Widget buildMainView() {
     return HeroControllerScope(
       controller: MaterialApp.createMaterialHeroController(),
-      child: Navigator(
-        observers: [widget.observer],
-        key: widget.navigatorKey,
-        onGenerateRoute: (settings) => AppPageRoute(
-          preventRebuild: false,
-          builder: (context) {
-            return _NaviMainView(state: this);
-          },
+      child: NavigatorPopHandler(
+        onPopWithResult: (result) {
+          widget.navigatorKey.currentState?.maybePop(result);
+        },
+        child: Navigator(
+          observers: [widget.observer],
+          key: widget.navigatorKey,
+          onGenerateRoute: (settings) => AppPageRoute(
+            preventRebuild: false,
+            builder: (context) {
+              return _NaviMainView(state: this);
+            },
+          ),
         ),
       ),
     );
@@ -239,7 +252,7 @@ class NaviPaneState extends State<NaviPane>
                   icon: Icon(action.icon),
                   onPressed: action.onTap,
                 ),
-              )
+              ),
           ],
         ),
       ),
@@ -261,21 +274,18 @@ class NaviPaneState extends State<NaviPane>
           ),
         ),
         child: Row(
-          children: List<Widget>.generate(
-            widget.paneItems.length,
-            (index) {
-              return Expanded(
-                child: _SingleBottomNaviWidget(
-                  enabled: currentPage == index,
-                  entry: widget.paneItems[index],
-                  onTap: () {
-                    updatePage(index);
-                  },
-                  key: ValueKey(index),
-                ),
-              );
-            },
-          ),
+          children: List<Widget>.generate(widget.paneItems.length, (index) {
+            return Expanded(
+              child: _SingleBottomNaviWidget(
+                enabled: currentPage == index,
+                entry: widget.paneItems[index],
+                onTap: () {
+                  updatePage(index);
+                },
+                key: ValueKey(index),
+              ),
+            );
+          }),
         ),
       ),
     );
@@ -286,7 +296,8 @@ class NaviPaneState extends State<NaviPane>
     const paddingHorizontal = 12.0;
     return Material(
       child: Container(
-        width: _kFoldedSideBarWidth +
+        width:
+            _kFoldedSideBarWidth +
             (_kSideBarWidth - _kFoldedSideBarWidth) * ((value - 2).clamp(0, 1)),
         height: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
@@ -323,9 +334,7 @@ class NaviPaneState extends State<NaviPane>
                 key: ValueKey(index + widget.paneItems.length),
               ),
             ),
-            const SizedBox(
-              height: 16,
-            )
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -334,12 +343,13 @@ class NaviPaneState extends State<NaviPane>
 }
 
 class _SideNaviWidget extends StatelessWidget {
-  const _SideNaviWidget(
-      {required this.enabled,
-      required this.entry,
-      required this.onTap,
-      required this.showTitle,
-      super.key});
+  const _SideNaviWidget({
+    required this.enabled,
+    required this.entry,
+    required this.onTap,
+    required this.showTitle,
+    super.key,
+  });
 
   final bool enabled;
 
@@ -368,18 +378,18 @@ class _SideNaviWidget extends StatelessWidget {
             ? Row(
                 children: [icon, const SizedBox(width: 12), Text(entry.label)],
               )
-            : Align(
-                alignment: Alignment.centerLeft,
-                child: icon,
-              ),
+            : Align(alignment: Alignment.centerLeft, child: icon),
       ),
     ).paddingVertical(4);
   }
 }
 
 class _PaneActionWidget extends StatelessWidget {
-  const _PaneActionWidget(
-      {required this.entry, required this.showTitle, super.key});
+  const _PaneActionWidget({
+    required this.entry,
+    required this.showTitle,
+    super.key,
+  });
 
   final PaneActionEntry entry;
 
@@ -399,21 +409,19 @@ class _PaneActionWidget extends StatelessWidget {
             ? Row(
                 children: [icon, const SizedBox(width: 12), Text(entry.label)],
               )
-            : Align(
-                alignment: Alignment.centerLeft,
-                child: icon,
-              ),
+            : Align(alignment: Alignment.centerLeft, child: icon),
       ),
     ).paddingVertical(4);
   }
 }
 
 class _SingleBottomNaviWidget extends StatefulWidget {
-  const _SingleBottomNaviWidget(
-      {required this.enabled,
-      required this.entry,
-      required this.onTap,
-      super.key});
+  const _SingleBottomNaviWidget({
+    required this.enabled,
+    required this.entry,
+    required this.onTap,
+    super.key,
+  });
 
   final bool enabled;
 
@@ -482,8 +490,9 @@ class _SingleBottomNaviWidgetState extends State<_SingleBottomNaviWidget>
   Widget buildContent() {
     final value = controller.value;
     final colorScheme = Theme.of(context).colorScheme;
-    final icon =
-        Icon(widget.enabled ? widget.entry.activeIcon : widget.entry.icon);
+    final icon = Icon(
+      widget.enabled ? widget.entry.activeIcon : widget.entry.icon,
+    );
     return Center(
       child: Container(
         width: 64,
@@ -570,8 +579,11 @@ class NaviObserver extends NavigatorObserver implements Listenable {
 }
 
 class _NaviPopScope extends StatelessWidget {
-  const _NaviPopScope(
-      {required this.child, this.popGesture = false, required this.action});
+  const _NaviPopScope({
+    required this.child,
+    this.popGesture = false,
+    required this.action,
+  });
 
   final Widget child;
   final bool popGesture;
@@ -581,32 +593,25 @@ class _NaviPopScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget res = App.isIOS
-        ? child
-        : PopScope(
-            canPop: App.isAndroid ? false : true,
-            onPopInvokedWithResult: (value, result) {
-              action();
-            },
-            child: child,
-          );
+    Widget res = child;
     if (popGesture) {
       res = GestureDetector(
-          onPanStart: (details) {
-            if (details.globalPosition.dx < 64) {
-              panStartAtEdge = true;
+        onPanStart: (details) {
+          if (details.globalPosition.dx < 64) {
+            panStartAtEdge = true;
+          }
+        },
+        onPanEnd: (details) {
+          if (details.velocity.pixelsPerSecond.dx < 0 ||
+              details.velocity.pixelsPerSecond.dx > 0) {
+            if (panStartAtEdge) {
+              action();
             }
-          },
-          onPanEnd: (details) {
-            if (details.velocity.pixelsPerSecond.dx < 0 ||
-                details.velocity.pixelsPerSecond.dx > 0) {
-              if (panStartAtEdge) {
-                action();
-              }
-            }
-            panStartAtEdge = false;
-          },
-          child: res);
+          }
+          panStartAtEdge = false;
+        },
+        child: res,
+      );
     }
     return res;
   }
