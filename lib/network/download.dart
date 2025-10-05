@@ -107,7 +107,21 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     var local = LocalManager().find(id, comicType);
     if (path != null) {
       if (local == null) {
-        Directory(path!).deleteIgnoreError(recursive: true);
+        Future.sync(() async {
+          var tasks = this.tasks.values.toList();
+          for (var i = 0; i < tasks.length; i++) {
+            if (!tasks[i].isComplete) {
+              tasks[i].cancel();
+              await tasks[i].wait();
+            }
+          }
+          try {
+            await Directory(path!).delete(recursive: true);
+          }
+          catch(e) {
+            Log.error("Download", "Failed to delete directory: $e");
+          }
+        });
       } else if (chapters != null) {
         for (var c in chapters!) {
           var dir = Directory(FilePath.join(path!, c));
@@ -197,7 +211,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       if (comic!.chapters != null) {
         saveTo = Directory(FilePath.join(
           path!,
-          _images!.keys.elementAt(_chapter),
+          LocalManager.getChapterDirectoryName(
+            _images!.keys.elementAt(_chapter),
+          ),
         ));
         if (!saveTo.existsSync()) {
           saveTo.createSync(recursive: true);
