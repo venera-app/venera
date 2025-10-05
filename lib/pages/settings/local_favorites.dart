@@ -13,6 +13,14 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("Local Favorites".tl)),
+        _SwitchSetting(
+          title: "Show local favorites before network favorites".tl,
+          settingKey: "localFavoritesFirst",
+        ).toSliver(),
+        _SwitchSetting(
+          title: "Auto close favorite panel after operation".tl,
+          settingKey: "autoCloseFavoritePanel",
+        ).toSliver(),
         SelectSetting(
           title: "Add new favorite to".tl,
           settingKey: "newFavoriteAddTo",

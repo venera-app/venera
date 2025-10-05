@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:collection';
+import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -17,10 +20,12 @@ import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/network/download.dart';
+import 'package:venera/network/cache.dart';
 import 'package:venera/pages/favorites/favorites_page.dart';
 import 'package:venera/pages/reader/reader.dart';
 import 'package:venera/utils/app_links.dart';
 import 'package:venera/utils/ext.dart';
+import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/tags_translation.dart';
 import 'package:venera/utils/translations.dart';
@@ -37,6 +42,8 @@ part 'favorite.dart';
 part 'comments_preview.dart';
 
 part 'actions.dart';
+
+part 'cover_viewer.dart';
 
 class ComicPage extends StatefulWidget {
   const ComicPage({
@@ -256,6 +263,18 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   Future<void> onDataLoaded() async {
     isLiked = comic.isLiked ?? false;
     isFavorite = comic.isFavorite ?? false;
+    // For sources with multi-folder favorites, prefer querying folders to get accurate favorite status
+    // Some sources may not set isFavorite reliably when multi-folder is enabled
+    if (comicSource.favoriteData?.loadFolders != null && comicSource.isLogged) {
+      var res = await comicSource.favoriteData!.loadFolders!(comic.id);
+      if (!res.error) {
+        if (res.subData is List) {
+          var list = List<String>.from(res.subData);
+          isFavorite = list.isNotEmpty;
+          update();
+        }
+      }
+    }
     if (comic.chapters == null) {
       isDownloaded = LocalManager().isDownloaded(comic.id, comic.comicType, 0);
     }
@@ -283,31 +302,35 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(width: 16),
-          Hero(
-            tag: "cover${widget.heroID}",
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colorScheme.outlineVariant,
-                    blurRadius: 1,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              height: 144,
-              width: 144 * 0.72,
-              clipBehavior: Clip.antiAlias,
-              child: AnimatedImage(
-                image: CachedImageProvider(
-                  widget.cover ?? comic.cover,
-                  sourceKey: comic.sourceKey,
-                  cid: comic.id,
+          GestureDetector(
+            onTap: () => _viewCover(context),
+            onLongPress: () => _saveCover(context),
+            child: Hero(
+              tag: "cover${widget.heroID}",
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.colorScheme.outlineVariant,
+                      blurRadius: 1,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
-                width: double.infinity,
-                height: double.infinity,
+                height: 144,
+                width: 144 * 0.72,
+                clipBehavior: Clip.antiAlias,
+                child: AnimatedImage(
+                  image: CachedImageProvider(
+                    widget.cover ?? comic.cover,
+                    sourceKey: comic.sourceKey,
+                    cid: comic.id,
+                  ),
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
               ),
             ),
           ),
@@ -709,6 +732,54 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       return const SliverPadding(padding: EdgeInsets.zero);
     }
     return _CommentsPart(comments: comic.comments!, showMore: showComments);
+  }
+
+  void _viewCover(BuildContext context) {
+    final imageProvider = CachedImageProvider(
+      widget.cover ?? comic.cover,
+      sourceKey: comic.sourceKey,
+      cid: comic.id,
+    );
+
+    context.to(
+      () => _CoverViewer(
+        imageProvider: imageProvider,
+        title: comic.title,
+        heroTag: "cover${widget.heroID}",
+      ),
+    );
+  }
+
+  void _saveCover(BuildContext context) async {
+    try {
+      final imageProvider = CachedImageProvider(
+        widget.cover ?? comic.cover,
+        sourceKey: comic.sourceKey,
+        cid: comic.id,
+      );
+
+      final imageStream = imageProvider.resolve(const ImageConfiguration());
+      final completer = Completer<Uint8List>();
+
+      imageStream.addListener(
+        ImageStreamListener((ImageInfo info, bool _) async {
+          final byteData = await info.image.toByteData(
+            format: ImageByteFormat.png,
+          );
+          if (byteData != null) {
+            completer.complete(byteData.buffer.asUint8List());
+          }
+        }),
+      );
+
+      final data = await completer.future;
+      final fileType = detectFileType(data);
+      await saveFile(filename: "cover${fileType.ext}", data: data);
+    } catch (e) {
+      if (context.mounted) {
+        context.showMessage(message: "Error".tl);
+      }
+    }
   }
 }
 
