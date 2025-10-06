@@ -599,22 +599,24 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void saveCurrentImage() async {
-    var data = await selectImageToData();
-    if (data == null) {
+    var result = await selectImageToData();
+    if (result == null) {
       return;
     }
+    var (imageIndex, data) = result;
     var fileType = detectFileType(data);
-    var filename = "${context.reader.page}${fileType.ext}";
+    var filename = "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
     saveFile(data: data, filename: filename);
   }
 
   void share() async {
-    var data = await selectImageToData();
-    if (data == null) {
+    var result = await selectImageToData();
+    if (result == null) {
       return;
     }
+    var (imageIndex, data) = result;
     var fileType = detectFileType(data);
-    var filename = "${context.reader.page}${fileType.ext}";
+    var filename = "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
     Share.shareFile(data: data, filename: filename, mime: fileType.mime);
   }
 
@@ -719,8 +721,29 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   Future<int?> selectImage() async {
     var reader = context.reader;
     var imageViewController = context.reader._imageViewController;
-    if (imageViewController is _GalleryModeState && reader.imagesPerPage == 1) {
-      return reader.page - 1;
+
+    bool needsSelection = false;
+    int? singleImageIndex;
+
+    if (imageViewController is _GalleryModeState) {
+      var range = imageViewController.getCurrentPageImageRange();
+      if (range != null) {
+        var (startIndex, endIndex) = range;
+        int actualImageCount = endIndex - startIndex;
+        if (actualImageCount == 1) {
+          needsSelection = false;
+          singleImageIndex = startIndex;
+        } else {
+          needsSelection = true;
+        }
+      }
+    } else if (imageViewController is _ContinuousModeState) {
+      needsSelection = false;
+      singleImageIndex = reader.page - 1;
+    }
+
+    if (!needsSelection && singleImageIndex != null) {
+      return singleImageIndex;
     } else {
       var location = await _showSelectImageOverlay();
       if (location == null) {
@@ -734,20 +757,23 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
   }
 
-  /// Same as [selectImage], but return the image data.
-  Future<Uint8List?> selectImageToData() async {
+  /// Same as [selectImage], but return the image data with its index.
+  /// Returns (imageIndex, imageData) or null if cancelled.
+  Future<(int, Uint8List)?> selectImageToData() async {
     var i = await selectImage();
     if (i == null) {
       return null;
     }
     var imageKey = context.reader.images![i];
+    Uint8List data;
     if (imageKey.startsWith("file://")) {
-      return await File(imageKey.substring(7)).readAsBytes();
+      data = await File(imageKey.substring(7)).readAsBytes();
     } else {
-      return (await CacheManager().findCache(
+      data = await (await CacheManager().findCache(
         "$imageKey@${context.reader.type.sourceKey}@${context.reader.cid}@${context.reader.eid}",
       ))!.readAsBytes();
     }
+    return (i, data);
   }
 
   Future<Offset?> _showSelectImageOverlay() {

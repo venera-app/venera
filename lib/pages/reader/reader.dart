@@ -116,9 +116,9 @@ class _ReaderState extends State<Reader>
       return 1;
     }
     if (!showSingleImageOnFirstPage()) {
-      return (images!.length / imagesPerPage()).ceil();
+      return (images!.length / imagesPerPage).ceil();
     } else {
-      return 1 + ((images!.length - 1) / imagesPerPage()).ceil();
+      return 1 + ((images!.length - 1) / imagesPerPage).ceil();
     }
   }
 
@@ -277,13 +277,13 @@ class _ReaderState extends State<Reader>
         history!.page = images?.length ?? 1;
       } else {
         /// Record the first image of the page
-        if (!showSingleImageOnFirstPage() || imagesPerPage() == 1) {
-          history!.page = (page - 1) * imagesPerPage() + 1;
+        if (!showSingleImageOnFirstPage() || imagesPerPage == 1) {
+          history!.page = (page - 1) * imagesPerPage + 1;
         } else {
           if (page == 1) {
             history!.page = 1;
           } else {
-            history!.page = (page - 2) * imagesPerPage() + 2;
+            history!.page = (page - 2) * imagesPerPage + 2;
           }
         }
       }
@@ -371,13 +371,13 @@ abstract mixin class _ImagePerPageHandler {
   ComicType get type;
 
   void initImagesPerPage(int initialPage) {
-    _lastImagesPerPage = imagesPerPage();
+    _lastImagesPerPage = imagesPerPage;
     _lastOrientation = isPortrait;
-    if (imagesPerPage() != 1) {
+    if (imagesPerPage != 1) {
       if (showSingleImageOnFirstPage()) {
-        page = ((initialPage - 1) / imagesPerPage()).ceil() + 1;
+        page = ((initialPage - 1) / imagesPerPage).ceil() + 1;
       } else {
-        page = (initialPage / imagesPerPage()).ceil();
+        page = (initialPage / imagesPerPage).ceil();
       }
     }
   }
@@ -386,7 +386,7 @@ abstract mixin class _ImagePerPageHandler {
       appdata.settings.getReaderSetting(cid, type.sourceKey, 'showSingleImageOnFirstPage');
 
   /// The number of images displayed on one screen
-  int imagesPerPage() {
+  int get imagesPerPage {
     if (mode.isContinuous) return 1;
     if (isPortrait) {
       return appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerScreenPicNumberForPortrait') ?? 1;
@@ -397,7 +397,7 @@ abstract mixin class _ImagePerPageHandler {
 
   /// Check if the number of images per page has changed
   void _checkImagesPerPageChange() {
-    int currentImagesPerPage = imagesPerPage();
+    int currentImagesPerPage = imagesPerPage;
     bool currentOrientation = isPortrait;
 
     if (_lastImagesPerPage != currentImagesPerPage || _lastOrientation != currentOrientation) {
