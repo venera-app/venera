@@ -759,6 +759,7 @@ class ComicSourceParser {
   LoadComicFunc? _parseLoadComicFunc() {
     return (id) async {
       try {
+        print("Loading comic $id from source $_key. Stacktrace:\n${StackTrace.current}");
         var res = await JsEngine().runCode("""
           ComicSource.sources.$_key.comic.loadInfo(${jsonEncode(id)})
         """);
