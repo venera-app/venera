@@ -140,12 +140,12 @@ class _GalleryModeState extends State<_GalleryMode>
   int get totalPages {
     if (!reader.showSingleImageOnFirstPage()) {
       return (reader.images!.length /
-              reader.imagesPerPage())
+              reader.imagesPerPage)
           .ceil();
     } else {
       return 1 +
           ((reader.images!.length - 1) /
-                  reader.imagesPerPage())
+                  reader.imagesPerPage)
               .ceil();
     }
   }
@@ -169,7 +169,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
   /// Get the range of images for the given page. [page] is 1-based.
   (int start, int end) getPageImagesRange(int page) {
-    var imagesPerPage = reader.imagesPerPage();
+    var imagesPerPage = reader.imagesPerPage;
     if (reader.showSingleImageOnFirstPage()) {
       if (page == 1) {
         return (0, 1);
@@ -189,6 +189,16 @@ class _GalleryModeState extends State<_GalleryMode>
       );
       return (startIndex, endIndex);
     }
+  }
+
+  /// Get the image indices for current page. Returns null if no images.
+  /// Returns a single index if only one image, or a range if multiple images.
+  (int, int)? getCurrentPageImageRange() {
+    if (reader.images == null || reader.images!.isEmpty) {
+      return null;
+    }
+    var (startIndex, endIndex) = getPageImagesRange(reader.page);
+    return (startIndex, endIndex);
   }
 
   /// [cache] is used to cache the images.
@@ -259,7 +269,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             photoViewControllers[index] ??= PhotoViewController();
 
-            if (reader.imagesPerPage() == 1 ||
+            if (reader.imagesPerPage == 1 ||
                 pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
                 filterQuality: FilterQuality.medium,
@@ -533,17 +543,27 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   String? getImageKeyByOffset(Offset offset) {
-    String? imageKey;
-    if (reader.imagesPerPage() == 1) {
-      imageKey = reader.images![reader.page - 1];
-    } else {
-      for (var imageState in imageStates) {
-        if ((imageState as _ComicImageState).containsPoint(offset)) {
-          imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+    var range = getCurrentPageImageRange();
+    if (range == null) return null;
+    
+    var (startIndex, endIndex) = range;
+    int actualImageCount = endIndex - startIndex;
+    
+    if (actualImageCount == 1) {
+      return reader.images![startIndex];
+    }
+    
+    for (var imageState in imageStates) {
+      if ((imageState as _ComicImageState).containsPoint(offset)) {
+        var imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+        int index = reader.images!.indexOf(imageKey);
+        if (index >= startIndex && index < endIndex) {
+          return imageKey;
         }
       }
     }
-    return imageKey;
+    
+    return reader.images![startIndex];
   }
 }
 
