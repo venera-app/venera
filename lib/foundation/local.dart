@@ -423,6 +423,7 @@ class LocalManager with ChangeNotifier {
     if (comic.hasChapters) {
       var cid =
           ep is int ? comic.chapters!.ids.elementAt(ep - 1) : (ep as String);
+      cid = getChapterDirectoryName(cid);
       directory = Directory(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
@@ -600,7 +601,10 @@ class LocalManager with ChangeNotifier {
     }
     var shouldRemovedDirs = <Directory>[];
     for (var chapter in chapters) {
-      var dir = Directory(FilePath.join(c.baseDir, chapter));
+      var dir = Directory(FilePath.join(
+        c.baseDir,
+        getChapterDirectoryName(chapter),
+      ));
       if (dir.existsSync()) {
         shouldRemovedDirs.add(dir);
       }
@@ -667,6 +671,21 @@ class LocalManager with ChangeNotifier {
         }
       }
     });
+  }
+
+  static String getChapterDirectoryName(String name) {
+    var builder = StringBuffer();
+    for (var i = 0; i < name.length; i++) {
+      var char = name[i];
+      if (char == '/' || char == '\\' || char == ':' || char == '*' ||
+          char == '?'
+          || char == '"' || char == '<' || char == '>' || char == '|') {
+        builder.write('_');
+      } else {
+        builder.write(char);
+      }
+    }
+    return builder.toString();
   }
 }
 

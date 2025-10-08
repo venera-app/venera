@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/utils/channel.dart';
 
 class ComicUpdateResult {
   final bool updated;
@@ -62,6 +63,7 @@ Future<ComicUpdateResult> updateComic(
       return ComicUpdateResult(updated, null);
     } catch (e, s) {
       Log.error("Check Updates", e, s);
+      await Future.delayed(const Duration(seconds: 2));
       retries--;
       if (retries == 0) {
         return ComicUpdateResult(false, e.toString());
@@ -114,23 +116,50 @@ void updateFolderBase(
   current = 0;
   stream.add(UpdateProgress(total, current, errors, updated));
 
-  var futures = <Future>[];
-  for (var comic in comicsToUpdate) {
-    var future = updateComic(comic, folder).then((result) {
-      current++;
-      if (result.updated) {
-        updated++;
+  var channel = Channel<FavoriteItemWithUpdateInfo>(10);
+
+  // Producer
+  () async {
+    var c = 0;
+    for (var comic in comicsToUpdate) {
+      await channel.push(comic);
+      c++;
+      // Throttle
+      if (c % 5 == 0) {
+        var delay = c % 100 + 1;
+        if (delay > 10) {
+          delay = 10;
+        }
+        await Future.delayed(Duration(seconds: delay));
       }
-      if (result.errorMessage != null) {
-        errors++;
+    }
+    channel.close();
+  }();
+
+  // Consumers
+  var updateFutures = <Future>[];
+  for (var i = 0; i < 5; i++) {
+    var f = () async {
+      while (true) {
+        var comic = await channel.pop();
+        if (comic == null) {
+          break;
+        }
+        var result = await updateComic(comic, folder);
+        current++;
+        if (result.updated) {
+          updated++;
+        }
+        if (result.errorMessage != null) {
+          errors++;
+        }
+        stream.add(UpdateProgress(total, current, errors, updated, comic, result.errorMessage));
       }
-      stream.add(
-          UpdateProgress(total, current, errors, updated, comic, result.errorMessage));
-    });
-    futures.add(future);
+    }();
+    updateFutures.add(f);
   }
 
-  await Future.wait(futures);
+  await Future.wait(updateFutures);
 
   if (updated > 0) {
     LocalFavoritesManager().notifyChanges();

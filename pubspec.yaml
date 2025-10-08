@@ -2,11 +2,11 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.5.1+151
+version: 1.5.2+152
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
-  flutter: 3.35.3
+  flutter: 3.35.5
 
 dependencies:
   flutter:
@@ -94,6 +94,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_to_arch: ^1.0.1
   flutter_to_debian: ^2.0.2
+  archive: any
 
 flutter:
   uses-material-design: true
@@ -104,6 +105,7 @@ flutter:
     - assets/tags.json
     - assets/tags_tw.json
     - assets/opencc.txt
+# fonts:
 
 flutter_to_arch:
   name: Venera

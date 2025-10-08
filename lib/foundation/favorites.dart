@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:isolate';
@@ -213,12 +214,10 @@ class LocalFavoritesManager with ChangeNotifier {
 
   late Map<String, int> counts;
 
+  var _hashedIds = <int, int>{};
+
   int get totalComics {
-    int total = 0;
-    for (var t in counts.values) {
-      total += t;
-    }
-    return total;
+    return _hashedIds.length;
   }
 
   int folderComics(String folder) {
@@ -280,6 +279,48 @@ class LocalFavoritesManager with ChangeNotifier {
     for (var folder in folderNames) {
       counts[folder] = count(folder);
     }
+    _initHashedIds(folderNames, _db.handle).then((value) {
+      _hashedIds = value;
+      notifyListeners();
+    });
+  }
+
+  void refreshHashedIds() {
+    _initHashedIds(folderNames, _db.handle).then((value) {
+      _hashedIds = value;
+      notifyListeners();
+    });
+  }
+
+  void reduceHashedId(String id, int type) {
+    var hash = id.hashCode ^ type;
+    if (_hashedIds.containsKey(hash)) {
+      if (_hashedIds[hash]! > 1) {
+        _hashedIds[hash] = _hashedIds[hash]! - 1;
+      } else {
+        _hashedIds.remove(hash);
+      }
+    }
+  }
+
+  static Future<Map<int, int>> _initHashedIds(
+      List<String> folders, Pointer<void> p) {
+    return Isolate.run(() {
+      var db = sqlite3.fromPointer(p);
+      var hashedIds = <int, int>{};
+      for (var folder in folders) {
+        var rows = db.select("""
+          select id, type from "$folder";
+        """);
+        for (var row in rows) {
+          var id = row["id"] as String;
+          var type = row["type"] as int;
+          var hash = id.hashCode ^ type;
+          hashedIds[hash] = (hashedIds[hash] ?? 0) + 1;
+        }
+      }
+      return hashedIds;
+    });
   }
 
   List<String> find(String id, ComicType type) {
@@ -559,7 +600,6 @@ class LocalFavoritesManager with ChangeNotifier {
   /// return true if success, false if already exists
   bool addComic(String folder, FavoriteItem comic,
       [int? order, String? updateTime]) {
-    _modifiedAfterLastCache = true;
     if (!existsFolder(folder)) {
       throw Exception("Folder does not exists");
     }
@@ -614,14 +654,14 @@ class LocalFavoritesManager with ChangeNotifier {
     } else {
       counts[folder] = counts[folder]! + 1;
     }
+    var hash = comic.id.hashCode ^ comic.type.value;
+    _hashedIds[hash] = (_hashedIds[hash] ?? 0) + 1;
     notifyListeners();
     return true;
   }
 
   void moveFavorite(
       String sourceFolder, String targetFolder, String id, ComicType type) {
-    _modifiedAfterLastCache = true;
-
     if (!existsFolder(sourceFolder)) {
       throw Exception("Source folder does not exist");
     }
@@ -655,8 +695,6 @@ class LocalFavoritesManager with ChangeNotifier {
 
   void batchMoveFavorites(
       String sourceFolder, String targetFolder, List<FavoriteItem> items) {
-    _modifiedAfterLastCache = true;
-
     if (!existsFolder(sourceFolder)) {
       throw Exception("Source folder does not exist");
     }
@@ -691,25 +729,15 @@ class LocalFavoritesManager with ChangeNotifier {
     _db.execute("COMMIT");
 
     // Update counts
-    if (counts[targetFolder] == null) {
-      counts[targetFolder] = count(targetFolder);
-    } else {
-      counts[targetFolder] = counts[targetFolder]! + items.length;
-    }
-
-    if (counts[sourceFolder] != null) {
-      counts[sourceFolder] = counts[sourceFolder]! - items.length;
-    } else {
-      counts[sourceFolder] = count(sourceFolder);
-    }
+    counts[targetFolder] = count(targetFolder);
+    counts[sourceFolder] = count(sourceFolder);
+    refreshHashedIds();
 
     notifyListeners();
   }
 
   void batchCopyFavorites(
       String sourceFolder, String targetFolder, List<FavoriteItem> items) {
-    _modifiedAfterLastCache = true;
-
     if (!existsFolder(sourceFolder)) {
       throw Exception("Source folder does not exist");
     }
@@ -740,18 +768,14 @@ class LocalFavoritesManager with ChangeNotifier {
     _db.execute("COMMIT");
 
     // Update counts
-    if (counts[targetFolder] == null) {
-      counts[targetFolder] = count(targetFolder);
-    } else {
-      counts[targetFolder] = counts[targetFolder]! + items.length;
-    }
+    counts[targetFolder] = count(targetFolder);
+    refreshHashedIds();
 
     notifyListeners();
   }
 
   /// delete a folder
   void deleteFolder(String name) {
-    _modifiedAfterLastCache = true;
     _db.execute("""
       drop table "$name";
     """);
@@ -760,11 +784,11 @@ class LocalFavoritesManager with ChangeNotifier {
       where folder_name == ?;
     """, [name]);
     counts.remove(name);
+    refreshHashedIds();
     notifyListeners();
   }
 
   void deleteComicWithId(String folder, String id, ComicType type) {
-    _modifiedAfterLastCache = true;
     LocalFavoriteImageProvider.delete(id, type.value);
     _db.execute("""
       delete from "$folder"
@@ -775,11 +799,11 @@ class LocalFavoritesManager with ChangeNotifier {
     } else {
       counts[folder] = count(folder);
     }
+    reduceHashedId(id, type.value);
     notifyListeners();
   }
 
   void batchDeleteComics(String folder, List<FavoriteItem> comics) {
-    _modifiedAfterLastCache = true;
     _db.execute("BEGIN TRANSACTION");
     try {
       for (var comic in comics) {
@@ -800,11 +824,13 @@ class LocalFavoritesManager with ChangeNotifier {
       return;
     }
     _db.execute("COMMIT");
+    for (var comic in comics) {
+      reduceHashedId(comic.id, comic.type.value);
+    }
     notifyListeners();
   }
 
   void batchDeleteComicsInAllFolders(List<ComicID> comics) {
-    _modifiedAfterLastCache = true;
     _db.execute("BEGIN TRANSACTION");
     var folderNames = _getFolderNamesWithDB();
     try {
@@ -824,6 +850,10 @@ class LocalFavoritesManager with ChangeNotifier {
     }
     initCounts();
     _db.execute("COMMIT");
+    for (var comic in comics) {
+      var hash = comic.id.hashCode ^ comic.type.value;
+      _hashedIds.remove(hash);
+    }
     notifyListeners();
   }
 
@@ -908,7 +938,6 @@ class LocalFavoritesManager with ChangeNotifier {
       markAsRead(id, type);
       return;
     }
-    _modifiedAfterLastCache = true;
     var followUpdatesFolder = appdata.settings['followUpdatesFolder'];
     for (final folder in folderNames) {
       var rows = _db.select("""
@@ -1029,28 +1058,9 @@ class LocalFavoritesManager with ChangeNotifier {
     notifyListeners();
   }
 
-  final _cachedFavoritedIds = <String, bool>{};
-
   bool isExist(String id, ComicType type) {
-    if (_modifiedAfterLastCache) {
-      _cacheFavoritedIds();
-    }
-    return _cachedFavoritedIds.containsKey("$id@${type.value}");
-  }
-
-  bool _modifiedAfterLastCache = true;
-
-  void _cacheFavoritedIds() {
-    _modifiedAfterLastCache = false;
-    _cachedFavoritedIds.clear();
-    for (var folder in folderNames) {
-      var rows = _db.select("""
-        select id, type from "$folder";
-      """);
-      for (var row in rows) {
-        _cachedFavoritedIds["${row["id"]}@${row["type"]}"] = true;
-      }
-    }
+    var hash = id.hashCode ^ type.value;
+    return _hashedIds.containsKey(hash);
   }
 
   void updateInfo(String folder, FavoriteItem comic, [bool notify = true]) {

@@ -199,6 +199,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         tertiary = light.tertiary;
       }
       return MaterialApp(
+        title: "venera",
         home: home,
         debugShowCheckedModeBanner: false,
         theme: getTheme(primary, secondary, tertiary, Brightness.light),
@@ -246,7 +247,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             /// https://github.com/flutter/flutter/issues/161086
             var isPaddingCheckError =
                 MediaQuery.of(context).viewPadding.top <= 0 ||
-                MediaQuery.of(context).viewPadding.top > 50;
+                MediaQuery.of(context).viewPadding.top > 200;
 
             if (isPaddingCheckError && Platform.isAndroid) {
               widget = MediaQuery(
