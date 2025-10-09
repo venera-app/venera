@@ -31,7 +31,7 @@ jobs:
     - name: Update AltStore source
       id: update_source
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
       run: |
         python update_alt_store.py
         git config --global user.name 'GitHub Action'
