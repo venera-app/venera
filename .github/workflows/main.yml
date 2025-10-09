@@ -83,6 +83,8 @@ jobs:
   Build_Android:
     runs-on: ubuntu-22.04
     steps:
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
         with:
