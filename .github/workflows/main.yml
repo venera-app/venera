@@ -116,6 +116,8 @@ jobs:
         run: | 
           choco install yq -y
           pip install httpx
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
