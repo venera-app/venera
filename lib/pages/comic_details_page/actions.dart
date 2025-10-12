@@ -237,10 +237,12 @@ abstract mixin class _ComicPageActions {
                           isGettingLink = false;
                         });
                       } else if (context.mounted) {
-                        LocalManager()
+                        if (res.data.isNotEmpty) {
+                          LocalManager()
                             .addTask(ArchiveDownloadTask(res.data, comic));
-                        App.rootContext
+                          App.rootContext
                             .showMessage(message: "Download started".tl);
+                        }
                         context.pop();
                       }
                     },
