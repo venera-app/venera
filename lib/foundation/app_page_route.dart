@@ -128,7 +128,7 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
         context,
         animation,
         secondaryAnimation,
-        enableIOSGesture
+        enableIOSGesture && App.isIOS
             ? IOSBackGestureDetector(
             gestureWidth: _kBackGestureWidth,
             enabledCallback: () => _isPopGestureEnabled<T>(this),
@@ -302,7 +302,7 @@ class _IOSBackGestureDetectorState extends State<IOSBackGestureDetector> {
     assert(mounted);
     assert(_backGestureController != null);
     _backGestureController!.dragUpdate(
-        _convertToLogical(details.primaryDelta! / context.size!.width));
+       _convertToLogical(details.primaryDelta! / context.size!.width));
   }
 }
 
