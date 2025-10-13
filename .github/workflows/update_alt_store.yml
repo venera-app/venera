@@ -51,7 +51,7 @@ jobs:
           --title "Update AltStore source with latest release" \
           --body "This PR updates the alt_store.json file with the latest release information." \
           --head "$branch_name" \
-          --base main
+          --base master
           
           echo "changes=true" >> $GITHUB_OUTPUT
         fi
