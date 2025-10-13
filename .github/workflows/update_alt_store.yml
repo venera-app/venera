@@ -31,19 +31,30 @@ jobs:
     - name: Update AltStore source
       id: update_source
       env:
-        GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        python update_alt_store.py
-        git config --global user.name 'GitHub Action'
-        git config --global user.email 'action@github.com'
-        git add alt_store.json
-        if git diff --staged --quiet; then
-          echo "changes=false" >> $GITHUB_OUTPUT
-        else
-          git commit -m "Updated source with latest release"
-          git push
-          echo "changes=true" >> $GITHUB_OUTPUT
-        fi
+      python update_alt_store.py
+      git config --global user.name 'GitHub Action'
+      git config --global user.email 'action@github.com'
+      git add alt_store.json
+      if git diff --staged --quiet; then
+        echo "changes=false" >> $GITHUB_OUTPUT
+      else
+        # Create a new branch for the PR
+        branch_name="update-altstore-$(date +%Y%m%d-%H%M%S)"
+        git checkout -b "$branch_name"
+        git commit -m "Updated source with latest release"
+        git push -u origin "$branch_name"
+        
+        # Create PR using GitHub CLI
+        gh pr create \
+        --title "Update AltStore source with latest release" \
+        --body "This PR updates the alt_store.json file with the latest release information." \
+        --head "$branch_name" \
+        --base main
+        
+        echo "changes=true" >> $GITHUB_OUTPUT
+      fi
 
     - name: Calculate job duration
       id: duration

@@ -416,10 +416,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_memory_info
-      sha256: "1f112f1d7503aa1681fc8e923f6cd0e847bb2fbeec3753ed021cf1e5f7e9cd74"
+      sha256: eacfd0dd01ff596b4e5bf022442769a1807a73f2af43d62802436f0a5de99137
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.1"
+    version: "0.0.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

@@ -84,9 +84,8 @@ android {
 
     buildTypes {
         release {
-            // Temporarily solution to fix crash
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }

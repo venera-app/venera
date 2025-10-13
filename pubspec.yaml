@@ -2,7 +2,7 @@ name: venera
 description: "A comic app."
 publish_to: 'none'
 
-version: 1.5.2+152
+version: 1.5.3+153
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -75,7 +75,7 @@ dependencies:
       ref: fe182cdf40e5fa6230f451bc1d643b860f610d13
   dynamic_color: ^1.7.0
   shimmer_animation: ^2.1.0
-  flutter_memory_info: ^0.0.1
+  flutter_memory_info: ^0.0.3
   syntax_highlight: ^0.4.0
   flutter_7zip:
     git:
