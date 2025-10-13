@@ -70,39 +70,29 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
         return StatefulBuilder(builder: (context, setState) {
           return ContentDialog(
             title: "Sort".tl,
-            content: Column(
-              children: [
-                RadioListTile<LocalSortType>(
-                  title: Text("Name".tl),
-                  value: LocalSortType.name,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-                RadioListTile<LocalSortType>(
-                  title: Text("Date".tl),
-                  value: LocalSortType.timeAsc,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-                RadioListTile<LocalSortType>(
-                  title: Text("Date Desc".tl),
-                  value: LocalSortType.timeDesc,
-                  groupValue: sortType,
-                  onChanged: (v) {
-                    setState(() {
-                      sortType = v!;
-                    });
-                  },
-                ),
-              ],
+            content: RadioGroup<LocalSortType>(
+              groupValue: sortType,
+              onChanged: (v) {
+                setState(() {
+                  sortType = v ?? sortType;
+                });
+              },
+              child: Column(
+                children: [
+                  RadioListTile<LocalSortType>(
+                    title: Text("Name".tl),
+                    value: LocalSortType.name,
+                  ),
+                  RadioListTile<LocalSortType>(
+                    title: Text("Date".tl),
+                    value: LocalSortType.timeAsc,
+                  ),
+                  RadioListTile<LocalSortType>(
+                    title: Text("Date Desc".tl),
+                    value: LocalSortType.timeDesc,
+                  ),
+                ],
+              ),
             ),
             actions: [
               FilledButton(

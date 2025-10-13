@@ -514,51 +514,53 @@ class _ImportComicsWidgetState extends State<_ImportComicsWidget> {
                 child: CircularProgressIndicator(),
               ),
             )
-          : Column(
-              key: key,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(width: 600),
-                ...List.generate(importMethods.length, (index) {
-                  return RadioListTile(
-                    title: Text(importMethods[index]),
-                    value: index,
-                    groupValue: type,
-                    onChanged: (value) {
-                      setState(() {
-                        type = value as int;
-                      });
-                    },
-                  );
-                }),
-                if (type != 4)
-                  ListTile(
-                    title: Text("Add to favorites".tl),
-                    trailing: Select(
-                      current: selectedFolder,
-                      values: folders,
-                      minWidth: 112,
-                      onTap: (v) {
-                        setState(() {
-                          selectedFolder = folders[v];
-                        });
-                      },
-                    ),
-                  ).paddingHorizontal(8),
-                if (!App.isIOS && !App.isMacOS && type != 2 && type != 3)
-                  CheckboxListTile(
-                      enabled: true,
-                      title: Text("Copy to app local path".tl),
-                      value: copyToLocalFolder,
-                      onChanged: (v) {
-                        setState(() {
-                          copyToLocalFolder = !copyToLocalFolder;
-                        });
-                      }).paddingHorizontal(8),
-                const SizedBox(height: 8),
-                Text(info).paddingHorizontal(24),
-              ],
-            ),
+          : RadioGroup<int>(
+              groupValue: type,
+              onChanged: (value) {
+                setState(() {
+                  type = value ?? type;
+                });
+              },
+              child: Column(
+                key: key,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 600),
+                  ...List.generate(importMethods.length, (index) {
+                    return RadioListTile<int>(
+                      title: Text(importMethods[index]),
+                      value: index,
+                    );
+                  }),
+                  if (type != 4)
+                    ListTile(
+                      title: Text("Add to favorites".tl),
+                      trailing: Select(
+                        current: selectedFolder,
+                        values: folders,
+                        minWidth: 112,
+                        onTap: (v) {
+                          setState(() {
+                            selectedFolder = folders[v];
+                          });
+                        },
+                      ),
+                    ).paddingHorizontal(8),
+                  if (!App.isIOS && !App.isMacOS && type != 2 && type != 3)
+                    CheckboxListTile(
+                        enabled: true,
+                        title: Text("Copy to app local path".tl),
+                        value: copyToLocalFolder,
+                        onChanged: (v) {
+                          setState(() {
+                            copyToLocalFolder = !copyToLocalFolder;
+                          });
+                        }).paddingHorizontal(8),
+                  const SizedBox(height: 8),
+                  Text(info).paddingHorizontal(24),
+                ],
+              ),
+          ),
       actions: [
         Button.text(
           child: Row(

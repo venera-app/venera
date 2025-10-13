@@ -428,30 +428,26 @@ class _WebdavSettingState extends State<_WebdavSetting> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Text("Operation".tl),
-                Radio<bool>(
-                  groupValue: upload,
-                  value: true,
-                  onChanged: (value) {
-                    setState(() {
-                      upload = value!;
-                    });
-                  },
-                ),
-                Text("Upload".tl),
-                Radio<bool>(
-                  groupValue: upload,
-                  value: false,
-                  onChanged: (value) {
-                    setState(() {
-                      upload = value!;
-                    });
-                  },
-                ),
-                Text("Download".tl),
-              ],
+            RadioGroup<bool>(
+              groupValue: upload,
+              onChanged: (value) {
+                setState(() {
+                  upload = value ?? upload;
+                });
+              },
+              child: Row(
+                children: [
+                  Text("Operation".tl),
+                  Radio<bool>(
+                    value: true,
+                  ),
+                  Text("Upload".tl),
+                  Radio<bool>(
+                    value: false,
+                  ),
+                  Text("Download".tl),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             AnimatedSize(

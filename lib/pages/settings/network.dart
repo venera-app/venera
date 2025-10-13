@@ -111,44 +111,34 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
     return PopUpWidgetScaffold(
       title: "Proxy".tl,
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            RadioListTile<String>(
-              title: Text("Direct".tl),
-              value: 'direct',
-              groupValue: type,
-              onChanged: (v) {
-                setState(() {
-                  type = v!;
-                });
-                appdata.settings['proxy'] = toProxyStr();
-                appdata.saveData();
-              },
-            ),
-            RadioListTile<String>(
-              title: Text("System".tl),
-              value: 'system',
-              groupValue: type,
-              onChanged: (v) {
-                setState(() {
-                  type = v!;
-                });
-                appdata.settings['proxy'] = toProxyStr();
-                appdata.saveData();
-              },
-            ),
-            RadioListTile(
-              title: Text("Manual".tl),
-              value: 'manual',
-              groupValue: type,
-              onChanged: (v) {
-                setState(() {
-                  type = v!;
-                });
-              },
-            ),
-            if (type == 'manual') buildManualProxy(),
-          ],
+        child: RadioGroup<String>(
+          groupValue: type,
+          onChanged: (v) {
+            setState(() {
+              type = v ?? type;
+            });
+            if (type != 'manual') {
+              appdata.settings['proxy'] = toProxyStr();
+              appdata.saveData();
+            }
+          },
+          child: Column(
+            children: [
+              RadioListTile<String>(
+                title: Text("Direct".tl),
+                value: 'direct',
+              ),
+              RadioListTile<String>(
+                title: Text("System".tl),
+                value: 'system',
+              ),
+              RadioListTile(
+                title: Text("Manual".tl),
+                value: 'manual',
+              ),
+              if (type == 'manual') buildManualProxy(),
+            ],
+          ),
         ),
       ),
     );

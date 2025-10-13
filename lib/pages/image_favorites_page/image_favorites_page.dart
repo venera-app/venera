@@ -404,21 +404,23 @@ class _ImageFavoritesDialogState extends State<_ImageFavoritesDialog> {
           children: [
             tabBar,
             TabViewBody(children: [
-              Column(
-                children: ImageFavoriteSortType.values
-                    .map(
-                      (e) => RadioListTile<ImageFavoriteSortType>(
-                        title: Text(e.value.tl),
-                        value: e,
-                        groupValue: sortType,
-                        onChanged: (v) {
-                          setState(() {
-                            sortType = v!;
-                          });
-                        },
-                      ),
-                    )
-                    .toList(),
+              RadioGroup<ImageFavoriteSortType>(
+                groupValue: sortType,
+                onChanged: (v) {
+                  setState(() {
+                    sortType = v ?? sortType;
+                  });
+                },
+                child: Column(
+                  children: ImageFavoriteSortType.values
+                      .map(
+                        (e) => RadioListTile<ImageFavoriteSortType>(
+                          title: Text(e.value.tl),
+                          value: e,
+                        ),
+                      )
+                      .toList(),
+                ),
               ),
               Column(
                 children: [
