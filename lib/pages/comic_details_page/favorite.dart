@@ -197,11 +197,12 @@ class _NetworkSectionState extends State<_NetworkSection> {
       if (res.subData is List) {
         final list = List<String>.from(res.subData);
         if (list.isNotEmpty) {
-          addedFolders = {list.first};
+          addedFolders = list.toSet();
+          localIsFavorite = true;
         } else {
           addedFolders.clear();
+          localIsFavorite = false;
         }
-        localIsFavorite = addedFolders.isNotEmpty;
       } else {
         addedFolders.clear();
         localIsFavorite = false;
@@ -352,62 +353,6 @@ class _NetworkSectionState extends State<_NetworkSection> {
   }
 
   Widget _buildMultiFolder() {
-    if (localIsFavorite == true &&
-        widget.comicSource.favoriteData!.singleFolderForSingleComic) {
-      return ListTile(
-        title: Row(
-          children: [
-            Text("Network Favorites".tl),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: context.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text("Added".tl, style: ts.s12),
-            ),
-          ],
-        ),
-        trailing: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : _HoverButton(
-                isFavorite: true,
-                onTap: () async {
-                  setState(() {
-                    isLoading = true;
-                  });
-
-                  var res = await widget
-                      .comicSource
-                      .favoriteData!
-                      .addOrDelFavorite!(widget.cid, '', false, null);
-                  if (res.success) {
-                    // Invalidate network cache so subsequent loads see latest
-                    NetworkCacheManager().clear();
-                    setState(() {
-                      localIsFavorite = false;
-                    });
-                    widget.onFavorite(false);
-                    App.rootContext.showMessage(message: "Removed".tl);
-                    if (appdata.settings['autoCloseFavoritePanel'] ?? false) {
-                      context.pop();
-                    }
-                  } else {
-                    context.showMessage(message: res.errorMessage!);
-                  }
-                  setState(() {
-                    isLoading = false;
-                  });
-                },
-              ),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -425,8 +370,10 @@ class _NetworkSectionState extends State<_NetworkSection> {
           var name = entry.value;
           var id = entry.key;
           var isAdded = addedFolders.contains(id);
-          var hasSelection = addedFolders.isNotEmpty;
-          var enabled = !hasSelection || isAdded;
+          // When `singleFolderForSingleComic` is `false`, all add and remove buttons are clickable.
+          // When `singleFolderForSingleComic` is `true`, the remove button is always clickable, 
+          // while the add button is only clickable if the comic has not been added to any list.
+          var enabled = !(widget.comicSource.favoriteData!.singleFolderForSingleComic && addedFolders.isNotEmpty && !isAdded);
 
           return ListTile(
             title: Row(
@@ -469,11 +416,9 @@ class _NetworkSectionState extends State<_NetworkSection> {
                         NetworkCacheManager().clear();
                         setState(() {
                           if (isAdded) {
-                            addedFolders.clear();
+                            addedFolders.remove(id);
                           } else {
-                            addedFolders
-                              ..clear()
-                              ..add(id);
+                            addedFolders.add(id);
                           }
                           // sync local flag for single-folder-per-comic logic and parent
                           localIsFavorite = addedFolders.isNotEmpty;
