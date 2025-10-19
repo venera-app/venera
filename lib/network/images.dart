@@ -181,7 +181,15 @@ abstract class ImageDownloader {
         }
 
         if (configs['onResponse'] is JSInvokable) {
-          buffer = (configs['onResponse'] as JSInvokable)([Uint8List.fromList(buffer)]);
+          dynamic result = (configs['onResponse'] as JSInvokable)([Uint8List.fromList(buffer)]);
+          if (result is Future) {
+            result = await result;
+          }
+          if (result is List<int>) {
+            buffer = result;
+          } else {
+            throw "Error: Invalid onResponse result.";
+          }
           (configs['onResponse'] as JSInvokable).free();
         }
 
