@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:venera/foundation/app.dart';
 
 const double _kBackGestureWidth = 20.0;
@@ -287,7 +288,11 @@ class _IOSBackGestureDetectorState extends State<IOSBackGestureDetector> {
   }
 
   void _handlePointerDown(PointerDownEvent event) {
-    if (widget.enabledCallback()) _recognizer.addPointer(event);
+    if (!widget.enabledCallback()) return;
+    if (widget.fullScreen && _isPointerOverHorizontalScrollable(event)) {
+      return;
+    }
+    _recognizer.addPointer(event);
   }
 
   void _handleDragCancel() {
@@ -324,6 +329,28 @@ class _IOSBackGestureDetectorState extends State<IOSBackGestureDetector> {
     assert(_backGestureController != null);
     _backGestureController!.dragUpdate(
        _convertToLogical(details.primaryDelta! / context.size!.width));
+  }
+
+  bool _isPointerOverHorizontalScrollable(PointerDownEvent event) {
+    final HitTestResult result = HitTestResult();
+    WidgetsBinding.instance.hitTest(result, event.position);
+    for (final entry in result.path) {
+      final target = entry.target;
+      if (target is RenderViewport) {
+        if (_isAxisHorizontal(target.axisDirection)) {
+          return true;
+        }
+      } else if (target is RenderSliver) {
+        if (_isAxisHorizontal(target.constraints.axisDirection)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  bool _isAxisHorizontal(AxisDirection direction) {
+    return direction == AxisDirection.left || direction == AxisDirection.right;
   }
 }
 
