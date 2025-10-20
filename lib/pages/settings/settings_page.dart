@@ -252,9 +252,10 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
     if (!App.isIOS) {
       return;
     }
-    if (event.position.dx < 20) {
-      gestureRecognizer.addPointer(event);
+    if (currentPage == -1) {
+      return;
     }
+    gestureRecognizer.addPointer(event);
   }
 
   Widget buildLeft() {

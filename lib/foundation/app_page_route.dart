@@ -19,6 +19,7 @@ class AppPageRoute<T> extends PageRoute<T> with _AppRouteTransitionMixin{
     super.allowSnapshotting = true,
     super.barrierDismissible = false,
     this.enableIOSGesture = true,
+    this.iosFullScreenPopGesture = true,
     this.preventRebuild = true,
   }) {
     assert(opaque);
@@ -49,6 +50,9 @@ class AppPageRoute<T> extends PageRoute<T> with _AppRouteTransitionMixin{
   final bool enableIOSGesture;
 
   @override
+  final bool iosFullScreenPopGesture;
+
+  @override
   final bool preventRebuild;
 }
 
@@ -73,6 +77,8 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
   }
 
   bool get enableIOSGesture;
+
+  bool get iosFullScreenPopGesture;
 
   bool get preventRebuild;
 
@@ -121,20 +127,22 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
       builder = PredictiveBackPageTransitionsBuilder();
     } else {
       builder = SlidePageTransitionBuilder();
-    }
+  }
 
-    return builder.buildTransitions(
+  return builder.buildTransitions(
         this,
         context,
         animation,
         secondaryAnimation,
-        enableIOSGesture && App.isIOS
-            ? IOSBackGestureDetector(
-            gestureWidth: _kBackGestureWidth,
-            enabledCallback: () => _isPopGestureEnabled<T>(this),
-            onStartPopGesture: () => _startPopGesture(this),
-            child: child)
-            : child);
+    enableIOSGesture && App.isIOS
+      ? IOSBackGestureDetector(
+        gestureWidth: _kBackGestureWidth,
+        enabledCallback: () => _isPopGestureEnabled<T>(this),
+        onStartPopGesture: () => _startPopGesture(this),
+        fullScreen: iosFullScreenPopGesture,
+        child: child,
+        )
+      : child);
   }
 
   IOSBackGestureController _startPopGesture(PageRoute<T> route) {
@@ -206,6 +214,7 @@ class IOSBackGestureDetector extends StatefulWidget {
       required this.child,
       required this.gestureWidth,
       required this.onStartPopGesture,
+      this.fullScreen = false,
       super.key});
 
   final double gestureWidth;
@@ -215,6 +224,8 @@ class IOSBackGestureDetector extends StatefulWidget {
   final IOSBackGestureController Function() onStartPopGesture;
 
   final Widget child;
+
+  final bool fullScreen;
 
   @override
   State<IOSBackGestureDetector> createState() => _IOSBackGestureDetectorState();
@@ -247,20 +258,30 @@ class _IOSBackGestureDetectorState extends State<IOSBackGestureDetector> {
         ? MediaQuery.of(context).padding.left
         : MediaQuery.of(context).padding.right;
     dragAreaWidth = max(dragAreaWidth, widget.gestureWidth);
+    final Widget gestureListener = widget.fullScreen
+        ? Positioned.fill(
+            child: Listener(
+              onPointerDown: _handlePointerDown,
+              behavior: HitTestBehavior.translucent,
+            ),
+          )
+        : Positioned(
+            width: dragAreaWidth,
+            top: 0.0,
+            bottom: 0.0,
+            left: Directionality.of(context) == TextDirection.ltr ? 0.0 : null,
+            right: Directionality.of(context) == TextDirection.rtl ? 0.0 : null,
+            child: Listener(
+              onPointerDown: _handlePointerDown,
+              behavior: HitTestBehavior.translucent,
+            ),
+          );
+
     return Stack(
       fit: StackFit.passthrough,
       children: <Widget>[
         widget.child,
-        Positioned(
-          width: dragAreaWidth,
-          top: 0.0,
-          bottom: 0.0,
-          left: 0,
-          child: Listener(
-            onPointerDown: _handlePointerDown,
-            behavior: HitTestBehavior.translucent,
-          ),
-        ),
+        gestureListener,
       ],
     );
   }
@@ -314,30 +335,31 @@ class SlidePageTransitionBuilder extends PageTransitionsBuilder {
       Animation<double> animation,
       Animation<double> secondaryAnimation,
       Widget child) {
+    final Animation<double> primaryAnimation = App.isIOS
+        ? animation
+        : CurvedAnimation(parent: animation, curve: Curves.ease);
+    final Animation<double> secondaryCurve = App.isIOS
+        ? secondaryAnimation
+        : CurvedAnimation(parent: secondaryAnimation, curve: Curves.ease);
+
     return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(primaryAnimation),
+      child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(1, 0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: Curves.ease,
-        )),
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset.zero,
-            end: const Offset(-0.4, 0),
-          ).animate(CurvedAnimation(
-            parent: secondaryAnimation,
-            curve: Curves.ease,
-          )),
-          child: PhysicalModel(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.zero,
-            clipBehavior: Clip.hardEdge,
-            elevation: 6,
-            child: Material(child: child,),
-          ),
-        )
+          begin: Offset.zero,
+          end: const Offset(-0.4, 0),
+        ).animate(secondaryCurve),
+        child: PhysicalModel(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.zero,
+          clipBehavior: Clip.hardEdge,
+          elevation: 6,
+          child: Material(child: child),
+        ),
+      ),
     );
   }
 }
