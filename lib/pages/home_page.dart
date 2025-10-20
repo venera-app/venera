@@ -874,7 +874,10 @@ class _ImageFavoritesState extends State<ImageFavorites> {
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: () {
-            context.to(() => const ImageFavoritesPage());
+            context.to(
+              () => const ImageFavoritesPage(),
+              iosFullScreenGesture: false,
+            );
           },
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -993,7 +996,10 @@ class _ImageFavoritesState extends State<ImageFavorites> {
               maxCount: maxCount,
               enableTranslation: displayType != 2,
               onTap: (text) {
-                context.to(() => ImageFavoritesPage(initialKeyword: text));
+                context.to(
+                  () => ImageFavoritesPage(initialKeyword: text),
+                  iosFullScreenGesture: false,
+                );
               },
             );
           }).toList(),

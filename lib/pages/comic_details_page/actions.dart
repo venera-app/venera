@@ -116,6 +116,8 @@ abstract mixin class _ComicPageActions {
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
       ),
+      enableIOSGesture: false,
+      iosFullScreenGesture: false,
     )
         .then((_) {
       onReadEnd();

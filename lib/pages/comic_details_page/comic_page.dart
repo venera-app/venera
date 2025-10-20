@@ -236,7 +236,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
               author: localComic.subTitle ?? '',
               tags: localComic.tags,
             );
-          });
+          }, enableIOSGesture: false, iosFullScreenGesture: false);
           App.mainNavigatorKey!.currentContext!.pop();
         });
         isFirst = false;

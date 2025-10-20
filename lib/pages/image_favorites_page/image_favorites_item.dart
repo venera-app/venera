@@ -37,6 +37,8 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
         initialEp: ep,
         initialPage: page,
       ),
+      enableIOSGesture: false,
+      iosFullScreenGesture: false,
     );
   }
 

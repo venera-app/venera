@@ -244,6 +244,8 @@ class _ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
                 initialEp: ep,
                 initialPage: page,
               ),
+              enableIOSGesture: false,
+              iosFullScreenGesture: false,
             );
           },
         ),
