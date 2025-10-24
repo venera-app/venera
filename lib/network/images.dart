@@ -52,7 +52,11 @@ abstract class ImageDownloader {
       responseType: ResponseType.stream,
     ));
 
-    var req = await dio.request<ResponseBody>(configs['url'] ?? url,
+    String requestUrl = configs['url'] ?? url;
+    if (requestUrl.startsWith('//')) {
+      requestUrl = 'https:$requestUrl';
+    }
+    var req = await dio.request<ResponseBody>(requestUrl,
         data: configs['data']);
     var stream = req.data?.stream ?? (throw "Error: Empty response body.");
     int? expectedBytes = req.data!.contentLength;
