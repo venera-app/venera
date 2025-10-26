@@ -441,7 +441,7 @@ class ImageFavoriteManager with ChangeNotifier {
     for (var comic in comics) {
       count += comic.images.length;
       for (var tag in comic.tags) {
-        String finalTag = tag;
+        String finalTag = tag.split(":").last;
         tagCount[finalTag] = (tagCount[finalTag] ?? 0) + 1;
       }
 

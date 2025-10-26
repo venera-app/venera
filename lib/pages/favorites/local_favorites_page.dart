@@ -43,6 +43,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   bool isLoading = false;
 
+  late String readFilterSelect;
+
   var searchResults = <FavoriteItem>[];
 
   void updateSearchResult() {
@@ -104,6 +106,19 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     setState(() {});
   }
 
+  List<FavoriteItem> filterComics(List<FavoriteItem> curComics) {
+    return curComics.where((comic) {
+      var history =
+          HistoryManager().find(comic.id, ComicType(comic.sourceKey.hashCode));
+      if (readFilterSelect == "UnCompleted") {
+        return history == null || history.page != history.maxPage;
+      } else if (readFilterSelect == "Completed") {
+        return history != null && history.page == history.maxPage;
+      }
+      return true;
+    }).toList();
+  }
+
   bool matchKeyword(String keyword, FavoriteItem comic) {
     var list = keyword.split(" ");
     for (var k in list) {
@@ -152,6 +167,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
 
   @override
   void initState() {
+    readFilterSelect = appdata.implicitData["local_favorites_read_filter"] ??
+        readFilterList[0];
     favPage = context.findAncestorStateOfType<_FavoritesPageState>()!;
     if (!isAllFolder) {
       var (a, b) = LocalFavoritesManager().findLinked(widget.folder);
@@ -321,6 +338,31 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   ),
                 ),
               Tooltip(
+                message: "Filter".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.sort_rounded),
+                  color: readFilterSelect != readFilterList[0]
+                      ? context.colorScheme.primaryContainer
+                      : null,
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return _LocalFavoritesFilterDialog(
+                          initReadFilterSelect: readFilterSelect,
+                          updateConfig: (readFilter) {
+                            setState(() {
+                              readFilterSelect = readFilter;
+                            });
+                            updateComics();
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              Tooltip(
                 message: "Search".tl,
                 child: IconButton(
                   icon: const Icon(Icons.search),
@@ -454,15 +496,15 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
             actions: [
               MenuButton(entries: [
                 if (!isAllFolder)
-                MenuEntry(
-                    icon: Icons.drive_file_move,
-                    text: "Move to folder".tl,
-                    onClick: () => favoriteOption('move')),
+                  MenuEntry(
+                      icon: Icons.drive_file_move,
+                      text: "Move to folder".tl,
+                      onClick: () => favoriteOption('move')),
                 if (!isAllFolder)
-                MenuEntry(
-                    icon: Icons.copy,
-                    text: "Copy to folder".tl,
-                    onClick: () => favoriteOption('add')),
+                  MenuEntry(
+                      icon: Icons.copy,
+                      text: "Copy to folder".tl,
+                      onClick: () => favoriteOption('add')),
                 MenuEntry(
                     icon: Icons.select_all,
                     text: "Select All".tl,
@@ -519,9 +561,21 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     onClick: () {
                       final c = selectedComics.keys.first as FavoriteItem;
                       App.rootContext.to(() => ReaderWithLoading(
-                        id: c.id,
-                        sourceKey: c.sourceKey,
-                      ));
+                            id: c.id,
+                            sourceKey: c.sourceKey,
+                          ));
+                    },
+                  ),
+                if (selectedComics.length == 1)
+                  MenuEntry(
+                    icon: Icons.arrow_forward_ios,
+                    text: "Jump to Detail".tl,
+                    onClick: () {
+                      final c = selectedComics.keys.first as FavoriteItem;
+                      App.mainNavigatorKey?.currentContext?.to(() => ComicPage(
+                            id: c.id,
+                            sourceKey: c.sourceKey,
+                          ));
                     },
                   ),
               ]),
@@ -568,7 +622,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
           )
         else
           SliverGridComics(
-            comics: searchMode ? searchResults : comics,
+            comics: searchMode ? searchResults : filterComics(comics),
             selections: selectedComics,
             menuBuilder: (c) {
               return [
@@ -1070,6 +1124,81 @@ class _SelectUpdatePageNumState extends State<_SelectUpdatePageNum> {
               },
             )
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _LocalFavoritesFilterDialog extends StatefulWidget {
+  const _LocalFavoritesFilterDialog({
+    required this.initReadFilterSelect,
+    required this.updateConfig,
+  });
+
+  final String initReadFilterSelect;
+  final Function updateConfig;
+
+  @override
+  State<_LocalFavoritesFilterDialog> createState() =>
+      _LocalFavoritesFilterDialogState();
+}
+
+const readFilterList = ['All', 'UnCompleted', 'Completed'];
+
+class _LocalFavoritesFilterDialogState
+    extends State<_LocalFavoritesFilterDialog> {
+  List<String> optionTypes = ['Filter'];
+  late var readFilter = widget.initReadFilterSelect;
+  @override
+  Widget build(BuildContext context) {
+    Widget tabBar = Material(
+      borderRadius: BorderRadius.circular(8),
+      child: AppTabBar(
+        key: PageStorageKey(optionTypes),
+        tabs: optionTypes.map((e) => Tab(text: e.tl, key: Key(e))).toList(),
+      ),
+    ).paddingTop(context.padding.top);
+    return ContentDialog(
+      content: DefaultTabController(
+        length: 2,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            tabBar,
+            TabViewBody(children: [
+              Column(
+                children: [
+                  ListTile(
+                    title: Text("Filter reading status".tl),
+                    trailing: Select(
+                      current: readFilter.tl,
+                      values: readFilterList.map((e) => e.tl).toList(),
+                      minWidth: 64,
+                      onTap: (index) {
+                        setState(() {
+                          readFilter = readFilterList[index];
+                        });
+                      },
+                    ),
+                  )
+                ],
+              )
+            ]),
+          ],
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () {
+            appdata.implicitData["local_favorites_read_filter"] = readFilter;
+            appdata.writeImplicitData();
+            if (mounted) {
+              Navigator.pop(context);
+              widget.updateConfig(readFilter);
+            }
+          },
+          child: Text("Confirm".tl),
         ),
       ],
     );
