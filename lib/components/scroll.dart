@@ -241,6 +241,10 @@ class _AppScrollBarState extends State<AppScrollBar> {
 
   late final VerticalDragGestureRecognizer _dragGestureRecognizer;
 
+  bool _isVisible = false;
+  Timer? _hideTimer;
+  static const _hideDuration = Duration(seconds: 2);
+
   @override
   void initState() {
     super.initState();
@@ -248,7 +252,41 @@ class _AppScrollBarState extends State<AppScrollBar> {
     _scrollController.addListener(onChanged);
     Future.microtask(onChanged);
     _dragGestureRecognizer = VerticalDragGestureRecognizer()
-      ..onUpdate = onUpdate;
+      ..onUpdate = onUpdate
+      ..onStart = (_) {
+        _showScrollbar();
+      }
+      ..onEnd = (_) {
+        _scheduleHide();
+      };
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    _scrollController.removeListener(onChanged);
+    _dragGestureRecognizer.dispose();
+    super.dispose();
+  }
+
+  void _showScrollbar() {
+    if (!_isVisible && mounted) {
+      setState(() {
+        _isVisible = true;
+      });
+    }
+    _hideTimer?.cancel();
+  }
+
+  void _scheduleHide() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(_hideDuration, () {
+      if (mounted && _isVisible) {
+        setState(() {
+          _isVisible = false;
+        });
+      }
+    });
   }
 
   void onUpdate(DragUpdateDetails details) {
@@ -269,14 +307,24 @@ class _AppScrollBarState extends State<AppScrollBar> {
   void onChanged() {
     if (_scrollController.positions.isEmpty) return;
     var position = _scrollController.position;
+
+    bool hasChanged = false;
     if (position.minScrollExtent != minExtent ||
         position.maxScrollExtent != maxExtent ||
         position.pixels != this.position) {
-      setState(() {
-        minExtent = position.minScrollExtent;
-        maxExtent = position.maxScrollExtent;
-        this.position = position.pixels;
-      });
+      hasChanged = true;
+      minExtent = position.minScrollExtent;
+      maxExtent = position.maxScrollExtent;
+      this.position = position.pixels;
+    }
+
+    if (hasChanged) {
+      _showScrollbar();
+      _scheduleHide();
+    }
+
+    if (hasChanged && mounted) {
+      setState(() {});
     }
   }
 
@@ -300,29 +348,35 @@ class _AppScrollBarState extends State<AppScrollBar> {
             Positioned(
               top: top + widget.topPadding,
               right: 0,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Listener(
-                  behavior: HitTestBehavior.translucent,
-                  onPointerDown: (event) {
-                    _dragGestureRecognizer.addPointer(event);
-                  },
-                  child: SizedBox(
-                    width: _scrollIndicatorSize/2,
-                    height: _scrollIndicatorSize,
-                    child: CustomPaint(
-                      painter: _ScrollIndicatorPainter(
-                        backgroundColor: context.colorScheme.surface,
-                        shadowColor: context.colorScheme.shadow,
+              child: AnimatedOpacity(
+                opacity: _isVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  onEnter: (_) => _showScrollbar(),
+                  onExit: (_) => _scheduleHide(),
+                  child: Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerDown: (event) {
+                      _dragGestureRecognizer.addPointer(event);
+                    },
+                    child: SizedBox(
+                      width: _scrollIndicatorSize / 2,
+                      height: _scrollIndicatorSize,
+                      child: CustomPaint(
+                        painter: _ScrollIndicatorPainter(
+                          backgroundColor: context.colorScheme.surface,
+                          shadowColor: context.colorScheme.shadow,
+                        ),
+                        child: Column(
+                          children: [
+                            const Spacer(),
+                            Icon(Icons.arrow_drop_up, size: 18),
+                            Icon(Icons.arrow_drop_down, size: 18),
+                            const Spacer(),
+                          ],
+                        ).paddingLeft(4),
                       ),
-                      child: Column(
-                        children: [
-                          const Spacer(),
-                          Icon(Icons.arrow_drop_up, size: 18),
-                          Icon(Icons.arrow_drop_down, size: 18),
-                          const Spacer(),
-                        ],
-                      ).paddingLeft(4),
                     ),
                   ),
                 ),

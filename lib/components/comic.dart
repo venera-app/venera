@@ -753,9 +753,9 @@ class SliverGridComics extends StatefulWidget {
 
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
-  final void Function(Comic)? onTap;
+  final void Function(Comic, int heroID)? onTap;
 
-  final void Function(Comic)? onLongPressed;
+  final void Function(Comic, int heroID)? onLongPressed;
 
   @override
   State<SliverGridComics> createState() => _SliverGridComicsState();
@@ -856,52 +856,51 @@ class _SliverGridComics extends StatelessWidget {
 
   final List<MenuEntry> Function(Comic)? menuBuilder;
 
-  final void Function(Comic)? onTap;
+  final void Function(Comic, int heroID)? onTap;
 
-  final void Function(Comic)? onLongPressed;
+  final void Function(Comic, int heroID)? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
     return SliverGrid(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          if (index == comics.length - 1) {
-            onLastItemBuild?.call();
-          }
-          var badge = badgeBuilder?.call(comics[index]);
-          var isSelected =
-              selection == null ? false : selection![comics[index]] ?? false;
-          var comic = ComicTile(
-            comic: comics[index],
-            badge: badge,
-            menuOptions: menuBuilder?.call(comics[index]),
-            onTap: onTap != null ? () => onTap!(comics[index]) : null,
-            onLongPressed: onLongPressed != null
-                ? () => onLongPressed!(comics[index])
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index == comics.length - 1) {
+          onLastItemBuild?.call();
+        }
+        var badge = badgeBuilder?.call(comics[index]);
+        var isSelected = selection == null
+            ? false
+            : selection![comics[index]] ?? false;
+        var comic = ComicTile(
+          comic: comics[index],
+          badge: badge,
+          menuOptions: menuBuilder?.call(comics[index]),
+          onTap: onTap != null
+              ? () => onTap!(comics[index], heroIDs[index])
+              : null,
+          onLongPressed: onLongPressed != null
+              ? () => onLongPressed!(comics[index], heroIDs[index])
+              : null,
+          heroID: heroIDs[index],
+        );
+        if (selection == null) {
+          return comic;
+        }
+        return AnimatedContainer(
+          key: ValueKey(comics[index].id),
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer.toOpacity(0.72)
                 : null,
-            heroID: heroIDs[index],
-          );
-          if (selection == null) {
-            return comic;
-          }
-          return AnimatedContainer(
-            key: ValueKey(comics[index].id),
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Theme.of(context)
-                      .colorScheme
-                      .secondaryContainer
-                      .toOpacity(0.72)
-                  : null,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(4),
-            child: comic,
-          );
-        },
-        childCount: comics.length,
-      ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(4),
+          child: comic,
+        );
+      }, childCount: comics.length),
       gridDelegate: SliverGridDelegateWithComics(),
     );
   }

@@ -211,7 +211,7 @@ class _HistoryPageState extends State<HistoryPage> {
               selections: selectedComics,
               onLongPressed: null,
               onTap: multiSelectMode
-                  ? (c) {
+                  ? (c, heroID) {
                       setState(() {
                         if (selectedComics.containsKey(c as History)) {
                           selectedComics.remove(c);
