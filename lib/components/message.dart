@@ -360,6 +360,7 @@ Future<void> showInputDialog({
   String cancelText = "Cancel",
   RegExp? inputValidator,
   String? image,
+  Uint8List? imageData,
 }) {
   var controller = TextEditingController(text: initialValue);
   bool isLoading = false;
@@ -378,6 +379,11 @@ Future<void> showInputDialog({
                   SizedBox(
                     height: 108,
                     child: Image.network(image, fit: BoxFit.none),
+                  ).paddingBottom(8),
+                if (image == null && imageData != null)
+                  SizedBox(
+                    height: 108,
+                    child: Image.memory(imageData, fit: BoxFit.none),
                   ).paddingBottom(8),
                 TextField(
                   controller: controller,
