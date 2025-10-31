@@ -302,13 +302,18 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
+                      final heroID = history[index].id.hashCode;
                       return SimpleComicTile(
                         comic: history[index],
+                        heroID: heroID,
                         onTap: () {
                           context.to(
                             () => ComicPage(
                               id: history[index].id,
                               sourceKey: history[index].type.sourceKey,
+                              cover: history[index].cover,
+                              title: history[index].title,
+                              heroID: heroID,
                             ),
                           );
                         },
@@ -386,7 +391,9 @@ class _LocalState extends State<_Local> {
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 8),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -405,9 +412,22 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      return SimpleComicTile(comic: local[index])
-                          .paddingHorizontal(8)
-                          .paddingVertical(2);
+                      final heroID = local[index].id.hashCode;
+                      return SimpleComicTile(
+                        comic: local[index],
+                        heroID: heroID,
+                        onTap: () {
+                          context.to(
+                            () => ComicPage(
+                              id: local[index].id,
+                              sourceKey: local[index].sourceKey,
+                              cover: local[index].cover,
+                              title: local[index].title,
+                              heroID: heroID,
+                            ),
+                          );
+                        },
+                      ).paddingHorizontal(8).paddingVertical(2);
                     },
                   ),
                 ).paddingHorizontal(8),

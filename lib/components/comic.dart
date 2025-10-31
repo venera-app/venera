@@ -1626,13 +1626,15 @@ class _SMClipper extends CustomClipper<Rect> {
 
 class SimpleComicTile extends StatelessWidget {
   const SimpleComicTile(
-      {super.key, required this.comic, this.onTap, this.withTitle = false});
+      {super.key, required this.comic, this.onTap, this.withTitle = false, this.heroID});
 
   final Comic comic;
 
   final void Function()? onTap;
 
   final bool withTitle;
+
+  final int? heroID;
 
   @override
   Widget build(BuildContext context) {
@@ -1659,6 +1661,13 @@ class SimpleComicTile extends StatelessWidget {
       child: child,
     );
 
+    if (heroID != null) {
+      child = Hero(
+        tag: "cover$heroID",
+        child: child,
+      );
+    }
+
     child = AnimatedTapRegion(
       borderRadius: 8,
       onTap: onTap ??
@@ -1667,6 +1676,9 @@ class SimpleComicTile extends StatelessWidget {
               () => ComicPage(
                 id: comic.id,
                 sourceKey: comic.sourceKey,
+                cover: comic.cover,
+                title: comic.title,
+                heroID: heroID,
               ),
             );
           },
