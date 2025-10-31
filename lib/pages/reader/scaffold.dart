@@ -709,7 +709,6 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         comicTitle: context.reader.widget.name,
         chapterTitle: chapterTitle,
       ),
-      showBarrier: false,
     );
   }
 
