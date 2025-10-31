@@ -303,6 +303,15 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           comicId: isEnabledSpecificSettings ? widget.comicId : null,
           comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
+        _SwitchSetting(
+          title: "Show Chapter Comments".tl,
+          settingKey: "showChapterComments",
+          onChanged: () {
+            widget.onChanged?.call("showChapterComments");
+          },
+          comicId: isEnabledSpecificSettings ? widget.comicId : null,
+          comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
+        ).toSliver(),
       ],
     );
   }

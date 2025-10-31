@@ -61,8 +61,10 @@ class ComicSourceManager with ChangeNotifier, Init {
     await for (var entity in Directory(path).list()) {
       if (entity is File && entity.path.endsWith(".js")) {
         try {
-          var source = await ComicSourceParser()
-              .parse(await entity.readAsString(), entity.absolute.path);
+          var source = await ComicSourceParser().parse(
+            await entity.readAsString(),
+            entity.absolute.path,
+          );
           _sources.add(source);
         } catch (e, s) {
           Log.error("ComicSource", "$e\n$s");
@@ -154,7 +156,7 @@ class ComicSource {
   final GetImageLoadingConfigFunc? getImageLoadingConfig;
 
   final Map<String, dynamic> Function(String imageKey)?
-      getThumbnailLoadingConfig;
+  getThumbnailLoadingConfig;
 
   var data = <String, dynamic>{};
 
@@ -169,6 +171,10 @@ class ComicSource {
   final CommentsLoader? commentsLoader;
 
   final SendCommentFunc? sendCommentFunc;
+
+  final ChapterCommentsLoader? chapterCommentsLoader;
+
+  final SendChapterCommentFunc? sendChapterCommentFunc;
 
   final RegExp? idMatcher;
 
@@ -256,6 +262,8 @@ class ComicSource {
     this.version,
     this.commentsLoader,
     this.sendCommentFunc,
+    this.chapterCommentsLoader,
+    this.sendChapterCommentFunc,
     this.likeOrUnlikeComic,
     this.voteCommentFunc,
     this.likeCommentFunc,
@@ -367,11 +375,19 @@ enum ExplorePageType {
   override,
 }
 
-typedef SearchFunction = Future<Res<List<Comic>>> Function(
-    String keyword, int page, List<String> searchOption);
+typedef SearchFunction =
+    Future<Res<List<Comic>>> Function(
+      String keyword,
+      int page,
+      List<String> searchOption,
+    );
 
-typedef SearchNextFunction = Future<Res<List<Comic>>> Function(
-    String keyword, String? next, List<String> searchOption);
+typedef SearchNextFunction =
+    Future<Res<List<Comic>>> Function(
+      String keyword,
+      String? next,
+      List<String> searchOption,
+    );
 
 class SearchPageData {
   /// If this is not null, the default value of search options will be first element.
@@ -398,11 +414,19 @@ class SearchOptions {
   String get defaultValue => defaultVal ?? options.keys.firstOrNull ?? "";
 }
 
-typedef CategoryComicsLoader = Future<Res<List<Comic>>> Function(
-    String category, String? param, List<String> options, int page);
+typedef CategoryComicsLoader =
+    Future<Res<List<Comic>>> Function(
+      String category,
+      String? param,
+      List<String> options,
+      int page,
+    );
 
-typedef CategoryOptionsLoader = Future<Res<List<CategoryComicsOptions>>> Function(
-    String category, String? param);
+typedef CategoryOptionsLoader =
+    Future<Res<List<CategoryComicsOptions>>> Function(
+      String category,
+      String? param,
+    );
 
 class CategoryComicsData {
   /// options
@@ -419,7 +443,12 @@ class CategoryComicsData {
 
   final RankingData? rankingData;
 
-  const CategoryComicsData({this.options, this.optionsLoader, required this.load, this.rankingData});
+  const CategoryComicsData({
+    this.options,
+    this.optionsLoader,
+    required this.load,
+    this.rankingData,
+  });
 }
 
 class RankingData {
@@ -428,7 +457,7 @@ class RankingData {
   final Future<Res<List<Comic>>> Function(String option, int page)? load;
 
   final Future<Res<List<Comic>>> Function(String option, String? next)?
-      loadWithNext;
+  loadWithNext;
 
   const RankingData(this.options, this.load, this.loadWithNext);
 }
@@ -447,7 +476,12 @@ class CategoryComicsOptions {
 
   final List<String>? showWhen;
 
-  const CategoryComicsOptions(this.label, this.options, this.notShowWhen, this.showWhen);
+  const CategoryComicsOptions(
+    this.label,
+    this.options,
+    this.notShowWhen,
+    this.showWhen,
+  );
 }
 
 class LinkHandler {

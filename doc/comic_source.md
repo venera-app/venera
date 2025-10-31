@@ -555,6 +555,51 @@ If `load` function is implemented, `loadNext` function will be ignored.
 
         },
         /**
+         * [Optional] load chapter comments
+         * 
+         * Chapter comments are displayed in the reader.
+         * Same rich text support as loadComments.
+         * 
+         * Note: To control reply functionality:
+         * - If a comment does not support replies, set its `id` to null/undefined
+         * - Or set its `replyCount` to null/undefined
+         * - The reply button will only show when both `id` and `replyCount` are present
+         * 
+         * @param comicId {string}
+         * @param epId {string} - chapter id
+         * @param page {number}
+         * @param replyTo {string?} - commentId to reply, not null when reply to a comment
+         * @returns {Promise<{comments: Comment[], maxPage: number?}>}
+         * 
+         * @example
+         * // Example for comments without reply support:
+         * return {
+         *   comments: data.list.map(e => ({
+         *     userName: e.user_name,
+         *     avatar: e.user_avatar,
+         *     content: e.comment,
+         *     time: e.create_at,
+         *     replyCount: null,  // or undefined - no reply support
+         *     id: null,          // or undefined - no reply support
+         *   })),
+         *   maxPage: Math.ceil(total / 20)
+         * }
+         */
+        loadChapterComments: async (comicId, epId, page, replyTo) => {
+
+        },
+        /**
+         * [Optional] send a chapter comment, return any value to indicate success
+         * @param comicId {string}
+         * @param epId {string} - chapter id
+         * @param content {string}
+         * @param replyTo {string?} - commentId to reply, not null when reply to a comment
+         * @returns {Promise<any>}
+         */
+        sendChapterComment: async (comicId, epId, content, replyTo) => {
+
+        },
+        /**
          * [Optional] like or unlike a comment
          * @param comicId {string}
          * @param subId {string?} - ComicDetails.subId
