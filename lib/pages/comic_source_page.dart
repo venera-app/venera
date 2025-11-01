@@ -1245,6 +1245,15 @@ class _LoginPageState extends State<_LoginPage> {
       if (widget.config.checkLoginStatus != null &&
           widget.config.checkLoginStatus!(url, title)) {
         var cookies = (await c.getCookies(url)) ?? [];
+        var localStorageItems = await c.webStorage.localStorage.getItems();
+        var mappedLocalStorage = <String, dynamic>{};
+        for (var item in localStorageItems) {
+          if (item.key != null) {
+            mappedLocalStorage[item.key!] = item.value;
+          }
+        }
+        widget.source.data['_localStorage'] = mappedLocalStorage;
+        await widget.source.saveData();
         SingleInstanceCookieJar.instance?.saveFromResponse(
           Uri.parse(url),
           cookies,
@@ -1306,6 +1315,20 @@ class _LoginPageState extends State<_LoginPage> {
           Uri.parse(url),
           cookies,
         );
+        var localStorageJson = await webview.evaluateJavascript(
+          "JSON.stringify(window.localStorage);",
+        );
+        var localStorage = <String, dynamic>{};
+        try {
+          var decoded = jsonDecode(localStorageJson ?? '');
+          if (decoded is Map<String, dynamic>) {
+            localStorage = decoded;
+          }
+        } catch (e) {
+          Log.error("ComicSourcePage", "Failed to parse localStorage JSON\n$e");
+        }
+        widget.source.data['_localStorage'] = localStorage;
+        await widget.source.saveData();
         success = true;
         widget.config.onLoginWithWebviewSuccess?.call();
         webview.close();
