@@ -25,6 +25,7 @@ import 'package:venera/foundation/consts.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/global_state.dart';
 import 'package:venera/foundation/history.dart';
+import 'package:venera/foundation/image_provider/cached_image.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/local.dart';
 import 'package:venera/foundation/log.dart';
@@ -53,6 +54,8 @@ part 'comic_image.dart';
 part 'loading.dart';
 
 part 'chapters.dart';
+
+part 'chapter_comments.dart';
 
 extension _ReaderContext on BuildContext {
   _ReaderState get reader => findAncestorStateOfType<_ReaderState>()!;
@@ -168,12 +171,22 @@ class _ReaderState extends State<Reader>
       }
     }
     // mode = ReaderMode.fromKey(appdata.settings['readerMode']);
-    mode = ReaderMode.fromKey(appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerMode'));
+    mode = ReaderMode.fromKey(
+      appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerMode'),
+    );
     history = widget.history;
-    if (!appdata.settings.getReaderSetting(cid, type.sourceKey, 'showSystemStatusBar')) {
+    if (!appdata.settings.getReaderSetting(
+      cid,
+      type.sourceKey,
+      'showSystemStatusBar',
+    )) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     }
-    if (appdata.settings.getReaderSetting(cid, type.sourceKey, 'enableTurnPageByVolumeKey')) {
+    if (appdata.settings.getReaderSetting(
+      cid,
+      type.sourceKey,
+      'enableTurnPageByVolumeKey',
+    )) {
       handleVolumeEvent();
     }
     setImageCacheSize();
@@ -211,8 +224,10 @@ class _ReaderState extends State<Reader>
     } else {
       maxImageCacheSize = 500 << 20;
     }
-    Log.info("Reader",
-        "Detect available RAM: $availableRAM, set image cache size to $maxImageCacheSize");
+    Log.info(
+      "Reader",
+      "Detect available RAM: $availableRAM, set image cache size to $maxImageCacheSize",
+    );
     PaintingBinding.instance.imageCache.maximumSizeBytes = maxImageCacheSize;
   }
 
@@ -242,13 +257,15 @@ class _ReaderState extends State<Reader>
       onKeyEvent: onKeyEvent,
       child: Overlay(
         initialEntries: [
-          OverlayEntry(builder: (context) {
-            return _ReaderScaffold(
-              child: _ReaderGestureDetector(
-                child: _ReaderImages(key: Key(chapter.toString())),
-              ),
-            );
-          })
+          OverlayEntry(
+            builder: (context) {
+              return _ReaderScaffold(
+                child: _ReaderGestureDetector(
+                  child: _ReaderImages(key: Key(chapter.toString())),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -385,16 +402,29 @@ abstract mixin class _ImagePerPageHandler {
     }
   }
 
-  bool showSingleImageOnFirstPage() =>
-      appdata.settings.getReaderSetting(cid, type.sourceKey, 'showSingleImageOnFirstPage');
+  bool showSingleImageOnFirstPage() => appdata.settings.getReaderSetting(
+    cid,
+    type.sourceKey,
+    'showSingleImageOnFirstPage',
+  );
 
   /// The number of images displayed on one screen
   int get imagesPerPage {
     if (mode.isContinuous) return 1;
     if (isPortrait) {
-      return appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerScreenPicNumberForPortrait') ?? 1;
+      return appdata.settings.getReaderSetting(
+            cid,
+            type.sourceKey,
+            'readerScreenPicNumberForPortrait',
+          ) ??
+          1;
     } else {
-      return appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerScreenPicNumberForLandscape') ?? 1;
+      return appdata.settings.getReaderSetting(
+            cid,
+            type.sourceKey,
+            'readerScreenPicNumberForLandscape',
+          ) ??
+          1;
     }
   }
 
@@ -403,15 +433,22 @@ abstract mixin class _ImagePerPageHandler {
     int currentImagesPerPage = imagesPerPage;
     bool currentOrientation = isPortrait;
 
-    if (_lastImagesPerPage != currentImagesPerPage || _lastOrientation != currentOrientation) {
-      _adjustPageForImagesPerPageChange(_lastImagesPerPage, currentImagesPerPage);
+    if (_lastImagesPerPage != currentImagesPerPage ||
+        _lastOrientation != currentOrientation) {
+      _adjustPageForImagesPerPageChange(
+        _lastImagesPerPage,
+        currentImagesPerPage,
+      );
       _lastImagesPerPage = currentImagesPerPage;
       _lastOrientation = currentOrientation;
     }
   }
 
   /// Adjust the page number when the number of images per page changes
-  void _adjustPageForImagesPerPageChange(int oldImagesPerPage, int newImagesPerPage) {
+  void _adjustPageForImagesPerPageChange(
+    int oldImagesPerPage,
+    int newImagesPerPage,
+  ) {
     int previousImageIndex = 1;
     if (!showSingleImageOnFirstPage() || oldImagesPerPage == 1) {
       previousImageIndex = (page - 1) * oldImagesPerPage + 1;
@@ -434,7 +471,7 @@ abstract mixin class _ImagePerPageHandler {
       newPage = previousImageIndex;
     }
 
-    page = newPage>0 ? newPage : 1;
+    page = newPage > 0 ? newPage : 1;
   }
 }
 
@@ -469,10 +506,7 @@ abstract mixin class _VolumeListener {
     if (volumeListener != null) {
       volumeListener?.cancel();
     }
-    volumeListener = VolumeListener(
-      onDown: onDown,
-      onUp: onUp,
-    )..listen();
+    volumeListener = VolumeListener(onDown: onDown, onUp: onUp)..listen();
   }
 
   void stopVolumeEvent() {
@@ -507,7 +541,8 @@ abstract mixin class _ReaderLocation {
 
   void update();
 
-  bool enablePageAnimation(String cid, ComicType type) => appdata.settings.getReaderSetting(cid, type.sourceKey, 'enablePageAnimation');
+  bool enablePageAnimation(String cid, ComicType type) => appdata.settings
+      .getReaderSetting(cid, type.sourceKey, 'enablePageAnimation');
 
   _ImageViewController? _imageViewController;
 
@@ -588,7 +623,11 @@ abstract mixin class _ReaderLocation {
       autoPageTurningTimer!.cancel();
       autoPageTurningTimer = null;
     } else {
-      int interval = appdata.settings.getReaderSetting(cid, type.sourceKey, 'autoPageTurningInterval');
+      int interval = appdata.settings.getReaderSetting(
+        cid,
+        type.sourceKey,
+        'autoPageTurningInterval',
+      );
       autoPageTurningTimer = Timer.periodic(Duration(seconds: interval), (_) {
         if (page == maxPage) {
           autoPageTurningTimer!.cancel();

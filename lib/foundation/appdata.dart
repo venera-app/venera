@@ -194,6 +194,7 @@ class Settings with ChangeNotifier {
     'readerScrollSpeed': 1.0, // 0.5 - 3.0
     'localFavoritesFirst': true,
     'autoCloseFavoritePanel': false,
+    'showChapterComments': true, // show chapter comments in reader
   };
 
   operator [](String key) {
@@ -207,7 +208,11 @@ class Settings with ChangeNotifier {
     }
   }
 
-  void setEnabledComicSpecificSettings(String comicId, String sourceKey, bool enabled) {
+  void setEnabledComicSpecificSettings(
+    String comicId,
+    String sourceKey,
+    bool enabled,
+  ) {
     setReaderSetting(comicId, sourceKey, "enabled", enabled);
   }
 
@@ -215,7 +220,8 @@ class Settings with ChangeNotifier {
     if (comicId == null || sourceKey == null) {
       return false;
     }
-    return _data['comicSpecificSettings']["$comicId@$sourceKey"]?["enabled"] == true;
+    return _data['comicSpecificSettings']["$comicId@$sourceKey"]?["enabled"] ==
+        true;
   }
 
   dynamic getReaderSetting(String comicId, String sourceKey, String key) {

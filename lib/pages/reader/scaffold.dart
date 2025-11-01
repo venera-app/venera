@@ -183,6 +183,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               ),
             ),
             const SizedBox(width: 8),
+            if (shouldShowChapterComments())
+              Tooltip(
+                message: "Chapter Comments".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.comment),
+                  onPressed: openChapterComments,
+                ),
+              ),
             Tooltip(
               message: "Settings".tl,
               child: IconButton(
@@ -605,7 +613,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
     var (imageIndex, data) = result;
     var fileType = detectFileType(data);
-    var filename = "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
+    var filename =
+        "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
     saveFile(data: data, filename: filename);
   }
 
@@ -616,7 +625,8 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     }
     var (imageIndex, data) = result;
     var fileType = detectFileType(data);
-    var filename = "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
+    var filename =
+        "${context.reader.widget.name}_${imageIndex + 1}${fileType.ext}";
     Share.shareFile(data: data, filename: filename, mime: fileType.mime);
   }
 
@@ -650,10 +660,55 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           if (key == "quickCollectImage") {
             addDragListener();
           }
+          if (key == "showChapterComments") {
+            update();
+          }
           context.reader.update();
         },
       ),
       width: 400,
+    );
+  }
+
+  bool shouldShowChapterComments() {
+    // Check if chapters exist
+    if (context.reader.widget.chapters == null) return false;
+
+    // Check if setting is enabled
+    var showChapterComments = appdata.settings.getReaderSetting(
+      context.reader.cid,
+      context.reader.type.sourceKey,
+      'showChapterComments',
+    );
+    if (showChapterComments != true) return false;
+
+    // Check if comic source supports chapter comments
+    var source = ComicSource.find(context.reader.type.sourceKey);
+    if (source == null || source.chapterCommentsLoader == null) return false;
+
+    return true;
+  }
+
+  void openChapterComments() {
+    var source = ComicSource.find(context.reader.type.sourceKey);
+    if (source == null) return;
+
+    var chapters = context.reader.widget.chapters;
+    if (chapters == null) return;
+
+    var chapterIndex = context.reader.chapter - 1;
+    var epId = chapters.ids.elementAt(chapterIndex);
+    var chapterTitle = chapters.titles.elementAt(chapterIndex);
+
+    showSideBar(
+      context,
+      ChapterCommentsPage(
+        comicId: context.reader.cid,
+        epId: epId,
+        source: source,
+        comicTitle: context.reader.widget.name,
+        chapterTitle: chapterTitle,
+      ),
     );
   }
 

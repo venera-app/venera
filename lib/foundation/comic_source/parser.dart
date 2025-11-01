@@ -151,6 +151,8 @@ class ComicSourceParser {
       version ?? "1.0.0",
       _parseCommentsLoader(),
       _parseSendCommentFunc(),
+      _parseChapterCommentsLoader(),
+      _parseSendChapterCommentFunc(),
       _parseLikeFunc(),
       _parseVoteCommentFunc(),
       _parseLikeCommentFunc(),
@@ -560,12 +562,16 @@ class ComicSourceParser {
             res = await res;
           }
           if (res is! List) {
-            return Res.error("Invalid data:\nExpected: List\nGot: ${res.runtimeType}");
+            return Res.error(
+              "Invalid data:\nExpected: List\nGot: ${res.runtimeType}",
+            );
           }
           var options = <CategoryComicsOptions>[];
           for (var element in res) {
             if (element is! Map) {
-              return Res.error("Invalid option data:\nExpected: Map\nGot: ${element.runtimeType}");
+              return Res.error(
+                "Invalid option data:\nExpected: Map\nGot: ${element.runtimeType}",
+              );
             }
             LinkedHashMap<String, String> map = LinkedHashMap<String, String>();
             for (var option in element["options"] ?? []) {
@@ -582,13 +588,14 @@ class ComicSourceParser {
                 element["label"] ?? "",
                 map,
                 List.from(element["notShowWhen"] ?? []),
-                element["showWhen"] == null ? null : List.from(element["showWhen"]),
+                element["showWhen"] == null
+                    ? null
+                    : List.from(element["showWhen"]),
               ),
             );
           }
           return Res(options);
-        }
-        catch(e) {
+        } catch (e) {
           Log.error("Data Analysis", "Failed to load category options.\n$e");
           return Res.error(e.toString());
         }
@@ -984,6 +991,54 @@ class ComicSourceParser {
           await JsEngine().runCode("""
             ComicSource.sources.$_key.comic.sendComment(
               ${jsonEncode(id)}, ${jsonEncode(subId)}, ${jsonEncode(content)}, ${jsonEncode(replyTo)})
+          """);
+          return const Res(true);
+        } catch (e, s) {
+          Log.error("Network", "$e\n$s");
+          return Res.error(e.toString());
+        }
+      }
+
+      var res = await func();
+      if (res.error && res.errorMessage!.contains("Login expired")) {
+        var reLoginRes = await ComicSource.find(_key!)!.reLogin();
+        if (!reLoginRes) {
+          return const Res.error("Login expired and re-login failed");
+        } else {
+          return func();
+        }
+      }
+      return res;
+    };
+  }
+
+  ChapterCommentsLoader? _parseChapterCommentsLoader() {
+    if (!_checkExists("comic.loadChapterComments")) return null;
+    return (comicId, epId, page, replyTo) async {
+      try {
+        var res = await JsEngine().runCode("""
+          ComicSource.sources.$_key.comic.loadChapterComments(
+            ${jsonEncode(comicId)}, ${jsonEncode(epId)}, ${jsonEncode(page)}, ${jsonEncode(replyTo)})
+        """);
+        return Res(
+          (res["comments"] as List).map((e) => Comment.fromJson(e)).toList(),
+          subData: res["maxPage"],
+        );
+      } catch (e, s) {
+        Log.error("Network", "$e\n$s");
+        return Res.error(e.toString());
+      }
+    };
+  }
+
+  SendChapterCommentFunc? _parseSendChapterCommentFunc() {
+    if (!_checkExists("comic.sendChapterComment")) return null;
+    return (comicId, epId, content, replyTo) async {
+      Future<Res<bool>> func() async {
+        try {
+          await JsEngine().runCode("""
+            ComicSource.sources.$_key.comic.sendChapterComment(
+              ${jsonEncode(comicId)}, ${jsonEncode(epId)}, ${jsonEncode(content)}, ${jsonEncode(replyTo)})
           """);
           return const Res(true);
         } catch (e, s) {
