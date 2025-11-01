@@ -30,6 +30,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
   late List<String> added = [];
 
   String keyword = "";
+  bool searchHasUpper = false;
 
   bool searchMode = false;
 
@@ -123,23 +124,23 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     var list = keyword.split(" ");
     for (var k in list) {
       if (k.isEmpty) continue;
-      if (comic.title.contains(k)) {
+      if (checkKeyWordMatch(k, comic.title, false)) {
         continue;
-      } else if (comic.subtitle != null && comic.subtitle!.contains(k)) {
+      } else if (comic.subtitle != null && checkKeyWordMatch(k, comic.subtitle!, false)) {
         continue;
       } else if (comic.tags.any((tag) {
-        if (tag == k) {
+        if (checkKeyWordMatch(k, tag, true)) {
           return true;
-        } else if (tag.contains(':') && tag.split(':')[1] == k) {
+        } else if (tag.contains(':') && checkKeyWordMatch(k, tag.split(':')[1], true)) {
           return true;
         } else if (App.locale.languageCode != 'en' &&
-            tag.translateTagsToCN == k) {
+            checkKeyWordMatch(k, tag.translateTagsToCN, true)) {
           return true;
         }
         return false;
       })) {
         continue;
-      } else if (comic.author == k) {
+      } else if (checkKeyWordMatch(k, comic.author, true)) {
         continue;
       }
       return false;
@@ -147,6 +148,17 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     return true;
   }
 
+  bool checkKeyWordMatch(String keyword, String compare, bool needEqual) {
+    String temp = compare;
+    // 没有大写的话, 就转成小写比较, 避免搜索需要注意大小写
+    if (!searchHasUpper) {
+      temp = temp.toLowerCase();
+    }
+    if (needEqual) {
+      return  keyword == temp;
+    }
+    return temp.contains(keyword);
+  }
   // Convert keyword to traditional Chinese to match comics
   bool matchKeywordT(String keyword, FavoriteItem comic) {
     if (!OpenCC.hasChineseSimplified(keyword)) {
@@ -164,7 +176,6 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
     keyword = OpenCC.traditionalToSimplified(keyword);
     return matchKeyword(keyword, comic);
   }
-
   @override
   void initState() {
     readFilterSelect = appdata.implicitData["local_favorites_read_filter"] ??
@@ -613,6 +624,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
               ),
               onChanged: (v) {
                 keyword = v;
+                searchHasUpper = keyword.contains(RegExp(r'[A-Z]'));
                 updateSearchResult();
               },
             ).paddingBottom(8).paddingRight(8),
