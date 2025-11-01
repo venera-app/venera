@@ -13,15 +13,15 @@
       "bundleIdentifier": "com.github.wgh136.venera",
       "developerName": "wgh136",
       "subtitle": "A comic reader that supports reading local and network comics",
-      "version": "1.5.3",
-      "versionDate": "2025-10-13",
-      "versionDescription": "1. Fix an issue where the app freezes after swiping back on Android. 544\r\n2. Enable minification when building for Android. 547\r\n3. Prevent the app from creating an archive download task when the archive URL is an empty string.",
-      "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.5.3/venera-ios-1.5.3%2B153.ipa",
+      "version": "1.6.0",
+      "versionDate": "2025-11-01",
+      "versionDescription": "What's Changed\r\n* Update AltStore source with latest release by @github-actions[bot] in https://github.com/venera-app/venera/pull/559\r\n* \u8c03\u6574\u591a\u6536\u85cf\u5939\u6f2b\u753b\u6e90\u7684\u6536\u85cf\u72b6\u6001\u663e\u793a\u903b\u8f91 by @Ftbom in https://github.com/venera-app/venera/pull/571\r\n* Enhance onResponse to support Future and validate result type by @wgh136 in https://github.com/venera-app/venera/pull/574\r\n* [iOS] Enable full screen swipe back gesture by @liulifox233 in https://github.com/venera-app/venera/pull/575\r\n* [linux] Fix linux nhentai cover image by @4b1tQu4ntN3k0 in https://github.com/venera-app/venera/pull/578\r\n* feat: \u652f\u6301\u8fc7\u6ee4\u9605\u8bfb\u5b8c\u6210\u60c5\u51b5 by @luckyray-fan in https://github.com/venera-app/venera/pull/582\r\n* Fix chinese character issue when compressing files. Close 565 by @ynyx631 in https://github.com/venera-app/venera/pull/583\r\n* Add support for ArrayBuffer to showInputDialog. by @wgh136 in https://github.com/venera-app/venera/pull/585\r\n* Added support for localstorage when logging in via webview. by @wgh136 in https://github.com/venera-app/venera/pull/586\r\n* Fix the issue of the comic list loading infinitely. Close 584 by @ynyx631 in https://github.com/venera-app/venera/pull/588\r\n* Save data when mark all as read by @lings03 in https://github.com/venera-app/venera/pull/592\r\n* Chapter comments. by @lings03 in https://github.com/venera-app/venera/pull/593\r\n* Optimize favorite page and home page. by @lings03 in https://github.com/venera-app/venera/pull/594\r\n* Update version code by @wgh136 in https://github.com/venera-app/venera/pull/596\r\n* Fix missing depends in deb package. Close 587 by @wgh136 in https://github.com/venera-app/venera/pull/597\r\n* feat: \u672c\u5730\u6536\u85cf\u641c\u7d22\u652f\u6301\u8f6c\u5c0f\u5199\u5339\u914d by @luckyray-fan in https://github.com/venera-app/venera/pull/598\r\n* Fix editor page gesture confict by @liulifox233 in https://github.com/venera-app/venera/pull/600\r \nNew Contributors\r\n* @github-actions[bot] made their first contribution in https://github.com/venera-app/venera/pull/559\r\n* @Ftbom made their first contribution in https://github.com/venera-app/venera/pull/571\r\n* @liulifox233 made their first contribution in https://github.com/venera-app/venera/pull/575\r\n* @4b1tQu4ntN3k0 made their first contribution in https://github.com/venera-app/venera/pull/578\r\n* @ynyx631 made their first contribution in https://github.com/venera-app/venera/pull/583\r \nFull Changelog: https://github.com/venera-app/venera/compare/v1.5.3...v1.6.0",
+      "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.6.0/venera-ios-1.6.0%2B160.ipa",
       "localizedDescription": "A comic reader that supports reading local and network comics",
       "iconURL": "https://raw.githubusercontent.com/venera-app/venera/master/assets/app_icon.png",
       "tintColor": "#0784FC",
       "category": "utilities",
-      "size": 15047841,
+      "size": 15064741,
       "appPermissions": {
         "entitlements": [
           "application-identifier",
@@ -39,6 +39,13 @@
         }
       },
       "versions": [
+        {
+          "version": "1.6.0",
+          "date": "2025-11-01",
+          "localizedDescription": "What's Changed\r\n* Update AltStore source with latest release by @github-actions[bot] in https://github.com/venera-app/venera/pull/559\r\n* \u8c03\u6574\u591a\u6536\u85cf\u5939\u6f2b\u753b\u6e90\u7684\u6536\u85cf\u72b6\u6001\u663e\u793a\u903b\u8f91 by @Ftbom in https://github.com/venera-app/venera/pull/571\r\n* Enhance onResponse to support Future and validate result type by @wgh136 in https://github.com/venera-app/venera/pull/574\r\n* [iOS] Enable full screen swipe back gesture by @liulifox233 in https://github.com/venera-app/venera/pull/575\r\n* [linux] Fix linux nhentai cover image by @4b1tQu4ntN3k0 in https://github.com/venera-app/venera/pull/578\r\n* feat: \u652f\u6301\u8fc7\u6ee4\u9605\u8bfb\u5b8c\u6210\u60c5\u51b5 by @luckyray-fan in https://github.com/venera-app/venera/pull/582\r\n* Fix chinese character issue when compressing files. Close 565 by @ynyx631 in https://github.com/venera-app/venera/pull/583\r\n* Add support for ArrayBuffer to showInputDialog. by @wgh136 in https://github.com/venera-app/venera/pull/585\r\n* Added support for localstorage when logging in via webview. by @wgh136 in https://github.com/venera-app/venera/pull/586\r\n* Fix the issue of the comic list loading infinitely. Close 584 by @ynyx631 in https://github.com/venera-app/venera/pull/588\r\n* Save data when mark all as read by @lings03 in https://github.com/venera-app/venera/pull/592\r\n* Chapter comments. by @lings03 in https://github.com/venera-app/venera/pull/593\r\n* Optimize favorite page and home page. by @lings03 in https://github.com/venera-app/venera/pull/594\r\n* Update version code by @wgh136 in https://github.com/venera-app/venera/pull/596\r\n* Fix missing depends in deb package. Close 587 by @wgh136 in https://github.com/venera-app/venera/pull/597\r\n* feat: \u672c\u5730\u6536\u85cf\u641c\u7d22\u652f\u6301\u8f6c\u5c0f\u5199\u5339\u914d by @luckyray-fan in https://github.com/venera-app/venera/pull/598\r\n* Fix editor page gesture confict by @liulifox233 in https://github.com/venera-app/venera/pull/600\r \nNew Contributors\r\n* @github-actions[bot] made their first contribution in https://github.com/venera-app/venera/pull/559\r\n* @Ftbom made their first contribution in https://github.com/venera-app/venera/pull/571\r\n* @liulifox233 made their first contribution in https://github.com/venera-app/venera/pull/575\r\n* @4b1tQu4ntN3k0 made their first contribution in https://github.com/venera-app/venera/pull/578\r\n* @ynyx631 made their first contribution in https://github.com/venera-app/venera/pull/583\r \nFull Changelog: https://github.com/venera-app/venera/compare/v1.5.3...v1.6.0",
+          "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.6.0/venera-ios-1.6.0%2B160.ipa",
+          "size": 15064741
+        },
         {
           "version": "1.5.3",
           "date": "2025-10-13",
@@ -76,6 +83,16 @@
       "tintColor": "#0784FC",
       "title": "v1.5.3 - Venera  13/10/25",
       "url": "https://github.com/venera-app/venera/releases/tag/v1.5.3"
+    },
+    {
+      "appID": "com.github.wgh136.venera",
+      "caption": "Update of Venera just got released!",
+      "date": "2025-11-01T07:31:38Z",
+      "identifier": "release-v1.6.0",
+      "notify": true,
+      "tintColor": "#0784FC",
+      "title": "v1.6.0 - Venera  01/11/25",
+      "url": "https://github.com/venera-app/venera/releases/tag/v1.6.0"
     }
   ]
 }
