@@ -689,7 +689,7 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   ),
               ];
             },
-            onTap: (c) {
+            onTap: (c, heroID) {
               if (multiSelectMode) {
                 setState(() {
                   if (selectedComics.containsKey(c as FavoriteItem)) {
@@ -701,20 +701,24 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                   lastSelectedIndex = comics.indexOf(c);
                 });
               } else if (appdata.settings["onClickFavorite"] == "viewDetail") {
-                App.mainNavigatorKey?.currentContext
-                    ?.to(() => ComicPage(id: c.id, sourceKey: c.sourceKey));
-              } else {
                 App.mainNavigatorKey?.currentContext?.to(
-                  () => ReaderWithLoading(
+                  () => ComicPage(
                     id: c.id,
                     sourceKey: c.sourceKey,
+                    cover: c.cover,
+                    title: c.title,
+                    heroID: heroID,
                   ),
                   enableIOSGesture: false,
                   iosFullScreenGesture: false,
                 );
+              } else {
+                App.mainNavigatorKey?.currentContext?.to(
+                  () => ReaderWithLoading(id: c.id, sourceKey: c.sourceKey),
+                );
               }
             },
-            onLongPressed: (c) {
+            onLongPressed: (c, heroID) {
               setState(() {
                 if (!multiSelectMode) {
                   multiSelectMode = true;
