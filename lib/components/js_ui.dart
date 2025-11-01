@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_qjs/flutter_qjs.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -40,7 +42,6 @@ mixin class JsUiApi {
         var image = message['image'];
         if (title is! String) return;
         if (validator != null && validator is! JSInvokable) return;
-        if (image != null && image is! String) return;
         return _showInputDialog(title, validator, image);
       case 'showSelectDialog':
         var title = message['title'];
@@ -126,13 +127,25 @@ mixin class JsUiApi {
     controller?.close();
   }
 
-  Future<String?> _showInputDialog(String title, JSInvokable? validator, String? image) async {
+  Future<String?> _showInputDialog(String title, JSInvokable? validator, dynamic image) async {
     String? result;
     var func = validator == null ? null : JSAutoFreeFunction(validator);
+    String? imageUrl;
+    Uint8List? imageData;
+    if (image != null) {
+      if (image is String) {
+        imageUrl = image;
+      } else if (image is Uint8List) {
+        imageData = image;
+      } else if (image is List<int>) {
+        imageData = Uint8List.fromList(image);
+      }
+    }
     await showInputDialog(
       context: App.rootContext,
       title: title,
-      image: image,
+      image: imageUrl,
+      imageData: imageData,
       onConfirm: (v) {
         if (func != null) {
           var res = func.call([v]);

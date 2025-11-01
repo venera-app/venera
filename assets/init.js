@@ -1334,7 +1334,7 @@ let UI = {
      * Show an input dialog
      * @param title {string}
      * @param validator {(string) => string | null | undefined} - A function that validates the input. If the function returns a string, the dialog will show the error message.
-     * @param image {string?} - Available since 1.4.6. An optional image to show in the dialog. You can use this to show a captcha.
+     * @param image {string | ArrayBuffer | null | undefined} - Since 1.4.6, you can pass an image url to show an image in the dialog. Since 1.5.3, you can also pass an ArrayBuffer to show a custom image.
      * @returns {Promise<string | null>} - The input value. If the dialog is canceled, return null.
      */
     showInputDialog: (title, validator, image) => {
