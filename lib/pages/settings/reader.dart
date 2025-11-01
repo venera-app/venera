@@ -282,7 +282,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         ).toSliver(),
         _CallbackSetting(
           title: "Custom Image Processing".tl,
-          callback: () => context.to(() => _CustomImageProcessing()),
+          callback: () => context.to(() => _CustomImageProcessing(), iosFullScreenGesture: false),
           actionTitle: "Edit".tl,
         ).toSliver(),
         _SliderSetting(
