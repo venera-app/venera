@@ -1159,7 +1159,7 @@ class ComicListState extends State<ComicList> {
           if (res.data.isEmpty) {
             setState(() {
               _data[page] = const [];
-              _maxPage = page;
+              _maxPage ??= page;
             });
           } else {
             setState(() {
@@ -1282,8 +1282,8 @@ class ComicListState extends State<ComicList> {
         ],
       );
     }
-    if (_data[_page] == null) {
-      _loadPage(_page);
+    if (_data[1] == null) {
+      _loadPage(1);
       return Column(
         children: [
           if (widget.errorLeading != null) widget.errorLeading!,
@@ -1304,7 +1304,7 @@ class ComicListState extends State<ComicList> {
           comics: _data.values.expand((element) => element).toList(),
           menuBuilder: widget.menuBuilder,
           onLastItemBuild: () {
-            if (_error == null && (_maxPage == null || _page < _maxPage!)) {
+            if (_error == null && (_maxPage == null || _data.length < _maxPage!)) {
               _loadPage(_data.length + 1);
             }
           },
@@ -1334,7 +1334,7 @@ class ComicListState extends State<ComicList> {
               ],
             ).paddingHorizontal(16).paddingVertical(8),
           )
-        else if (_maxPage == null || _page < _maxPage!)
+        else if (_maxPage == null || _data.length < _maxPage!)
           const SliverListLoadingIndicator(),
         if (widget.trailingSliver != null) widget.trailingSliver!,
       ],
