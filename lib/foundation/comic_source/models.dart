@@ -542,6 +542,7 @@ class PageJumpTarget {
           sourceKey: sourceKey,
           options: List.from(attributes?["options"] ?? []),
         ),
+        iosFullScreenGesture: false,
       );
     } else if (page == "category") {
       var key = ComicSource.find(sourceKey)!.categoryData!.key;
