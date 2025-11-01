@@ -93,7 +93,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_to_arch: ^1.0.1
-  flutter_to_debian: ^2.0.2
+  flutter_to_debian: 
+    git:
+      url: https://github.com/venera-app/flutter_to_debian.git
   archive: any
 
 flutter:
