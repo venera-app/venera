@@ -299,6 +299,7 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
                             );
                           }
                           updateFollowUpdatesUI();
+                          appdata.saveData();
                         },
                       );
                     },
