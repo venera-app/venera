@@ -163,6 +163,9 @@ class _ReaderState extends State<Reader>
     }
     if (widget.initialPage != null) {
       page = widget.initialPage!;
+      if (page < 1) {
+        page = 1;
+      }
     }
     // mode = ReaderMode.fromKey(appdata.settings['readerMode']);
     mode = ReaderMode.fromKey(appdata.settings.getReaderSetting(cid, type.sourceKey, 'readerMode'));
