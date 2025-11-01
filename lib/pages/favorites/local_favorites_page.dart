@@ -521,7 +521,9 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                       App.rootContext.to(() => ReaderWithLoading(
                         id: c.id,
                         sourceKey: c.sourceKey,
-                      ));
+                      ),
+                          enableIOSGesture: false,
+                          iosFullScreenGesture: false);
                     },
                   ),
               ]),
@@ -622,6 +624,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                           id: c.id,
                           sourceKey: c.sourceKey,
                         ),
+                        enableIOSGesture: false,
+                        iosFullScreenGesture: false,
                       );
                     },
                   ),
@@ -647,6 +651,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                     id: c.id,
                     sourceKey: c.sourceKey,
                   ),
+                  enableIOSGesture: false,
+                  iosFullScreenGesture: false,
                 );
               }
             },
