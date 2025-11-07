@@ -217,6 +217,7 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
 
     try {
       var headers = Map<String, dynamic>.from(req["headers"] ?? {});
+      var extra = Map<String, dynamic>.from(req["extra"] ?? {});
       if (headers["user-agent"] == null && headers["User-Agent"] == null) {
         headers["User-Agent"] = webUA;
       }
@@ -244,7 +245,10 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
               responseType: req["bytes"] == true
                   ? ResponseType.bytes
                   : ResponseType.plain,
-              headers: headers));
+              headers: headers,
+              extra: extra,
+          )
+      );
     } catch (e) {
       error = e.toString();
     }
