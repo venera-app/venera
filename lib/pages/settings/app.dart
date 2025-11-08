@@ -436,22 +436,33 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: Text("Skip Setting Fields".tl),
-                        content: RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(text: "${"When sync data, skip certain setting fields, which means these won't be uploaded / override.".tl}\n\n"),
-                              TextSpan(text: "See ".tl),
-                              TextSpan(
-                                text: "source code".tl,
-                                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = ()  {
-                                    launchUrlString("https://github.com/venera-app/venera/blob/b08f11f6ac49bd07d34b4fcde233ed07e86efbc9/lib/foundation/appdata.dart#L138");
-                                  },
-                              ),
-                              TextSpan(text: " for available fields.".tl),
-                            ],
-                          ),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "When sync data, skip certain setting fields, which means these won't be uploaded / override.".tl,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "See source code for available fields.".tl,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.open_in_new),
+                                    onPressed: () {
+                                      launchUrlString("https://github.com/venera-app/venera/blob/b08f11f6ac49bd07d34b4fcde233ed07e86efbc9/lib/foundation/appdata.dart#L138");
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     );
