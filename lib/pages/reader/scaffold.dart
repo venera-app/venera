@@ -166,40 +166,49 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         decoration: BoxDecoration(
           color: context.colorScheme.surface.toOpacity(0.92),
           border: Border(
-            bottom: BorderSide(color: Colors.grey.toOpacity(0.5), width: 0.5),
+            bottom: BorderSide(
+              color: Colors.grey.toOpacity(0.5),
+              width: 0.5,
+            ),
           ),
         ),
-        child: Row(
-          children: [
-            const SizedBox(width: 8),
-            const BackButton(),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                context.reader.widget.name,
-                style: ts.s18,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (shouldShowChapterComments())
-              Tooltip(
-                message: "Chapter Comments".tl,
-                child: IconButton(
-                  icon: const Icon(Icons.comment),
-                  onPressed: openChapterComments,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: context.padding.left,
+            right: context.padding.right,
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              const BackButton(),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.reader.widget.name,
+                  style: ts.s18,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            Tooltip(
-              message: "Settings".tl,
-              child: IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: openSetting,
+              const SizedBox(width: 8),
+              if (shouldShowChapterComments())
+                Tooltip(
+                  message: "Chapter Comments".tl,
+                  child: IconButton(
+                    icon: const Icon(Icons.comment),
+                    onPressed: openChapterComments,
+                  ),
+                ),
+              Tooltip(
+                message: "Settings".tl,
+                child: IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: openSetting,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-          ],
+              const SizedBox(width: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -520,7 +529,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               : null,
         ),
         padding: EdgeInsets.only(bottom: context.padding.bottom),
-        child: child,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: context.padding.left,
+            right: context.padding.right,
+          ),
+          child: child,
+        ),
       ),
     );
   }
@@ -713,11 +728,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildEpChangeButton() {
+    final extraWidth = context.padding.left + context.padding.right;
     if (context.reader.widget.chapters == null) return const SizedBox();
     switch (showFloatingButtonValue) {
       case 0:
         return Container(
-          width: 58,
+          width: 58 + extraWidth,
           height: 58,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
@@ -735,7 +751,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       case -1:
       case 1:
         return SizedBox(
-          width: 58,
+          width: 58 + extraWidth,
           height: 58,
           child: Material(
             color: Theme.of(context).colorScheme.primaryContainer,

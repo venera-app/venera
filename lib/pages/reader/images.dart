@@ -286,8 +286,9 @@ class _GalleryModeState extends State<_GalleryMode>
               );
             }
 
+            final viewportSize = MediaQuery.of(context).size;
             return PhotoViewGalleryPageOptions.customChild(
-              childSize: reader.size * 2,
+              childSize: viewportSize,
               controller: photoViewControllers[index],
               minScale: PhotoViewComputedScale.contained * 1.0,
               maxScale: PhotoViewComputedScale.covered * 10.0,
