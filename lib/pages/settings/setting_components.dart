@@ -385,17 +385,16 @@ class _SliderSettingState extends State<_SliderSetting> {
                 : appdata.settings.getReaderSetting(
                     widget.comicId!,
                     widget.comicSource!,
-                    widget.settingsIndex,
-                  ))
+                  widget.settingsIndex,
+                ))
             .toDouble();
     return ListTile(
-      title: Row(
-        children: [
-          Text(widget.title),
-          const Spacer(),
-          Text(value.toString(), style: ts.s12),
-        ],
+      title: Text(
+        widget.title,
+        softWrap: true,
+        maxLines: 2,
       ),
+      trailing: Text(value.toString(), style: ts.s12),
       subtitle: Slider(
         value: value,
         onChanged: (value) {
