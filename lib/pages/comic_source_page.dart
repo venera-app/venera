@@ -200,7 +200,6 @@ class _BodyState extends State<_Body> {
         await ComicSourceManager().reload();
         setState(() {});
       }),
-      iosFullScreenGesture: false,
     );
   }
 

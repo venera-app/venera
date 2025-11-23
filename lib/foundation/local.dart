@@ -153,9 +153,7 @@ class LocalComic with HistoryMixin implements Comic {
             ),
         author: subtitle,
         tags: tags,
-      ),
-      enableIOSGesture: false,
-      iosFullScreenGesture: false,
+      )
     );
   }
 

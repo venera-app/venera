@@ -115,9 +115,7 @@ abstract mixin class _ComicPageActions {
         history: history ?? History.fromModel(model: comic, ep: 0, page: 0),
         author: comic.findAuthor() ?? '',
         tags: comic.plainTags,
-      ),
-      enableIOSGesture: false,
-      iosFullScreenGesture: false,
+      )
     )
         .then((_) {
       onReadEnd();
