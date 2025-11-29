@@ -96,11 +96,28 @@ class MyLogInterceptor implements Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    const String headerMask = "********";
+    const String dataMask = "****** DATA_PROTECTED ******";
     Log.info(
         "Network",
         "${options.method} ${options.uri}\n"
-            "headers:\n${options.headers}\n"
-            "data:\n${options.data}");
+            "headers:\n${
+              options.extra.containsKey("maskHeadersInLog")
+                ? options.headers.map((key, value) =>
+                  MapEntry(
+                    key,
+                    options.extra["maskHeadersInLog"].contains(key)
+                      ? headerMask
+                      : value
+                  ))
+                : options.headers
+            }\n"
+            "data:\n${
+              options.extra["maskDataInLog"] == true
+                ? dataMask
+                : options.data
+            }"
+    );
     options.connectTimeout = const Duration(seconds: 15);
     options.receiveTimeout = const Duration(seconds: 15);
     options.sendTimeout = const Duration(seconds: 15);
