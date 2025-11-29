@@ -84,6 +84,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - run: rm -rf /opt/hostedtoolcache
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
