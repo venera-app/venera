@@ -21,7 +21,7 @@ class _CommentsPartState extends State<_CommentsPart> {
 
   @override
   void initState() {
-    comments = widget.comments;
+    comments = widget.comments.where((c) => !_shouldBlockComment(c)).toList();
     super.initState();
   }
 

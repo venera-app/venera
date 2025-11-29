@@ -180,6 +180,7 @@ class Settings with ChangeNotifier {
     'showFavoriteStatusOnTile': true,
     'showHistoryStatusOnTile': false,
     'blockedWords': [],
+    'blockedCommentWords': [],
     'defaultSearchTarget': null,
     'autoPageTurningInterval': 5, // in seconds
     'readerMode': 'galleryLeftToRight', // values of [ReaderMode]
