@@ -436,83 +436,72 @@ mixin class _JSEngineApi {
             return Uint8List.fromList(hmac.convert(value).bytes);
           }
         case "aes-ecb":
-          if (!isEncode) {
-            var key = data["key"];
-            var cipher = ECBBlockCipher(AESEngine());
-            cipher.init(
-              false,
-              KeyParameter(key),
+          var key = data["key"];
+          var cipher = ECBBlockCipher(AESEngine());
+          cipher.init(
+            isEncode,
+            KeyParameter(key),
+          );
+          var offset = 0;
+          var result = Uint8List(value.length);
+          while (offset < value.length) {
+            offset += cipher.processBlock(
+              value,
+              offset,
+              result,
+              offset,
             );
-            var offset = 0;
-            var result = Uint8List(value.length);
-            while (offset < value.length) {
-              offset += cipher.processBlock(
-                value,
-                offset,
-                result,
-                offset,
-              );
-            }
-            return result;
           }
-          return null;
+          return result;
         case "aes-cbc":
-          if (!isEncode) {
-            var key = data["key"];
-            var iv = data["iv"];
-            var cipher = CBCBlockCipher(AESEngine());
-            cipher.init(false, ParametersWithIV(KeyParameter(key), iv));
-            var offset = 0;
-            var result = Uint8List(value.length);
-            while (offset < value.length) {
-              offset += cipher.processBlock(
-                value,
-                offset,
-                result,
-                offset,
-              );
-            }
-            return result;
+          var key = data["key"];
+          var iv = data["iv"];
+          var cipher = CBCBlockCipher(AESEngine());
+          cipher.init(isEncode, ParametersWithIV(KeyParameter(key), iv));
+          var offset = 0;
+          var result = Uint8List(value.length);
+          while (offset < value.length) {
+            offset += cipher.processBlock(
+              value,
+              offset,
+              result,
+              offset,
+            );
           }
-          return null;
+          return result;
         case "aes-cfb":
-          if (!isEncode) {
-            var key = data["key"];
-            var blockSize = data["blockSize"];
-            var cipher = CFBBlockCipher(AESEngine(), blockSize);
-            cipher.init(false, KeyParameter(key));
-            var offset = 0;
-            var result = Uint8List(value.length);
-            while (offset < value.length) {
-              offset += cipher.processBlock(
-                value,
-                offset,
-                result,
-                offset,
-              );
-            }
-            return result;
+          var key = data["key"];
+          var iv = data["iv"];
+          var blockSize = data["blockSize"];
+          var cipher = CFBBlockCipher(AESEngine(), blockSize);
+          cipher.init(isEncode, ParametersWithIV(KeyParameter(key), iv));
+          var offset = 0;
+          var result = Uint8List(value.length);
+          while (offset < value.length) {
+            offset += cipher.processBlock(
+              value,
+              offset,
+              result,
+              offset,
+            );
           }
-          return null;
+          return result;
         case "aes-ofb":
-          if (!isEncode) {
-            var key = data["key"];
-            var blockSize = data["blockSize"];
-            var cipher = OFBBlockCipher(AESEngine(), blockSize);
-            cipher.init(false, KeyParameter(key));
-            var offset = 0;
-            var result = Uint8List(value.length);
-            while (offset < value.length) {
-              offset += cipher.processBlock(
-                value,
-                offset,
-                result,
-                offset,
-              );
-            }
-            return result;
+          var key = data["key"];
+          var blockSize = data["blockSize"];
+          var cipher = OFBBlockCipher(AESEngine(), blockSize);
+          cipher.init(isEncode, KeyParameter(key));
+          var offset = 0;
+          var result = Uint8List(value.length);
+          while (offset < value.length) {
+            offset += cipher.processBlock(
+              value,
+              offset,
+              result,
+              offset,
+            );
           }
-          return null;
+          return result;
         case "rsa":
           if (!isEncode) {
             var key = data["key"];

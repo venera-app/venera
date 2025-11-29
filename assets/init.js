@@ -195,6 +195,21 @@ let Convert = {
      * @param {ArrayBuffer} key
      * @returns {ArrayBuffer}
      */
+    encryptAesEcb: (value, key) => {
+        return sendMessage({
+            method: "convert",
+            type: "aes-ecb",
+            value: value,
+            key: key,
+            isEncode: true
+        });
+    },
+
+    /**
+     * @param {ArrayBuffer} value
+     * @param {ArrayBuffer} key
+     * @returns {ArrayBuffer}
+     */
     decryptAesEcb: (value, key) => {
         return sendMessage({
             method: "convert",
@@ -202,6 +217,23 @@ let Convert = {
             value: value,
             key: key,
             isEncode: false
+        });
+    },
+
+    /**
+     * @param {ArrayBuffer} value
+     * @param {ArrayBuffer} key
+     * @param {ArrayBuffer} iv
+     * @returns {ArrayBuffer}
+     */
+    encryptAesCbc: (value, key, iv) => {
+        return sendMessage({
+            method: "convert",
+            type: "aes-cbc",
+            value: value,
+            key: key,
+            iv: iv,
+            isEncode: true
         });
     },
 
@@ -225,17 +257,55 @@ let Convert = {
     /**
      * @param {ArrayBuffer} value
      * @param {ArrayBuffer} key
+     * @param {ArrayBuffer} iv
      * @param {number} blockSize
      * @returns {ArrayBuffer}
      */
-    decryptAesCfb: (value, key, blockSize) => {
+    encryptAesCfb: (value, key, iv, blockSize) => {
         return sendMessage({
             method: "convert",
             type: "aes-cfb",
             value: value,
             key: key,
+            iv: iv,
+            blockSize: blockSize,
+            isEncode: true
+        });
+    },
+
+    /**
+     * @param {ArrayBuffer} value
+     * @param {ArrayBuffer} key
+     * @param {ArrayBuffer} iv
+     * @param {number} blockSize
+     * @returns {ArrayBuffer}
+     */
+    decryptAesCfb: (value, key, iv, blockSize) => {
+        return sendMessage({
+            method: "convert",
+            type: "aes-cfb",
+            value: value,
+            key: key,
+            iv: iv,
             blockSize: blockSize,
             isEncode: false
+        });
+    },
+
+    /**
+     * @param {ArrayBuffer} value
+     * @param {ArrayBuffer} key
+     * @param {number} blockSize
+     * @returns {ArrayBuffer}
+     */
+    encryptAesOfb: (value, key, blockSize) => {
+        return sendMessage({
+            method: "convert",
+            type: "aes-ofb",
+            value: value,
+            key: key,
+            blockSize: blockSize,
+            isEncode: true
         });
     },
 
