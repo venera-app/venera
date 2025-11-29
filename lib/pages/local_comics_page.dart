@@ -258,29 +258,41 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
           else if (searchMode)
             SliverAppbar(
               leading: Tooltip(
-                message: "Cancel".tl,
+                message: multiSelectMode ? "Cancel".tl : "Cancel".tl,
                 child: IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: multiSelectMode
+                      ? const Icon(Icons.close)
+                      : const Icon(Icons.close),
                   onPressed: () {
-                    setState(() {
-                      searchMode = false;
-                      keyword = "";
-                      update();
-                    });
+                    if (multiSelectMode) {
+                      setState(() {
+                        multiSelectMode = false;
+                        selectedComics.clear();
+                      });
+                    } else {
+                      setState(() {
+                        searchMode = false;
+                        keyword = "";
+                        update();
+                      });
+                    }
                   },
                 ),
               ),
-              title: TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: "Search".tl,
-                  border: InputBorder.none,
-                ),
-                onChanged: (v) {
-                  keyword = v;
-                  update();
-                },
-              ),
+              title: multiSelectMode
+                  ? Text(selectedComics.length.toString())
+                  : TextField(
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: "Search".tl,
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (v) {
+                        keyword = v;
+                        update();
+                      },
+                    ),
+              actions: multiSelectMode ? selectActions : null,
             ),
           SliverGridComics(
             comics: comics,
@@ -344,6 +356,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     return PopScope(
       canPop: !multiSelectMode && !searchMode,
       onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         if (multiSelectMode) {
           setState(() {
             multiSelectMode = false;
