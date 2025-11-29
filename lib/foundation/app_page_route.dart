@@ -263,8 +263,9 @@ class _IOSBackGestureDetectorState extends State<IOSBackGestureDetector> {
 
   bool _isPointerInHorizontalScrollable(Offset globalPosition) {
     final HitTestResult result = HitTestResult();
-    WidgetsBinding.instance.hitTest(result, globalPosition);
-    
+    final binding = WidgetsBinding.instance;
+    binding.hitTestInView(result, globalPosition, binding.platformDispatcher.implicitView!.viewId);
+
     for (final entry in result.path) {
       final target = entry.target;
       if (target is RenderViewport) {

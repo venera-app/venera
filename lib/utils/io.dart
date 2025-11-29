@@ -362,7 +362,7 @@ Future<void> saveFile(
   }
 }
 
-class _IOOverrides extends IOOverrides {
+final class _IOOverrides extends IOOverrides {
   @override
   Directory createDirectory(String path) {
     if (App.isAndroid) {
