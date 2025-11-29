@@ -100,7 +100,7 @@ class _AppSettingsState extends State<AppSettings> {
           title: "Export App Data".tl,
           callback: () async {
             var controller = showLoadingDialog(context);
-            var file = await exportAppData();
+            var file = await exportAppData(false);
             await saveFile(filename: "data.venera", file: file);
             controller.close();
           },
@@ -353,6 +353,8 @@ class _WebdavSettingState extends State<_WebdavSetting> {
   String url = "";
   String user = "";
   String pass = "";
+  String disableSync = "";
+
   bool autoSync = true;
 
   bool isTesting = false;
@@ -363,6 +365,9 @@ class _WebdavSettingState extends State<_WebdavSetting> {
     super.initState();
     if (appdata.settings['webdav'] is! List) {
       appdata.settings['webdav'] = [];
+    }
+    if (appdata.settings['disableSyncFields'].trim().isNotEmpty) {
+      disableSync = appdata.settings['disableSyncFields'];
     }
     var configs = appdata.settings['webdav'] as List;
     if (configs.whereType<String>().length != 3) {
@@ -416,6 +421,56 @@ class _WebdavSettingState extends State<_WebdavSetting> {
               ),
               controller: TextEditingController(text: pass),
               onChanged: (value) => pass = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: InputDecoration(
+                labelText: "Skip Setting Fields (Optional)".tl,
+                hintText: "field0, field1, field2, ...",
+                hintStyle: TextStyle(color: Theme.of(context).hintColor),
+                border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.help_outline),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text("Skip Setting Fields".tl),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "When sync data, skip certain setting fields, which means these won't be uploaded / override.".tl,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "See source code for available fields.".tl,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.open_in_new),
+                                    onPressed: () {
+                                      launchUrlString("https://github.com/venera-app/venera/blob/b08f11f6ac49bd07d34b4fcde233ed07e86efbc9/lib/foundation/appdata.dart#L138");
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              controller: TextEditingController(text: disableSync),
+              onChanged: (value) => disableSync = value,
             ),
             const SizedBox(height: 12),
             ListTile(
@@ -494,6 +549,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                   }
 
                   appdata.settings['webdav'] = [url, user, pass];
+                  appdata.settings['disableSyncFields'] = disableSync;
                   appdata.implicitData['webdavAutoSync'] = autoSync;
                   appdata.writeImplicitData();
 

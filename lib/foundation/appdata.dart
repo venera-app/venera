@@ -23,9 +23,26 @@ class Appdata with Init {
     }
     _isSavingData = true;
     try {
-      var data = jsonEncode(toJson());
+      var futures = <Future>[];
+      var json = toJson();
+      var data = jsonEncode(json);
       var file = File(FilePath.join(App.dataPath, 'appdata.json'));
-      await file.writeAsString(data);
+      futures.add(file.writeAsString(data));
+
+      var disableSyncFields = json["settings"]["disableSyncFields"] as String;
+      if (disableSyncFields.isNotEmpty){
+        var json4sync = jsonDecode(data);
+        List<String> customDisableSync = splitField(disableSyncFields);
+        for (var field in customDisableSync) {
+          json4sync["settings"].remove(field);
+        }
+        var data4sync = jsonEncode(json4sync);
+        var file4sync = File(FilePath.join(App.dataPath, 'syncdata.json'));
+        futures.add(file4sync.writeAsString(data4sync));
+      }
+
+      await Future.wait(futures);
+
     } finally {
       _isSavingData = false;
     }
@@ -59,20 +76,33 @@ class Appdata with Init {
     return {'settings': settings._data, 'searchHistory': searchHistory};
   }
 
+  List<String> splitField(String merged) {
+    return merged
+        .split(',')
+        .map((field) => field.trim())
+        .where((field) => field.isNotEmpty)
+        .toList();
+  }
+
   /// Following fields are related to device-specific data and should not be synced.
   static const _disableSync = [
     "proxy",
     "authorizationRequired",
     "customImageProcessing",
     "webdav",
+    "disableSyncFields",
   ];
 
   /// Sync data from another device
   void syncData(Map<String, dynamic> data) {
     if (data['settings'] is Map) {
       var settings = data['settings'] as Map<String, dynamic>;
+
+      List<String> customDisableSync = splitField(this.settings["disableSyncFields"] as String);
+
       for (var key in settings.keys) {
-        if (!_disableSync.contains(key)) {
+        if (!_disableSync.contains(key) &&
+            !customDisableSync.contains(key)) {
           this.settings[key] = settings[key];
         }
       }
@@ -166,6 +196,7 @@ class Settings with ChangeNotifier {
     'checkUpdateOnStart': false,
     'limitImageWidth': true,
     'webdav': [], // empty means not configured
+    "disableSyncFields": "", // "field1, field2, ..."
     'dataVersion': 0,
     'quickFavorite': null,
     'enableTurnPageByVolumeKey': true,

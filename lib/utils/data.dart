@@ -15,7 +15,7 @@ import 'package:zip_flutter/zip_flutter.dart';
 
 import 'io.dart';
 
-Future<File> exportAppData() async {
+Future<File> exportAppData([bool sync = true]) async {
   var time = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var cacheFilePath = FilePath.join(App.cachePath, '$time.venera');
   var cacheFile = File(cacheFilePath);
@@ -27,7 +27,7 @@ Future<File> exportAppData() async {
     var zipFile = ZipFile.open(cacheFilePath);
     var historyFile = FilePath.join(dataPath, "history.db");
     var localFavoriteFile = FilePath.join(dataPath, "local_favorite.db");
-    var appdata = FilePath.join(dataPath, "appdata.json");
+    var appdata = FilePath.join(dataPath, sync ? "syncdata.json" : "appdata.json");
     var cookies = FilePath.join(dataPath, "cookie.db");
     zipFile.addFile("history.db", historyFile);
     zipFile.addFile("local_favorite.db", localFavoriteFile);
