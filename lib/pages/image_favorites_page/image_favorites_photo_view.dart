@@ -243,9 +243,7 @@ class _ImageFavoritesPhotoViewState extends State<ImageFavoritesPhotoView> {
                 sourceKey: comic.sourceKey,
                 initialEp: ep,
                 initialPage: page,
-              ),
-              enableIOSGesture: false,
-              iosFullScreenGesture: false,
+              )
             );
           },
         ),

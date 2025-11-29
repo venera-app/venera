@@ -895,8 +895,7 @@ class _ImageFavoritesState extends State<ImageFavorites> {
           borderRadius: BorderRadius.circular(8),
           onTap: () {
             context.to(
-              () => const ImageFavoritesPage(),
-              iosFullScreenGesture: false,
+              () => const ImageFavoritesPage()
             );
           },
           child: Column(
@@ -1018,7 +1017,6 @@ class _ImageFavoritesState extends State<ImageFavorites> {
               onTap: (text) {
                 context.to(
                   () => ImageFavoritesPage(initialKeyword: text),
-                  iosFullScreenGesture: false,
                 );
               },
             );

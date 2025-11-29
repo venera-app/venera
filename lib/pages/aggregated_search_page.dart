@@ -170,7 +170,6 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
             text: widget.keyword,
             sourceKey: widget.source.key,
           ),
-          iosFullScreenGesture: false,
         );
       },
       child: Column(

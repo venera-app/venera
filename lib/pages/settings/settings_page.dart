@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_reorderable_grid_view/widgets/reorderable_builder.dart';
@@ -41,7 +40,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> implements PopEntry {
+class _SettingsPageState extends State<SettingsPage> {
   int currentPage = -1;
 
   ColorScheme get colors => Theme.of(context).colorScheme;
@@ -70,84 +69,14 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
     Icons.bug_report,
   ];
 
-  double offset = 0;
-
-  late final HorizontalDragGestureRecognizer gestureRecognizer;
-
-  ModalRoute? _route;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final ModalRoute<dynamic>? nextRoute = ModalRoute.of(context);
-    if (nextRoute != _route) {
-      _route?.unregisterPopEntry(this);
-      _route = nextRoute;
-      _route?.registerPopEntry(this);
-    }
-  }
-
   @override
   void initState() {
     currentPage = widget.initialPage;
-    gestureRecognizer = HorizontalDragGestureRecognizer(debugOwner: this)
-      ..onUpdate = ((details) => setState(() => offset += details.delta.dx))
-      ..onEnd = (details) async {
-        if (details.velocity.pixelsPerSecond.dx.abs() > 1 &&
-            details.velocity.pixelsPerSecond.dx >= 0) {
-          setState(() {
-            Future.delayed(const Duration(milliseconds: 300), () => offset = 0);
-            currentPage = -1;
-          });
-        } else if (offset > MediaQuery.of(context).size.width / 2) {
-          setState(() {
-            Future.delayed(const Duration(milliseconds: 300), () => offset = 0);
-            currentPage = -1;
-          });
-        } else {
-          int i = 10;
-          while (offset != 0) {
-            setState(() {
-              offset -= i;
-              i *= 10;
-              if (offset < 0) {
-                offset = 0;
-              }
-            });
-            await Future.delayed(const Duration(milliseconds: 10));
-          }
-        }
-      }
-      ..onCancel = () async {
-        int i = 10;
-        while (offset != 0) {
-          setState(() {
-            offset -= i;
-            i *= 10;
-            if (offset < 0) {
-              offset = 0;
-            }
-          });
-          await Future.delayed(const Duration(milliseconds: 10));
-        }
-      };
     super.initState();
   }
 
   @override
-  dispose() {
-    super.dispose();
-    gestureRecognizer.dispose();
-    _route?.unregisterPopEntry(this);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (currentPage != -1) {
-      canPop.value = false;
-    } else {
-      canPop.value = true;
-    }
     return Material(
       child: buildBody(),
     );
@@ -209,53 +138,8 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
         ],
       );
     } else {
-      return LayoutBuilder(
-        builder: (context, constrains) {
-          return Stack(
-            children: [
-              Positioned.fill(child: buildLeft()),
-              Positioned(
-                left: offset,
-                width: constrains.maxWidth,
-                top: 0,
-                bottom: 0,
-                child: Listener(
-                  onPointerDown: handlePointerDown,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    switchInCurve: Curves.fastOutSlowIn,
-                    switchOutCurve: Curves.fastOutSlowIn,
-                    transitionBuilder: (child, animation) {
-                      var tween = Tween<Offset>(
-                          begin: const Offset(1, 0), end: const Offset(0, 0));
-
-                      return SlideTransition(
-                        position: tween.animate(animation),
-                        child: child,
-                      );
-                    },
-                    child: Material(
-                      key: ValueKey(currentPage),
-                      child: buildRight(),
-                    ),
-                  ),
-                ),
-              )
-            ],
-          );
-        },
-      );
+      return buildLeft();
     }
-  }
-
-  void handlePointerDown(PointerDownEvent event) {
-    if (!App.isIOS) {
-      return;
-    }
-    if (currentPage == -1) {
-      return;
-    }
-    gestureRecognizer.addPointer(event);
   }
 
   Widget buildLeft() {
@@ -334,7 +218,13 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
             ? const EdgeInsets.fromLTRB(8, 0, 8, 0)
             : EdgeInsets.zero,
         child: InkWell(
-          onTap: () => setState(() => currentPage = id),
+          onTap: () {
+            if (enableTwoViews) {
+              setState(() => currentPage = id);
+            } else {
+              context.to(() => _SettingsDetailPage(pageIndex: id));
+            }
+          },
           child: content,
         ).paddingVertical(4),
       );
@@ -348,8 +238,23 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
   }
 
   Widget buildRight() {
-    return switch (currentPage) {
-      -1 => const SizedBox(),
+    if (currentPage == -1) {
+      return const SizedBox();
+    }
+    return Navigator(
+      onGenerateRoute: (settings) {
+        return PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return _buildSettingsContent(currentPage);
+          },
+          transitionDuration: Duration.zero,
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsContent(int pageIndex) {
+    return switch (pageIndex) {
       0 => const ExploreSettings(),
       1 => const ReaderSettings(),
       2 => const AppearanceSettings(),
@@ -362,26 +267,31 @@ class _SettingsPageState extends State<SettingsPage> implements PopEntry {
     };
   }
 
-  var canPop = ValueNotifier(true);
+}
+
+class _SettingsDetailPage extends StatelessWidget {
+  const _SettingsDetailPage({required this.pageIndex});
+
+  final int pageIndex;
 
   @override
-  ValueListenable<bool> get canPopNotifier => canPop;
-
-  @override
-  void onPopInvokedWithResult(bool didPop, result) {
-    if (currentPage != -1) {
-      setState(() {
-        currentPage = -1;
-      });
-    }
+  Widget build(BuildContext context) {
+    return Material(
+      child: _buildPage(),
+    );
   }
 
-  @override
-  void onPopInvoked(bool didPop) {
-    if (currentPage != -1) {
-      setState(() {
-        currentPage = -1;
-      });
-    }
+  Widget _buildPage() {
+    return switch (pageIndex) {
+      0 => const ExploreSettings(),
+      1 => const ReaderSettings(),
+      2 => const AppearanceSettings(),
+      3 => const LocalFavoritesSettings(),
+      4 => const AppSettings(),
+      5 => const NetworkSettings(),
+      6 => const AboutSettings(),
+      7 => const DebugPage(),
+      _ => throw UnimplementedError()
+    };
   }
 }

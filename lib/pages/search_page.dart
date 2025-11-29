@@ -50,8 +50,7 @@ class _SearchPageState extends State<SearchPage> {
     if (aggregatedSearch) {
       context
           .to(
-            () => AggregatedSearchPage(keyword: text ?? controller.text),
-            iosFullScreenGesture: false,
+            () => AggregatedSearchPage(keyword: text ?? controller.text)
           )
           .then((_) => update());
     } else {
@@ -61,8 +60,7 @@ class _SearchPageState extends State<SearchPage> {
               text: text ?? controller.text,
               sourceKey: searchTarget,
               options: options,
-            ),
-            iosFullScreenGesture: false,
+            )
           )
           .then((_) => update());
     }
