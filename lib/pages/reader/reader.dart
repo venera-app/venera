@@ -124,6 +124,7 @@ class _ReaderState extends State<Reader>
   }
 
   /// Total pages including chapter comments page (used for internal page control).
+  @override
   int get totalPages {
     var pages = maxPage;
     if (_shouldShowChapterCommentsAtEnd) pages++;
@@ -131,6 +132,7 @@ class _ReaderState extends State<Reader>
   }
 
   /// Whether the current page is the chapter comments page.
+  @override
   bool get isOnChapterCommentsPage {
     return _shouldShowChapterCommentsAtEnd && _page > maxPage;
   }
@@ -165,6 +167,7 @@ class _ReaderState extends State<Reader>
 
   String get eid => widget.chapters?.ids.elementAtOrNull(chapter - 1) ?? '0';
 
+  @override
   List<String>? images;
 
   @override
