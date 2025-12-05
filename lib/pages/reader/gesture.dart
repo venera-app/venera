@@ -191,6 +191,10 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     } else if (context.readerScaffold.isOpen) {
       context.readerScaffold.openOrClose();
     } else {
+      // Don't open toolbar on chapter comments page
+      if (reader.isOnChapterCommentsPage) {
+        return;
+      }
       if (appdata.settings.getReaderSetting(
           reader.cid, reader.type.sourceKey, 'enableTapToTurnPages')) {
         bool isLeft = false, isRight = false, isTop = false, isBottom = false;

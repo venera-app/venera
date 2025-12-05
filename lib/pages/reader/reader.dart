@@ -113,16 +113,48 @@ class _ReaderState extends State<Reader>
     setState(() {});
   }
 
+  /// The maximum page number for images only (excluding chapter comments page).
+  /// This is used for display purposes and history recording.
   @override
   int get maxPage {
-    if (images == null) {
-      return 1;
+    if (images == null) return 1;
+    return !showSingleImageOnFirstPage()
+        ? (images!.length / imagesPerPage).ceil()
+        : 1 + ((images!.length - 1) / imagesPerPage).ceil();
+  }
+
+  /// Total pages including chapter comments page (used for internal page control).
+  int get totalPages {
+    var pages = maxPage;
+    if (_shouldShowChapterCommentsAtEnd) pages++;
+    return pages;
+  }
+
+  /// Whether the current page is the chapter comments page.
+  bool get isOnChapterCommentsPage {
+    return _shouldShowChapterCommentsAtEnd && _page > maxPage;
+  }
+
+  bool get _shouldShowChapterCommentsAtEnd {
+    if (mode != ReaderMode.galleryLeftToRight &&
+        mode != ReaderMode.galleryRightToLeft) {
+      return false;
     }
-    if (!showSingleImageOnFirstPage()) {
-      return (images!.length / imagesPerPage).ceil();
-    } else {
-      return 1 + ((images!.length - 1) / imagesPerPage).ceil();
-    }
+    if (widget.chapters == null) return false;
+    var source = ComicSource.find(type.sourceKey);
+    if (source?.chapterCommentsLoader == null) return false;
+    return appdata.settings.getReaderSetting(
+              cid,
+              type.sourceKey,
+              'showChapterComments',
+            ) ==
+            true &&
+        appdata.settings.getReaderSetting(
+              cid,
+              type.sourceKey,
+              'showChapterCommentsAtEnd',
+            ) ==
+            true;
   }
 
   @override
@@ -292,7 +324,8 @@ class _ReaderState extends State<Reader>
 
   void updateHistory() {
     if (history != null) {
-      if (page == maxPage) {
+      // page >= maxPage handles both last image page and chapter comments page
+      if (page >= maxPage) {
         /// Record the last image of chapter
         history!.page = images?.length ?? 1;
       } else {
@@ -377,6 +410,9 @@ abstract mixin class _ImagePerPageHandler {
   late int _lastImagesPerPage;
 
   late bool _lastOrientation;
+  
+  /// Track if we were on the chapter comments page before orientation change
+  bool _wasOnCommentsPage = false;
 
   bool get isPortrait;
 
@@ -389,10 +425,20 @@ abstract mixin class _ImagePerPageHandler {
   String get cid;
 
   ComicType get type;
+  
+  /// Whether the current page is the chapter comments page
+  bool get isOnChapterCommentsPage;
+  
+  /// Get the max page (excluding comments page)
+  int get maxPage;
+  
+  /// Get images list for calculating maxPage
+  List<String>? get images;
 
   void initImagesPerPage(int initialPage) {
     _lastImagesPerPage = imagesPerPage;
     _lastOrientation = isPortrait;
+    _wasOnCommentsPage = false;
     if (imagesPerPage != 1) {
       if (showSingleImageOnFirstPage()) {
         page = ((initialPage - 1) / imagesPerPage).ceil() + 1;
@@ -427,6 +473,14 @@ abstract mixin class _ImagePerPageHandler {
           1;
     }
   }
+  
+  /// Calculate maxPage with a specific imagesPerPage value
+  int _calcMaxPage(int imagesPerPageValue) {
+    if (images == null) return 1;
+    return !showSingleImageOnFirstPage()
+        ? (images!.length / imagesPerPageValue).ceil()
+        : 1 + ((images!.length - 1) / imagesPerPageValue).ceil();
+  }
 
   /// Check if the number of images per page has changed
   void _checkImagesPerPageChange() {
@@ -435,6 +489,11 @@ abstract mixin class _ImagePerPageHandler {
 
     if (_lastImagesPerPage != currentImagesPerPage ||
         _lastOrientation != currentOrientation) {
+      // Calculate old maxPage using old imagesPerPage to correctly determine
+      // if we were on the comments page before the orientation change
+      int oldMaxPage = _calcMaxPage(_lastImagesPerPage);
+      _wasOnCommentsPage = page > oldMaxPage;
+      
       _adjustPageForImagesPerPageChange(
         _lastImagesPerPage,
         currentImagesPerPage,
@@ -471,7 +530,15 @@ abstract mixin class _ImagePerPageHandler {
       newPage = previousImageIndex;
     }
 
-    page = newPage > 0 ? newPage : 1;
+    // Clamp to valid range (1 to maxPage)
+    newPage = newPage.clamp(1, maxPage);
+    
+    // If we were on the comments page, stay on the comments page
+    if (_wasOnCommentsPage) {
+      page = maxPage + 1;
+    } else {
+      page = newPage;
+    }
   }
 }
 
@@ -531,6 +598,9 @@ abstract mixin class _ReaderLocation {
 
   int get maxPage;
 
+  /// Total pages including chapter comments page (for internal page control).
+  int get totalPages;
+
   int get maxChapter;
 
   bool get isLoading;
@@ -557,7 +627,7 @@ abstract mixin class _ReaderLocation {
   }
 
   bool _validatePage(int page) {
-    return page >= 1 && page <= maxPage;
+    return page >= 1 && page <= totalPages;
   }
 
   /// Returns true if the page is changed
@@ -574,7 +644,7 @@ abstract mixin class _ReaderLocation {
 
   bool toPage(int page) {
     if (_validatePage(page)) {
-      if (page == this.page && page != 1 && page != maxPage) {
+      if (page == this.page && page != 1 && page != totalPages) {
         return false;
       }
       this.page = page;

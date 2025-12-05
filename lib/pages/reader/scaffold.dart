@@ -126,12 +126,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final isOnChapterCommentsPage = context.reader.isOnChapterCommentsPage;
     return Stack(
       children: [
         Positioned.fill(child: widget.child),
-        if (appdata.settings['showPageNumberInReader'] == true)
+        if (appdata.settings['showPageNumberInReader'] == true && !isOnChapterCommentsPage)
           buildPageInfoText(),
-        buildStatusInfo(),
+        if (!isOnChapterCommentsPage)
+          buildStatusInfo(),
         AnimatedPositioned(
           duration: const Duration(milliseconds: 180),
           right: 16,
@@ -360,9 +362,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildBottom() {
-    var text = "E${context.reader.chapter} : P${context.reader.page}";
+    // Use maxPage for display (excluding chapter comments page)
+    final displayPage = context.reader.page.clamp(1, context.reader.maxPage);
+    var text = "E${context.reader.chapter} : P$displayPage";
     if (context.reader.widget.chapters == null) {
-      text = "P${context.reader.page}";
+      text = "P$displayPage";
     }
 
     final buttons = [
@@ -543,12 +547,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   var sliderFocus = FocusNode();
 
   Widget buildSlider() {
+    // Clamp page to maxPage (excluding chapter comments page)
+    final displayPage = context.reader.page.clamp(1, context.reader.maxPage);
     return CustomSlider(
       focusNode: sliderFocus,
-      value: context.reader.page.toDouble(),
+      value: displayPage.toDouble(),
       min: 1,
       max: context.reader.maxPage
-          .clamp(context.reader.page, 1 << 16)
+          .clamp(displayPage, 1 << 16)
           .toDouble(),
       reversed: isReversed,
       divisions: (context.reader.maxPage - 1).clamp(2, 1 << 16),
@@ -675,7 +681,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           if (key == "quickCollectImage") {
             addDragListener();
           }
-          if (key == "showChapterComments") {
+          if (key == "showChapterComments" || key == "showChapterCommentsAtEnd") {
             update();
           }
           context.reader.update();
