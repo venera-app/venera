@@ -769,9 +769,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               borderRadius: BorderRadius.circular(16),
               child: Center(
                 child: Icon(
-                  showFloatingButtonValue == 1
-                      ? Icons.arrow_forward_ios
-                      : Icons.arrow_back_ios_outlined,
+                  _getArrowIcon(
+                    isReversed,
+                    showFloatingButtonValue,
+                  ),
                   size: 24,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
@@ -781,6 +782,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         );
     }
     return const SizedBox();
+  }
+
+  IconData _getArrowIcon(bool reversed, int value) {
+    if (reversed) {
+      return value == 1 ? Icons.arrow_back_ios_outlined : Icons.arrow_forward_ios;
+    } else {
+      return value == 1 ? Icons.arrow_forward_ios : Icons.arrow_back_ios_outlined;
+    }
   }
 
   /// If there is only one image on screen, return it.
