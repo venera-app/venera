@@ -675,6 +675,7 @@ class _EmbeddedChapterCommentsPageState
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       color: context.colorScheme.surface,
       child: SafeArea(
@@ -683,6 +684,7 @@ class _EmbeddedChapterCommentsPageState
             _buildHeader(),
             Expanded(child: _buildBody()),
             _buildBottom(),
+            SizedBox(height: bottomInset),
           ],
         ),
       ),
