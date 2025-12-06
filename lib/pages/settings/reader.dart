@@ -17,6 +17,72 @@ class ReaderSettings extends StatefulWidget {
 }
 
 class _ReaderSettingsState extends State<ReaderSettings> {
+  bool _isChapterCommentsAtEndSupported() {
+    String? readerMode;
+    bool? showChapterComments;
+    
+    if (widget.comicId != null &&
+        widget.comicSource != null &&
+        appdata.settings.isComicSpecificSettingsEnabled(
+          widget.comicId,
+          widget.comicSource,
+        )) {
+      readerMode = appdata.settings.getReaderSetting(
+        widget.comicId!,
+        widget.comicSource!,
+        'readerMode',
+      );
+      showChapterComments = appdata.settings.getReaderSetting(
+        widget.comicId!,
+        widget.comicSource!,
+        'showChapterComments',
+      );
+    } else {
+      readerMode = appdata.settings['readerMode'] as String?;
+      showChapterComments = appdata.settings['showChapterComments'] as bool?;
+    }
+    
+    // Must have showChapterComments enabled and be in gallery mode
+    if (showChapterComments != true) return false;
+    
+    return readerMode == 'galleryLeftToRight' ||
+        readerMode == 'galleryRightToLeft';
+  }
+  
+  void _onShowChapterCommentsChanged() {
+    // When showChapterComments is turned off, also turn off showChapterCommentsAtEnd
+    bool? showChapterComments;
+    
+    if (widget.comicId != null &&
+        widget.comicSource != null &&
+        appdata.settings.isComicSpecificSettingsEnabled(
+          widget.comicId,
+          widget.comicSource,
+        )) {
+      showChapterComments = appdata.settings.getReaderSetting(
+        widget.comicId!,
+        widget.comicSource!,
+        'showChapterComments',
+      );
+      if (showChapterComments != true) {
+        appdata.settings.setReaderSetting(
+          widget.comicId!,
+          widget.comicSource!,
+          'showChapterCommentsAtEnd',
+          false,
+        );
+      }
+    } else {
+      showChapterComments = appdata.settings['showChapterComments'] as bool?;
+      if (showChapterComments != true) {
+        appdata.settings['showChapterCommentsAtEnd'] = false;
+      }
+    }
+    
+    setState(() {});
+    widget.onChanged?.call("showChapterComments");
+  }
+
   @override
   Widget build(BuildContext context) {
     final comicId = widget.comicId;
@@ -306,12 +372,22 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         _SwitchSetting(
           title: "Show Chapter Comments".tl,
           settingKey: "showChapterComments",
-          onChanged: () {
-            widget.onChanged?.call("showChapterComments");
-          },
+          onChanged: _onShowChapterCommentsChanged,
           comicId: isEnabledSpecificSettings ? widget.comicId : null,
           comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
         ).toSliver(),
+        SliverAnimatedVisibility(
+          visible: _isChapterCommentsAtEndSupported(),
+          child: _SwitchSetting(
+            title: "Show Comments at Chapter End".tl,
+            settingKey: "showChapterCommentsAtEnd",
+            onChanged: () {
+              widget.onChanged?.call("showChapterCommentsAtEnd");
+            },
+            comicId: isEnabledSpecificSettings ? widget.comicId : null,
+            comicSource: isEnabledSpecificSettings ? widget.comicSource : null,
+          ),
+        ),
       ],
     );
   }

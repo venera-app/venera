@@ -108,8 +108,24 @@ class _ReaderImagesState extends State<_ReaderImages> {
       );
     } else {
       if (reader.mode.isGallery) {
+        var showComments =
+            appdata.settings.getReaderSetting(
+              reader.cid,
+              reader.type.sourceKey,
+              'showChapterComments',
+            ) ==
+            true;
+        var showCommentsAtEnd =
+            appdata.settings.getReaderSetting(
+              reader.cid,
+              reader.type.sourceKey,
+              'showChapterCommentsAtEnd',
+            ) ==
+            true;
         return _GalleryMode(
-          key: Key('${reader.mode.key}_${reader.imagesPerPage}'),
+          key: Key(
+            '${reader.mode.key}_${reader.imagesPerPage}_${showComments}_$showCommentsAtEnd',
+          ),
         );
       } else {
         return _ContinuousMode(key: Key(reader.mode.key));
@@ -135,19 +151,38 @@ class _GalleryModeState extends State<_GalleryMode>
 
   late _ReaderState reader;
 
-  /// [totalPages] is the total number of pages in the current chapter.
-  /// More than one images can be displayed on one page.
-  int get totalPages {
-    if (!reader.showSingleImageOnFirstPage()) {
-      return (reader.images!.length /
-              reader.imagesPerPage)
-          .ceil();
-    } else {
-      return 1 +
-          ((reader.images!.length - 1) /
-                  reader.imagesPerPage)
-              .ceil();
+  bool get showChapterCommentsAtEnd {
+    if (reader.mode != ReaderMode.galleryLeftToRight &&
+        reader.mode != ReaderMode.galleryRightToLeft) {
+      return false;
     }
+    if (reader.widget.chapters == null) return false;
+    var source = ComicSource.find(reader.type.sourceKey);
+    if (source?.chapterCommentsLoader == null) return false;
+    return appdata.settings.getReaderSetting(
+              reader.cid,
+              reader.type.sourceKey,
+              'showChapterComments',
+            ) ==
+            true &&
+        appdata.settings.getReaderSetting(
+              reader.cid,
+              reader.type.sourceKey,
+              'showChapterCommentsAtEnd',
+            ) ==
+            true;
+  }
+
+  int get totalImagePages {
+    return !reader.showSingleImageOnFirstPage()
+        ? (reader.images!.length / reader.imagesPerPage).ceil()
+        : 1 + ((reader.images!.length - 1) / reader.imagesPerPage).ceil();
+  }
+
+  int get totalPages => reader.totalPages;
+
+  bool isChapterCommentsPage(int pageIndex) {
+    return showChapterCommentsAtEnd && pageIndex == totalImagePages + 1;
   }
 
   var imageStates = <State<ComicImage>>{};
@@ -201,28 +236,40 @@ class _GalleryModeState extends State<_GalleryMode>
     return (startIndex, endIndex);
   }
 
-  /// [cache] is used to cache the images.
-  /// The count of images to cache is determined by the [preCacheCount] setting.
-  /// For previous page and next page, it will do a memory cache.
-  /// For current page, it will do nothing because it is already on the screen.
-  /// For other pages, it will do a pre-download cache.
   void cache(int startPage) {
     for (int i = startPage - 1; i <= startPage + preCacheCount; i++) {
-      if (i == startPage || i <= 0 || i > totalPages) continue;
-      bool shouldPreCache = i == startPage + 1 || i == startPage - 1;
-      _cachePage(i, shouldPreCache);
+      if (i == startPage ||
+          i <= 0 ||
+          i > totalPages ||
+          isChapterCommentsPage(i)) {
+        continue;
+      }
+      _cachePage(i, i == startPage + 1 || i == startPage - 1);
     }
   }
 
   void _cachePage(int page, bool shouldPreCache) {
+    if (isChapterCommentsPage(page)) return;
     var (startIndex, endIndex) = getPageImagesRange(page);
     for (int i = startIndex; i < endIndex; i++) {
-      if (shouldPreCache) {
-        _precacheImage(i + 1, context);
-      } else {
-        _preDownloadImage(i + 1, context);
-      }
+      shouldPreCache
+          ? _precacheImage(i + 1, context)
+          : _preDownloadImage(i + 1, context);
     }
+  }
+
+  Widget _buildChapterCommentsPage() {
+    var source = ComicSource.find(reader.type.sourceKey);
+    var chapters = reader.widget.chapters;
+    if (source == null || chapters == null) return const SizedBox();
+    var chapterIndex = reader.chapter - 1;
+    return _EmbeddedChapterCommentsPage(
+      comicId: reader.cid,
+      epId: chapters.ids.elementAt(chapterIndex),
+      source: source,
+      comicTitle: reader.widget.name,
+      chapterTitle: chapters.titles.elementAt(chapterIndex),
+    );
   }
 
   @override
@@ -258,6 +305,10 @@ class _GalleryModeState extends State<_GalleryMode>
             return PhotoViewGalleryPageOptions.customChild(
               child: const SizedBox(),
             );
+          } else if (isChapterCommentsPage(index)) {
+            return PhotoViewGalleryPageOptions.customChild(
+              child: _buildChapterCommentsPage(),
+            );
           } else {
             var (startIndex, endIndex) = getPageImagesRange(index);
             List<String> pageImages = reader.images!.sublist(
@@ -269,8 +320,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             photoViewControllers[index] ??= PhotoViewController();
 
-            if (reader.imagesPerPage == 1 ||
-                pageImages.length == 1) {
+            if (reader.imagesPerPage == 1 || pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
                 filterQuality: FilterQuality.medium,
                 controller: photoViewControllers[index],
@@ -311,16 +361,21 @@ class _GalleryModeState extends State<_GalleryMode>
         ),
         onPageChanged: (i) {
           if (i == 0) {
-            if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
-              reader.toPage(1);
+            if (reader.isFirstChapterOfGroup ||
+                !reader.toPrevChapter()) {
+              controller.jumpToPage(1);
             }
           } else if (i == totalPages + 1) {
             if (reader.isLastChapterOfGroup || !reader.toNextChapter()) {
-              reader.toPage(totalPages);
+              controller.jumpToPage(totalPages);
             }
           } else {
             reader.setPage(i);
             context.readerScaffold.update();
+            // Auto close toolbar when entering chapter comments page
+            if (isChapterCommentsPage(i) && context.readerScaffold.isOpen) {
+              context.readerScaffold.openOrClose();
+            }
           }
           // Remove other pages' controllers to reset their state.
           var keys = photoViewControllers.keys.toList();
@@ -546,24 +601,25 @@ class _GalleryModeState extends State<_GalleryMode>
   String? getImageKeyByOffset(Offset offset) {
     var range = getCurrentPageImageRange();
     if (range == null) return null;
-    
+
     var (startIndex, endIndex) = range;
     int actualImageCount = endIndex - startIndex;
-    
+
     if (actualImageCount == 1) {
       return reader.images![startIndex];
     }
-    
+
     for (var imageState in imageStates) {
       if ((imageState as _ComicImageState).containsPoint(offset)) {
-        var imageKey = (imageState.widget.image as ReaderImageProvider).imageKey;
+        var imageKey =
+            (imageState.widget.image as ReaderImageProvider).imageKey;
         int index = reader.images!.indexOf(imageKey);
         if (index >= startIndex && index < endIndex) {
           return imageKey;
         }
       }
     }
-    
+
     return reader.images![startIndex];
   }
 }
@@ -694,17 +750,13 @@ class _ContinuousModeState extends State<_ContinuousMode>
       }
     }
     scrollController
-        .animateTo(
-      _futurePosition!,
-      duration: duration,
-      curve: Curves.linear,
-    )
+        .animateTo(_futurePosition!, duration: duration, curve: Curves.linear)
         .then((_) {
-      var current = scrollController.position.pixels;
-      if (current == target && current == _futurePosition) {
-        _futurePosition = null;
-      }
-    });
+          var current = scrollController.position.pixels;
+          if (current == target && current == _futurePosition) {
+            _futurePosition = null;
+          }
+        });
   }
 
   void onPointerSignal(PointerSignalEvent event) {
