@@ -755,86 +755,39 @@ class _EmbeddedChapterCommentsPageState
   }
 
   Widget _buildCommentsList(bool showAvatar) {
-    // Use orientation to determine layout mode (landscape = 2 columns, portrait = 1 column)
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final crossAxisCount = isLandscape ? 2 : 1;
+    final scrollController = ScrollController();
     
-    // Calculate item count based on layout mode
-    final itemCount = isLandscape 
-        ? (_comments!.length / 2).ceil() + 1  // Pairs of comments + load more
-        : _comments!.length + 1;               // Individual comments + load more
-    
-    return SmoothScrollProvider(
-      // Use key to force SmoothScrollProvider rebuild when orientation changes
-      // This ensures ScrollController is properly recreated
-      key: ValueKey('comments_scroll_$isLandscape'),
-      builder: (context, controller, physics) {
-        return Scrollbar(
-          controller: controller,
-          child: ListView.builder(
-            controller: controller,
-            physics: physics,
-            primary: false,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              final actualItemCount = isLandscape 
-                  ? (_comments!.length / 2).ceil() 
-                  : _comments!.length;
-              
-              if (index == actualItemCount) {
-                if (_page < (maxPage ?? _page + 1)) {
-                  loadMore();
-                  return const ListLoadingIndicator();
-                } else {
-                  return const SizedBox();
-                }
-              }
-
-              if (isLandscape) {
-                // Landscape: show two comments per row
-                final leftIndex = index * 2;
-                final rightIndex = leftIndex + 1;
-                
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _ChapterCommentTile(
-                        comment: _comments![leftIndex],
-                        source: widget.source,
-                        comicId: widget.comicId,
-                        epId: widget.epId,
-                        showAvatar: showAvatar,
-                      ),
-                    ),
-                    if (rightIndex < _comments!.length)
-                      Expanded(
-                        child: _ChapterCommentTile(
-                          comment: _comments![rightIndex],
-                          source: widget.source,
-                          comicId: widget.comicId,
-                          epId: widget.epId,
-                          showAvatar: showAvatar,
-                        ),
-                      )
-                    else
-                      const Expanded(child: SizedBox()),
-                  ],
-                );
-              } else {
-                // Portrait: single column
-                return _ChapterCommentTile(
-                  comment: _comments![index],
-                  source: widget.source,
-                  comicId: widget.comicId,
-                  epId: widget.epId,
-                  showAvatar: showAvatar,
-                );
-              }
-            },
-          ),
-        );
-      },
+    return Scrollbar(
+      controller: scrollController,
+      thumbVisibility: true,
+      thickness: 8,
+      child: MasonryGridView.count(
+        controller: scrollController,
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 0,
+        crossAxisSpacing: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        itemCount: _comments!.length + 1,
+        itemBuilder: (context, index) {
+          if (index == _comments!.length) {
+            if (_page < (maxPage ?? _page + 1)) {
+              loadMore();
+              return const ListLoadingIndicator();
+            } else {
+              return const SizedBox();
+            }
+          }
+          return _ChapterCommentTile(
+            comment: _comments![index],
+            source: widget.source,
+            comicId: widget.comicId,
+            epId: widget.epId,
+            showAvatar: showAvatar,
+          );
+        },
+      ),
     );
   }
 
