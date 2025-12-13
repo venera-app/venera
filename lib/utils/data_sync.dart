@@ -98,6 +98,8 @@ class DataSync with ChangeNotifier {
 
   Future<Res<bool>> uploadData() async {
     if (isDownloading) return const Res(true);
+    // Before uploading, download data first to merge.
+    await downloadData();
     if (_haveWaitingTask) return const Res(true);
     while (isUploading) {
       _haveWaitingTask = true;
@@ -129,29 +131,35 @@ class DataSync with ChangeNotifier {
 
       try {
         appdata.settings['dataVersion']++;
+        Log.info("Data Sync", "Uploading data with version ${appdata.settings['dataVersion']}");
         await appdata.saveData(false);
         var data = await exportAppData(
-            appdata.settings['disableSyncFields'].toString().isNotEmpty
-        );
-        var time =
-            (DateTime.now().millisecondsSinceEpoch ~/ 86400000).toString();
-        var filename = time;
-        filename += '-';
-        filename += appdata.settings['dataVersion'].toString();
-        filename += '.venera';
-        var files = await client.readDir('/');
-        files = files.where((e) => e.name!.endsWith('.venera')).toList();
-        var old = files.firstWhereOrNull((e) => e.name!.startsWith("$time-"));
-        if (old != null) {
-          await client.remove(old.name!);
-        }
-        if (files.length >= 10) {
-          files.sort((a, b) => a.name!.compareTo(b.name!));
-          await client.remove(files.first.name!);
-        }
+            appdata.settings['disableSyncFields'].toString().isNotEmpty);
+        var time = DateTime.now().millisecondsSinceEpoch.toString();
+        var filename = "$time-${appdata.settings['dataVersion']}.venera";
+
+        // 1. Upload the new file first. This is the safe "write" operation.
         await client.write(filename, await data.readAsBytes());
         data.deleteIgnoreError();
-        Log.info("Upload Data", "Data uploaded successfully");
+        Log.info("Upload Data", "Data uploaded successfully to $filename");
+
+        // 2. After successful upload, clean up old files.
+        var files = await client.readDir('/');
+        files = files.where((e) => e.name!.endsWith('.venera')).toList();
+        if (files.length > 10) {
+          // Sort files from oldest to newest
+          files.sort((a, b) => a.name!.compareTo(b.name!));
+          // Remove the oldest files until only 10 are left
+          var filesToRemove = files.length - 10;
+          for (var i = 0; i < filesToRemove; i++) {
+            try {
+              await client.remove(files[i].name!);
+              Log.info("Data Sync", "Removed old backup: ${files[i].name!}");
+            } catch (e) {
+              Log.error("Data Sync", "Failed to remove old backup ${files[i].name!}: $e");
+            }
+          }
+        }
         return const Res(true);
       } catch (e, s) {
         Log.error("Upload Data", e, s);
@@ -205,6 +213,7 @@ class DataSync with ChangeNotifier {
             file.name!.split('-').elementAtOrNull(1)?.split('.').first;
         if (version != null && int.tryParse(version) != null) {
           var currentVersion = appdata.settings['dataVersion'];
+          Log.info("Data Sync", "Remote version: $version, Local version: $currentVersion");
           if (currentVersion != null && int.parse(version) <= currentVersion) {
             Log.info("Data Sync", 'No new data to download');
             return const Res(true);
@@ -213,7 +222,7 @@ class DataSync with ChangeNotifier {
         Log.info("Data Sync", "Downloading data from WebDAV server");
         var localFile = File(FilePath.join(App.cachePath, file.name!));
         await client.read2File(file.name!, localFile.path);
-        await importAppData(localFile, true);
+        await mergeAppData(localFile);
         await localFile.delete();
         Log.info("Data Sync", "Data downloaded successfully");
         return const Res(true);

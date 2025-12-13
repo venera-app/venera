@@ -262,6 +262,8 @@ class LocalManager with ChangeNotifier {
     _db = sqlite3.open(
       '${App.dataPath}/local.db',
     );
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
     _db.execute('''
       CREATE TABLE IF NOT EXISTS comics (
         id TEXT NOT NULL,

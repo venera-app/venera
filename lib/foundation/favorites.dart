@@ -227,6 +227,8 @@ class LocalFavoritesManager with ChangeNotifier {
   Future<void> init() async {
     counts = {};
     _db = sqlite3.open("${App.dataPath}/local_favorite.db");
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
     _db.execute("""
       create table if not exists folder_order (
         folder_name text primary key,

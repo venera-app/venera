@@ -71,6 +71,8 @@ class CacheManager {
   CacheManager._create() {
     Directory(cachePath).createSync(recursive: true);
     _db = sqlite3.open('${App.dataPath}/cache.db');
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
     _db.execute('''
       CREATE TABLE IF NOT EXISTS cache (
         key TEXT PRIMARY KEY NOT NULL,
