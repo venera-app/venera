@@ -797,6 +797,7 @@ class _SliverComicSource extends StatefulWidget {
 
 class _SliverComicSourceState extends State<_SliverComicSource> {
   ComicSource get source => widget.source;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -804,11 +805,18 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
     bool hasUpdate =
         newVersion != null && compareSemVer(newVersion, source.version);
 
+    var settings = buildSourceSettings().toList();
+    var account = _buildAccount().toList();
+    var hasConfig = settings.isNotEmpty || account.isNotEmpty;
+
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(padding: const EdgeInsets.only(top: 16)),
         SliverToBoxAdapter(
           child: ListTile(
+            onTap: hasConfig
+                ? () => setState(() => _isExpanded = !_isExpanded)
+                : null,
             title: Row(
               children: [
                 Text(source.name, style: ts.s18),
@@ -871,6 +879,22 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
                     icon: const Icon(Icons.delete),
                   ),
                 ),
+                if (hasConfig)
+                  Tooltip(
+                    message: _isExpanded ? "Collapse".tl : "Expand".tl,
+                    child: IconButton(
+                      onPressed: () =>
+                          setState(() => _isExpanded = !_isExpanded),
+                      icon: Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      ),
+                    ),
+                  )
+                else
+                  const IconButton(
+                    onPressed: null,
+                    icon: Icon(Icons.expand_more, color: Colors.transparent),
+                  ),
               ],
             ),
           ),
@@ -888,10 +912,10 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Column(children: buildSourceSettings().toList()),
-        ),
-        SliverToBoxAdapter(child: Column(children: _buildAccount().toList())),
+        if (_isExpanded) ...[
+          SliverToBoxAdapter(child: Column(children: settings)),
+          SliverToBoxAdapter(child: Column(children: account)),
+        ],
       ],
     );
   }
