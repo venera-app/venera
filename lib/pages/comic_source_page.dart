@@ -819,7 +819,13 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
                 : null,
             title: Row(
               children: [
-                Text(source.name, style: ts.s18),
+                Flexible(
+                  child: Text(
+                    source.name,
+                    style: ts.s18,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
