@@ -805,8 +805,8 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
     bool hasUpdate =
         newVersion != null && compareSemVer(newVersion, source.version);
 
-    var settings = buildSourceSettings().toList();
-    var account = _buildAccount().toList();
+    var settings = buildSourceSettings();
+    var account = _buildAccount();
     var hasConfig = settings.isNotEmpty || account.isNotEmpty;
 
     return SliverMainAxisGroup(
@@ -919,8 +919,8 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
           ),
         ),
         if (_isExpanded) ...[
-          SliverToBoxAdapter(child: Column(children: settings)),
-          SliverToBoxAdapter(child: Column(children: account)),
+          SliverToBoxAdapter(child: Column(children: settings.toList())),
+          SliverToBoxAdapter(child: Column(children: account.toList())),
         ],
       ],
     );
