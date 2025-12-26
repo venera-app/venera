@@ -121,9 +121,11 @@ class _ChapterCommentsPageState extends State<ChapterCommentsPage> {
         withAppbar: false,
       );
     } else {
-      var showAvatar = _comments!.any((e) {
-        return e.avatar != null;
-      });
+      var showAvatar =
+          _comments!.any((e) {
+            return e.avatar != null;
+          }) ||
+          (widget.replyComment?.avatar != null);
       return Column(
         children: [
           Expanded(
@@ -579,10 +581,7 @@ class _CommentContent extends StatelessWidget {
     if (!text.contains('<') && !text.contains('http')) {
       return SelectableText(text);
     } else {
-      // Use the RichCommentContent from comments_page.dart
-      // For simplicity, we'll just show plain text here
-      // In a real implementation, you'd need to import or duplicate the RichCommentContent class
-      return SelectableText(text);
+      return RichCommentContent(text: text);
     }
   }
 }
