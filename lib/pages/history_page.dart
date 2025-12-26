@@ -84,6 +84,65 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
+  void _refreshHistory(History comic) async {
+    var result = await HistoryManager().refreshHistoryInfo(comic);
+    if (result) {
+      if (mounted) {
+        App.rootContext.showMessage(message: "Refresh Success".tl);
+      }
+    } else {
+      if (mounted) {
+        App.rootContext.showMessage(message: "Refresh Failed".tl);
+      }
+    }
+  }
+
+  void _refreshAllHistories() async {
+    bool isCanceled = false;
+    void onCancel() {
+      isCanceled = true;
+    }
+
+    var loadingController = showLoadingDialog(
+      App.rootContext,
+      withProgress: true,
+      cancelButtonText: "Cancel".tl,
+      onCancel: onCancel,
+      message: "Refreshing Histories".tl,
+    );
+
+    int success = 0;
+    int failed = 0;
+    int skipped = 0;
+
+    await for (var progress
+        in HistoryManager().refreshAllHistoriesStream()) {
+      if (isCanceled) {
+        return;
+      }
+      if (progress.total > 0) {
+        loadingController.setProgress(progress.current / progress.total);
+      }
+      success = progress.success;
+      failed = progress.failed;
+      skipped = progress.skipped;
+    }
+
+    loadingController.close();
+
+    if (mounted) {
+      App.rootContext.showMessage(
+        message:
+            "Refresh Completed: Success @success, Failed @failed, Skipped @skipped"
+                .tlParams({
+          'success': success,
+          'failed': failed,
+          'skipped': skipped,
+        }),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> selectActions = [
@@ -122,6 +181,11 @@ class _HistoryPageState extends State<HistoryPage> {
     ];
 
     List<Widget> normalActions = [
+      IconButton(
+        icon: const Icon(Icons.refresh),
+        tooltip: 'Refresh All Histories'.tl,
+        onPressed: _refreshAllHistories,
+      ),
       IconButton(
         icon: const Icon(Icons.checklist),
         tooltip: multiSelectMode ? "Exit Multi-Select".tl : "Multi-Select".tl,
@@ -166,7 +230,7 @@ class _HistoryPageState extends State<HistoryPage> {
             },
           ),
         ),
-      )
+      ),
     ];
 
     return PopScope(
@@ -229,6 +293,13 @@ class _HistoryPageState extends State<HistoryPage> {
               },
               menuBuilder: (c) {
                 return [
+                  MenuEntry(
+                    icon: Icons.refresh,
+                    text: 'Refresh Info'.tl,
+                    onClick: () {
+                      _refreshHistory(c as History);
+                    },
+                  ),
                   MenuEntry(
                     icon: Icons.remove,
                     text: 'Remove'.tl,
