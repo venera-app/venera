@@ -27,6 +27,14 @@ class _ReaderImagesState extends State<_ReaderImages> {
     ImageDownloader.cancelAllLoadingImages();
   }
 
+  /// Handle jumping to last page when _jumpToLastPageOnLoad is true
+  void _handleJumpToLastPage() {
+    if (reader._jumpToLastPageOnLoad) {
+      reader._page = reader.maxPage;
+      reader._jumpToLastPageOnLoad = false;
+    }
+  }
+
   void load() async {
     if (inProgress) return;
     inProgress = true;
@@ -47,6 +55,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = images;
           reader.isLoading = false;
           inProgress = false;
+          _handleJumpToLastPage();
           Future.microtask(() {
             reader.updateHistory();
           });
@@ -75,6 +84,7 @@ class _ReaderImagesState extends State<_ReaderImages> {
           reader.images = res.data;
           reader.isLoading = false;
           inProgress = false;
+          _handleJumpToLastPage();
           Future.microtask(() {
             reader.updateHistory();
           });
@@ -311,7 +321,7 @@ class _GalleryModeState extends State<_GalleryMode>
         ),
         onPageChanged: (i) {
           if (i == 0) {
-            if (reader.isFirstChapterOfGroup || !reader.toPrevChapter()) {
+            if (reader.isFirstChapterOfGroup || !reader.toPrevChapter(toLastPage: true)) {
               reader.toPage(1);
             }
           } else if (i == totalPages + 1) {
@@ -850,7 +860,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         if (fingers == 0) {
           if (jumpToPrevChapter) {
             context.readerScaffold.setFloatingButton(0);
-            reader.toPrevChapter();
+            reader.toPrevChapter(toLastPage: true);
           } else if (jumpToNextChapter) {
             context.readerScaffold.setFloatingButton(0);
             reader.toNextChapter();
