@@ -797,6 +797,7 @@ class _SliverComicSource extends StatefulWidget {
 
 class _SliverComicSourceState extends State<_SliverComicSource> {
   ComicSource get source => widget.source;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -804,14 +805,27 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
     bool hasUpdate =
         newVersion != null && compareSemVer(newVersion, source.version);
 
+    var settings = buildSourceSettings();
+    var account = _buildAccount();
+    var hasConfig = settings.isNotEmpty || account.isNotEmpty;
+
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(padding: const EdgeInsets.only(top: 16)),
         SliverToBoxAdapter(
           child: ListTile(
+            onTap: hasConfig
+                ? () => setState(() => _isExpanded = !_isExpanded)
+                : null,
             title: Row(
               children: [
-                Text(source.name, style: ts.s18),
+                Flexible(
+                  child: Text(
+                    source.name,
+                    style: ts.s18,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -850,26 +864,57 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Tooltip(
-                  message: "Edit".tl,
-                  child: IconButton(
-                    onPressed: () => widget.edit(source),
-                    icon: const Icon(Icons.edit_note),
+                if (hasConfig)
+                  IconButton(
+                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    ),
                   ),
-                ),
-                Tooltip(
-                  message: "Update".tl,
-                  child: IconButton(
-                    onPressed: () => widget.update(source),
-                    icon: const Icon(Icons.update),
-                  ),
-                ),
-                Tooltip(
-                  message: "Delete".tl,
-                  child: IconButton(
-                    onPressed: () => widget.delete(source),
-                    icon: const Icon(Icons.delete),
-                  ),
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) {
+                    if (value == 0) widget.edit(source);
+                    if (value == 1) widget.update(source);
+                    if (value == 2) widget.delete(source);
+                  },
+                  itemBuilder:
+                      (context) => [
+                        PopupMenuItem(
+                          value: 0,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_note).paddingRight(8),
+                              Text("Edit".tl),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 1,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.update).paddingRight(8),
+                              Text("Update".tl),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 2,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete,
+                                color: context.colorScheme.error,
+                              ).paddingRight(8),
+                              Text(
+                                "Delete".tl,
+                                style:
+                                    TextStyle(color: context.colorScheme.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -888,10 +933,10 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Column(children: buildSourceSettings().toList()),
-        ),
-        SliverToBoxAdapter(child: Column(children: _buildAccount().toList())),
+        if (_isExpanded) ...[
+          SliverToBoxAdapter(child: Column(children: settings.toList())),
+          SliverToBoxAdapter(child: Column(children: account.toList())),
+        ],
       ],
     );
   }
