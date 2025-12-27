@@ -864,43 +864,58 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Tooltip(
-                  message: "Edit".tl,
-                  child: IconButton(
-                    onPressed: () => widget.edit(source),
-                    icon: const Icon(Icons.edit_note),
-                  ),
-                ),
-                Tooltip(
-                  message: "Update".tl,
-                  child: IconButton(
-                    onPressed: () => widget.update(source),
-                    icon: const Icon(Icons.update),
-                  ),
-                ),
-                Tooltip(
-                  message: "Delete".tl,
-                  child: IconButton(
-                    onPressed: () => widget.delete(source),
-                    icon: const Icon(Icons.delete),
-                  ),
-                ),
                 if (hasConfig)
-                  Tooltip(
-                    message: _isExpanded ? "Collapse".tl : "Expand".tl,
-                    child: IconButton(
-                      onPressed: () =>
-                          setState(() => _isExpanded = !_isExpanded),
-                      icon: Icon(
-                        _isExpanded ? Icons.expand_less : Icons.expand_more,
-                      ),
+                  IconButton(
+                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
                     ),
-                  )
-                else
-                  const IconButton(
-                    onPressed: null,
-                    icon: Icon(Icons.expand_more, color: Colors.transparent),
                   ),
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) {
+                    if (value == 0) widget.edit(source);
+                    if (value == 1) widget.update(source);
+                    if (value == 2) widget.delete(source);
+                  },
+                  itemBuilder:
+                      (context) => [
+                        PopupMenuItem(
+                          value: 0,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_note).paddingRight(8),
+                              Text("Edit".tl),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 1,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.update).paddingRight(8),
+                              Text("Update".tl),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 2,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete,
+                                color: context.colorScheme.error,
+                              ).paddingRight(8),
+                              Text(
+                                "Delete".tl,
+                                style:
+                                    TextStyle(color: context.colorScheme.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                ),
               ],
             ),
           ),
