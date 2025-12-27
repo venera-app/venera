@@ -13,6 +13,7 @@ import 'package:venera/foundation/comic_type.dart';
 import 'package:venera/foundation/favorites.dart';
 import 'package:venera/foundation/image_provider/image_favorites_provider.dart';
 import 'package:venera/foundation/log.dart';
+import 'package:venera/utils/channel.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
@@ -430,4 +431,165 @@ void clearUnfavoritedHistory() {
     updateCache();
     notifyListeners();
   }
+
+  /// Refresh history info from comic source.
+  /// Fetches the latest cover, title and subtitle from the source.
+  /// Keeps the reading progress (ep, page, etc.).
+  Future<bool> refreshHistoryInfo(History history) async {
+    if (history.sourceKey == 'local') {
+      // Local comics don't need refresh
+      return false;
+    }
+
+    return await _refreshSingleHistory(history);
+  }
+
+  /// Internal method to refresh a single history
+  /// Retries up to 3 times on failure with 2 second delay between retries
+  Future<bool> _refreshSingleHistory(History history) async {
+    var comicSource = ComicSource.find(history.sourceKey);
+    if (comicSource == null || comicSource.loadComicInfo == null) {
+      return false;
+    }
+
+    int retries = 3;
+    while (true) {
+      try {
+        var res = await comicSource.loadComicInfo!(history.id);
+        if (res.error) {
+          await Future.delayed(const Duration(seconds: 2));
+          retries--;
+          if (retries == 0) {
+            return false;
+          }
+          continue;
+        }
+
+        var comicDetails = res.data;
+        // Update history info while keeping reading progress
+        var updatedHistory = History.fromMap({
+          'type': history.type.value,
+          'time': history.time.millisecondsSinceEpoch,
+          'title': comicDetails.title,
+          'subtitle': comicDetails.subTitle ?? '',
+          'cover': comicDetails.cover,
+          'ep': history.ep,
+          'page': history.page,
+          'id': history.id,
+          'readEpisode': history.readEpisode.toList(),
+          'max_page': history.maxPage,
+        });
+        updatedHistory.group = history.group;
+
+        addHistory(updatedHistory);
+        return true;
+      } catch (e, s) {
+        Log.error("History", "Exception while refreshing history info: $e\n$s");
+        await Future.delayed(const Duration(seconds: 2));
+        retries--;
+        if (retries == 0) {
+          return false;
+        }
+      }
+    }
+  }
+
+  /// Refresh all histories from comic sources.
+  /// Returns a stream with progress updates.
+  /// From e0ea449c.
+  Stream<RefreshProgress> refreshAllHistoriesStream() {
+    var controller = StreamController<RefreshProgress>();
+    _refreshAllHistoriesBase(controller);
+    return controller.stream;
+  }
+
+  void _refreshAllHistoriesBase(
+    StreamController<RefreshProgress> controller,
+  ) async {
+    var histories = getAll();
+    int total = histories.length;
+    int current = 0;
+    int success = 0;
+    int failed = 0;
+    int skipped = 0;
+
+    controller.add(RefreshProgress(total, current, success, failed, skipped));
+
+    var historiesToRefresh = <History>[];
+    for (var history in histories) {
+      if (history.sourceKey == 'local') {
+        skipped++;
+        current++;
+        controller.add(RefreshProgress(total, current, success, failed, skipped));
+        continue;
+      }
+      historiesToRefresh.add(history);
+    }
+
+    total = historiesToRefresh.length;
+    current = 0;
+    controller.add(RefreshProgress(total, current, success, failed, skipped));
+
+    var channel = Channel<History>(10);
+
+    () async {
+      var c = 0;
+      for (var history in historiesToRefresh) {
+        await channel.push(history);
+        c++;
+        if (c % 5 == 0) {
+          var delay = c % 100 + 1;
+          if (delay > 10) {
+            delay = 10;
+          }
+          await Future.delayed(Duration(seconds: delay));
+        }
+      }
+      channel.close();
+    }();
+
+    var updateFutures = <Future>[];
+    for (var i = 0; i < 5; i++) {
+      var f = () async {
+        while (true) {
+          var history = await channel.pop();
+          if (history == null) {
+            break;
+          }
+          var result = await _refreshSingleHistory(history);
+          current++;
+          if (result) {
+            success++;
+          } else {
+            failed++;
+          }
+          controller.add(
+            RefreshProgress(total, current, success, failed, skipped),
+          );
+        }
+      }();
+      updateFutures.add(f);
+    }
+
+    await Future.wait(updateFutures);
+
+    notifyListeners();
+    controller.close();
+  }
+}
+
+class RefreshProgress {
+  final int total;
+  final int current;
+  final int success;
+  final int failed;
+  final int skipped;
+
+  RefreshProgress(
+    this.total,
+    this.current,
+    this.success,
+    this.failed,
+    this.skipped,
+  );
 }
