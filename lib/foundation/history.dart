@@ -202,6 +202,8 @@ class HistoryManager with ChangeNotifier {
       return;
     }
     _db = sqlite3.open("${App.dataPath}/history.db");
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
 
     _db.execute("""
         create table if not exists history  (
