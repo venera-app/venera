@@ -554,7 +554,7 @@ abstract mixin class _VolumeListener {
 
   bool toNextChapter();
 
-  bool toPrevChapter();
+  bool toPrevChapter({bool toLastPage = false});
 
   VolumeListener? volumeListener;
 
@@ -566,7 +566,7 @@ abstract mixin class _VolumeListener {
 
   void onUp() {
     if (!toPrevPage()) {
-      toPrevChapter();
+      toPrevChapter(toLastPage: true);
     }
   }
 
@@ -591,6 +591,9 @@ abstract mixin class _VolumeListener {
 
 abstract mixin class _ReaderLocation {
   int _page = 1;
+
+  /// Flag to indicate that the page should jump to the last page after images are loaded.
+  bool _jumpToLastPageOnLoad = false;
 
   int get page => _page;
 
@@ -677,14 +680,16 @@ abstract mixin class _ReaderLocation {
   }
 
   /// Returns true if the chapter is changed
-  bool toPrevChapter() {
-    return toChapter(chapter - 1);
+  /// If [toLastPage] is true, the page will be set to the last page of the previous chapter.
+  bool toPrevChapter({bool toLastPage = false}) {
+    return toChapter(chapter - 1, toLastPage: toLastPage);
   }
 
-  bool toChapter(int c) {
+  bool toChapter(int c, {bool toLastPage = false}) {
     if (_validateChapter(c) && !isLoading) {
       chapter = c;
       page = 1;
+      _jumpToLastPageOnLoad = toLastPage;
       update();
       return true;
     }
