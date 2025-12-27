@@ -227,6 +227,7 @@ class Settings with ChangeNotifier {
     'localFavoritesFirst': true,
     'autoCloseFavoritePanel': false,
     'showChapterComments': true, // show chapter comments in reader
+    'showChapterCommentsAtEnd': false, // show chapter comments at end of chapter
   };
 
   operator [](String key) {

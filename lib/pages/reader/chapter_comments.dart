@@ -121,9 +121,11 @@ class _ChapterCommentsPageState extends State<ChapterCommentsPage> {
         withAppbar: false,
       );
     } else {
-      var showAvatar = _comments!.any((e) {
-        return e.avatar != null;
-      });
+      var showAvatar =
+          _comments!.any((e) {
+            return e.avatar != null;
+          }) ||
+          (widget.replyComment?.avatar != null);
       return Column(
         children: [
           Expanded(
@@ -579,10 +581,297 @@ class _CommentContent extends StatelessWidget {
     if (!text.contains('<') && !text.contains('http')) {
       return SelectableText(text);
     } else {
-      // Use the RichCommentContent from comments_page.dart
-      // For simplicity, we'll just show plain text here
-      // In a real implementation, you'd need to import or duplicate the RichCommentContent class
-      return SelectableText(text);
+      return RichCommentContent(text: text);
     }
+  }
+}
+
+/// Embedded chapter comments page for displaying at end of chapter in gallery mode.
+class _EmbeddedChapterCommentsPage extends StatefulWidget {
+  const _EmbeddedChapterCommentsPage({
+    required this.comicId,
+    required this.epId,
+    required this.source,
+    required this.comicTitle,
+    required this.chapterTitle,
+  });
+
+  final String comicId;
+  final String epId;
+  final ComicSource source;
+  final String comicTitle;
+  final String chapterTitle;
+
+  @override
+  State<_EmbeddedChapterCommentsPage> createState() =>
+      _EmbeddedChapterCommentsPageState();
+}
+
+class _EmbeddedChapterCommentsPageState
+    extends State<_EmbeddedChapterCommentsPage> {
+  bool _loading = true;
+  List<Comment>? _comments;
+  String? _error;
+  int _page = 1;
+  int? maxPage;
+  var textController = TextEditingController();
+  bool sending = false;
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  void firstLoad() async {
+    var res = await widget.source.chapterCommentsLoader!(
+      widget.comicId,
+      widget.epId,
+      1,
+      null,
+    );
+    if (res.error) {
+      if (mounted) {
+        setState(() {
+          _error = res.errorMessage;
+          _loading = false;
+        });
+      }
+    } else if (mounted) {
+      var filteredComments =
+          res.data.where((c) => !_shouldBlockComment(c)).toList();
+      setState(() {
+        _comments = filteredComments;
+        _loading = false;
+        maxPage = res.subData;
+      });
+    }
+  }
+
+  void loadMore() async {
+    var res = await widget.source.chapterCommentsLoader!(
+      widget.comicId,
+      widget.epId,
+      _page + 1,
+      null,
+    );
+    if (res.error) {
+      if (mounted) {
+        context.showMessage(message: res.errorMessage ?? "Unknown Error");
+      }
+    } else if (mounted) {
+      var filteredComments =
+          res.data.where((c) => !_shouldBlockComment(c)).toList();
+      setState(() {
+        _comments!.addAll(filteredComments);
+        _page++;
+        if (maxPage == null && res.data.isEmpty) {
+          maxPage = _page;
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      color: context.colorScheme.surface,
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(child: _buildBody()),
+            _buildBottom(),
+            SizedBox(height: bottomInset),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: context.colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            tooltip: "Exit".tl,
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.comment, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Chapter Comments".tl, style: ts.s18),
+                Text(widget.chapterTitle, style: ts.s12),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      firstLoad();
+      return const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      return NetworkError(
+        message: _error!,
+        retry: () {
+          setState(() {
+            _loading = true;
+            _error = null;
+          });
+        },
+        withAppbar: false,
+      );
+    } else if (_comments == null || _comments!.isEmpty) {
+      return Center(
+        child: Text("No comments yet".tl, style: ts.s14),
+      );
+    } else {
+      var showAvatar = _comments!.any((e) => e.avatar != null);
+      return _buildCommentsList(showAvatar);
+    }
+  }
+
+  Widget _buildCommentsList(bool showAvatar) {
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final crossAxisCount = isLandscape ? 2 : 1;
+    final scrollController = ScrollController();
+    
+    return Scrollbar(
+      controller: scrollController,
+      thumbVisibility: true,
+      thickness: 8,
+      child: MasonryGridView.count(
+        controller: scrollController,
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 0,
+        crossAxisSpacing: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        itemCount: _comments!.length + 1,
+        itemBuilder: (context, index) {
+          if (index == _comments!.length) {
+            if (_page < (maxPage ?? _page + 1)) {
+              loadMore();
+              return const ListLoadingIndicator();
+            } else {
+              return const SizedBox();
+            }
+          }
+          return _ChapterCommentTile(
+            comment: _comments![index],
+            source: widget.source,
+            comicId: widget.comicId,
+            epId: widget.epId,
+            showAvatar: showAvatar,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBottom() {
+    if (widget.source.sendChapterCommentFunc == null) {
+      return const SizedBox(height: 0);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: context.colorScheme.outlineVariant,
+            width: 0.6,
+          ),
+        ),
+      ),
+      child: Material(
+        color: context.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(24),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: textController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isCollapsed: true,
+                  hintText: "Comment".tl,
+                ),
+                minLines: 1,
+                maxLines: 5,
+              ),
+            ),
+            if (sending)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else
+              IconButton(
+                onPressed: () async {
+                  if (textController.text.isEmpty) {
+                    return;
+                  }
+                  setState(() {
+                    sending = true;
+                  });
+                  var b = await widget.source.sendChapterCommentFunc!(
+                    widget.comicId,
+                    widget.epId,
+                    textController.text,
+                    null,
+                  );
+                  if (!b.error) {
+                    textController.text = "";
+                    setState(() {
+                      sending = false;
+                      _loading = true;
+                      _comments?.clear();
+                      _page = 1;
+                      maxPage = null;
+                    });
+                  } else {
+                    if (mounted) {
+                      context.showMessage(message: b.errorMessage ?? "Error");
+                    }
+                    setState(() {
+                      sending = false;
+                    });
+                  }
+                },
+                icon: Icon(
+                  Icons.send,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+          ],
+        ).paddingLeft(16).paddingRight(4),
+      ),
+    );
   }
 }
