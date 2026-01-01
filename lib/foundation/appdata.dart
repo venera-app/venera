@@ -308,4 +308,4 @@ function processImage(image, cid, eid, page, sourceKey) {
 ''';
 
 const _defaultSourceListUrl =
-    "https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json";
+    "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json";
