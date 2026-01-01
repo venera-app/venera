@@ -1,8 +1,7 @@
 # venera
-[![flutter](https://img.shields.io/badge/flutter-3.27.1-blue)](https://flutter.dev/)
+[![flutter](https://img.shields.io/badge/flutter-3.38.5-blue)](https://flutter.dev/)
 [![License](https://img.shields.io/github/license/venera-app/venera)](https://github.com/venera-app/venera/blob/master/LICENSE)
 [![stars](https://img.shields.io/github/stars/venera-app/venera?style=flat)](https://github.com/venera-app/venera/stargazers)
-[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/venera_release)
 
 [![Download](https://img.shields.io/github/v/release/venera-app/venera)](https://github.com/venera-app/venera/releases)
 [![AUR Version](https://img.shields.io/aur/version/venera-bin)](https://aur.archlinux.org/packages/venera-bin)
