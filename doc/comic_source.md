@@ -15,7 +15,7 @@ Venera can display a list of comic sources in the app.
 
 You can use the following repo url:
 ```
-https://git.nyne.dev/nyne/venera-configs/raw/branch/main/index.json
+https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json
 ```
 The repo is maintained by the Venera team.
 
