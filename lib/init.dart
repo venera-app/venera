@@ -95,6 +95,12 @@ void _checkOldConfigs() {
     }
     appdata.writeImplicitData();
   }
+
+  if (appdata.settings['comicSourceListUrl'].toString().contains("git.nyne.dev")) {
+    // migrate to jsdelivr cdn
+    appdata.settings['comicSourceListUrl'] = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json";
+    appdata.saveData();
+  }
 }
 
 Future<void> _checkAppUpdates() async {
