@@ -13,15 +13,15 @@
       "bundleIdentifier": "com.github.wgh136.venera",
       "developerName": "wgh136",
       "subtitle": "A comic reader that supports reading local and network comics",
-      "version": "1.6.1",
-      "versionDate": "2025-11-29",
-      "versionDescription": "What's Changed\r\n* Update AltStore source with latest release by @github-actions[bot] in https://github.com/venera-app/venera/pull/602\r\n* Add encryptAes for js_engine by @liulifox233 in https://github.com/venera-app/venera/pull/645\r\n* Optimize iOS full-screen back gesture implementation by @liulifox233 in https://github.com/venera-app/venera/pull/643\r\n* Fix landscape reader layout and wrap long settings labels by @boa-z in https://github.com/venera-app/venera/pull/640\r\n* Enhance Cloudflare challenge detection logic by @Y-Ymeow in https://github.com/venera-app/venera/pull/619\r\n* interceptor: mask log by @Pacalini in https://github.com/venera-app/venera/pull/618\r\n* feat: skip sync setting by @Pacalini in https://github.com/venera-app/venera/pull/563\r\n* flutter 3.38.3 by @wgh136 in https://github.com/venera-app/venera/pull/648\r\n* fix: enable multi-select actions in local comics search mode by @wgh136 in https://github.com/venera-app/venera/pull/650\r\n* feat: add comment keyword blocking functionality by @wgh136 in https://github.com/venera-app/venera/pull/649\r \nNew Contributors\r\n* @Y-Ymeow made their first contribution in https://github.com/venera-app/venera/pull/619\r \nFull Changelog: https://github.com/venera-app/venera/compare/v1.6.0...v1.6.1",
-      "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.6.1/venera-ios-1.6.1%2B161.ipa",
+      "version": "1.6.2",
+      "versionDate": "2026-01-01",
+      "versionDescription": "What's Changed\r\n* Set status bar transparent when startup. by @lings03 in https://github.com/venera-app/venera/pull/664\r\n* Jump to last page when continuously flipping to previous chapter.  by @lings03 in https://github.com/venera-app/venera/pull/665\r\n* Show chapter comments at end of chapter. by @lings03 in https://github.com/venera-app/venera/pull/666\r\n* Save file name: {comic}_EP{chapter}_P{page}.{ext} to avoid conflict. by @lings03 in https://github.com/venera-app/venera/pull/669\r\n* Enable to refresh history info. by @lings03 in https://github.com/venera-app/venera/pull/722\r\n* Update AltStore source with latest release by @github-actions[bot] in https://github.com/venera-app/venera/pull/651\r\n* Update comic source URL to use jsdelivr CDN for improved reliability by @wgh136 in https://github.com/venera-app/venera/pull/734\r\n* Improve layout of buttons in reader by @wgh136 in https://github.com/venera-app/venera/pull/735\r \n\r\nFull Changelog: https://github.com/venera-app/venera/compare/v1.6.1...v1.6.2",
+      "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.6.2/venera-ios-1.6.2%2B162.ipa",
       "localizedDescription": "A comic reader that supports reading local and network comics",
       "iconURL": "https://raw.githubusercontent.com/venera-app/venera/master/assets/app_icon.png",
       "tintColor": "#0784FC",
       "category": "utilities",
-      "size": 15202312,
+      "size": 15209455,
       "appPermissions": {
         "entitlements": [
           "application-identifier",
@@ -39,6 +39,13 @@
         }
       },
       "versions": [
+        {
+          "version": "1.6.2",
+          "date": "2026-01-01",
+          "localizedDescription": "What's Changed\r\n* Set status bar transparent when startup. by @lings03 in https://github.com/venera-app/venera/pull/664\r\n* Jump to last page when continuously flipping to previous chapter.  by @lings03 in https://github.com/venera-app/venera/pull/665\r\n* Show chapter comments at end of chapter. by @lings03 in https://github.com/venera-app/venera/pull/666\r\n* Save file name: {comic}_EP{chapter}_P{page}.{ext} to avoid conflict. by @lings03 in https://github.com/venera-app/venera/pull/669\r\n* Enable to refresh history info. by @lings03 in https://github.com/venera-app/venera/pull/722\r\n* Update AltStore source with latest release by @github-actions[bot] in https://github.com/venera-app/venera/pull/651\r\n* Update comic source URL to use jsdelivr CDN for improved reliability by @wgh136 in https://github.com/venera-app/venera/pull/734\r\n* Improve layout of buttons in reader by @wgh136 in https://github.com/venera-app/venera/pull/735\r \n\r\nFull Changelog: https://github.com/venera-app/venera/compare/v1.6.1...v1.6.2",
+          "downloadURL": "https://github.com/venera-app/venera/releases/download/v1.6.2/venera-ios-1.6.2%2B162.ipa",
+          "size": 15209455
+        },
         {
           "version": "1.6.1",
           "date": "2025-11-29",
@@ -110,6 +117,16 @@
       "tintColor": "#0784FC",
       "title": "v1.6.1 - Venera  29/11/25",
       "url": "https://github.com/venera-app/venera/releases/tag/v1.6.1"
+    },
+    {
+      "appID": "com.github.wgh136.venera",
+      "caption": "Update of Venera just got released!",
+      "date": "2026-01-01T08:31:16Z",
+      "identifier": "release-v1.6.2",
+      "notify": true,
+      "tintColor": "#0784FC",
+      "title": "v1.6.2 - Venera  01/01/26",
+      "url": "https://github.com/venera-app/venera/releases/tag/v1.6.2"
     }
   ]
 }
