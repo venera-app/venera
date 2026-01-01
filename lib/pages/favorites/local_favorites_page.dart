@@ -1179,7 +1179,7 @@ class _LocalFavoritesFilterDialogState
     ).paddingTop(context.padding.top);
     return ContentDialog(
       content: DefaultTabController(
-        length: 2,
+        length: 1,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
