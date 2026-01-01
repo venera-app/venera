@@ -162,6 +162,11 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   Widget buildTop() {
+    final epName =
+      context.reader.widget.chapters?.titles.elementAtOrNull(
+        context.reader.chapter - 1,
+      );
+
     return BlurEffect(
       child: Container(
         padding: EdgeInsets.only(top: context.padding.top),
@@ -185,11 +190,28 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               const BackButton(),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
+                child: epName == null ? Text(
                   context.reader.widget.name,
                   style: ts.s18,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ) : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      context.reader.widget.name,
+                      style: ts.s16,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      epName,
+                      style: ts.s12,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
@@ -496,9 +518,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           ),
           LayoutBuilder(
             builder: (context, constrains) {
+              final small = (constrains.maxWidth - buttons.length * 50) < 120;
               return Row(
                 children: [
-                  if ((constrains.maxWidth - buttons.length * 42) > 80)
+                  if (!small)
                     Container(
                       height: 24,
                       padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
@@ -509,8 +532,13 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
                       child: Center(child: Text(text)),
                     ).paddingLeft(16),
                   const Spacer(),
-                  ...buttons,
-                  const SizedBox(width: 4),
+                  for (var button in buttons)
+                    if (!small)
+                      button.paddingHorizontal(4)
+                    else
+                      ...[button, const Spacer()],
+                  if (!small)
+                    const SizedBox(width: 4),
                 ],
               );
             },
