@@ -103,10 +103,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void showFolderSelector() {
+    final noAnim = MediaQuery.of(App.rootContext).disableAnimations;
     Navigator.of(App.rootContext).push(PageRouteBuilder(
       barrierDismissible: true,
       fullscreenDialog: true,
       opaque: false,
+      transitionDuration: noAnim ? Duration.zero : const Duration(milliseconds: 300),
+      reverseTransitionDuration:
+          noAnim ? Duration.zero : const Duration(milliseconds: 300),
       barrierColor: Colors.black.toOpacity(0.36),
       pageBuilder: (context, animation, secondary) {
         return Align(
@@ -126,6 +130,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         );
       },
       transitionsBuilder: (context, animation, secondary, child) {
+        if (noAnim) return child;
         var offset =
             Tween<Offset>(begin: const Offset(-1, 0), end: const Offset(0, 0));
         return SlideTransition(

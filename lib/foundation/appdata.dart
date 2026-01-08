@@ -228,6 +228,7 @@ class Settings with ChangeNotifier {
     'autoCloseFavoritePanel': false,
     'showChapterComments': true, // show chapter comments in reader
     'showChapterCommentsAtEnd': false, // show chapter comments at end of chapter
+    'disableAnimation': false,  // disable UI animation
   };
 
   operator [](String key) {

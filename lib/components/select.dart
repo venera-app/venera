@@ -222,6 +222,7 @@ class _AnimatedCheckIconState extends State<AnimatedCheckIcon>
     with SingleTickerProviderStateMixin {
   late Animation<double> animation;
   late AnimationController controller;
+  bool _disableAnimations = false;
 
   @override
   void initState() {
@@ -235,6 +236,20 @@ class _AnimatedCheckIconState extends State<AnimatedCheckIcon>
       });
     controller.forward();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    controller.duration =
+        _disableAnimations ? Duration.zero : _fastAnimationDuration;
+    if (_disableAnimations) {
+      controller.value = 1;
+    } else if (!controller.isAnimating && controller.value < 1) {
+      controller.forward(from: controller.value);
+    }
   }
 
   @override
@@ -267,8 +282,10 @@ class OptionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool disableAnimations =
+        MediaQuery.of(context).disableAnimations;
     return AnimatedContainer(
-      duration: _fastAnimationDuration,
+      duration: disableAnimations ? Duration.zero : _fastAnimationDuration,
       decoration: BoxDecoration(
         color: isSelected
             ? context.colorScheme.secondaryContainer

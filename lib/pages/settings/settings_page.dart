@@ -24,6 +24,7 @@ part 'reader.dart';
 part 'explore_settings.dart';
 part 'setting_components.dart';
 part 'appearance.dart';
+part 'ink_screen.dart';
 part 'local_favorites.dart';
 part 'app.dart';
 part 'about.dart';
@@ -50,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
     "Explore",
     "Reading",
     "Appearance",
+    "墨水屏设置",
     "Local Favorites",
     "APP",
     "Network",
@@ -61,6 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
     Icons.explore,
     Icons.book,
     Icons.color_lens,
+    Icons.display_settings,
     Icons.collections_bookmark_rounded,
     Icons.apps,
     Icons.public,
@@ -257,11 +260,12 @@ class _SettingsPageState extends State<SettingsPage> {
       0 => const ExploreSettings(),
       1 => const ReaderSettings(),
       2 => const AppearanceSettings(),
-      3 => const LocalFavoritesSettings(),
-      4 => const AppSettings(),
-      5 => const NetworkSettings(),
-      6 => const AboutSettings(),
-      7 => const DebugPage(),
+      3 => const InkScreenSettings(),
+      4 => const LocalFavoritesSettings(),
+      5 => const AppSettings(),
+      6 => const NetworkSettings(),
+      7 => const AboutSettings(),
+      8 => const DebugPage(),
       _ => throw UnimplementedError()
     };
   }
@@ -285,11 +289,12 @@ class _SettingsDetailPage extends StatelessWidget {
       0 => const ExploreSettings(),
       1 => const ReaderSettings(),
       2 => const AppearanceSettings(),
-      3 => const LocalFavoritesSettings(),
-      4 => const AppSettings(),
-      5 => const NetworkSettings(),
-      6 => const AboutSettings(),
-      7 => const DebugPage(),
+      3 => const InkScreenSettings(),
+      4 => const LocalFavoritesSettings(),
+      5 => const AppSettings(),
+      6 => const NetworkSettings(),
+      7 => const AboutSettings(),
+      8 => const DebugPage(),
       _ => throw UnimplementedError()
     };
   }
