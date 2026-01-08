@@ -1,5 +1,15 @@
 part of 'reader.dart';
 
+FilterQuality _inkImageFilterQuality() {
+  final value = appdata.settings['inkImageFilterQuality'];
+  return switch (value) {
+    'none' => FilterQuality.none,
+    'low' => FilterQuality.low,
+    'high' => FilterQuality.high,
+    _ => FilterQuality.medium,
+  };
+}
+
 class _ReaderImages extends StatefulWidget {
   const _ReaderImages({super.key});
 
@@ -332,7 +342,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             if (reader.imagesPerPage == 1 || pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
-                filterQuality: FilterQuality.medium,
+                filterQuality: _inkImageFilterQuality(),
                 controller: photoViewControllers[index],
                 imageProvider: _createImageProviderFromKey(
                   pageImages[0],
@@ -863,7 +873,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         return ColoredBox(
           color: context.colorScheme.surface,
           child: ComicImage(
-            filterQuality: FilterQuality.medium,
+            filterQuality: _inkImageFilterQuality(),
             image: image,
             width: width,
             height: height,

@@ -231,6 +231,7 @@ class Settings with ChangeNotifier {
     'disableAnimation': false,  // disable UI animation
     'disableInertialScrolling': false,  // disable inertial scrolling
     'inkScrollPageFraction': 0.9, // page size per turn (0-1, viewport fraction)
+    'inkImageFilterQuality': 'medium', // none, low(bilinear), medium, high
   };
 
   operator [](String key) {
