@@ -12,6 +12,17 @@ class InkScreenSettings extends StatelessWidget {
           title: "禁用UI动画",
           settingKey: "disableAnimation",
         ).toSliver(),
+        _SwitchSetting(
+          title: "禁用惯性滑动",
+          settingKey: "disableInertialScrolling",
+        ).toSliver(),
+        _SliderSetting(
+          title: "翻页距离（仅禁用惯性滑动时生效）",
+          settingsIndex: "inkScrollPageFraction",
+          interval: 0.05,
+          min: 0.1,
+          max: 1.0,
+        ).toSliver(),
       ],
     );
   }
