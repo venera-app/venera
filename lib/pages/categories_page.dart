@@ -199,11 +199,17 @@ class _CategoryPage extends StatelessWidget {
         children.add(buildTags(part.categories));
       }
     }
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
+    return SmoothScrollProvider(
+      builder: (context, scrollController, physics) {
+        return SingleChildScrollView(
+          controller: scrollController,
+          physics: physics,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        );
+      },
     );
   }
 

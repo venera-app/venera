@@ -278,21 +278,27 @@ Future<void> sortFolders() async {
             ),
           )
         ],
-        body: ReorderableListView.builder(
-          onReorder: (oldIndex, newIndex) {
-            if (oldIndex < newIndex) {
-              newIndex--;
-            }
-            setState(() {
-              var item = folders.removeAt(oldIndex);
-              folders.insert(newIndex, item);
-            });
-          },
-          itemCount: folders.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              key: ValueKey(folders[index]),
-              title: Text(folders[index]),
+        body: SmoothScrollProvider(
+          builder: (context, scrollController, physics) {
+            return ReorderableListView.builder(
+              scrollController: scrollController,
+              physics: physics,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex < newIndex) {
+                  newIndex--;
+                }
+                setState(() {
+                  var item = folders.removeAt(oldIndex);
+                  folders.insert(newIndex, item);
+                });
+              },
+              itemCount: folders.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  key: ValueKey(folders[index]),
+                  title: Text(folders[index]),
+                );
+              },
             );
           },
         ),

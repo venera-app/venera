@@ -232,10 +232,17 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.zero,
-      itemCount: categories.length,
-      itemBuilder: (context, index) => buildItem(categories[index].tl, index),
+    return SmoothScrollProvider(
+      builder: (context, scrollController, physics) {
+        return ListView.builder(
+          controller: scrollController,
+          physics: physics,
+          padding: EdgeInsets.zero,
+          itemCount: categories.length,
+          itemBuilder: (context, index) =>
+              buildItem(categories[index].tl, index),
+        );
+      },
     );
   }
 

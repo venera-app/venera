@@ -147,7 +147,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Widget buildBody() {
     if (folder == null) {
-      return CustomScrollView(
+      return SmoothCustomScrollView(
         slivers: [
           SliverAppbar(
             leading: Tooltip(

@@ -84,29 +84,35 @@ class _LeftBarState extends State<_LeftBar> implements FolderList {
               ),
             ).paddingTop(context.padding.top),
           Expanded(
-            child: ListView.builder(
-              padding: widget.withAppbar
-                  ? EdgeInsets.zero
-                  : EdgeInsets.only(top: context.padding.top),
-              itemCount: folders.length + networkFolders.length + 3,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return buildLocalTitle();
-                }
-                index--;
-                if (index == 0) {
-                  return buildLocalFolder(_localAllFolderLabel);
-                }
-                index--;
-                if (index < folders.length) {
-                  return buildLocalFolder(folders[index]);
-                }
-                index -= folders.length;
-                if (index == 0) {
-                  return buildNetworkTitle();
-                }
-                index--;
-                return buildNetworkFolder(networkFolders[index]);
+            child: SmoothScrollProvider(
+              builder: (context, scrollController, physics) {
+                return ListView.builder(
+                  controller: scrollController,
+                  physics: physics,
+                  padding: widget.withAppbar
+                      ? EdgeInsets.zero
+                      : EdgeInsets.only(top: context.padding.top),
+                  itemCount: folders.length + networkFolders.length + 3,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildLocalTitle();
+                    }
+                    index--;
+                    if (index == 0) {
+                      return buildLocalFolder(_localAllFolderLabel);
+                    }
+                    index--;
+                    if (index < folders.length) {
+                      return buildLocalFolder(folders[index]);
+                    }
+                    index -= folders.length;
+                    if (index == 0) {
+                      return buildNetworkTitle();
+                    }
+                    index--;
+                    return buildNetworkFolder(networkFolders[index]);
+                  },
+                );
               },
             ),
           )

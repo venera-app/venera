@@ -132,19 +132,25 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
           onPressed: add,
         ),
       ],
-      body: ListView.builder(
-        itemCount: appdata.settings["blockedWords"].length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(appdata.settings["blockedWords"][index]),
-            trailing: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () {
-                appdata.settings["blockedWords"].removeAt(index);
-                appdata.saveData();
-                setState(() {});
-              },
-            ),
+      body: SmoothScrollProvider(
+        builder: (context, scrollController, physics) {
+          return ListView.builder(
+            controller: scrollController,
+            physics: physics,
+            itemCount: appdata.settings["blockedWords"].length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(appdata.settings["blockedWords"][index]),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    appdata.settings["blockedWords"].removeAt(index);
+                    appdata.saveData();
+                    setState(() {});
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -277,19 +283,25 @@ class _ManageBlockingCommentWordViewState extends State<_ManageBlockingCommentWo
           onPressed: add,
         ),
       ],
-      body: ListView.builder(
-        itemCount: appdata.settings["blockedCommentWords"].length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(appdata.settings["blockedCommentWords"][index]),
-            trailing: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () {
-                appdata.settings["blockedCommentWords"].removeAt(index);
-                appdata.saveData();
-                setState(() {});
-              },
-            ),
+      body: SmoothScrollProvider(
+        builder: (context, scrollController, physics) {
+          return ListView.builder(
+            controller: scrollController,
+            physics: physics,
+            itemCount: appdata.settings["blockedCommentWords"].length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(appdata.settings["blockedCommentWords"][index]),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    appdata.settings["blockedCommentWords"].removeAt(index);
+                    appdata.saveData();
+                    setState(() {});
+                  },
+                ),
+              );
+            },
           );
         },
       ),

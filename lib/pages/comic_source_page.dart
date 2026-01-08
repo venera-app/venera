@@ -399,114 +399,124 @@ class _ComicSourceListState extends State<_ComicSourceList> {
   Widget buildBody() {
     var currentKey = ComicSource.all().map((e) => e.key).toList();
 
-    return ListView.builder(
-      itemCount: (json?.length ?? 1) + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  leading: Icon(Icons.source_outlined),
-                  title: Text("Repo URL".tl),
-                ),
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: "URL",
-                    border: const UnderlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    return SmoothScrollProvider(
+      builder: (context, scrollController, physics) {
+        return ListView.builder(
+          controller: scrollController,
+          physics: physics,
+          itemCount: (json?.length ?? 1) + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.6,
                   ),
-                  onChanged: (value) {
-                    changed = true;
-                  },
-                ).paddingHorizontal(16).paddingBottom(8),
-                Text(
-                  "The URL should point to a 'index.json' file".tl,
-                ).paddingLeft(16),
-                Text(
-                  "Do not report any issues related to sources to App repo.".tl,
-                ).paddingLeft(16),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: () {
-                        launchUrlString(
-                          "https://github.com/venera-app/venera/blob/master/doc/comic_source.md",
-                        );
+                    ListTile(
+                      leading: Icon(Icons.source_outlined),
+                      title: Text("Repo URL".tl),
+                    ),
+                    TextField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        hintText: "URL",
+                        border: const UnderlineInputBorder(),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      onChanged: (value) {
+                        changed = true;
                       },
-                      child: Text("Help".tl),
+                    ).paddingHorizontal(16).paddingBottom(8),
+                    Text(
+                      "The URL should point to a 'index.json' file".tl,
+                    ).paddingLeft(16),
+                    Text(
+                      "Do not report any issues related to sources to App repo.".tl,
+                    ).paddingLeft(16),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            launchUrlString(
+                              "https://github.com/venera-app/venera/blob/master/doc/comic_source.md",
+                            );
+                          },
+                          child: Text("Help".tl),
+                        ),
+                        FilledButton.tonal(
+                          onPressed: load,
+                          child: Text("Refresh".tl),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
                     ),
-                    FilledButton.tonal(
-                      onPressed: load,
-                      child: Text("Refresh".tl),
-                    ),
-                    const SizedBox(width: 16),
+                    const SizedBox(height: 16),
                   ],
                 ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          );
-        }
+              );
+            }
 
-        if (index == 1 && json == null) {
-          return Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-            ).fixWidth(24).fixHeight(24),
-          );
-        }
+            if (index == 1 && json == null) {
+              return Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ).fixWidth(24).fixHeight(24),
+              );
+            }
 
-        index--;
+            index--;
 
-        var key = json![index]["key"];
-        var action = currentKey.contains(key)
-            ? const Icon(Icons.check, size: 20).paddingRight(8)
-            : Button.filled(
-                child: Text("Add".tl),
-                onPressed: () async {
-                  var fileName = json![index]["fileName"];
-                  var url = json![index]["url"];
-                  if (url == null || !(url.toString()).isURL) {
-                    var listUrl =
-                        appdata.settings['comicSourceListUrl'] as String;
-                    if (listUrl
-                        .replaceFirst("https://", "")
-                        .replaceFirst("http://", "")
-                        .contains("/")) {
-                      url =
-                          listUrl.substring(0, listUrl.lastIndexOf("/") + 1) +
-                          fileName;
-                    } else {
-                      url = '$listUrl/$fileName';
-                    }
-                  }
-                  await widget.onAdd(url);
-                  setState(() {});
-                },
-              ).fixHeight(32);
+            var key = json![index]["key"];
+            var action = currentKey.contains(key)
+                ? const Icon(Icons.check, size: 20).paddingRight(8)
+                : Button.filled(
+                    child: Text("Add".tl),
+                    onPressed: () async {
+                      var fileName = json![index]["fileName"];
+                      var url = json![index]["url"];
+                      if (url == null || !(url.toString()).isURL) {
+                        var listUrl =
+                            appdata.settings['comicSourceListUrl'] as String;
+                        if (listUrl
+                            .replaceFirst("https://", "")
+                            .replaceFirst("http://", "")
+                            .contains("/")) {
+                          url =
+                              listUrl.substring(
+                                    0,
+                                    listUrl.lastIndexOf("/") + 1,
+                                  ) +
+                                  fileName;
+                        } else {
+                          url = '$listUrl/$fileName';
+                        }
+                      }
+                      await widget.onAdd(url);
+                      setState(() {});
+                    },
+                  ).fixHeight(32);
 
-        var description = json![index]["version"];
-        if (json![index]["description"] != null) {
-          description = "$description\n${json![index]["description"]}";
-        }
+            var description = json![index]["version"];
+            if (json![index]["description"] != null) {
+              description = "$description\n${json![index]["description"]}";
+            }
 
-        return ListTile(
-          title: Text(json![index]["name"]),
-          subtitle: Text(description),
-          trailing: action,
+            return ListTile(
+              title: Text(json![index]["name"]),
+              subtitle: Text(description),
+              trailing: action,
+            );
+          },
         );
       },
     );

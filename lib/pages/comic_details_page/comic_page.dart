@@ -882,25 +882,31 @@ class _SelectDownloadChapterState extends State<_SelectDownloadChapter> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              itemCount: widget.eps.length,
-              itemBuilder: (context, i) {
-                return CheckboxListTile(
-                  title: Text(widget.eps[i]),
-                  value:
-                      selected.contains(i) || widget.downloadedEps.contains(i),
-                  onChanged: widget.downloadedEps.contains(i)
-                      ? null
-                      : (v) {
-                          setState(() {
-                            if (selected.contains(i)) {
-                              selected.remove(i);
-                            } else {
-                              selected.add(i);
-                            }
-                          });
-                        },
+            child: SmoothScrollProvider(
+              builder: (context, scrollController, physics) {
+                return ListView.builder(
+                  controller: scrollController,
+                  physics: physics,
+                  padding: EdgeInsets.zero,
+                  itemCount: widget.eps.length,
+                  itemBuilder: (context, i) {
+                    return CheckboxListTile(
+                      title: Text(widget.eps[i]),
+                      value: selected.contains(i) ||
+                          widget.downloadedEps.contains(i),
+                      onChanged: widget.downloadedEps.contains(i)
+                          ? null
+                          : (v) {
+                              setState(() {
+                                if (selected.contains(i)) {
+                                  selected.remove(i);
+                                } else {
+                                  selected.add(i);
+                                }
+                              });
+                            },
+                    );
+                  },
                 );
               },
             ),

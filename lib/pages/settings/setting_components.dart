@@ -500,53 +500,59 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
   Widget build(BuildContext context) {
     var tiles = keys.map((e) => buildItem(e)).toList();
 
-    var view = ReorderableBuilder<String>(
-      key: reorderWidgetKey,
-      scrollController: scrollController,
-      longPressDelay: App.isDesktop
-          ? const Duration(milliseconds: 100)
-          : const Duration(milliseconds: 500),
-      dragChildBoxDecoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-            spreadRadius: 2,
+    return SmoothScrollProvider(
+      controller: scrollController,
+      builder: (context, scrollController, physics) {
+        var view = ReorderableBuilder<String>(
+          key: reorderWidgetKey,
+          scrollController: scrollController,
+          longPressDelay: App.isDesktop
+              ? const Duration(milliseconds: 100)
+              : const Duration(milliseconds: 500),
+          dragChildBoxDecoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 5,
+                offset: Offset(0, 2),
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ],
-      ),
-      onReorder: (reorderFunc) {
-        setState(() {
-          keys = List.from(reorderFunc(keys));
-        });
-      },
-      children: tiles,
-      builder: (children) {
-        return GridView(
-          key: _key,
-          controller: scrollController,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 1,
-            mainAxisExtent: 48,
-          ),
-          children: children,
+          onReorder: (reorderFunc) {
+            setState(() {
+              keys = List.from(reorderFunc(keys));
+            });
+          },
+          children: tiles,
+          builder: (children) {
+            return GridView(
+              key: _key,
+              controller: scrollController,
+              physics: physics,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                mainAxisExtent: 48,
+              ),
+              children: children,
+            );
+          },
+        );
+
+        return PopUpWidgetScaffold(
+          title: widget.title,
+          tailing: [
+            if (keys.length < widget.pages.length)
+              TextButton.icon(
+                label: Text("Add".tl),
+                icon: const Icon(Icons.add),
+                onPressed: showAddDialog,
+              ),
+          ],
+          body: view,
         );
       },
-    );
-
-    return PopUpWidgetScaffold(
-      title: widget.title,
-      tailing: [
-        if (keys.length < widget.pages.length)
-          TextButton.icon(
-            label: Text("Add".tl),
-            icon: const Icon(Icons.add),
-            onPressed: showAddDialog,
-          ),
-      ],
-      body: view,
     );
   }
 
