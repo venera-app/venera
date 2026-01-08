@@ -278,10 +278,14 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
   }
 
   Iterable<Widget> buildTitle() sync* {
+    final bool disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
     yield SliverAppbar(
       title: AnimatedOpacity(
         opacity: showAppbarTitle ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
+        duration:
+            disableAnimations ? Duration.zero : const Duration(milliseconds: 200),
         child: Text(comic.title),
       ),
       actions: [
@@ -302,31 +306,34 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
           GestureDetector(
             onTap: () => _viewCover(context),
             onLongPress: () => _saveCover(context),
-            child: Hero(
-              tag: "cover${widget.heroID}",
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.colorScheme.outlineVariant,
-                      blurRadius: 1,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                height: 144,
-                width: 144 * 0.72,
-                clipBehavior: Clip.antiAlias,
-                child: AnimatedImage(
-                  image: CachedImageProvider(
-                    widget.cover ?? comic.cover,
-                    sourceKey: comic.sourceKey,
-                    cid: comic.id,
+            child: HeroMode(
+              enabled: !disableAnimations,
+              child: Hero(
+                tag: "cover${widget.heroID}",
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: context.colorScheme.outlineVariant,
+                        blurRadius: 1,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
-                  width: double.infinity,
-                  height: double.infinity,
+                  height: 144,
+                  width: 144 * 0.72,
+                  clipBehavior: Clip.antiAlias,
+                  child: AnimatedImage(
+                    image: CachedImageProvider(
+                      widget.cover ?? comic.cover,
+                      sourceKey: comic.sourceKey,
+                      cid: comic.id,
+                    ),
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
             ),
@@ -1032,6 +1039,8 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
   }
 
   Widget buildImage(BuildContext context) {
+    final bool disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     Widget child;
     if (cover != null) {
       child = AnimatedImage(
@@ -1044,24 +1053,27 @@ class _ComicPageLoadingPlaceHolder extends StatelessWidget {
       child = const SizedBox();
     }
 
-    return Hero(
-      tag: "cover$heroID",
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: context.colorScheme.outlineVariant,
-              blurRadius: 1,
-              offset: const Offset(0, 1),
-            ),
-          ],
+    return HeroMode(
+      enabled: !disableAnimations,
+      child: Hero(
+        tag: "cover$heroID",
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: context.colorScheme.outlineVariant,
+                blurRadius: 1,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          height: 144,
+          width: 144 * 0.72,
+          clipBehavior: Clip.antiAlias,
+          child: child,
         ),
-        height: 144,
-        width: 144 * 0.72,
-        clipBehavior: Clip.antiAlias,
-        child: child,
       ),
     );
   }

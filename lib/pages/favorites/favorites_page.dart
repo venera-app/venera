@@ -79,6 +79,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool noAnim = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return IconTheme(
       data: IconThemeData(color: Theme.of(context).colorScheme.secondary),
       child: Stack(
@@ -87,7 +88,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             left: context.width <= _kTwoPanelChangeWidth ? -_kLeftBarWidth : 0,
             top: 0,
             bottom: 0,
-            duration: const Duration(milliseconds: 200),
+            duration: noAnim ? Duration.zero : const Duration(milliseconds: 200),
             child: (const _LeftBar()).fixWidth(_kLeftBarWidth),
           ),
           Positioned(

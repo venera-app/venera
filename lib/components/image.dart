@@ -326,9 +326,15 @@ class _AnimatedImageState extends State<AnimatedImage>
       result = const Center();
     }
 
+    final bool disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 200),
+      reverseDuration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 200),
       child: result,
     );
   }

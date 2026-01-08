@@ -215,6 +215,8 @@ class ComicTile extends StatelessWidget {
   Widget _buildDetailedMode(BuildContext context) {
     return LayoutBuilder(builder: (context, constrains) {
       final height = constrains.maxHeight - 16;
+      final bool disableAnimations =
+          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
       Widget image = Container(
         width: height * 0.68,
@@ -235,9 +237,12 @@ class ComicTile extends StatelessWidget {
       );
 
       if (heroID != null) {
-        image = Hero(
-          tag: "cover$heroID",
-          child: image,
+        image = HeroMode(
+          enabled: !disableAnimations,
+          child: Hero(
+            tag: "cover$heroID",
+            child: image,
+          ),
         );
       }
 
@@ -280,6 +285,8 @@ class ComicTile extends StatelessWidget {
   Widget _buildBriefMode(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final bool disableAnimations =
+            MediaQuery.maybeOf(context)?.disableAnimations ?? false;
         Widget image = Container(
           decoration: BoxDecoration(
             color: context.colorScheme.secondaryContainer,
@@ -297,9 +304,12 @@ class ComicTile extends StatelessWidget {
         );
 
         if (heroID != null) {
-          image = Hero(
-            tag: "cover$heroID",
-            child: image,
+          image = HeroMode(
+            enabled: !disableAnimations,
+            child: Hero(
+              tag: "cover$heroID",
+              child: image,
+            ),
           );
         }
 
@@ -1638,6 +1648,8 @@ class SimpleComicTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     var image = _findImageProvider(comic);
 
     Widget child = image == null
@@ -1662,9 +1674,12 @@ class SimpleComicTile extends StatelessWidget {
     );
 
     if (heroID != null) {
-      child = Hero(
-        tag: "cover$heroID",
-        child: child,
+      child = HeroMode(
+        enabled: !disableAnimations,
+        child: Hero(
+          tag: "cover$heroID",
+          child: child,
+        ),
       );
     }
 
