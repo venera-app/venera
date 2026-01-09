@@ -195,6 +195,14 @@ class LogsPage extends StatefulWidget {
 class _LogsPageState extends State<LogsPage> {
   String logLevelToShow = "all";
 
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     var logToShow = logLevelToShow == "all"
@@ -263,74 +271,87 @@ class _LogsPageState extends State<LogsPage> {
               icon: const Icon(Icons.more_horiz))
         ],
       ),
-      body: ListView.builder(
-        reverse: true,
-        controller: ScrollController(),
-        itemCount: logToShow.length,
-        itemBuilder: (context, index) {
-          index = logToShow.length - index - 1;
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: SelectionArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: SmoothScrollProvider(
+        controller: _scrollController,
+        builder: (context, scrollController, physics) {
+          return ListView.builder(
+            reverse: true,
+            controller: scrollController,
+            physics: physics,
+            itemCount: logToShow.length,
+            itemBuilder: (context, index) {
+              index = logToShow.length - index - 1;
+              final log = logToShow[index];
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: SelectionArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(16)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
-                          child: Text(logToShow[index].title),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 3,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: [
-                            Theme.of(context).colorScheme.error,
-                            Theme.of(context).colorScheme.errorContainer,
-                            Theme.of(context).colorScheme.primaryContainer
-                          ][logToShow[index].level.index],
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(16)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
-                          child: Text(
-                            logToShow[index].level.name,
-                            style: TextStyle(
-                                color: logToShow[index].level.index == 0
-                                    ? Colors.white
-                                    : Colors.black),
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(16)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
+                              child: Text(log.title),
+                            ),
                           ),
+                          const SizedBox(width: 3),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: [
+                                Theme.of(context).colorScheme.error,
+                                Theme.of(context).colorScheme.errorContainer,
+                                Theme.of(context).colorScheme.primaryContainer
+                              ][log.level.index],
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(16),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(5, 0, 5, 1),
+                              child: Text(
+                                log.level.name,
+                                style: TextStyle(
+                                  color: log.level.index == 0
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        log.time
+                            .toString()
+                            .replaceAll(RegExp(r"\.\w+"), ""),
+                      ),
+                      Text(log.content),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Clipboard.setData(
+                              ClipboardData(text: log.content),
+                            );
+                          },
+                          child: Text("Copy".tl),
                         ),
                       ),
+                      const Divider(),
                     ],
                   ),
-                  Text(logToShow[index].content),
-                  Text(logToShow[index].time
-                      .toString()
-                      .replaceAll(RegExp(r"\.\w+"), "")),
-                  TextButton(
-                    onPressed: () {
-                      Clipboard.setData(
-                          ClipboardData(text: logToShow[index].content));
-                    },
-                    child: Text("Copy".tl),
-                  ),
-                  const Divider(),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
         },
       ),

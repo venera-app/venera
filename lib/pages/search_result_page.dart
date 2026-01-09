@@ -364,11 +364,17 @@ class _SuggestionsState extends State<_Suggestions> {
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: widget.controller.suggestions.length,
-            itemBuilder: (context, index) =>
-                buildItem(widget.controller.suggestions[index]),
+          child: SmoothScrollProvider(
+            builder: (context, scrollController, physics) {
+              return ListView.builder(
+                controller: scrollController,
+                physics: physics,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: widget.controller.suggestions.length,
+                itemBuilder: (context, index) =>
+                    buildItem(widget.controller.suggestions[index]),
+              );
+            },
           ),
         )
       ],

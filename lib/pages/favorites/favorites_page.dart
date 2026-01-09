@@ -79,6 +79,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool noAnim = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return IconTheme(
       data: IconThemeData(color: Theme.of(context).colorScheme.secondary),
       child: Stack(
@@ -87,7 +88,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             left: context.width <= _kTwoPanelChangeWidth ? -_kLeftBarWidth : 0,
             top: 0,
             bottom: 0,
-            duration: const Duration(milliseconds: 200),
+            duration: noAnim ? Duration.zero : const Duration(milliseconds: 200),
             child: (const _LeftBar()).fixWidth(_kLeftBarWidth),
           ),
           Positioned(
@@ -103,10 +104,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void showFolderSelector() {
+    final noAnim = MediaQuery.of(App.rootContext).disableAnimations;
     Navigator.of(App.rootContext).push(PageRouteBuilder(
       barrierDismissible: true,
       fullscreenDialog: true,
       opaque: false,
+      transitionDuration: noAnim ? Duration.zero : const Duration(milliseconds: 300),
+      reverseTransitionDuration:
+          noAnim ? Duration.zero : const Duration(milliseconds: 300),
       barrierColor: Colors.black.toOpacity(0.36),
       pageBuilder: (context, animation, secondary) {
         return Align(
@@ -126,6 +131,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         );
       },
       transitionsBuilder: (context, animation, secondary, child) {
+        if (noAnim) return child;
         var offset =
             Tween<Offset>(begin: const Offset(-1, 0), end: const Offset(0, 0));
         return SlideTransition(
@@ -141,7 +147,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   Widget buildBody() {
     if (folder == null) {
-      return CustomScrollView(
+      return SmoothCustomScrollView(
         slivers: [
           SliverAppbar(
             leading: Tooltip(

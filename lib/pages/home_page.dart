@@ -792,6 +792,7 @@ class _AnimatedDownloadingIcon extends StatefulWidget {
 class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _disableAnimations = false;
 
   @override
   void initState() {
@@ -800,7 +801,27 @@ class __AnimatedDownloadingIconState extends State<_AnimatedDownloadingIcon>
       lowerBound: -1,
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    )..repeat();
+    );
+    _startIfNeeded();
+  }
+
+  void _startIfNeeded() {
+    if (_disableAnimations) {
+      _controller.stop();
+      _controller.value = 0;
+    } else {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    _startIfNeeded();
   }
 
   @override
@@ -1053,6 +1074,7 @@ class _ChartLine extends StatefulWidget {
 class __ChartLineState extends State<_ChartLine>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _disableAnimations = false;
 
   @override
   void initState() {
@@ -1061,7 +1083,27 @@ class __ChartLineState extends State<_ChartLine>
       vsync: this,
       duration: const Duration(milliseconds: 200),
       value: 0,
-    )..forward();
+    );
+    _startIfNeeded();
+  }
+
+  void _startIfNeeded() {
+    if (_disableAnimations) {
+      _controller.stop();
+      _controller.value = 1;
+    } else {
+      if (!_controller.isAnimating && _controller.value < 1) {
+        _controller.forward(from: _controller.value);
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    _startIfNeeded();
   }
 
   @override
@@ -1106,7 +1148,8 @@ class __ChartLineState extends State<_ChartLine>
               animation: _controller,
               builder: (context, child) {
                 return Container(
-                  width: width * _controller.value,
+                  width:
+                      width * (_disableAnimations ? 1 : _controller.value),
                   height: 18,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(2),

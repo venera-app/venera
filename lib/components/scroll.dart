@@ -49,6 +49,9 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
 
   double? _futurePosition;
 
+  ScrollDirection _lastUserScrollDirection = ScrollDirection.idle;
+  bool _isSnappingToPage = false;
+
   static bool _isMouseScroll = App.isDesktop;
 
   late int id;
@@ -79,13 +82,57 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
     super.dispose();
   }
 
+  double _pageFraction() {
+    final value = appdata.settings['inkScrollPageFraction'];
+    if (value is num) {
+      return value.toDouble().clamp(0.1, 1.0);
+    }
+    return 0.9;
+  }
+
+  void _snapToPageIfNeeded() {
+    if (_isSnappingToPage) return;
+    if (!_controller.hasClients) return;
+
+    final position = _controller.position;
+    final viewportHeight = position.viewportDimension;
+    if (viewportHeight <= 0) return;
+
+    final pageSize = viewportHeight * _pageFraction();
+    if (pageSize <= 0) return;
+
+    final min = position.minScrollExtent;
+    final max = position.maxScrollExtent;
+    final pixels = position.pixels.clamp(min, max);
+
+    final relative = (pixels - min) / pageSize;
+    final targetIndex = switch (_lastUserScrollDirection) {
+      ScrollDirection.reverse => relative.ceil(),
+      ScrollDirection.forward => relative.floor(),
+      _ => relative.round(),
+    };
+
+    final target = (min + targetIndex * pageSize).clamp(min, max);
+    if ((target - position.pixels).abs() < 0.5) return;
+
+    _isSnappingToPage = true;
+    _futurePosition = null;
+    _controller.jumpTo(target);
+    _isSnappingToPage = false;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final disableInertialScrolling =
+        appdata.settings['disableInertialScrolling'] as bool;
+    
     if (App.isMacOS) {
       return widget.builder(
         context,
         _controller,
-        const BouncingScrollPhysics(),
+        disableInertialScrolling
+            ? const NoInertialScrollPhysics()
+            : const BouncingScrollPhysics(),
       );
     }
     var child = Listener(
@@ -112,6 +159,37 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
             });
           }
           if (!_isMouseScroll) return;
+          
+          // If disabling inertial scrolling, jump by page size.
+          if (disableInertialScrolling) {
+            if (!_controller.hasClients) return;
+            var currentLocation = _controller.position.pixels;
+            var viewportHeight = _controller.position.viewportDimension;
+            var scrollDelta = pointerSignal.scrollDelta.dy;
+
+            if (viewportHeight <= 0) return;
+            final pageSize = viewportHeight * _pageFraction();
+            
+            double targetPosition;
+            if (scrollDelta > 0) {
+              targetPosition = (currentLocation + pageSize).clamp(
+                _controller.position.minScrollExtent,
+                _controller.position.maxScrollExtent,
+              );
+            } else {
+              targetPosition = (currentLocation - pageSize).clamp(
+                _controller.position.minScrollExtent,
+                _controller.position.maxScrollExtent,
+              );
+            }
+            
+            if (targetPosition != currentLocation) {
+              _futurePosition = null;
+              _controller.jumpTo(targetPosition);
+            }
+            return;
+          }
+          
           var currentLocation = _controller.position.pixels;
           var old = _futurePosition;
           _futurePosition ??= currentLocation;
@@ -154,12 +232,32 @@ class _SmoothScrollProviderState extends State<SmoothScrollProvider> {
         onChildInactive: (id) {
           activeChildren.remove(id);
         },
-        child: widget.builder(
-          context,
-          _controller,
-          _isMouseScroll
-              ? const NeverScrollableScrollPhysics()
-              : const BouncingScrollPhysics(),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (!disableInertialScrolling) return false;
+            // Mouse wheel paging is handled in onPointerSignal; this mainly covers Android touch dragging.
+            if (_isMouseScroll) return false;
+            if (activeChildren.isNotEmpty) return false;
+            if (notification.depth != 0) return false;
+
+            if (notification is UserScrollNotification) {
+              _lastUserScrollDirection = notification.direction;
+            }
+
+            if (notification is ScrollEndNotification) {
+              _snapToPageIfNeeded();
+            }
+            return false;
+          },
+          child: widget.builder(
+            context,
+            _controller,
+            _isMouseScroll
+                ? const NeverScrollableScrollPhysics()
+                : (disableInertialScrolling
+                    ? const NoInertialScrollPhysics()
+                    : const BouncingScrollPhysics()),
+          ),
         ),
       ),
     );
@@ -207,6 +305,28 @@ class ScrollState extends InheritedWidget {
   @override
   bool updateShouldNotify(ScrollState oldWidget) {
     return oldWidget.controller != controller;
+  }
+}
+
+/// 禁用拖拽释放后的 ballistic（惯性/回弹）动画。
+///
+/// 适用于墨水屏等需要“停下即停下”的场景。
+class NoInertialScrollPhysics extends ScrollPhysics {
+  const NoInertialScrollPhysics({super.parent});
+
+  @override
+  NoInertialScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return NoInertialScrollPhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+      ScrollMetrics position, double velocity) {
+    // If we're out of range and not headed back in range, defer to the parent
+    if (position.outOfRange) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+    return null;
   }
 }
 

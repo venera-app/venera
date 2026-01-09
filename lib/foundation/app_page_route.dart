@@ -58,8 +58,18 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
   @protected
   Widget buildContent(BuildContext context);
 
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 300);
+  bool get _disableAnimations {
+    final ctx = navigator?.context;
+    return ctx != null ? (MediaQuery.maybeOf(ctx)?.disableAnimations ?? false) : false;
+  }
+
+    @override
+    Duration get transitionDuration =>
+      _disableAnimations ? Duration.zero : const Duration(milliseconds: 300);
+
+    @override
+    Duration get reverseTransitionDuration =>
+      _disableAnimations ? Duration.zero : const Duration(milliseconds: 300);
 
   @override
   Color? get barrierColor => null;
@@ -117,6 +127,9 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
+    final bool noAnim = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (noAnim) return child;
+
     PageTransitionsBuilder builder;
     if (App.isAndroid) {
       builder = PredictiveBackPageTransitionsBuilder();

@@ -366,6 +366,7 @@ class FiveDotLoadingAnimation extends StatefulWidget {
 class _FiveDotLoadingAnimationState extends State<FiveDotLoadingAnimation>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _disableAnimations = false;
 
   @override
   void initState() {
@@ -374,7 +375,31 @@ class _FiveDotLoadingAnimationState extends State<FiveDotLoadingAnimation>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
       upperBound: 6,
-    )..repeat(min: 0, max: 5.2, period: const Duration(milliseconds: 1200));
+    );
+    _startIfNeeded();
+  }
+
+  void _startIfNeeded() {
+    if (_disableAnimations) {
+      _controller.stop();
+      _controller.value = 0;
+    } else {
+      if (!_controller.isAnimating) {
+        _controller.repeat(
+          min: 0,
+          max: 5.2,
+          period: const Duration(milliseconds: 1200),
+        );
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    _startIfNeeded();
   }
 
   @override
@@ -414,11 +439,13 @@ class _FiveDotLoadingAnimationState extends State<FiveDotLoadingAnimation>
   Widget buildDot(int index) {
     var value = _controller.value;
     var startValue = index * 0.8;
+    final double bottomOffset = _disableAnimations
+        ? 0
+        : (math.sin(math.pi / 2 * (value - startValue).clamp(0, 2))) *
+            (_height - _dotSize);
     return Positioned(
       left: index * _dotSize + (index + 1) * _padding,
-      bottom:
-          (math.sin(math.pi / 2 * (value - startValue).clamp(0, 2))) *
-          (_height - _dotSize),
+      bottom: bottomOffset,
       child: Container(
         width: _dotSize,
         height: _dotSize,

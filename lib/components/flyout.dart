@@ -98,6 +98,7 @@ class FlyoutState extends State<Flyout> {
   void show() {
     var renderBox = context.findRenderObject() as RenderBox;
     var rect = renderBox.localToGlobal(Offset.zero) & renderBox.size;
+    final noAnim = MediaQuery.of(context).disableAnimations;
     var navigator = widget.navigator ??
         Navigator.of(
           context,
@@ -107,8 +108,8 @@ class FlyoutState extends State<Flyout> {
         fullscreenDialog: true,
         barrierDismissible: true,
         opaque: false,
-        transitionDuration: _fastAnimationDuration,
-        reverseTransitionDuration: _fastAnimationDuration,
+        transitionDuration: noAnim ? Duration.zero : _fastAnimationDuration,
+        reverseTransitionDuration: noAnim ? Duration.zero : _fastAnimationDuration,
         pageBuilder: (context, animation, secondaryAnimation) {
           var left = rect.left;
           var top = rect.bottom;
@@ -122,6 +123,7 @@ class FlyoutState extends State<Flyout> {
 
           Widget transition(BuildContext context, Animation<double> animation,
               Animation<double> secondaryAnimation, Widget flyout) {
+            if (noAnim) return flyout;
             return SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, -0.05),
@@ -137,14 +139,17 @@ class FlyoutState extends State<Flyout> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: navigator.pop,
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, builder) {
-                      return ColoredBox(
-                        color: Colors.black.toOpacity(0.3 * animation.value),
-                      );
-                    },
-                  ),
+                  child: noAnim
+                      ? const ColoredBox(color: Colors.transparent)
+                      : AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, builder) {
+                            return ColoredBox(
+                              color: Colors.black
+                                  .toOpacity(0.3 * animation.value),
+                            );
+                          },
+                        ),
                 ),
               ),
               Positioned(

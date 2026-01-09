@@ -14,6 +14,8 @@ class DebugPageState extends State<DebugPage> {
 
   @override
   Widget build(BuildContext context) {
+    final disableInertialScrolling =
+        appdata.settings['disableInertialScrolling'] as bool;
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("Debug".tl)),
@@ -87,6 +89,9 @@ class DebugPageState extends State<DebugPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: SingleChildScrollView(
+                  physics: disableInertialScrolling
+                      ? const NoInertialScrollPhysics()
+                      : null,
                   child: Text(result).paddingAll(4),
                 ),
               ),

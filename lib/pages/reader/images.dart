@@ -1,5 +1,15 @@
 part of 'reader.dart';
 
+FilterQuality _inkImageFilterQuality() {
+  final value = appdata.settings['inkImageFilterQuality'];
+  return switch (value) {
+    'none' => FilterQuality.none,
+    'low' => FilterQuality.low,
+    'high' => FilterQuality.high,
+    _ => FilterQuality.medium,
+  };
+}
+
 class _ReaderImages extends StatefulWidget {
   const _ReaderImages({super.key});
 
@@ -155,6 +165,10 @@ class _GalleryModeState extends State<_GalleryMode>
     implements _ImageViewController {
   late PageController controller;
 
+  int? _activePointer;
+  double _dragAlongAxis = 0;
+  final List<({int tMs, double d})> _recentDragSamples = [];
+
   int get preCacheCount => appdata.settings["preloadImageCount"];
 
   var photoViewControllers = <int, PhotoViewController>{};
@@ -284,15 +298,91 @@ class _GalleryModeState extends State<_GalleryMode>
 
   @override
   Widget build(BuildContext context) {
+    final disableSwipeAnimation =
+      !reader.enablePageAnimation(reader.cid, reader.type);
+    final Axis scrollAxis = reader.mode == ReaderMode.galleryTopToBottom
+        ? Axis.vertical
+        : Axis.horizontal;
+
+    double axisDelta(Offset delta) =>
+        scrollAxis == Axis.horizontal ? delta.dx : delta.dy;
+
+    bool dragIndicatesNext(double alongAxis) {
+      if (scrollAxis == Axis.vertical) {
+        // galleryTopToBottom: swipe up (negative dy) to next page.
+        return alongAxis < 0;
+      }
+      // Left-to-right: swipe left (negative dx) to next page.
+      // Right-to-left: reversed.
+      final isRtl = reader.mode == ReaderMode.galleryRightToLeft;
+      return isRtl ? alongAxis > 0 : alongAxis < 0;
+    }
+
     return Listener(
       onPointerDown: (event) {
         fingers++;
+        if (!disableSwipeAnimation) {
+          return;
+        }
+        // Only track single-finger page switch gestures.
+        if (fingers == 1) {
+          _activePointer = event.pointer;
+          _dragAlongAxis = 0;
+          _recentDragSamples.clear();
+        } else {
+          _activePointer = null;
+          _dragAlongAxis = 0;
+          _recentDragSamples.clear();
+        }
       },
       onPointerUp: (event) {
         fingers--;
+        if (disableSwipeAnimation && _activePointer == event.pointer) {
+          final viewport = MediaQuery.of(context).size;
+          final axisSize =
+              scrollAxis == Axis.horizontal ? viewport.width : viewport.height;
+          final distanceThreshold =
+              (axisSize * 0.15).clamp(48.0, 140.0).toDouble();
+
+          final nowMs = DateTime.now().millisecondsSinceEpoch;
+          _recentDragSamples.removeWhere((s) => nowMs - s.tMs > 80);
+          final recentDistance = _recentDragSamples.fold<double>(
+            0,
+            (sum, s) => sum + s.d,
+          );
+          final recentDurationMs = _recentDragSamples.isEmpty
+              ? 0
+              : (nowMs - _recentDragSamples.first.tMs).clamp(1, 1000000);
+          final recentVelocity = recentDurationMs == 0
+              ? 0.0
+              : recentDistance / recentDurationMs * 1000.0;
+
+          final absDistance = _dragAlongAxis.abs();
+          final absVelocity = recentVelocity.abs();
+          final meetsDistance = absDistance >= distanceThreshold;
+          final meetsVelocity = absVelocity >= 900.0;
+
+          if (meetsDistance || meetsVelocity) {
+            final next = dragIndicatesNext(meetsVelocity ? recentVelocity : _dragAlongAxis);
+            final current = (controller.page ?? reader.page.toDouble()).round();
+            final target = (current + (next ? 1 : -1)).clamp(0, totalPages + 1);
+            if (target != current) {
+              controller.jumpToPage(target);
+            }
+          }
+
+          _activePointer = null;
+          _dragAlongAxis = 0;
+          _recentDragSamples.clear();
+        }
       },
       onPointerCancel: (event) {
         fingers--;
+        if (_activePointer == event.pointer) {
+          _activePointer = null;
+          _dragAlongAxis = 0;
+          _recentDragSamples.clear();
+        }
       },
       onPointerMove: (event) {
         if (isLongPressing) {
@@ -302,13 +392,27 @@ class _GalleryModeState extends State<_GalleryMode>
             controller.updateMultiple(position: controller.position + value);
           }
         }
+
+        if (!disableSwipeAnimation) {
+          return;
+        }
+        if (_activePointer != event.pointer) {
+          return;
+        }
+        // Accumulate drag distance along the scroll axis without entering
+        // the gesture arena (so we don't break PhotoView pan/zoom).
+        final d = axisDelta(event.delta);
+        _dragAlongAxis += d;
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        _recentDragSamples.add((tMs: nowMs, d: d));
+        _recentDragSamples.removeWhere((s) => nowMs - s.tMs > 80);
       },
       child: PhotoViewGallery.builder(
         backgroundDecoration: BoxDecoration(color: context.colorScheme.surface),
         reverse: reader.mode == ReaderMode.galleryRightToLeft,
-        scrollDirection: reader.mode == ReaderMode.galleryTopToBottom
-            ? Axis.vertical
-            : Axis.horizontal,
+        scrollDirection: scrollAxis,
+        scrollPhysics:
+            disableSwipeAnimation ? const NeverScrollableScrollPhysics() : null,
         itemCount: totalPages + 2,
         builder: (BuildContext context, int index) {
           if (index == 0 || index == totalPages + 1) {
@@ -332,7 +436,7 @@ class _GalleryModeState extends State<_GalleryMode>
 
             if (reader.imagesPerPage == 1 || pageImages.length == 1) {
               return PhotoViewGalleryPageOptions(
-                filterQuality: FilterQuality.medium,
+                filterQuality: _inkImageFilterQuality(),
                 controller: photoViewControllers[index],
                 imageProvider: _createImageProviderFromKey(
                   pageImages[0],
@@ -863,7 +967,7 @@ class _ContinuousModeState extends State<_ContinuousMode>
         return ColoredBox(
           color: context.colorScheme.surface,
           child: ComicImage(
-            filterQuality: FilterQuality.medium,
+            filterQuality: _inkImageFilterQuality(),
             image: image,
             width: width,
             height: height,
