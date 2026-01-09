@@ -17,6 +17,8 @@ class CookieJarSql {
 
   void init() {
     _db = sqlite3.open(path);
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
     _db.execute('''
       CREATE TABLE IF NOT EXISTS cookies (
         name TEXT NOT NULL,

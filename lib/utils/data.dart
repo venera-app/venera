@@ -112,6 +112,184 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
   }
 }
 
+Future<void> _mergeHistory(String localDbPath, String remoteDbPath) async {
+  final localDb = sqlite3.open(localDbPath);
+  localDb.execute('PRAGMA journal_mode = WAL;');
+  localDb.execute('PRAGMA synchronous = NORMAL;');
+  final remoteDb = sqlite3.open(remoteDbPath);
+
+  final remoteHistories = remoteDb.select('SELECT * FROM history');
+
+  for (final remoteHistory in remoteHistories) {
+    final id = remoteHistory['id'] as String;
+    final localHistory = localDb.select('SELECT * FROM history WHERE id = ?', [id]);
+
+    if (localHistory.isEmpty) {
+      // History doesn't exist locally, so add it.
+      var cols = remoteHistory.keys.join(",");
+      var placeholders = remoteHistory.keys.map((e) => "?").join(",");
+      localDb.execute(
+        'INSERT INTO history ($cols) VALUES ($placeholders)',
+        remoteHistory.values.toList(),
+      );
+    } else {
+      // History exists, merge based on timestamp.
+      final localTime = localHistory.first['time'] as int;
+      final remoteTime = remoteHistory['time'] as int;
+      if (remoteTime > localTime) {
+        // Remote is newer, update local.
+        var updateSql = remoteHistory.keys.where((k) => k != 'id').map((k) => "$k = ?").join(",");
+        var values = remoteHistory.keys.where((k) => k != 'id').map((k) => remoteHistory[k]).toList();
+        localDb.execute(
+          'UPDATE history SET $updateSql WHERE id = ?',
+          [...values, id],
+        );
+      }
+    }
+  }
+
+  localDb.dispose();
+  remoteDb.dispose();
+}
+
+Future<void> _mergeFavorites(String localDbPath, String remoteDbPath) async {
+  final localDb = sqlite3.open(localDbPath);
+  localDb.execute('PRAGMA journal_mode = WAL;');
+  localDb.execute('PRAGMA synchronous = NORMAL;');
+  final remoteDb = sqlite3.open(remoteDbPath);
+
+  final remoteFolders = remoteDb
+      .select("SELECT name FROM sqlite_master WHERE type='table'")
+      .map((e) => e['name'] as String)
+      .where((name) => name != 'folder_order' && name != 'folder_sync')
+      .toList();
+
+  final localFolders = localDb
+      .select("SELECT name FROM sqlite_master WHERE type='table'")
+      .map((e) => e['name'] as String)
+      .where((name) => name != 'folder_order' && name != 'folder_sync')
+      .toList();
+
+  for (final folder in remoteFolders) {
+    if (!localFolders.contains(folder)) {
+      // Create folder if it doesn't exist locally.
+      localDb.execute("""
+        create table "$folder"(
+          id text,
+          name TEXT,
+          author TEXT,
+          type int,
+          tags TEXT,
+          cover_path TEXT,
+          time TEXT,
+          display_order int,
+          translated_tags TEXT,
+          primary key (id, type)
+        );
+      """);
+    }
+
+    // Ensure columns exist
+    var columns = localDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+    var remoteColumns = remoteDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+    for (var col in remoteColumns) {
+      if (!columns.contains(col)) {
+        localDb.execute("ALTER TABLE \"$folder\" ADD COLUMN $col ${remoteDb.select("PRAGMA table_info(\"$folder\");").firstWhere((e) => e['name'] == col)['type']};");
+      }
+    }
+    columns = localDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+
+    final remoteComics = remoteDb.select('SELECT * FROM "$folder"');
+    for (final remoteComic in remoteComics) {
+      final id = remoteComic['id'] as String;
+      final type = remoteComic['type'] as int;
+      final localComic = localDb.select('SELECT * FROM "$folder" WHERE id = ? AND type = ?', [id, type]);
+
+      if (localComic.isEmpty) {
+        // Comic doesn't exist, so add it.
+        var cols = remoteComic.keys.join(",");
+        var placeholders = remoteComic.keys.map((e) => "?").join(",");
+        localDb.execute(
+          'INSERT INTO "$folder" ($cols) VALUES ($placeholders)',
+          remoteComic.values.toList(),
+        );
+      } else {
+        // Comic exists, merge based on timestamp.
+        final localTime = DateTime.parse(localComic.first['time'] as String);
+        final remoteTime = DateTime.parse(remoteComic['time'] as String);
+        if (remoteTime.isAfter(localTime)) {
+          // Remote is newer, update local.
+          var updateSql = remoteComic.keys.where((k) => k != 'id' && k != 'type').map((k) => "$k = ?").join(",");
+          var values = remoteComic.keys.where((k) => k != 'id' && k != 'type').map((k) => remoteComic[k]).toList();
+          localDb.execute(
+            'UPDATE "$folder" SET $updateSql WHERE id = ? AND type = ?',
+            [...values, id, type],
+          );
+        }
+      }
+    }
+  }
+
+  // Merge folder_order and folder_sync
+  for (var table in ['folder_order', 'folder_sync']) {
+    var remoteData = remoteDb.select('SELECT * FROM $table');
+    var primaryKey = table == 'folder_order' ? 'folder_name' : 'folder_name'; // Both use folder_name as PK
+    for (var row in remoteData) {
+      var pkValue = row[primaryKey];
+      var localRow = localDb.select('SELECT * FROM $table WHERE $primaryKey = ?', [pkValue]);
+      if (localRow.isEmpty) {
+        var cols = row.keys.join(",");
+        var placeholders = row.keys.map((e) => "?").join(",");
+        localDb.execute('INSERT INTO $table ($cols) VALUES ($placeholders)', row.values.toList());
+      }
+    }
+  }
+
+  localDb.dispose();
+  remoteDb.dispose();
+}
+
+Future<void> mergeAppData(File file) async {
+  var cacheDirPath = FilePath.join(App.cachePath, 'temp_data');
+  var cacheDir = Directory(cacheDirPath);
+  if (cacheDir.existsSync()) {
+    cacheDir.deleteSync(recursive: true);
+  }
+  cacheDir.createSync();
+  try {
+    await Isolate.run(() {
+      ZipFile.openAndExtract(file.path, cacheDirPath);
+    });
+
+    var remoteHistoryFile = cacheDir.joinFile("history.db");
+    var remoteLocalFavoriteFile = cacheDir.joinFile("local_favorite.db");
+    var remoteAppdataFile = cacheDir.joinFile("appdata.json");
+
+    // Merge history
+    if (await remoteHistoryFile.exists()) {
+      HistoryManager().close();
+      await _mergeHistory(FilePath.join(App.dataPath, "history.db"), remoteHistoryFile.path);
+      HistoryManager().init();
+    }
+
+    // Merge favorites
+    if (await remoteLocalFavoriteFile.exists()) {
+      LocalFavoritesManager().close();
+      await _mergeFavorites(FilePath.join(App.dataPath, "local_favorite.db"), remoteLocalFavoriteFile.path);
+      LocalFavoritesManager().init();
+    }
+
+    // Merge appdata.json
+    if (await remoteAppdataFile.exists()) {
+      var remoteContent = await remoteAppdataFile.readAsString();
+      var remoteData = jsonDecode(remoteContent);
+      appdata.syncData(remoteData);
+    }
+  } finally {
+    cacheDir.deleteIgnoreError(recursive: true);
+  }
+}
+
 Future<void> importPicaData(File file) async {
   var cacheDirPath = FilePath.join(App.cachePath, 'temp_data');
   var cacheDir = Directory(cacheDirPath);
