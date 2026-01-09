@@ -140,6 +140,17 @@ class Appdata with Init {
           settings[key] = json['settings'][key];
         }
       }
+
+      // Migrations
+      // Renamed: explorePageSwitchAnimation -> enableTabViewSwitchAnimation
+      if ((json['settings'] as Map<String, dynamic>)
+              .containsKey('explorePageSwitchAnimation') &&
+          !(json['settings'] as Map<String, dynamic>)
+              .containsKey('enableTabViewSwitchAnimation')) {
+        settings['enableTabViewSwitchAnimation'] =
+            json['settings']['explorePageSwitchAnimation'];
+      }
+
       searchHistory = List.from(json['searchHistory']);
     } catch (e) {
       Log.error("Appdata", "Failed to load appdata", e);
@@ -229,6 +240,7 @@ class Settings with ChangeNotifier {
     'showChapterComments': true, // show chapter comments in reader
     'showChapterCommentsAtEnd': false, // show chapter comments at end of chapter
     'disableAnimation': false,  // disable UI animation
+    'enableTabViewSwitchAnimation': true, // tab/page switching animation for tab views
     'disableInertialScrolling': false,  // disable inertial scrolling
     'inkScrollPageFraction': 0.9, // page size per turn (0-1, viewport fraction)
     'inkImageFilterQuality': 'medium', // none, low(bilinear), medium, high

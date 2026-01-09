@@ -56,6 +56,10 @@ class _ExploreSettingsState extends State<ExploreSettings> {
           title: "Reverse default chapter order".tl,
           settingKey: "reverseChapterOrder",
         ).toSliver(),
+        _SwitchSetting(
+          title: "Explore page switch animation".tl,
+          settingKey: "enableTabViewSwitchAnimation",
+        ).toSliver(),
         _PopupWindowSetting(
           title: "Keyword blocking".tl,
           builder: () => const _ManageBlockingWordView(),

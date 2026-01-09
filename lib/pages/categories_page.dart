@@ -25,6 +25,10 @@ class _CategoriesPageState extends State<CategoriesPage>
 
   late TabController controller;
 
+  bool _enableTabViewSwitchAnimationSetting = true;
+
+  double _horizontalDragDistance = 0;
+
   void onSettingsChanged() {
     var categories = List.from(
       appdata.settings["categories"],
@@ -37,17 +41,55 @@ class _CategoriesPageState extends State<CategoriesPage>
     categories = categories
         .where((element) => allCategories.contains(element))
         .toList();
-    if (!categories.isEqualTo(this.categories)) {
+    final bool enableSwitchAnimation =
+        appdata.settings["enableTabViewSwitchAnimation"] != false;
+
+    if (!categories.isEqualTo(this.categories) ||
+        _enableTabViewSwitchAnimationSetting != enableSwitchAnimation) {
       setState(() {
-        this.categories = categories;
+        _enableTabViewSwitchAnimationSetting = enableSwitchAnimation;
+        if (!categories.isEqualTo(this.categories)) {
+          this.categories = categories;
+          controller.dispose();
+          controller = TabController(length: categories.length, vsync: this);
+        }
       });
-      controller = TabController(length: categories.length, vsync: this);
+    }
+  }
+
+  void _switchPageByDragEnd({required double width, required double velocity}) {
+    if (categories.length <= 1) {
+      return;
+    }
+
+    final double distanceThreshold =
+        (width * 0.15).clamp(48.0, 140.0); // px
+    const double velocityThreshold = 900.0; // px/s
+
+    final bool shouldTurnByVelocity = velocity.abs() >= velocityThreshold;
+    final bool shouldTurnByDistance =
+        _horizontalDragDistance.abs() >= distanceThreshold;
+
+    if (!shouldTurnByVelocity && !shouldTurnByDistance) {
+      return;
+    }
+
+    final bool goNext = shouldTurnByVelocity
+        ? (velocity < 0)
+        : (_horizontalDragDistance < 0);
+
+    final int newIndex = (goNext ? controller.index + 1 : controller.index - 1)
+        .clamp(0, categories.length - 1);
+    if (newIndex != controller.index) {
+      controller.index = newIndex;
     }
   }
 
   @override
   void initState() {
     super.initState();
+    _enableTabViewSwitchAnimationSetting =
+        appdata.settings["enableTabViewSwitchAnimation"] != false;
     var categories = List.from(
       appdata.settings["categories"],
     ).whereType<String>().toList();
@@ -102,12 +144,16 @@ class _CategoriesPageState extends State<CategoriesPage>
       return buildEmpty();
     }
 
+    final bool enablePageSwitchAnimation = _enableTabViewSwitchAnimationSetting &&
+        !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+
     return Material(
       child: Column(
         children: [
           AppTabBar(
             controller: controller,
             key: PageStorageKey(categories.toString()),
+            enableSwitchAnimation: enablePageSwitchAnimation,
             tabs: categories.map((e) {
               String title = e;
               try {
@@ -124,10 +170,35 @@ class _CategoriesPageState extends State<CategoriesPage>
             ),
           ).paddingTop(context.padding.top),
           Expanded(
-            child: TabBarView(
-              controller: controller,
-              children: categories.map((e) => _CategoryPage(e)).toList(),
-            ),
+            child: enablePageSwitchAnimation
+                ? TabBarView(
+                    controller: controller,
+                    children: categories.map((e) => _CategoryPage(e)).toList(),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragStart: (_) {
+                          _horizontalDragDistance = 0;
+                        },
+                        onHorizontalDragUpdate: (details) {
+                          _horizontalDragDistance += details.delta.dx;
+                        },
+                        onHorizontalDragEnd: (details) {
+                          _switchPageByDragEnd(
+                            width: constraints.maxWidth,
+                            velocity: details.velocity.pixelsPerSecond.dx,
+                          );
+                        },
+                        child: TabViewBody(
+                          controller: controller,
+                          children:
+                              categories.map((e) => _CategoryPage(e)).toList(),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
