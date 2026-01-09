@@ -114,6 +114,8 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
 
 Future<void> _mergeHistory(String localDbPath, String remoteDbPath) async {
   final localDb = sqlite3.open(localDbPath);
+  localDb.execute('PRAGMA journal_mode = WAL;');
+  localDb.execute('PRAGMA synchronous = NORMAL;');
   final remoteDb = sqlite3.open(remoteDbPath);
 
   final remoteHistories = remoteDb.select('SELECT * FROM history');
@@ -124,21 +126,11 @@ Future<void> _mergeHistory(String localDbPath, String remoteDbPath) async {
 
     if (localHistory.isEmpty) {
       // History doesn't exist locally, so add it.
+      var cols = remoteHistory.keys.join(",");
+      var placeholders = remoteHistory.keys.map((e) => "?").join(",");
       localDb.execute(
-        'INSERT INTO history (id, title, subtitle, cover, time, type, ep, page, readEpisode, max_page, chapter_group) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          remoteHistory['id'],
-          remoteHistory['title'],
-          remoteHistory['subtitle'],
-          remoteHistory['cover'],
-          remoteHistory['time'],
-          remoteHistory['type'],
-          remoteHistory['ep'],
-          remoteHistory['page'],
-          remoteHistory['readEpisode'],
-          remoteHistory['max_page'],
-          remoteHistory['chapter_group'],
-        ],
+        'INSERT INTO history ($cols) VALUES ($placeholders)',
+        remoteHistory.values.toList(),
       );
     } else {
       // History exists, merge based on timestamp.
@@ -146,21 +138,11 @@ Future<void> _mergeHistory(String localDbPath, String remoteDbPath) async {
       final remoteTime = remoteHistory['time'] as int;
       if (remoteTime > localTime) {
         // Remote is newer, update local.
+        var updateSql = remoteHistory.keys.where((k) => k != 'id').map((k) => "$k = ?").join(",");
+        var values = remoteHistory.keys.where((k) => k != 'id').map((k) => remoteHistory[k]).toList();
         localDb.execute(
-          'UPDATE history SET title = ?, subtitle = ?, cover = ?, time = ?, type = ?, ep = ?, page = ?, readEpisode = ?, max_page = ?, chapter_group = ? WHERE id = ?',
-          [
-            remoteHistory['title'],
-            remoteHistory['subtitle'],
-            remoteHistory['cover'],
-            remoteHistory['time'],
-            remoteHistory['type'],
-            remoteHistory['ep'],
-            remoteHistory['page'],
-            remoteHistory['readEpisode'],
-            remoteHistory['max_page'],
-            remoteHistory['chapter_group'],
-            id,
-          ],
+          'UPDATE history SET $updateSql WHERE id = ?',
+          [...values, id],
         );
       }
     }
@@ -172,6 +154,8 @@ Future<void> _mergeHistory(String localDbPath, String remoteDbPath) async {
 
 Future<void> _mergeFavorites(String localDbPath, String remoteDbPath) async {
   final localDb = sqlite3.open(localDbPath);
+  localDb.execute('PRAGMA journal_mode = WAL;');
+  localDb.execute('PRAGMA synchronous = NORMAL;');
   final remoteDb = sqlite3.open(remoteDbPath);
 
   final remoteFolders = remoteDb
@@ -205,6 +189,16 @@ Future<void> _mergeFavorites(String localDbPath, String remoteDbPath) async {
       """);
     }
 
+    // Ensure columns exist
+    var columns = localDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+    var remoteColumns = remoteDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+    for (var col in remoteColumns) {
+      if (!columns.contains(col)) {
+        localDb.execute("ALTER TABLE \"$folder\" ADD COLUMN $col ${remoteDb.select("PRAGMA table_info(\"$folder\");").firstWhere((e) => e['name'] == col)['type']};");
+      }
+    }
+    columns = localDb.select("PRAGMA table_info(\"$folder\");").map((e) => e['name'] as String).toList();
+
     final remoteComics = remoteDb.select('SELECT * FROM "$folder"');
     for (final remoteComic in remoteComics) {
       final id = remoteComic['id'] as String;
@@ -213,19 +207,11 @@ Future<void> _mergeFavorites(String localDbPath, String remoteDbPath) async {
 
       if (localComic.isEmpty) {
         // Comic doesn't exist, so add it.
+        var cols = remoteComic.keys.join(",");
+        var placeholders = remoteComic.keys.map((e) => "?").join(",");
         localDb.execute(
-          'INSERT INTO "$folder" (id, name, author, type, tags, cover_path, time, display_order, translated_tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [
-            remoteComic['id'],
-            remoteComic['name'],
-            remoteComic['author'],
-            remoteComic['type'],
-            remoteComic['tags'],
-            remoteComic['cover_path'],
-            remoteComic['time'],
-            remoteComic['display_order'],
-            remoteComic['translated_tags'],
-          ],
+          'INSERT INTO "$folder" ($cols) VALUES ($placeholders)',
+          remoteComic.values.toList(),
         );
       } else {
         // Comic exists, merge based on timestamp.
@@ -233,21 +219,28 @@ Future<void> _mergeFavorites(String localDbPath, String remoteDbPath) async {
         final remoteTime = DateTime.parse(remoteComic['time'] as String);
         if (remoteTime.isAfter(localTime)) {
           // Remote is newer, update local.
+          var updateSql = remoteComic.keys.where((k) => k != 'id' && k != 'type').map((k) => "$k = ?").join(",");
+          var values = remoteComic.keys.where((k) => k != 'id' && k != 'type').map((k) => remoteComic[k]).toList();
           localDb.execute(
-            'UPDATE "$folder" SET name = ?, author = ?, tags = ?, cover_path = ?, time = ?, display_order = ?, translated_tags = ? WHERE id = ? AND type = ?',
-            [
-              remoteComic['name'],
-              remoteComic['author'],
-              remoteComic['tags'],
-              remoteComic['cover_path'],
-              remoteComic['time'],
-              remoteComic['display_order'],
-              remoteComic['translated_tags'],
-              id,
-              type,
-            ],
+            'UPDATE "$folder" SET $updateSql WHERE id = ? AND type = ?',
+            [...values, id, type],
           );
         }
+      }
+    }
+  }
+
+  // Merge folder_order and folder_sync
+  for (var table in ['folder_order', 'folder_sync']) {
+    var remoteData = remoteDb.select('SELECT * FROM $table');
+    var primaryKey = table == 'folder_order' ? 'folder_name' : 'folder_name'; // Both use folder_name as PK
+    for (var row in remoteData) {
+      var pkValue = row[primaryKey];
+      var localRow = localDb.select('SELECT * FROM $table WHERE $primaryKey = ?', [pkValue]);
+      if (localRow.isEmpty) {
+        var cols = row.keys.join(",");
+        var placeholders = row.keys.map((e) => "?").join(",");
+        localDb.execute('INSERT INTO $table ($cols) VALUES ($placeholders)', row.values.toList());
       }
     }
   }

@@ -99,7 +99,7 @@ class DataSync with ChangeNotifier {
   Future<Res<bool>> uploadData() async {
     if (isDownloading) return const Res(true);
     // Before uploading, download data first to merge.
-    await downloadData();
+    await downloadData(true);
     if (_haveWaitingTask) return const Res(true);
     while (isUploading) {
       _haveWaitingTask = true;
@@ -172,7 +172,7 @@ class DataSync with ChangeNotifier {
     }
   }
 
-  Future<Res<bool>> downloadData() async {
+  Future<Res<bool>> downloadData([bool merge = false]) async {
     if (_haveWaitingTask) return const Res(true);
     while (isDownloading || isUploading) {
       _haveWaitingTask = true;
@@ -214,15 +214,22 @@ class DataSync with ChangeNotifier {
         if (version != null && int.tryParse(version) != null) {
           var currentVersion = appdata.settings['dataVersion'];
           Log.info("Data Sync", "Remote version: $version, Local version: $currentVersion");
-          if (currentVersion != null && int.parse(version) <= currentVersion) {
-            Log.info("Data Sync", 'No new data to download');
-            return const Res(true);
+          if (currentVersion != null) {
+            var remoteVersion = int.parse(version);
+            if (remoteVersion < currentVersion || (remoteVersion == currentVersion && !merge)) {
+              Log.info("Data Sync", 'No new data to download');
+              return const Res(true);
+            }
           }
         }
         Log.info("Data Sync", "Downloading data from WebDAV server");
         var localFile = File(FilePath.join(App.cachePath, file.name!));
         await client.read2File(file.name!, localFile.path);
-        await mergeAppData(localFile);
+        if (merge) {
+          await mergeAppData(localFile);
+        } else {
+          await importAppData(localFile);
+        }
         await localFile.delete();
         Log.info("Data Sync", "Data downloaded successfully");
         return const Res(true);
