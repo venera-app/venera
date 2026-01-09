@@ -51,7 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
     "Explore",
     "Reading",
     "Appearance",
-    "墨水屏设置",
+    "Ink Screen",
     "Local Favorites",
     "APP",
     "Network",
