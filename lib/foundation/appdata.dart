@@ -299,7 +299,7 @@ const defaultCustomImageProcessing = '''
  * @param sourceKey {string} - The source key
  * @returns {Promise<ArrayBuffer> | {image: Promise<ArrayBuffer>, onCancel: () => void}} - The processed image
  */
-function processImage(image, cid, eid, page, sourceKey) {
+async function processImage(image, cid, eid, page, sourceKey) {
     let futureImage = new Promise((resolve, reject) => {
         resolve(image);
     });
