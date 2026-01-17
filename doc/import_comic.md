@@ -5,6 +5,19 @@
 Venera supports importing comics from local files.
 However, the comic files must be in a specific format.
 
+## Restore Local Downloads
+
+If you migrated the app and kept the local download folder but lost `local.db`,
+you can restore the local database by scanning the current local path.
+
+- Open `Local` -> `Import` -> `Restore local downloads`.
+- The app scans the current local storage path and rebuilds entries.
+- It does not copy files or add favorites.
+- Duplicates (same title or directory) are skipped.
+
+Make sure the local storage path in Settings points to the folder that contains
+the downloaded comics before running this.
+
 ## Comic Directory
 
 A directory considered as a comic directory only if it follows one of the following two types of structure:

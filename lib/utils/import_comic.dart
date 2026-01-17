@@ -198,13 +198,55 @@ class ImportComic {
     return registerComics(imported, copyToLocal);
   }
 
+  Future<bool> localDownloads() async {
+    var localDir = LocalManager().directory;
+    Map<String?, List<LocalComic>> imported = {null: []};
+    bool cancelled = false;
+    var controller = showLoadingDialog(App.rootContext, onCancel: () {
+      cancelled = true;
+    });
+    try {
+      if (!await localDir.exists()) {
+        App.rootContext.showMessage(message: "Local path not found".tl);
+        controller.close();
+        return false;
+      }
+      await for (var entry in localDir.list()) {
+        if (cancelled) {
+          break;
+        }
+        if (entry is Directory) {
+          var stat = await entry.stat();
+          var result = await _checkSingleComic(
+            entry,
+            createTime: stat.modified,
+            useRelativePath: true,
+          );
+          if (result != null) {
+            imported[null]!.add(result);
+          }
+        }
+      }
+      if (!cancelled && imported[null]!.isEmpty) {
+        App.rootContext.showMessage(message: "No valid comics found".tl);
+      }
+    } catch (e, s) {
+      Log.error("Import Comic", e.toString(), s);
+      App.rootContext.showMessage(message: e.toString());
+    }
+    controller.close();
+    if (cancelled) return false;
+    return registerComics(imported, false);
+  }
+
   //Automatically search for cover image and chapters
   Future<LocalComic?> _checkSingleComic(Directory directory,
       {String? id,
       String? title,
       String? subtitle,
       List<String>? tags,
-      DateTime? createTime}) async {
+      DateTime? createTime,
+      bool useRelativePath = false}) async {
     if (!(await directory.exists())) return null;
     var name = title ?? directory.name;
     if (LocalManager().findByName(name) != null) {
@@ -257,12 +299,13 @@ class ImportComic {
       Log.info("Import Comic", "Invalid Comic: $name\nNo cover image found.");
       return null;
     }
+    var directoryPath = useRelativePath ? directory.name : directory.path;
     return LocalComic(
       id: id ?? '0',
       title: name,
       subtitle: subtitle ?? '',
       tags: tags ?? [],
-      directory: directory.path,
+      directory: directoryPath,
       chapters: hasChapters
           ? ComicChapters(Map.fromIterables(chapters, chapters))
           : null,
