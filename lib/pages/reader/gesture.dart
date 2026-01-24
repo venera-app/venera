@@ -156,6 +156,11 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
       appdata.settings.getReaderSetting(reader.cid, reader.type.sourceKey, 'enableDoubleTapToZoom');
 
   void onTapUp(TapUpDetails event) {
+    if (event.globalPosition == Offset.zero &&
+        event.localPosition == Offset.zero) {
+      _previousEvent = null;
+      return;
+    }
     if (_longPressInProgress) {
       _longPressInProgress = false;
       return;
