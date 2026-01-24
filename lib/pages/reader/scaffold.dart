@@ -728,7 +728,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     _gestureDetectorState?.ignoreNextTap();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      showSideBar(context, widget, width: width, dismissible: false);
+      showSideBar(
+        context,
+        widget,
+        width: width,
+        dismissible: true,
+      ).whenComplete(() {
+        _gestureDetectorState?.clearIgnoreNextTap();
+      });
     });
   }
 

@@ -32,6 +32,10 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     ignoreNextTag = true;
   }
 
+  void clearIgnoreNextTap() {
+    ignoreNextTag = false;
+  }
+
   @override
   void initState() {
     _tapGestureRecognizer = TapGestureRecognizer()
