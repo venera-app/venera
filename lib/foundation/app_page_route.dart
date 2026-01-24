@@ -413,7 +413,7 @@ class _BackSwipeRecognizer extends OneSequenceGestureRecognizer {
           globalPosition: event.position,
           localPosition: event.localPosition,
           primaryDelta: event.delta.dx,
-          delta: event.delta,
+          delta: Offset(event.delta.dx, 0),
         ));
       }
     } else if (event is PointerUpEvent) {

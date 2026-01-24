@@ -4,6 +4,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
   SideBarRoute(this.widget,
       {this.showBarrier = true,
       this.useSurfaceTintColor = false,
+      this.dismissible = true,
       required this.width,
       this.addBottomPadding = true,
       this.addTopPadding = true});
@@ -14,20 +15,59 @@ class SideBarRoute<T> extends PopupRoute<T> {
 
   final bool useSurfaceTintColor;
 
+  final bool dismissible;
+
   final double width;
 
   final bool addTopPadding;
 
   final bool addBottomPadding;
 
+  bool _barrierSawPointerDown = false;
+
   @override
   Color? get barrierColor => showBarrier ? Colors.black54 : Colors.transparent;
 
   @override
-  bool get barrierDismissible => true;
+  bool get barrierDismissible => dismissible;
 
   @override
   String? get barrierLabel => "exit";
+
+  @override
+  TickerFuture didPush() {
+    _barrierSawPointerDown = false;
+    return super.didPush();
+  }
+
+  @override
+  Widget buildModalBarrier() {
+    if (!showBarrier) {
+      return const SizedBox.shrink();
+    }
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        if (event.position == Offset.zero) {
+          return;
+        }
+        _barrierSawPointerDown = true;
+      },
+      child: ModalBarrier(
+        dismissible: dismissible,
+        onDismiss: dismissible
+            ? () {
+                if (!_barrierSawPointerDown) {
+                  return;
+                }
+                navigator?.maybePop();
+              }
+            : null,
+        color: barrierColor,
+        semanticsLabel: barrierLabel,
+      ),
+    );
+  }
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
@@ -126,6 +166,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
 Future<void> showSideBar(BuildContext context, Widget widget,
     {bool showBarrier = true,
     bool useSurfaceTintColor = false,
+    bool dismissible = true,
     double width = 500,
     bool addTopPadding = false}) {
   return Navigator.of(context).push(
@@ -133,6 +174,7 @@ Future<void> showSideBar(BuildContext context, Widget widget,
       widget,
       showBarrier: showBarrier,
       useSurfaceTintColor: useSurfaceTintColor,
+      dismissible: dismissible,
       width: width,
       addTopPadding: addTopPadding,
       addBottomPadding: true,

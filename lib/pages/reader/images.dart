@@ -357,18 +357,29 @@ class _GalleryModeState extends State<_GalleryMode>
           }
         },
         pageController: controller,
-        loadingBuilder: (context, event) => Center(
-          child: SizedBox(
-            width: 20.0,
-            height: 20.0,
-            child: CircularProgressIndicator(
-              backgroundColor: context.colorScheme.surfaceContainerHigh,
-              value: event == null || event.expectedTotalBytes == null
-                  ? null
-                  : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+        loadingBuilder: (context, event) {
+          return PhotoView.customChild(
+            childSize: MediaQuery.of(context).size,
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained * 1.0,
+            maxScale: PhotoViewComputedScale.covered * 10.0,
+            backgroundDecoration: BoxDecoration(
+              color: context.colorScheme.surface,
             ),
-          ),
-        ),
+            child: Center(
+              child: SizedBox(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(
+                  backgroundColor: context.colorScheme.surfaceContainerHigh,
+                  value: event == null || event.expectedTotalBytes == null
+                      ? null
+                      : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+                ),
+              ),
+            ),
+          );
+        },
         onPageChanged: (i) {
           if (i == 0) {
             if (reader.isFirstChapterOfGroup || !reader.toPrevChapter(toLastPage: true)) {

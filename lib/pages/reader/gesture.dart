@@ -32,6 +32,10 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     ignoreNextTag = true;
   }
 
+  void clearIgnoreNextTap() {
+    ignoreNextTag = false;
+  }
+
   @override
   void initState() {
     _tapGestureRecognizer = TapGestureRecognizer()
@@ -49,6 +53,10 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
+        if (event.position == Offset.zero) {
+          _previousEvent = null;
+          return;
+        }
         fingers++;
         if (ignoreNextTag) {
           ignoreNextTag = false;
@@ -156,6 +164,11 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
       appdata.settings.getReaderSetting(reader.cid, reader.type.sourceKey, 'enableDoubleTapToZoom');
 
   void onTapUp(TapUpDetails event) {
+    if (event.globalPosition == Offset.zero &&
+        event.localPosition == Offset.zero) {
+      _previousEvent = null;
+      return;
+    }
     if (_longPressInProgress) {
       _longPressInProgress = false;
       return;
