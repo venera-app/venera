@@ -49,6 +49,10 @@ class _ReaderGestureDetectorState extends AutomaticGlobalState<_ReaderGestureDet
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
+        if (event.position == Offset.zero) {
+          _previousEvent = null;
+          return;
+        }
         fingers++;
         if (ignoreNextTag) {
           ignoreNextTag = false;

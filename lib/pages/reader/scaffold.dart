@@ -129,7 +129,12 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
     final isOnChapterCommentsPage = context.reader.isOnChapterCommentsPage;
     return Stack(
       children: [
-        Positioned.fill(child: widget.child),
+        Positioned.fill(
+          child: AbsorbPointer(
+            absorbing: context.reader.isPageAnimating,
+            child: widget.child,
+          ),
+        ),
         if (appdata.settings['showPageNumberInReader'] == true && !isOnChapterCommentsPage)
           buildPageInfoText(),
         if (!isOnChapterCommentsPage)

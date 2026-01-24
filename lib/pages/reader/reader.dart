@@ -591,6 +591,7 @@ abstract mixin class _VolumeListener {
 
 abstract mixin class _ReaderLocation {
   int _page = 1;
+  int? _pendingPage;
 
   /// Flag to indicate that the page should jump to the last page after images are loaded.
   bool _jumpToLastPageOnLoad = false;
@@ -628,7 +629,7 @@ abstract mixin class _ReaderLocation {
 
   void setPage(int page) {
     // Prevent page change during animation
-    if (_animationCount > 0) {
+    if (_animationCount > 0 && _pendingPage != null && page != _pendingPage) {
       return;
     }
     this.page = page;
@@ -655,20 +656,29 @@ abstract mixin class _ReaderLocation {
       if (page == this.page && page != 1 && page != totalPages) {
         return false;
       }
-      this.page = page;
-      update();
-      if (enablePageAnimation(cid, type)) {
+      final hasAnimation = enablePageAnimation(cid, type);
+      if (hasAnimation) {
+        _pendingPage = page;
         _animationCount++;
+        update();
         _imageViewController!.animateToPage(page).then((_) {
           _animationCount--;
+          if (_pendingPage == page) {
+            _pendingPage = null;
+          }
+          update();
         });
       } else {
+        this.page = page;
+        update();
         _imageViewController!.toPage(page);
       }
       return true;
     }
     return false;
   }
+
+  bool get isPageAnimating => _animationCount > 0;
 
   bool _validateChapter(int chapter) {
     return chapter >= 1 && chapter <= maxChapter;
