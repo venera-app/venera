@@ -646,8 +646,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void openChapterDrawer() {
-    showSideBar(
-      context,
+    _openSideBar(
       context.reader.widget.chapters!.isGrouped
           ? _GroupedChaptersView(context.reader)
           : _ChaptersView(context.reader),
@@ -682,8 +681,7 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
   }
 
   void openSetting() {
-    showSideBar(
-      context,
+    _openSideBar(
       ReaderSettings(
         comicId: context.reader.cid,
         comicSource: context.reader.type.sourceKey,
@@ -719,6 +717,14 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
       ),
       width: 400,
     );
+  }
+
+  void _openSideBar(Widget widget, {double width = 400}) {
+    _gestureDetectorState?.ignoreNextTap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showSideBar(context, widget, width: width, dismissible: false);
+    });
   }
 
   bool shouldShowChapterComments() {

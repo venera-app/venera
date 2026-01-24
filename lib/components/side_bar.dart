@@ -4,6 +4,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
   SideBarRoute(this.widget,
       {this.showBarrier = true,
       this.useSurfaceTintColor = false,
+      this.dismissible = true,
       required this.width,
       this.addBottomPadding = true,
       this.addTopPadding = true});
@@ -13,6 +14,8 @@ class SideBarRoute<T> extends PopupRoute<T> {
   final bool showBarrier;
 
   final bool useSurfaceTintColor;
+
+  final bool dismissible;
 
   final double width;
 
@@ -24,7 +27,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
   Color? get barrierColor => showBarrier ? Colors.black54 : Colors.transparent;
 
   @override
-  bool get barrierDismissible => true;
+  bool get barrierDismissible => dismissible;
 
   @override
   String? get barrierLabel => "exit";
@@ -126,6 +129,7 @@ class SideBarRoute<T> extends PopupRoute<T> {
 Future<void> showSideBar(BuildContext context, Widget widget,
     {bool showBarrier = true,
     bool useSurfaceTintColor = false,
+    bool dismissible = true,
     double width = 500,
     bool addTopPadding = false}) {
   return Navigator.of(context).push(
@@ -133,6 +137,7 @@ Future<void> showSideBar(BuildContext context, Widget widget,
       widget,
       showBarrier: showBarrier,
       useSurfaceTintColor: useSurfaceTintColor,
+      dismissible: dismissible,
       width: width,
       addTopPadding: addTopPadding,
       addBottomPadding: true,
