@@ -53,7 +53,7 @@ class ReaderImageProvider
     }
     if (appdata.settings['enableCustomImageProcessing']) {
       var script = appdata.settings['customImageProcessing'].toString();
-      if (!script.contains('async function processImage')) {
+      if (!script.contains('function processImage')) {
         return imageBytes;
       }
       var func = JsEngine().runCode('''
