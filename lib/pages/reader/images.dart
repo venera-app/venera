@@ -1225,6 +1225,7 @@ ImageProvider _createImageProviderFromKey(
     reader.cid,
     reader.eid,
     reader.page,
+    enableResize: reader.mode.isContinuous, // For continuous mode, we need to resize the image to improve performance
   );
 }
 

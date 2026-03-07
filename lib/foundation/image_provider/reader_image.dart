@@ -12,7 +12,7 @@ import 'package:venera/foundation/appdata.dart';
 class ReaderImageProvider
     extends BaseImageProvider<image_provider.ReaderImageProvider> {
   /// Image provider for normal image.
-  const ReaderImageProvider(this.imageKey, this.sourceKey, this.cid, this.eid, this.page);
+  const ReaderImageProvider(this.imageKey, this.sourceKey, this.cid, this.eid, this.page, {this.enableResize = false});
 
   final String imageKey;
 
@@ -23,6 +23,9 @@ class ReaderImageProvider
   final String eid;
 
   final int page;
+
+  @override
+  final bool enableResize;
 
   @override
   Future<Uint8List> load(chunkEvents, checkStop) async {
@@ -119,8 +122,5 @@ class ReaderImageProvider
   }
 
   @override
-  String get key => "$imageKey@$sourceKey@$cid@$eid";
-
-  @override
-  bool get enableResize => true;
+  String get key => "$imageKey@$sourceKey@$cid@$eid@$enableResize";
 }

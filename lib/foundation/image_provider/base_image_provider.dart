@@ -12,33 +12,22 @@ abstract class BaseImageProvider<T extends BaseImageProvider<T>>
     extends ImageProvider<T> {
   const BaseImageProvider();
 
-  static double? _effectiveScreenWidth;
+  static const int maxImagePixel = 2560 * 1440;
 
-  static const double _normalComicImageRatio = 0.72;
-
-  static const double _minComicImageWidth = 1920 * _normalComicImageRatio;
-
-  static TargetImageSize _getTargetSize(width, height) {
-    if (_effectiveScreenWidth == null) {
-      final screens = PlatformDispatcher.instance.displays;
-      for (var screen in screens) {
-        if (screen.size.width > screen.size.height) {
-          _effectiveScreenWidth = max(
-            _effectiveScreenWidth ?? 0,
-            screen.size.height * _normalComicImageRatio,
-          );
-        } else {
-          _effectiveScreenWidth =
-              max(_effectiveScreenWidth ?? 0, screen.size.width);
-        }
-      }
-      if (_effectiveScreenWidth! < _minComicImageWidth) {
-        _effectiveScreenWidth = _minComicImageWidth;
-      }
+  static TargetImageSize _getTargetSize(int width, int height) {
+    // ignore invalid size
+    if (width <= 0 || height <= 0) {
+      return TargetImageSize(width: width, height: height);
     }
-    if (width > _effectiveScreenWidth!) {
-      height = (height * _effectiveScreenWidth! / width).round();
-      width = _effectiveScreenWidth!.round();
+    // ignore too wide or too tall image
+    final imageRatio = width / height;
+    if (imageRatio > 2 || imageRatio < 0.5) {
+      return TargetImageSize(width: width, height: height);
+    }
+    // resize if too large
+    if (width * height > maxImagePixel) {
+      final ratio = sqrt(maxImagePixel / (width * height));
+      return TargetImageSize(width: (width * ratio).round(), height: (height * ratio).round());
     }
     return TargetImageSize(width: width, height: height);
   }
