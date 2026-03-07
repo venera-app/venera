@@ -53,17 +53,23 @@ class _DownloadingPageState extends State<DownloadingPage> {
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "",
-      body: ListView.builder(
-        itemCount: LocalManager().downloadingTasks.length + 1,
-        itemBuilder: (BuildContext context, int i) {
-          if (i == 0) {
-            return buildTop();
-          }
-          i--;
+      body: SmoothScrollProvider(
+        builder: (context, scrollController, physics) {
+          return ListView.builder(
+            controller: scrollController,
+            physics: physics,
+            itemCount: LocalManager().downloadingTasks.length + 1,
+            itemBuilder: (BuildContext context, int i) {
+              if (i == 0) {
+                return buildTop();
+              }
+              i--;
 
-          return _DownloadTaskTile(
-            key: ValueKey(LocalManager().downloadingTasks[i]),
-            task: LocalManager().downloadingTasks[i],
+              return _DownloadTaskTile(
+                key: ValueKey(LocalManager().downloadingTasks[i]),
+                task: LocalManager().downloadingTasks[i],
+              );
+            },
           );
         },
       ),

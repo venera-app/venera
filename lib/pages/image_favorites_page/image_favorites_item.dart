@@ -152,6 +152,8 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
   Widget buildItem(BuildContext context, int index) {
     var image = imageFavorites[index];
     bool isSelected = widget.selectedImageFavorites[image] ?? false;
+    final bool disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     int curPage = image.page;
     String pageText = curPage == firstPage
         ? '@a Cover'.tlParams({"a": image.epName})
@@ -189,14 +191,17 @@ class _ImageFavoritesItemState extends State<_ImageFavoritesItem> {
                 color: Theme.of(context).colorScheme.secondaryContainer,
               ),
               clipBehavior: Clip.antiAlias,
-              child: Hero(
-                tag: "${image.sourceKey}${image.ep}${image.page}",
-                child: AnimatedImage(
-                  image: ImageFavoritesProvider(image),
-                  width: 96,
-                  height: 128,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.medium,
+              child: HeroMode(
+                enabled: !disableAnimations,
+                child: Hero(
+                  tag: "${image.sourceKey}${image.ep}${image.page}",
+                  child: AnimatedImage(
+                    image: ImageFavoritesProvider(image),
+                    width: 96,
+                    height: 128,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.medium,
+                  ),
                 ),
               ),
             ),

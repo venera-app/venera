@@ -70,8 +70,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     App.registerForceRebuild(forceRebuild);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.addObserver(this);
+    // Listen to settings changes to propagate global UI updates (e.g., disable animations)
+    appdata.settings.addListener(_onSettingsChanged);
     checkUpdates();
     super.initState();
+  }
+
+  void _onSettingsChanged() {
+    if (mounted) setState(() {});
   }
 
   bool isAuthPageActive = false;
@@ -125,6 +131,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     (context as Element).visitChildren(rebuild);
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    appdata.settings.removeListener(_onSettingsChanged);
+    super.dispose();
   }
 
   Color translateColorSetting() {
@@ -243,6 +256,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             );
           };
           if (widget != null) {
+            // Respect system and app-level "disable animations" switch
+            final media = MediaQuery.of(context);
+            final shouldDisableAnimations = media.disableAnimations ||
+                (appdata.settings['disableAnimation'] == true);
+            widget = MediaQuery(
+              data: media.copyWith(disableAnimations: shouldDisableAnimations),
+              child: widget,
+            );
             /// 如果无法检测到状态栏高度设定指定高度
             /// https://github.com/flutter/flutter/issues/161086
             var isPaddingCheckError =

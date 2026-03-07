@@ -275,6 +275,7 @@ class AppTabBar extends StatefulWidget {
     required this.tabs,
     this.actionButton,
     this.withUnderLine = true,
+    this.enableSwitchAnimation = true,
   });
 
   final TabController? controller;
@@ -284,6 +285,9 @@ class AppTabBar extends StatefulWidget {
   final Widget? actionButton;
 
   final bool withUnderLine;
+
+  /// When false, clicking a tab will switch immediately (no animation).
+  final bool enableSwitchAnimation;
 
   @override
   State<AppTabBar> createState() => _AppTabBarState();
@@ -450,7 +454,11 @@ class _AppTabBarState extends State<AppTabBar> {
   }
 
   void onTabClicked(int i) {
-    _controller.animateTo(i);
+    if (widget.enableSwitchAnimation) {
+      _controller.animateTo(i);
+    } else {
+      _controller.index = i;
+    }
   }
 
   Widget buildTab(int i) {

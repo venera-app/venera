@@ -807,37 +807,42 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: targetFolders.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == targetFolders.length) {
-                            return SizedBox(
-                              height: 36,
-                              child: Center(
-                                child: TextButton(
-                                  onPressed: () {
-                                    newFolder().then((v) {
-                                      setState(() {
-                                        targetFolders = LocalFavoritesManager()
-                                            .folderNames
-                                            .where((folder) =>
-                                                folder != favPage.folder)
-                                            .toList();
-                                      });
-                                    });
-                                  },
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.add, size: 20),
-                                      const SizedBox(width: 4),
-                                      Text("New Folder".tl),
-                                    ],
+                      child: SmoothScrollProvider(
+                        builder: (context, scrollController, physics) {
+                          return ListView.builder(
+                            controller: scrollController,
+                            physics: physics,
+                            itemCount: targetFolders.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == targetFolders.length) {
+                                return SizedBox(
+                                  height: 36,
+                                  child: Center(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        newFolder().then((v) {
+                                          setState(() {
+                                            targetFolders =
+                                                LocalFavoritesManager()
+                                                    .folderNames
+                                                    .where((folder) =>
+                                                        folder != favPage.folder)
+                                                    .toList();
+                                          });
+                                        });
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.add, size: 20),
+                                          const SizedBox(width: 4),
+                                          Text("New Folder".tl),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }
+                                );
+                              }
                           var folder = targetFolders[index];
                           var disabled = false;
                           if (selectedLocalFolders.isNotEmpty) {
@@ -868,6 +873,8 @@ class _LocalFavoritesPageState extends State<_LocalFavoritesPage> {
                                       }
                                     });
                                   },
+                          );
+                            },
                           );
                         },
                       ),
@@ -1041,35 +1048,41 @@ class _ReorderComicsPageState extends State<_ReorderComicsPage> {
           )
         ],
       ),
-      body: ReorderableBuilder<FavoriteItem>(
-        key: reorderWidgetKey,
-        scrollController: _scrollController,
-        longPressDelay: App.isDesktop
-            ? const Duration(milliseconds: 100)
-            : const Duration(milliseconds: 500),
-        onReorder: (reorderFunc) {
-          changed = true;
-          setState(() {
-            comics = reorderFunc(comics);
-          });
-          widget.onReorder(comics);
-        },
-        dragChildBoxDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: lightenColor(
-            Theme.of(context).splashColor.withAlpha(255),
-            0.2,
-          ),
-        ),
-        builder: (children) {
-          return GridView(
-            key: _key,
-            controller: _scrollController,
-            gridDelegate: SliverGridDelegateWithComics(),
-            children: children,
+      body: SmoothScrollProvider(
+        controller: _scrollController,
+        builder: (context, scrollController, physics) {
+          return ReorderableBuilder<FavoriteItem>(
+            key: reorderWidgetKey,
+            scrollController: scrollController,
+            longPressDelay: App.isDesktop
+                ? const Duration(milliseconds: 100)
+                : const Duration(milliseconds: 500),
+            onReorder: (reorderFunc) {
+              changed = true;
+              setState(() {
+                comics = reorderFunc(comics);
+              });
+              widget.onReorder(comics);
+            },
+            dragChildBoxDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: lightenColor(
+                Theme.of(context).splashColor.withAlpha(255),
+                0.2,
+              ),
+            ),
+            builder: (children) {
+              return GridView(
+                key: _key,
+                controller: scrollController,
+                physics: physics,
+                gridDelegate: SliverGridDelegateWithComics(),
+                children: children,
+              );
+            },
+            children: tiles,
           );
         },
-        children: tiles,
       ),
     );
   }

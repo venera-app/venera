@@ -110,36 +110,42 @@ class _ProxySettingViewState extends State<_ProxySettingView> {
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "Proxy".tl,
-      body: SingleChildScrollView(
-        child: RadioGroup<String>(
-          groupValue: type,
-          onChanged: (v) {
-            setState(() {
-              type = v ?? type;
-            });
-            if (type != 'manual') {
-              appdata.settings['proxy'] = toProxyStr();
-              appdata.saveData();
-            }
-          },
-          child: Column(
-            children: [
-              RadioListTile<String>(
-                title: Text("Direct".tl),
-                value: 'direct',
+      body: SmoothScrollProvider(
+        builder: (context, scrollController, physics) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            physics: physics,
+            child: RadioGroup<String>(
+              groupValue: type,
+              onChanged: (v) {
+                setState(() {
+                  type = v ?? type;
+                });
+                if (type != 'manual') {
+                  appdata.settings['proxy'] = toProxyStr();
+                  appdata.saveData();
+                }
+              },
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    title: Text("Direct".tl),
+                    value: 'direct',
+                  ),
+                  RadioListTile<String>(
+                    title: Text("System".tl),
+                    value: 'system',
+                  ),
+                  RadioListTile(
+                    title: Text("Manual".tl),
+                    value: 'manual',
+                  ),
+                  if (type == 'manual') buildManualProxy(),
+                ],
               ),
-              RadioListTile<String>(
-                title: Text("System".tl),
-                value: 'system',
-              ),
-              RadioListTile(
-                title: Text("Manual".tl),
-                value: 'manual',
-              ),
-              if (type == 'manual') buildManualProxy(),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -271,37 +277,45 @@ class __DNSOverridesState extends State<_DNSOverrides> {
   Widget build(BuildContext context) {
     return PopUpWidgetScaffold(
       title: "DNS Overrides".tl,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _SwitchSetting(
-              title: "Enable DNS Overrides".tl,
-              settingKey: "enableDnsOverrides",
+      body: SmoothScrollProvider(
+        builder: (context, scrollController, physics) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            physics: physics,
+            child: Column(
+              children: [
+                _SwitchSetting(
+                  title: "Enable DNS Overrides".tl,
+                  settingKey: "enableDnsOverrides",
+                ),
+                _SwitchSetting(
+                  title: "Server Name Indication",
+                  settingKey: "sni",
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 1,
+                  margin: EdgeInsets.symmetric(horizontal: 8),
+                  color: context.colorScheme.outlineVariant,
+                ),
+                for (var i = 0; i < overrides.length; i++) buildOverride(i),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      overrides.add((
+                        TextEditingController(),
+                        TextEditingController(),
+                      ));
+                    });
+                  },
+                  icon: const Icon(Icons.add),
+                  label: Text("Add".tl),
+                ),
+              ],
             ),
-            _SwitchSetting(
-              title: "Server Name Indication",
-              settingKey: "sni",
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 1,
-              margin: EdgeInsets.symmetric(horizontal: 8),
-              color: context.colorScheme.outlineVariant,
-            ),
-            for (var i = 0; i < overrides.length; i++) buildOverride(i),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  overrides
-                      .add((TextEditingController(), TextEditingController()));
-                });
-              },
-              icon: const Icon(Icons.add),
-              label: Text("Add".tl),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

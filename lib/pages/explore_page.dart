@@ -21,11 +21,15 @@ class _ExplorePageState extends State<ExplorePage>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<ExplorePage> {
   late TabController controller;
 
+  double _horizontalDragDistance = 0;
+
   bool showFB = true;
 
   double location = 0;
 
   late List<String> pages;
+
+  bool _enablePageSwitchAnimationSetting = true;
 
   void onSettingsChanged() {
     var explorePages = List<String>.from(appdata.settings["explore_pages"]);
@@ -34,14 +38,53 @@ class _ExplorePageState extends State<ExplorePage>
         .expand((e) => e.map((e) => e.title))
         .toList();
     explorePages = explorePages.where((e) => all.contains(e)).toList();
-    if (!pages.isEqualTo(explorePages)) {
+
+    final bool enableSwitchAnimation =
+      appdata.settings["enableTabViewSwitchAnimation"] != false;
+
+    if (!pages.isEqualTo(explorePages) ||
+        _enablePageSwitchAnimationSetting != enableSwitchAnimation) {
+      final oldController = controller;
       setState(() {
-        pages = explorePages;
-        controller = TabController(
-          length: pages.length,
-          vsync: this,
-        );
+        _enablePageSwitchAnimationSetting = enableSwitchAnimation;
+        if (!pages.isEqualTo(explorePages)) {
+          pages = explorePages;
+          oldController.dispose();
+          controller = TabController(
+            length: pages.length,
+            vsync: this,
+          );
+        }
       });
+    }
+  }
+
+  void _switchPageByDragEnd({required double width, required double velocity}) {
+    if (pages.length <= 1) {
+      return;
+    }
+
+    // Small swipe should still work, but avoid accidental page turns.
+    final double distanceThreshold =
+        (width * 0.15).clamp(48.0, 140.0); // px
+    const double velocityThreshold = 900.0; // px/s
+
+    final bool shouldTurnByVelocity = velocity.abs() >= velocityThreshold;
+    final bool shouldTurnByDistance =
+        _horizontalDragDistance.abs() >= distanceThreshold;
+
+    if (!shouldTurnByVelocity && !shouldTurnByDistance) {
+      return;
+    }
+
+    final bool goNext = shouldTurnByVelocity
+        ? (velocity < 0)
+        : (_horizontalDragDistance < 0);
+
+    final int newIndex = (goNext ? controller.index + 1 : controller.index - 1)
+        .clamp(0, pages.length - 1);
+    if (newIndex != controller.index) {
+      controller.index = newIndex;
     }
   }
 
@@ -62,6 +105,8 @@ class _ExplorePageState extends State<ExplorePage>
   @override
   void initState() {
     pages = List<String>.from(appdata.settings["explore_pages"]);
+    _enablePageSwitchAnimationSetting =
+      appdata.settings["enableTabViewSwitchAnimation"] != false;
     var all = ComicSource.all()
         .map((e) => e.explorePages)
         .expand((e) => e.map((e) => e.title))
@@ -143,11 +188,16 @@ class _ExplorePageState extends State<ExplorePage>
       return buildEmpty();
     }
 
+    final bool enablePageSwitchAnimation =
+        _enablePageSwitchAnimationSetting &&
+            !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+
     Widget tabBar = Material(
       child: AppTabBar(
         key: PageStorageKey(pages.toString()),
         tabs: pages.map((e) => buildTab(e)).toList(),
         controller: controller,
+        enableSwitchAnimation: enablePageSwitchAnimation,
         actionButton: TabActionButton(
           icon: const Icon(Icons.add),
           text: "Add".tl,
@@ -195,10 +245,35 @@ class _ExplorePageState extends State<ExplorePage>
                   child: MediaQuery.removePadding(
                     context: context,
                     removeTop: true,
-                    child: TabBarView(
-                      controller: controller,
-                      children: pages.map((e) => buildBody(e)).toList(),
-                    ),
+                    child: enablePageSwitchAnimation
+                        ? TabBarView(
+                            controller: controller,
+                            children: pages.map((e) => buildBody(e)).toList(),
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onHorizontalDragStart: (_) {
+                                  _horizontalDragDistance = 0;
+                                },
+                                onHorizontalDragUpdate: (details) {
+                                  _horizontalDragDistance += details.delta.dx;
+                                },
+                                onHorizontalDragEnd: (details) {
+                                  _switchPageByDragEnd(
+                                    width: constraints.maxWidth,
+                                    velocity: details.velocity.pixelsPerSecond.dx,
+                                  );
+                                },
+                                child: TabViewBody(
+                                  controller: controller,
+                                  children:
+                                      pages.map((e) => buildBody(e)).toList(),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ),
               )
@@ -241,6 +316,9 @@ class _SingleExplorePage extends StatefulWidget {
 
 class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
     with AutomaticKeepAliveClientMixin<_SingleExplorePage> {
+  @override
+  Object? get key => widget.title;
+
   late final ExplorePageData data;
 
   late final String comicSourceKey;
@@ -262,6 +340,7 @@ class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
   @override
   void initState() {
     super.initState();
+    appdata.settings.addListener(onSettingsChanged);
     for (var source in ComicSource.all()) {
       for (var d in source.explorePages) {
         if (d.title == widget.title) {
@@ -271,7 +350,7 @@ class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
         }
       }
     }
-    appdata.settings.addListener(onSettingsChanged);
+    appdata.settings.removeListener(onSettingsChanged);
     throw "Explore Page ${widget.title} Not Found!";
   }
 
@@ -315,15 +394,11 @@ class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
           refreshHandler = c;
         },
       );
-    } else {
-      return const Center(
-        child: Text("Empty Page"),
-      );
     }
-  }
 
-  @override
-  Object? get key => widget.title;
+    return const SizedBox();
+
+  }
 
   @override
   void refresh() {

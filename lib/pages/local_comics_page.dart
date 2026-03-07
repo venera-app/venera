@@ -592,22 +592,28 @@ void showDeleteChaptersPopWindow(BuildContext context, LocalComic comic) {
         return Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                itemCount: comic.downloadedChapters.length,
-                itemBuilder: (context, index) {
-                  var id = comic.downloadedChapters[index];
-                  var chapter = comic.chapters![id] ?? "Unknown Chapter";
-                  return CheckboxListTile(
-                    title: Text(chapter),
-                    value: chapters.contains(id),
-                    onChanged: (v) {
-                      setState(() {
-                        if (v == true) {
-                          chapters.add(id);
-                        } else {
-                          chapters.remove(id);
-                        }
-                      });
+              child: SmoothScrollProvider(
+                builder: (context, scrollController, physics) {
+                  return ListView.builder(
+                    controller: scrollController,
+                    physics: physics,
+                    itemCount: comic.downloadedChapters.length,
+                    itemBuilder: (context, index) {
+                      var id = comic.downloadedChapters[index];
+                      var chapter = comic.chapters![id] ?? "Unknown Chapter";
+                      return CheckboxListTile(
+                        title: Text(chapter),
+                        value: chapters.contains(id),
+                        onChanged: (v) {
+                          setState(() {
+                            if (v == true) {
+                              chapters.add(id);
+                            } else {
+                              chapters.remove(id);
+                            }
+                          });
+                        },
+                      );
                     },
                   );
                 },

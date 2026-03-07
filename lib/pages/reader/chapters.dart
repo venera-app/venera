@@ -106,9 +106,15 @@ class _GroupedChaptersViewState extends State<_GroupedChaptersView>
 
   var downloaded = <String>[];
 
+  bool _enableTabViewSwitchAnimationSetting = true;
+
+  double _horizontalDragDistance = 0;
+
   @override
   void initState() {
     super.initState();
+    _enableTabViewSwitchAnimationSetting =
+        appdata.settings["enableTabViewSwitchAnimation"] != false;
     int index = 0;
     int epIndex = widget.reader.chapter - 1;
     while (epIndex >= 0) {
@@ -136,18 +142,68 @@ class _GroupedChaptersViewState extends State<_GroupedChaptersView>
 
   @override
   Widget build(BuildContext context) {
+    final bool enablePageSwitchAnimation = _enableTabViewSwitchAnimationSetting &&
+        !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+
     return Column(
       children: [
         Appbar(title: Text("Chapters".tl)),
         AppTabBar(
           controller: tabController,
+          enableSwitchAnimation: enablePageSwitchAnimation,
           tabs: chapters.groups.map((e) => Tab(text: e)).toList(),
         ),
         Expanded(
-          child: TabViewBody(
-            controller: tabController,
-            children: chapters.groups.map(buildGroup).toList(),
-          ),
+          child: enablePageSwitchAnimation
+              ? TabBarView(
+                  controller: tabController,
+                  children: chapters.groups.map(buildGroup).toList(),
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    void switchByDragEnd(double velocity) {
+                      if (chapters.groups.length <= 1) {
+                        return;
+                      }
+                      final double distanceThreshold =
+                          (constraints.maxWidth * 0.15).clamp(48.0, 140.0);
+                      const double velocityThreshold = 900.0;
+                      final bool shouldTurnByVelocity =
+                          velocity.abs() >= velocityThreshold;
+                      final bool shouldTurnByDistance =
+                          _horizontalDragDistance.abs() >= distanceThreshold;
+                      if (!shouldTurnByVelocity && !shouldTurnByDistance) {
+                        return;
+                      }
+                      final bool goNext = shouldTurnByVelocity
+                          ? (velocity < 0)
+                          : (_horizontalDragDistance < 0);
+                      final int newIndex =
+                          (goNext ? tabController.index + 1 : tabController.index - 1)
+                              .clamp(0, chapters.groups.length - 1);
+                      if (newIndex != tabController.index) {
+                        tabController.index = newIndex;
+                      }
+                    }
+
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onHorizontalDragStart: (_) {
+                        _horizontalDragDistance = 0;
+                      },
+                      onHorizontalDragUpdate: (details) {
+                        _horizontalDragDistance += details.delta.dx;
+                      },
+                      onHorizontalDragEnd: (details) {
+                        switchByDragEnd(details.velocity.pixelsPerSecond.dx);
+                      },
+                      child: TabViewBody(
+                        controller: tabController,
+                        children: chapters.groups.map(buildGroup).toList(),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );

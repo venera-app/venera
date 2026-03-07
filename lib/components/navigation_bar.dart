@@ -157,6 +157,7 @@ class NaviPaneState extends State<NaviPane>
   void onRebuild(BuildContext context) {
     double target = targetFormContext(context);
     if (controller.value != target || animationTarget != target) {
+      final bool noAnim = MediaQuery.of(context).disableAnimations;
       if (controller.isAnimating) {
         if (animationTarget == target) {
           return;
@@ -164,7 +165,11 @@ class NaviPaneState extends State<NaviPane>
           controller.stop();
         }
       }
-      controller.animateTo(target);
+      if (noAnim) {
+        controller.value = target;
+      } else {
+        controller.animateTo(target);
+      }
       animationTarget = target;
     }
   }
