@@ -66,6 +66,8 @@ typedef NaviItemTapListener = void Function(int);
 
 class NaviPaneState extends State<NaviPane>
     with SingleTickerProviderStateMixin {
+  bool _canPop = true;
+
   late int _currentPage = widget.initialPage;
 
   int get currentPage => _currentPage;
@@ -173,15 +175,12 @@ class NaviPaneState extends State<NaviPane>
   Widget build(BuildContext context) {
     onRebuild(context);
     final mq = MediaQuery.of(context);
-    final sideInsets =
-        (App.isMobile && mq.orientation == Orientation.landscape)
-            ? EdgeInsets.only(
-                left: math.max(
-                    mq.viewPadding.left, mq.systemGestureInsets.left),
-                right: math.max(
-                    mq.viewPadding.right, mq.systemGestureInsets.right),
-              )
-            : EdgeInsets.zero;
+    final sideInsets = (App.isMobile && mq.orientation == Orientation.landscape)
+        ? EdgeInsets.only(
+            left: math.max(mq.viewPadding.left, mq.systemGestureInsets.left),
+            right: math.max(mq.viewPadding.right, mq.systemGestureInsets.right),
+          )
+        : EdgeInsets.zero;
     return _NaviPopScope(
       action: () {
         if (App.mainNavigatorKey!.currentState!.canPop()) {
@@ -227,18 +226,33 @@ class NaviPaneState extends State<NaviPane>
   Widget buildMainView() {
     return HeroControllerScope(
       controller: MaterialApp.createMaterialHeroController(),
-      child: NavigatorPopHandler(
-        onPopWithResult: (result) {
+      child: PopScope(
+        canPop: _canPop,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            return;
+          }
           widget.navigatorKey.currentState?.maybePop(result);
         },
-        child: Navigator(
-          observers: [widget.observer],
-          key: widget.navigatorKey,
-          onGenerateRoute: (settings) => AppPageRoute(
-            preventRebuild: false,
-            builder: (context) {
-              return _NaviMainView(state: this);
-            },
+        child: NotificationListener<NavigationNotification>(
+          onNotification: (NavigationNotification notification) {
+            final bool nextCanPop = !notification.canHandlePop;
+            if (nextCanPop != _canPop) {
+              setState(() {
+                _canPop = nextCanPop;
+              });
+            }
+            return false;
+          },
+          child: Navigator(
+            observers: [widget.observer],
+            key: widget.navigatorKey,
+            onGenerateRoute: (settings) => AppPageRoute(
+              preventRebuild: false,
+              builder: (context) {
+                return _NaviMainView(state: this);
+              },
+            ),
           ),
         ),
       ),
